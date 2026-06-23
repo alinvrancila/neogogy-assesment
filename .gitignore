@@ -1,0 +1,53 @@
+# === Secrets — NEVER commit ===
+.env
+.env.*
+!.env.example
+deploy/.env.production
+deploy/.env*
+*.pem
+*.key
+*.pfx
+*.p12
+
+# === Dependencies ===
+node_modules/
+.pnp
+.pnp.js
+
+# === Next.js / build output ===
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# === Logs ===
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === OS / editor ===
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# === Local runtime data (PII — lives in DynamoDB) ===
+data/
+
+# === Local infra state / agent settings ===
+deploy/.provision.txt
+deploy/.instance.txt
+.claude/
+
+# === Build/deploy artifacts ===
+*.tar.gz
+deploy/app.tar.gz
+
+# === Misc / scratch ===
+_og*.png
+_ogr.png
+coverage/
+.vercel
