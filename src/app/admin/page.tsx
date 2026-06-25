@@ -92,7 +92,15 @@ type LeadRow = {
 const formatDateTime = (value?: string) => {
   if (!value) return 'Unknown date';
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  return Number.isNaN(date.getTime())
+    ? value
+    : new Intl.DateTimeFormat(undefined, {
+        month: 'numeric',
+        day: 'numeric',
+        year: '2-digit',
+        hour: 'numeric',
+        minute: '2-digit'
+      }).format(date);
 };
 
 function SunIcon() {
@@ -553,9 +561,9 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="admin-shell min-h-screen px-4 py-10" data-theme={theme}>
+    <main className="admin-shell min-h-screen px-2 py-6 sm:px-4 lg:px-6" data-theme={theme}>
       {selectedLead ? <LeadDetailPanel lead={selectedLead} onClose={() => setSelectedLead(null)} /> : null}
-      <div className="mx-auto max-w-6xl space-y-8">
+      <div className="admin-dashboard-wrap mx-auto space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="admin-eyebrow text-sm uppercase tracking-[0.3em]">The Neogogy Formation Compass</p>
@@ -581,7 +589,7 @@ export default function AdminPage() {
           ))}
         </div>
 
-        <div className="admin-card rounded-2xl p-4 sm:p-6">
+        <div className="admin-card rounded-2xl p-3 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="admin-eyebrow text-xs uppercase tracking-[0.24em]">Exam takers</p>
@@ -637,7 +645,7 @@ export default function AdminPage() {
           {leadError ? <p className="admin-error-box mt-4 rounded-xl px-4 py-3 text-sm">{leadError}</p> : null}
 
           <div className="admin-table mt-5 rounded-xl">
-            <div className="admin-leads-grid admin-table-head hidden px-4 py-3 text-xs uppercase tracking-[0.14em] md:grid">
+            <div className="admin-leads-grid admin-table-head hidden px-3 py-3 text-xs uppercase tracking-[0.11em] md:grid">
               <span>Select</span>
               <span>Taker</span>
               <span>Email</span>
@@ -653,7 +661,7 @@ export default function AdminPage() {
               {leadsLoading ? (
                 <div className="admin-muted px-4 py-6 text-sm">Loading exam takers...</div>
               ) : filteredLeads.length ? filteredLeads.map((lead) => (
-                <div key={lead.id} className="admin-leads-grid admin-table-row grid gap-3 px-4 py-4 text-sm">
+                <div key={lead.id} className="admin-leads-grid admin-table-row grid gap-3 px-3 py-4 text-sm">
                   <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -688,9 +696,11 @@ export default function AdminPage() {
                     <span className="admin-mobile-label text-xs uppercase tracking-[0.14em] md:hidden">Index</span>
                     <p className="admin-accent font-semibold">{lead.overall}</p>
                   </div>
-                  <div className="admin-muted hidden whitespace-nowrap md:block">{formatDateTime(lead.createdAt)}</div>
+                  <div className="admin-muted admin-submitted-cell hidden md:block" title={lead.createdAt}>
+                    {formatDateTime(lead.createdAt)}
+                  </div>
                   <div className="flex justify-start md:justify-end">
-                    <button onClick={() => setSelectedLead(lead)} className="admin-button admin-button-outline whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition">
+                    <button onClick={() => setSelectedLead(lead)} className="admin-button admin-button-outline whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition">
                       View result
                     </button>
                   </div>
