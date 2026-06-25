@@ -36,6 +36,8 @@ const ROLE_LABEL: Record<string, string> = {
   curious: 'Curious'
 };
 
+const LEADS_PAGE_SIZE = 10;
+
 declare global {
   interface Window {
     google?: any;
@@ -188,6 +190,7 @@ export default function AdminPage() {
   const [leadsLoading, setLeadsLoading] = useState(false);
   const [leadError, setLeadError] = useState<string | null>(null);
   const [leadQuery, setLeadQuery] = useState('');
+  const [leadPage, setLeadPage] = useState(1);
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null);
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   const [bulkDownloading, setBulkDownloading] = useState(false);
@@ -243,6 +246,7 @@ export default function AdminPage() {
       if (!res.ok) throw new Error('Could not load exam takers.');
       const data = await res.json();
       setLeads(data.leads || []);
+      setLeadPage(1);
     } catch {
       setLeadError('Could not load exam takers.');
     } finally {
@@ -306,6 +310,7 @@ export default function AdminPage() {
     setStats(null);
     setUsers([]);
     setLeads([]);
+    setLeadPage(1);
     setSelectedLead(null);
     setSelectedLeadIds([]);
   };
@@ -550,7 +555,13 @@ export default function AdminPage() {
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(query));
   });
-  const visibleLeadIds = filteredLeads.map((lead) => lead.id);
+  const totalLeadPages = Math.max(1, Math.ceil(filteredLeads.length / LEADS_PAGE_SIZE));
+  const currentLeadPage = Math.min(leadPage, totalLeadPages);
+  const leadPageStart = (currentLeadPage - 1) * LEADS_PAGE_SIZE;
+  const pagedLeads = filteredLeads.slice(leadPageStart, leadPageStart + LEADS_PAGE_SIZE);
+  const leadPageFrom = filteredLeads.length ? leadPageStart + 1 : 0;
+  const leadPageTo = Math.min(leadPageStart + pagedLeads.length, filteredLeads.length);
+  const visibleLeadIds = pagedLeads.map((lead) => lead.id);
   const selectedVisibleCount = visibleLeadIds.filter((id) => selectedLeadIds.includes(id)).length;
   const allVisibleSelected = visibleLeadIds.length > 0 && selectedVisibleCount === visibleLeadIds.length;
   const selectVisibleLeads = () => {
@@ -602,7 +613,10 @@ export default function AdminPage() {
               <input
                 type="search"
                 value={leadQuery}
-                onChange={(e) => setLeadQuery(e.target.value)}
+                onChange={(e) => {
+                  setLeadQuery(e.target.value);
+                  setLeadPage(1);
+                }}
                 placeholder="Search name, email, phone..."
                 className="admin-input w-full rounded-xl px-4 py-3 text-sm outline-none sm:w-72"
               />
@@ -615,7 +629,7 @@ export default function AdminPage() {
           <div className="admin-bulkbar mt-5 flex flex-col gap-3 rounded-2xl p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="admin-muted text-sm">
               {selectedLeadIds.length} selected
-              {filteredLeads.length ? ` / ${filteredLeads.length} visible` : ''}
+              {filteredLeads.length ? ` / showing ${leadPageFrom}-${leadPageTo} of ${filteredLeads.length}` : ' / no visible submissions'}
             </div>
             <div className="flex flex-wrap gap-2">
               <button
@@ -623,14 +637,14 @@ export default function AdminPage() {
                 disabled={!visibleLeadIds.length}
                 className="admin-button admin-button-muted rounded-full px-4 py-2 text-xs font-semibold transition disabled:opacity-50"
               >
-                {allVisibleSelected ? 'Unselect all' : 'Select all'}
+                {allVisibleSelected ? 'Unselect page' : 'Select page'}
               </button>
               <button
                 onClick={unselectVisibleLeads}
                 disabled={!selectedVisibleCount}
                 className="admin-button admin-button-muted rounded-full px-4 py-2 text-xs font-semibold transition disabled:opacity-50"
               >
-                Unselect visible
+                Unselect page
               </button>
               <button
                 onClick={downloadSelectedPdfs}
@@ -660,7 +674,7 @@ export default function AdminPage() {
             <div className="admin-table-body">
               {leadsLoading ? (
                 <div className="admin-muted px-4 py-6 text-sm">Loading exam takers...</div>
-              ) : filteredLeads.length ? filteredLeads.map((lead) => (
+              ) : filteredLeads.length ? pagedLeads.map((lead) => (
                 <div key={lead.id} className="admin-leads-grid admin-table-row grid gap-3 px-3 py-4 text-sm">
                   <label className="flex items-center gap-2">
                     <input
@@ -714,6 +728,32 @@ export default function AdminPage() {
               )}
             </div>
           </div>
+
+          {filteredLeads.length > LEADS_PAGE_SIZE ? (
+            <div className="admin-pagination mt-4 flex flex-col gap-3 rounded-2xl p-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="admin-muted text-sm">
+                Page {currentLeadPage} of {totalLeadPages}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLeadPage((page) => Math.max(1, page - 1))}
+                  disabled={currentLeadPage <= 1}
+                  className="admin-button admin-button-muted rounded-full px-4 py-2 text-xs font-semibold transition disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLeadPage((page) => Math.min(totalLeadPages, page + 1))}
+                  disabled={currentLeadPage >= totalLeadPages}
+                  className="admin-button admin-button-muted rounded-full px-4 py-2 text-xs font-semibold transition disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="admin-card rounded-3xl p-6">

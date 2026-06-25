@@ -210,7 +210,8 @@ button, input, textarea, select {
   overflow-y: hidden;
 }
 
-.admin-bulkbar {
+.admin-bulkbar,
+.admin-pagination {
   background: color-mix(in srgb, var(--admin-card-solid) 72%, transparent);
   border: 1px solid var(--admin-line);
 }
