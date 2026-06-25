@@ -19,6 +19,7 @@ export type LeadRecord = {
   firstName?: string;
   lastName?: string;
   email: string;
+  mobilePhone?: string;
   heardFrom?: string;
   role: string;
   modality: string;
@@ -30,6 +31,8 @@ export type LeadRecord = {
   overall: number;
   dimensions?: Record<string, number>;
   answers?: Record<string, number>;
+  baseline?: { b1: number; b2: number } | null;
+  usageVal?: number | null;
   createdAt: string;
 };
 
@@ -93,6 +96,38 @@ export const saveLead = async (lead: LeadRecord): Promise<void> => {
     return;
   }
   await appendLocal('leads.json', lead);
+};
+
+export const listLeads = async (): Promise<LeadRecord[]> => {
+  let leads: LeadRecord[] = [];
+  if (LEADS_TABLE) {
+    const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
+    const doc = await getDocClient();
+    let lastKey: any = undefined;
+    do {
+      const result: any = await doc.send(
+        new ScanCommand({ TableName: LEADS_TABLE, ExclusiveStartKey: lastKey })
+      );
+      leads = leads.concat((result.Items as LeadRecord[]) || []);
+      lastKey = result.LastEvaluatedKey;
+    } while (lastKey);
+  } else {
+    leads = await readLocal<LeadRecord>('leads.json');
+  }
+
+  return leads.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+};
+
+export const getLead = async (id: string): Promise<LeadRecord | null> => {
+  if (!id) return null;
+  if (LEADS_TABLE) {
+    const { GetCommand } = await import('@aws-sdk/lib-dynamodb');
+    const doc = await getDocClient();
+    const result: any = await doc.send(new GetCommand({ TableName: LEADS_TABLE, Key: { id } }));
+    return (result.Item as LeadRecord) || null;
+  }
+  const leads = await readLocal<LeadRecord>('leads.json');
+  return leads.find((lead) => lead.id === id) || null;
 };
 
 export const logEvent = async (

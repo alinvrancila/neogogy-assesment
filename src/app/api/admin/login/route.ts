@@ -24,9 +24,10 @@ export async function POST(request: NextRequest) {
   }
 
   const response = NextResponse.json({ ok: true, username: name });
+  const secure = request.nextUrl.protocol === 'https:';
   response.cookies.set(ADMIN_COOKIE, token, {
     httpOnly: true,
-    secure: true,
+    secure,
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60 * 8
@@ -34,8 +35,14 @@ export async function POST(request: NextRequest) {
   return response;
 }
 
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(ADMIN_COOKIE, '', { httpOnly: true, secure: true, sameSite: 'lax', path: '/', maxAge: 0 });
+  response.cookies.set(ADMIN_COOKIE, '', {
+    httpOnly: true,
+    secure: request.nextUrl.protocol === 'https:',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0
+  });
   return response;
 }

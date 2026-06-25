@@ -11,11 +11,12 @@ export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { email, name, firstName, lastName, heardFrom, role, modality, consent, answers, baseline, usageVal, sessionId } = body as {
+  const { email, name, firstName, lastName, mobilePhone, heardFrom, role, modality, consent, answers, baseline, usageVal, sessionId } = body as {
     email: string;
     name?: string;
     firstName?: string;
     lastName?: string;
+    mobilePhone?: string;
     heardFrom?: string;
     role?: string;
     modality?: string;
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
     firstName: firstName || '',
     lastName: lastName || '',
     email,
+    mobilePhone: mobilePhone || '',
     heardFrom: heardFrom || '',
     role: role || '',
     modality: modality || '',
@@ -55,6 +57,8 @@ export async function POST(request: NextRequest) {
     overall: result.overall,
     dimensions: dimScores,
     answers,
+    baseline,
+    usageVal,
     createdAt: new Date().toISOString()
   };
 

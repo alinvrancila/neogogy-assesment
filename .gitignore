@@ -35,7 +35,7 @@ Thumbs.db
 .idea/
 
 # === Local runtime data (PII — lives in DynamoDB) ===
-data/
+/data/
 
 # === Local infra state / agent settings ===
 deploy/.provision.txt

@@ -1,4 +1,5 @@
 import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
+import path from 'path';
 
 /**
  * Admin user store backed by DynamoDB (USERS_TABLE). Passwords are never stored
@@ -10,6 +11,8 @@ import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 
 const REGION = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'ap-southeast-1';
 const USERS_TABLE = process.env.USERS_TABLE || '';
+const localDir = path.join(process.cwd(), 'data');
+const localUsersFile = 'admin-users.json';
 
 export type AdminUser = {
   username: string;
@@ -48,10 +51,33 @@ const getDocClient = async () => {
   return docClientPromise;
 };
 
-export const usersEnabled = () => Boolean(USERS_TABLE);
+const readLocalUsers = async (): Promise<AdminUser[]> => {
+  const fs = await import('fs/promises');
+  try {
+    const raw = await fs.readFile(path.join(localDir, localUsersFile), 'utf-8');
+    return (JSON.parse(raw) as AdminUser[]) || [];
+  } catch {
+    return [];
+  }
+};
+
+const writeLocalUsers = async (users: AdminUser[]): Promise<void> => {
+  const fs = await import('fs/promises');
+  await fs.mkdir(localDir, { recursive: true });
+  await fs.writeFile(
+    path.join(localDir, localUsersFile),
+    JSON.stringify(users.sort((a, b) => a.username.localeCompare(b.username)), null, 2),
+    'utf-8'
+  );
+};
+
+export const usersEnabled = () => true;
 
 export const getUser = async (username: string): Promise<AdminUser | null> => {
-  if (!USERS_TABLE) return null;
+  if (!USERS_TABLE) {
+    const users = await readLocalUsers();
+    return users.find((u) => u.username === username) || null;
+  }
   const { GetCommand } = await import('@aws-sdk/lib-dynamodb');
   const doc = await getDocClient();
   const result: any = await doc.send(new GetCommand({ TableName: USERS_TABLE, Key: { username } }));
@@ -59,7 +85,12 @@ export const getUser = async (username: string): Promise<AdminUser | null> => {
 };
 
 export const listUsers = async (): Promise<Array<{ username: string; createdAt: string; updatedAt: string }>> => {
-  if (!USERS_TABLE) return [];
+  if (!USERS_TABLE) {
+    const users = await readLocalUsers();
+    return users
+      .map((u) => ({ username: u.username, createdAt: u.createdAt, updatedAt: u.updatedAt }))
+      .sort((a, b) => a.username.localeCompare(b.username));
+  }
   const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
   const doc = await getDocClient();
   const result: any = await doc.send(
@@ -71,7 +102,21 @@ export const listUsers = async (): Promise<Array<{ username: string; createdAt: 
 };
 
 export const upsertUser = async (username: string, password: string): Promise<void> => {
-  if (!USERS_TABLE) throw new Error('USERS_TABLE not configured');
+  if (!USERS_TABLE) {
+    const users = await readLocalUsers();
+    const existing = users.find((u) => u.username === username);
+    const { salt, hash } = hashPassword(password);
+    const now = new Date().toISOString();
+    const next: AdminUser = {
+      username,
+      salt,
+      hash,
+      createdAt: existing?.createdAt || now,
+      updatedAt: now
+    };
+    await writeLocalUsers(users.filter((u) => u.username !== username).concat(next));
+    return;
+  }
   const { PutCommand } = await import('@aws-sdk/lib-dynamodb');
   const doc = await getDocClient();
   const existing = await getUser(username);
@@ -92,7 +137,11 @@ export const upsertUser = async (username: string, password: string): Promise<vo
 };
 
 export const deleteUser = async (username: string): Promise<void> => {
-  if (!USERS_TABLE) throw new Error('USERS_TABLE not configured');
+  if (!USERS_TABLE) {
+    const users = await readLocalUsers();
+    await writeLocalUsers(users.filter((u) => u.username !== username));
+    return;
+  }
   const { DeleteCommand } = await import('@aws-sdk/lib-dynamodb');
   const doc = await getDocClient();
   await doc.send(new DeleteCommand({ TableName: USERS_TABLE, Key: { username } }));

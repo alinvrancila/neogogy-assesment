@@ -11,7 +11,7 @@ const Html = ({ html, ...rest }: { html: string } & React.HTMLAttributes<HTMLSpa
 
 type GateState = { submitting: boolean; error: string | null };
 
-export type GateData = { firstName: string; lastName: string; email: string; heardFrom: string; consent: boolean };
+export type GateData = { firstName: string; lastName: string; email: string; mobilePhone: string; heardFrom: string; consent: boolean };
 
 export type ResultsProps = {
   result: CompassResult;
@@ -217,6 +217,7 @@ function GateForm({ gate, onSubmit }: { gate?: GateState; onSubmit?: (d: GateDat
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [mobilePhone, setMobilePhone] = useState('');
   const [heardFrom, setHeardFrom] = useState('');
   const [heardOther, setHeardOther] = useState('');
   const [consent, setConsent] = useState(false);
@@ -229,7 +230,7 @@ function GateForm({ gate, onSubmit }: { gate?: GateState; onSubmit?: (d: GateDat
         onSubmit={(e) => {
           e.preventDefault();
           const heard = heardFrom === 'Other' ? (heardOther.trim() ? `Other: ${heardOther.trim()}` : 'Other') : heardFrom;
-          onSubmit?.({ firstName, lastName, email, heardFrom: heard, consent });
+          onSubmit?.({ firstName, lastName, email, mobilePhone, heardFrom: heard, consent });
         }}
       >
         <div className="grid2">
@@ -242,9 +243,15 @@ function GateForm({ gate, onSubmit }: { gate?: GateState; onSubmit?: (d: GateDat
             <input id="nfc-last" type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} />
           </div>
         </div>
-        <div className="field">
-          <label htmlFor="nfc-email">Email</label>
-          <input id="nfc-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        <div className="grid2">
+          <div className="field">
+            <label htmlFor="nfc-email">Email</label>
+            <input id="nfc-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="nfc-mobile">Mobile phone <span className="opt-tag">optional</span></label>
+            <input id="nfc-mobile" type="tel" inputMode="tel" autoComplete="tel" value={mobilePhone} onChange={(e) => setMobilePhone(e.target.value)} placeholder="+63 912 345 6789" />
+          </div>
         </div>
         <div className="field">
           <label htmlFor="nfc-heard">How did you hear about this assessment?</label>

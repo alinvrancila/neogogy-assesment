@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useState, type CSSProperties } from 'react';
 import { dimensions, axes } from '@/data/compass';
 import { bandOf, bandHex, type CompassResult } from '@/lib/engine';
 
@@ -178,19 +178,15 @@ export function IcanMark({ size = 48 }: { size?: number }) {
 }
 
 /* ----------------------------------------------------------------------------
-   ICAN LOGO  ·  served from /public/ican-logo.png; hides itself if absent.
+   ICAN LOGO  ·  PNG brand asset from public/ican-logo.png.
    ---------------------------------------------------------------------------- */
 export function IcanLogo({ height = 46, className }: { height?: number; className?: string }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) return <IcanMark size={height} />;
   return (
-    // eslint-disable-next-line @next/next/no-img-element
     <img
       src="/ican-logo.png"
-      alt="International Center for Applied Neogogy"
+      alt="ICAN.ph - International Center for Applied Neogogy"
       className={className}
-      style={{ height, width: 'auto', display: 'block' }}
-      onError={() => setFailed(true)}
+      style={{ '--ican-logo-height': `${height}px` } as CSSProperties}
     />
   );
 }

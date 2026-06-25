@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Crimson_Pro, Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 
 export const viewport: Viewport = {
@@ -8,8 +8,24 @@ export const viewport: Viewport = {
   themeColor: '#141210'
 };
 
-const crimson = Crimson_Pro({ subsets: ['latin'], weight: ['400', '600', '700'], variable: '--font-serif', display: 'swap' });
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
+const crimson = localFont({
+  src: [
+    { path: '../fonts/Spectral-Regular.ttf', weight: '400' },
+    { path: '../fonts/Spectral-SemiBold.ttf', weight: '600' },
+    { path: '../fonts/Spectral-Bold.ttf', weight: '700' }
+  ],
+  variable: '--font-serif',
+  display: 'swap'
+});
+const inter = localFont({
+  src: [
+    { path: '../fonts/IBMPlexMono-Regular.ttf', weight: '400' },
+    { path: '../fonts/IBMPlexMono-Medium.ttf', weight: '500' },
+    { path: '../fonts/IBMPlexMono-SemiBold.ttf', weight: '600' }
+  ],
+  variable: '--font-sans',
+  display: 'swap'
+});
 
 const SHARE_TITLE = 'The Neogogy Formation Compass';
 const SHARE_DESC = 'Is AI making you wiser, or just faster? A free, research-backed diagnostic of how you learn with AI, with a personal report. From the International Center for Applied Neogogy (ICAN).';

@@ -7,7 +7,7 @@ import {
   type RoleId, type Dimension, type Item, type Scenario
 } from '@/data/compass';
 import { compute, type Answers, type Baseline, type CompassResult } from '@/lib/engine';
-import { CompassGauge, ReportPreview, RadarSvg, QuadrantMap } from './Visuals';
+import { CompassGauge, IcanLogo, ReportPreview, RadarSvg, QuadrantMap } from './Visuals';
 import Results, { ThankYou, type GateData } from './Results';
 
 type Step =
@@ -180,7 +180,7 @@ export default function CompassApp() {
     }
   };
 
-  const submitGate = async ({ firstName, lastName, email, heardFrom, consent }: GateData) => {
+  const submitGate = async ({ firstName, lastName, email, mobilePhone, heardFrom, consent }: GateData) => {
     const name = `${firstName} ${lastName}`.trim();
     if (!firstName.trim() || !email.trim()) {
       setGate({ submitting: false, error: 'First name and email are required.' });
@@ -191,7 +191,7 @@ export default function CompassApp() {
       const res = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, name, email, heardFrom, consent, role, modality, answers, baseline, usageVal, sessionId: sessionId.current })
+        body: JSON.stringify({ firstName, lastName, name, email, mobilePhone, heardFrom, consent, role, modality, answers, baseline, usageVal, sessionId: sessionId.current })
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
@@ -313,13 +313,12 @@ function Hero({ onStart }: { onStart: () => void }) {
     <section className="screen" id="hero">
       <div className="wrap">
         <div className="brandbar">
-          <span className="wordmark">International Center for Applied Neogogy <span className="wm-ican">(ICAN)</span></span>
+          <IcanLogo height={132} className="brand-logo" />
           <span className="bsep" />
           <span className="btext">The Formation Compass<br />a diagnostic instrument</span>
         </div>
         <div className="hero-grid">
           <div className="hero-copy">
-            <span className="eyebrow">Learning at the Speed of Mind</span>
             <h1 className="display">Is AI making you <em>wiser</em>,<br />or just faster?</h1>
             <p className="lede">A free, research-backed diagnostic that reveals whether your way of learning with AI is forming you or quietly hollowing you out. In about ten minutes you will discover your formation persona, see exactly where you are strong and exposed, and get a personalized report to keep.</p>
             <div className="hero-cta">
@@ -513,14 +512,23 @@ function Quiz({
     <section className="screen" id="quiz">
       <div className="qbar">
         <div className="wrap qbar-in">
-          <div className="mini"><CompassGauge value={liveEstimate} size={42} stroke={8} /></div>
-          <div className="meta">
-            <div className="dimname">{dimName}</div>
-            <div className="count">{count}</div>
-            {role && (
-              <div className="lens">Assessing <strong>{subjectLabel[role]}</strong>{modality ? <> · “{modality}”</> : null}</div>
-            )}
-            <div className="progress-track"><div className="progress-fill" style={{ width: `${progress}%` }} /></div>
+          <div className="qbar-brand" aria-label="The Neogogy Formation Compass by ICAN">
+            <span className="app-title">The Neogogy Formation Compass</span>
+            <span className="app-sub">ICAN.ph assessment</span>
+          </div>
+          <div className="qbar-status">
+            <div className="meta">
+              <div className="dimname">{dimName}</div>
+              <div className="count">{count}</div>
+              {role && (
+                <div className="lens">
+                  <span className="lens-label">Assessing</span>
+                  <strong>{subjectLabel[role]}</strong>
+                  {modality ? <span className="lens-modality">&quot;{modality}&quot;</span> : null}
+                </div>
+              )}
+              <div className="progress-track"><div className="progress-fill" style={{ width: `${progress}%` }} /></div>
+            </div>
           </div>
         </div>
       </div>
@@ -540,7 +548,7 @@ function Quiz({
 
         {step.type === 'dimintro' && (
           <div className="dim-intro">
-            <div className="ring">Dimension {step.dim.n} · {step.dim.axis === 'resilience' ? 'Resilience' : 'Readiness'} axis</div>
+            <span className="ring">Dimension {step.dim.n} · {step.dim.axis === 'resilience' ? 'Resilience' : 'Readiness'} axis</span>
             <h2>{step.dim.title}</h2>
             <span className="principle">◈ Neogogy principle · {step.dim.principle}</span>
             <p className="brief">{step.dim.brief}</p>

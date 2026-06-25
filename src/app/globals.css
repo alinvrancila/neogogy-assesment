@@ -30,3 +30,246 @@ button, input, textarea, select {
 ::selection {
   background: rgba(214, 154, 45, 0.2);
 }
+
+/* Admin dashboard theme surface. Scoped so the assessment UI keeps its own system. */
+.admin-shell {
+  --admin-bg: #f5eadc;
+  --admin-bg-soft: #fbf6ee;
+  --admin-card: rgba(255, 252, 246, 0.88);
+  --admin-card-solid: #fffaf2;
+  --admin-subcard: #fff7ec;
+  --admin-line: #e2d4bf;
+  --admin-line-strong: #d6c4a8;
+  --admin-text: #26201c;
+  --admin-title: #5f100d;
+  --admin-muted: #6a5e54;
+  --admin-muted-soft: #8b7b68;
+  --admin-accent: #9e1d20;
+  --admin-gold: #85714e;
+  --admin-button-text: #fff8ec;
+  --admin-danger: #b3261e;
+  color-scheme: light;
+  background:
+    radial-gradient(900px 520px at 18% 0%, rgba(255, 252, 246, 0.86), transparent 58%),
+    radial-gradient(920px 560px at 86% 4%, rgba(239, 220, 192, 0.64), transparent 56%),
+    var(--admin-bg);
+  color: var(--admin-text);
+}
+
+.admin-shell[data-theme='dark'] {
+  --admin-bg: #141210;
+  --admin-bg-soft: #1c1714;
+  --admin-card: rgba(0, 0, 0, 0.52);
+  --admin-card-solid: #181411;
+  --admin-subcard: #141210;
+  --admin-line: rgba(214, 154, 45, 0.24);
+  --admin-line-strong: #334155;
+  --admin-text: #f7f1e3;
+  --admin-title: #ffffff;
+  --admin-muted: #cbd5e1;
+  --admin-muted-soft: #94a3b8;
+  --admin-accent: #d69a2d;
+  --admin-gold: #d69a2d;
+  --admin-button-text: #141210;
+  --admin-danger: #e35d55;
+  color-scheme: dark;
+  background:
+    radial-gradient(900px 520px at 18% 0%, rgba(105, 15, 13, 0.18), transparent 58%),
+    radial-gradient(920px 560px at 86% 4%, rgba(214, 154, 45, 0.09), transparent 56%),
+    var(--admin-bg);
+}
+
+.admin-card,
+.admin-modal {
+  background: var(--admin-card);
+  border: 1px solid var(--admin-line);
+  color: var(--admin-text);
+  box-shadow: 0 22px 60px -40px rgba(38, 32, 28, 0.38);
+}
+
+.admin-subcard {
+  background: var(--admin-subcard);
+  border: 1px solid var(--admin-line);
+}
+
+.admin-title,
+.admin-modal-title,
+.admin-strong,
+.admin-stat-value {
+  color: var(--admin-title);
+}
+
+.admin-eyebrow,
+.admin-accent,
+.admin-mobile-label {
+  color: var(--admin-gold);
+}
+
+.admin-muted {
+  color: var(--admin-muted);
+}
+
+.admin-muted-soft {
+  color: var(--admin-muted-soft);
+}
+
+.admin-input {
+  background: var(--admin-bg-soft);
+  border: 1px solid var(--admin-line-strong);
+  color: var(--admin-text);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.admin-input::placeholder {
+  color: var(--admin-muted-soft);
+}
+
+.admin-input:focus {
+  border-color: var(--admin-gold);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--admin-gold) 24%, transparent);
+}
+
+.admin-button {
+  border: 1px solid transparent;
+}
+
+.admin-button-primary {
+  background: var(--admin-accent);
+  color: var(--admin-button-text);
+}
+
+.admin-button-primary:hover {
+  filter: brightness(1.06);
+}
+
+.admin-button-outline {
+  border-color: var(--admin-gold);
+  color: var(--admin-gold);
+}
+
+.admin-button-outline:hover,
+.admin-button-muted:hover {
+  background: var(--admin-gold);
+  border-color: var(--admin-gold);
+  color: var(--admin-button-text);
+}
+
+.admin-button-muted {
+  border-color: var(--admin-line-strong);
+  color: var(--admin-muted);
+}
+
+.admin-button-danger {
+  border-color: var(--admin-line-strong);
+  color: var(--admin-muted);
+}
+
+.admin-button-danger:hover {
+  border-color: var(--admin-danger);
+  color: var(--admin-danger);
+}
+
+.admin-theme-toggle {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.admin-theme-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.admin-error {
+  color: var(--admin-danger);
+}
+
+.admin-error-box {
+  border: 1px solid color-mix(in srgb, var(--admin-danger) 42%, transparent);
+  background: color-mix(in srgb, var(--admin-danger) 11%, transparent);
+  color: var(--admin-danger);
+}
+
+.admin-table {
+  border: 1px solid var(--admin-line);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.admin-bulkbar {
+  background: color-mix(in srgb, var(--admin-card-solid) 72%, transparent);
+  border: 1px solid var(--admin-line);
+}
+
+.admin-checkbox {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--admin-accent);
+  cursor: pointer;
+}
+
+.admin-table-head {
+  background: color-mix(in srgb, var(--admin-card-solid) 82%, var(--admin-gold) 18%);
+  color: var(--admin-muted-soft);
+}
+
+.admin-table-body > * + * {
+  border-top: 1px solid var(--admin-line);
+}
+
+.admin-table-row {
+  background: color-mix(in srgb, var(--admin-card-solid) 84%, transparent);
+}
+
+.admin-table-row:nth-child(even) {
+  background: color-mix(in srgb, var(--admin-subcard) 86%, transparent);
+}
+
+@media (min-width: 768px) {
+  .admin-leads-grid {
+    display: grid;
+    min-width: 1080px;
+    grid-template-columns:
+      44px
+      minmax(138px, 0.9fr)
+      minmax(205px, 1.35fr)
+      148px
+      96px
+      130px
+      64px
+      134px
+      126px;
+    column-gap: 0.5rem;
+    align-items: center;
+  }
+
+  .admin-leads-grid > * {
+    min-width: 0;
+  }
+}
+
+.admin-form-row {
+  border-top: 1px solid var(--admin-line);
+}
+
+.admin-modal-backdrop {
+  background: rgba(20, 18, 16, 0.72);
+}
+
+.admin-modal {
+  border-radius: 1rem;
+}
+
+.admin-modal-head {
+  border-bottom: 1px solid var(--admin-line);
+}
