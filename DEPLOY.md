@@ -3,7 +3,7 @@
 ## What is running
 
 - **Host:** AWS EC2 `t3.micro` (Amazon Linux 2023), region `ap-southeast-1`.
-  - Instance: `i-045e9a508a81eb188`
+  - Instance: `i-06cc3b7e75a1ecac6`
   - Elastic IP (static): **52.77.118.48**
   - Security group `neogogy-sg` (`sg-0b80f7572d5d02196`): port 22 from the deployer IP only, ports 80 and 443 open.
   - 2 GB swap so `next build` does not run out of memory.
@@ -34,7 +34,7 @@ Change it to the Elastic IP:
 Then obtain SSL (one command, already staged on the server):
 
 ```
-ssh -i C:\Users\lci_d\neogogy-key.pem ec2-user@52.77.118.48 "bash setup-ssl.sh"
+ssh -i C:\Users\lcfaj\OneDrive\Documents\Neogogy.Ai\keys\neogogy-fresh-20260625-180854.pem ec2-user@52.77.118.48 "bash setup-ssl.sh"
 ```
 
 This runs certbot for `assessment.neogogy.ai`, switches nginx to HTTPS, adds the
@@ -98,7 +98,7 @@ powershell -ExecutionPolicy Bypass -File deploy\redeploy.ps1
 
 ```
 # SSH in
-ssh -i C:\Users\lci_d\neogogy-key.pem ec2-user@52.77.118.48
+ssh -i C:\Users\lcfaj\OneDrive\Documents\Neogogy.Ai\keys\neogogy-fresh-20260625-180854.pem ec2-user@52.77.118.48
 
 # service
 sudo systemctl status neogogy
@@ -114,7 +114,7 @@ curl "https://assessment.neogogy.ai/api/stats?token=TOKEN"
 
 ## Secrets and keys
 
-- SSH private key: `C:\Users\lci_d\neogogy-key.pem` (keep safe, not in the repo).
+- SSH private key: `C:\Users\lcfaj\OneDrive\Documents\Neogogy.Ai\keys\neogogy-fresh-20260625-180854.pem` (keep safe, not in the repo).
 - The server holds the AWS access key in `/opt/neogogy/app/.env.production`. For
   hardening, replace it with a scoped key limited to DynamoDB (and SES once on),
   or migrate to an EC2 instance role if IAM permissions allow.

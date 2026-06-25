@@ -5,7 +5,7 @@
 #
 $ErrorActionPreference = "Stop"
 $root = Split-Path $PSScriptRoot -Parent
-$key  = "C:\Users\lci_d\neogogy-key.pem"
+$key  = "C:\Users\lcfaj\OneDrive\Documents\Neogogy.Ai\keys\neogogy-fresh-20260625-180854.pem"
 $ip   = "52.77.118.48"
 $opts = @("-i", $key, "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null")
 
