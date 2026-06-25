@@ -201,12 +201,7 @@ button, input, textarea, select {
 }
 
 .admin-dashboard-wrap {
-  width: min(100%, 1720px);
-}
-
-.admin-wide-pad {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+  width: min(100%, 1400px);
 }
 
 .admin-table {
@@ -237,6 +232,10 @@ button, input, textarea, select {
   display: flex;
   align-items: center;
   background: color-mix(in srgb, var(--admin-card-solid) 82%, var(--admin-gold) 18%);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .admin-table-head > *:last-child {
@@ -267,15 +266,15 @@ button, input, textarea, select {
     width: 100%;
     min-width: 980px;
     grid-template-columns:
-      44px
-      minmax(128px, 0.9fr)
-      minmax(184px, 1.25fr)
-      minmax(86px, 0.58fr)
-      minmax(72px, 0.48fr)
-      minmax(112px, 0.74fr)
+      64px
+      minmax(118px, 0.82fr)
+      minmax(190px, 1fr)
+      minmax(144px, 0.78fr)
+      minmax(84px, 0.48fr)
+      minmax(118px, 0.72fr)
       50px
-      minmax(132px, 0.82fr)
-      98px;
+      minmax(126px, 0.72fr)
+      102px;
     column-gap: 0.5rem;
     align-items: center;
   }
@@ -292,13 +291,6 @@ button, input, textarea, select {
 
   .admin-leads-grid {
     min-width: 0;
-  }
-}
-
-@media (min-width: 1600px) {
-  .admin-wide-pad {
-    padding-left: 200px;
-    padding-right: 200px;
   }
 }
 

@@ -561,7 +561,7 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="admin-shell admin-wide-pad min-h-screen px-2 py-6 sm:px-4 lg:px-6" data-theme={theme}>
+    <main className="admin-shell min-h-screen px-4 py-6 sm:px-6 lg:px-8" data-theme={theme}>
       {selectedLead ? <LeadDetailPanel lead={selectedLead} onClose={() => setSelectedLead(null)} /> : null}
       <div className="admin-dashboard-wrap mx-auto space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -682,7 +682,9 @@ export default function AdminPage() {
                   </div>
                   <div className="min-w-0">
                     <span className="admin-mobile-label text-xs uppercase tracking-[0.14em] md:hidden">Mobile</span>
-                    <p className="admin-muted break-all md:break-normal md:whitespace-nowrap">{lead.mobilePhone || '-'}</p>
+                    <p className="admin-muted break-all md:truncate md:break-normal md:whitespace-nowrap" title={lead.mobilePhone || '-'}>
+                      {lead.mobilePhone || '-'}
+                    </p>
                   </div>
                   <div>
                     <span className="admin-mobile-label text-xs uppercase tracking-[0.14em] md:hidden">Role</span>
