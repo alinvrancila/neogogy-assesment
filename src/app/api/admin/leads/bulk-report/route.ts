@@ -6,8 +6,8 @@ import type { Answers, Baseline } from '@/lib/engine';
 
 export const runtime = 'nodejs';
 
-const safeFilePart = (value: string) =>
-  value.trim().replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') || 'Result';
+const safeFilePart = (value: unknown, fallback = 'Result') =>
+  String(value || fallback).trim().replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') || fallback;
 
 const crcTable = (() => {
   const table = new Uint32Array(256);
@@ -125,27 +125,43 @@ export async function POST(request: NextRequest) {
   }
 
   const files: ZipFile[] = [];
+  const skipped: string[] = [];
   for (const id of ids) {
     const lead = await getLead(id);
-    if (!lead?.answers) continue;
-    const pdf = await generateNeogogyPdfFromInputs({
-      name: lead.name || '',
-      role: lead.role || '',
-      modality: lead.modality || '',
-      answers: lead.answers as Answers,
-      baseline: (lead.baseline as Baseline | null | undefined) ?? null,
-      usageVal: lead.usageVal ?? null
-    });
-    files.push({
-      name: `${String(files.length + 1).padStart(2, '0')}_${safeFilePart(lead.name)}_${safeFilePart(lead.personaName || lead.persona)}.pdf`,
-      data: pdf
-    });
+    if (!lead?.answers) {
+      skipped.push(`${id}: no stored answers`);
+      continue;
+    }
+    try {
+      const pdf = await generateNeogogyPdfFromInputs({
+        name: lead.name || '',
+        role: lead.role || '',
+        modality: lead.modality || '',
+        answers: lead.answers as Answers,
+        baseline: (lead.baseline as Baseline | null | undefined) ?? null,
+        usageVal: lead.usageVal ?? null
+      });
+      files.push({
+        name: `${String(files.length + 1).padStart(2, '0')}_${safeFilePart(lead.name, 'Participant')}_${safeFilePart(lead.personaName || lead.persona, 'Result')}.pdf`,
+        data: pdf
+      });
+    } catch (error) {
+      console.error('bulk report failed for lead', id, error);
+      skipped.push(`${lead.name || id}: report could not be generated`);
+    }
   }
 
   if (!files.length) {
     return new Response(JSON.stringify({ error: 'Selected submissions do not have stored answers' }), {
       status: 422,
       headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  if (skipped.length) {
+    files.push({
+      name: '_bulk-download-warnings.txt',
+      data: Buffer.from(`Some selected submissions were skipped:\n\n${skipped.join('\n')}\n`, 'utf-8')
     });
   }
 

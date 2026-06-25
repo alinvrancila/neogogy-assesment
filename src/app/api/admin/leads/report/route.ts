@@ -6,8 +6,8 @@ import type { Answers, Baseline } from '@/lib/engine';
 
 export const runtime = 'nodejs';
 
-const safeFilePart = (value: string) =>
-  value.trim().replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') || 'Result';
+const safeFilePart = (value: unknown, fallback = 'Result') =>
+  String(value || fallback).trim().replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '') || fallback;
 
 export async function GET(request: NextRequest) {
   if (!isAdminAuthed(request)) {
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="Neogogy_Formation_Compass_${safeFilePart(lead.name)}.pdf"`
+      'Content-Disposition': `inline; filename="Neogogy_Formation_Compass_${safeFilePart(lead.name, 'Participant')}.pdf"`
     }
   });
 }
