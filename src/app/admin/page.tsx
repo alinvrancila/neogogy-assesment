@@ -561,7 +561,7 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="admin-shell min-h-screen px-2 py-6 sm:px-4 lg:px-6" data-theme={theme}>
+    <main className="admin-shell admin-wide-pad min-h-screen px-2 py-6 sm:px-4 lg:px-6" data-theme={theme}>
       {selectedLead ? <LeadDetailPanel lead={selectedLead} onClose={() => setSelectedLead(null)} /> : null}
       <div className="admin-dashboard-wrap mx-auto space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4">

@@ -204,6 +204,11 @@ button, input, textarea, select {
   width: min(100%, 1720px);
 }
 
+.admin-wide-pad {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
 .admin-table {
   border: 1px solid var(--admin-line);
   overflow-x: auto;
@@ -287,6 +292,13 @@ button, input, textarea, select {
 
   .admin-leads-grid {
     min-width: 0;
+  }
+}
+
+@media (min-width: 1600px) {
+  .admin-wide-pad {
+    padding-left: 200px;
+    padding-right: 200px;
   }
 }
 
