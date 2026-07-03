@@ -60,10 +60,12 @@ jobs:
             .env.example
 
       - name: Authorize runner SSH access
+        timeout-minutes: 2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION || 'ap-southeast-1' }}
+          AWS_PAGER: ""
           EC2_SECURITY_GROUP_ID: ${{ secrets.EC2_SECURITY_GROUP_ID }}
           EC2_PORT: ${{ secrets.EC2_PORT || '22' }}
         run: |
@@ -72,21 +74,27 @@ jobs:
           test -n "$AWS_SECRET_ACCESS_KEY"
           test -n "$EC2_SECURITY_GROUP_ID"
 
-          RUNNER_IP="$(curl -fsS https://checkip.amazonaws.com | tr -d '[:space:]')"
+          RUNNER_IP="$(curl --max-time 15 -fsS https://checkip.amazonaws.com | tr -d '[:space:]' || true)"
+          if [ -z "$RUNNER_IP" ]; then
+            RUNNER_IP="$(curl --max-time 15 -fsS https://api.ipify.org | tr -d '[:space:]')"
+          fi
           test -n "$RUNNER_IP"
           echo "RUNNER_IP=$RUNNER_IP" >> "$GITHUB_ENV"
 
           aws ec2 authorize-security-group-ingress \
+            --no-cli-pager \
             --region "$AWS_REGION" \
             --group-id "$EC2_SECURITY_GROUP_ID" \
             --ip-permissions "IpProtocol=tcp,FromPort=$EC2_PORT,ToPort=$EC2_PORT,IpRanges=[{CidrIp=${RUNNER_IP}/32,Description=github-actions-${GITHUB_RUN_ID}}]" \
           || aws ec2 describe-security-groups \
+            --no-cli-pager \
             --region "$AWS_REGION" \
             --group-ids "$EC2_SECURITY_GROUP_ID" \
             --query "SecurityGroups[0].IpPermissions[?FromPort==\`$EC2_PORT\`].IpRanges[?CidrIp==\`${RUNNER_IP}/32\`]" \
             --output text | grep -q "$RUNNER_IP/32"
 
       - name: Install SSH key
+        timeout-minutes: 2
         env:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -154,12 +162,14 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION || 'ap-southeast-1' }}
+          AWS_PAGER: ""
           EC2_SECURITY_GROUP_ID: ${{ secrets.EC2_SECURITY_GROUP_ID }}
           EC2_PORT: ${{ secrets.EC2_PORT || '22' }}
         run: |
           set -euo pipefail
           if [ -n "${RUNNER_IP:-}" ]; then
             aws ec2 revoke-security-group-ingress \
+              --no-cli-pager \
               --region "$AWS_REGION" \
               --group-id "$EC2_SECURITY_GROUP_ID" \
               --protocol tcp \
