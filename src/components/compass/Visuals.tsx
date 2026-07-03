@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useId, useState, type CSSProperties } from 'react';
 import { dimensions, axes } from '@/data/compass';
 import { bandOf, bandHex, type CompassResult } from '@/lib/engine';
@@ -182,11 +183,14 @@ export function IcanMark({ size = 48 }: { size?: number }) {
    ---------------------------------------------------------------------------- */
 export function IcanLogo({ height = 46, className }: { height?: number; className?: string }) {
   return (
-    <img
+    <Image
       src="/ican-logo.png"
       alt="ICAN.ph - International Center for Applied Neogogy"
+      width={1039}
+      height={740}
       className={className}
       style={{ '--ican-logo-height': `${height}px` } as CSSProperties}
+      priority
     />
   );
 }

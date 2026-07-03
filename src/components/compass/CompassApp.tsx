@@ -143,7 +143,7 @@ export default function CompassApp() {
     });
   }, [finish]);
 
-  const prev = () => setPos((p) => Math.max(0, p - 1));
+  const prev = useCallback(() => setPos((p) => Math.max(0, p - 1)), []);
 
   const chooseUsage = (v: number) => {
     setUsageVal(v);
@@ -153,10 +153,10 @@ export default function CompassApp() {
     setAnswers((a) => ({ ...a, [id]: v }));
     setTimeout(next, 240);
   };
-  const chooseItem = (id: string, v: number) => {
+  const chooseItem = useCallback((id: string, v: number) => {
     setAnswers((a) => ({ ...a, [id]: v }));
     setTimeout(next, 220);
-  };
+  }, [next]);
 
   // Keyboard support during the quiz.
   useEffect(() => {
@@ -169,7 +169,7 @@ export default function CompassApp() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [screen, pos, next]);
+  }, [screen, pos, next, prev, chooseItem]);
 
   const pickRole = (id: RoleId) => {
     setRole(id);

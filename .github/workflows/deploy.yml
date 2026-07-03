@@ -1,0 +1,122 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Package source
+        run: |
+          tar -czf app.tar.gz \
+            --exclude=node_modules \
+            --exclude=.next \
+            --exclude=.git \
+            --exclude=app.tar.gz \
+            src \
+            public \
+            scripts \
+            package.json \
+            package-lock.json \
+            next.config.mjs \
+            postcss.config.cjs \
+            tailwind.config.ts \
+            tsconfig.json \
+            .env.example
+
+      - name: Install SSH key
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          test -n "$EC2_SSH_KEY"
+          test -n "$EC2_HOST"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/neogogy_deploy_key
+          chmod 600 ~/.ssh/neogogy_deploy_key
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload release files
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_PORT: ${{ secrets.EC2_PORT || '22' }}
+        run: |
+          test -n "$EC2_USER"
+          scp -i ~/.ssh/neogogy_deploy_key -P "$EC2_PORT" \
+            app.tar.gz deploy/neogogy.service deploy/nginx.conf \
+            "$EC2_USER@$EC2_HOST:/home/$EC2_USER/"
+
+      - name: Deploy on server
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_PORT: ${{ secrets.EC2_PORT || '22' }}
+        run: |
+          ssh -i ~/.ssh/neogogy_deploy_key -p "$EC2_PORT" "$EC2_USER@$EC2_HOST" 'bash -se' <<'REMOTE'
+          set -euo pipefail
+
+          APP=/opt/neogogy/app
+          sudo mkdir -p "$APP"
+          sudo chown "$USER:$USER" "$APP"
+
+          rm -rf "$APP/src" "$APP/public" "$APP/scripts"
+          tar -xzf "$HOME/app.tar.gz" -C "$APP"
+
+          if [ -f "$HOME/.env.production" ]; then
+            cp "$HOME/.env.production" "$APP/.env.production"
+          fi
+
+          cd "$APP"
+          npm ci --no-audit --no-fund
+          npm run build
+
+          sudo cp "$HOME/neogogy.service" /etc/systemd/system/neogogy.service
+          sudo systemctl daemon-reload
+          sudo systemctl enable neogogy
+          sudo systemctl restart neogogy
+
+          sudo cp "$HOME/nginx.conf" /etc/nginx/nginx.conf
+          sudo nginx -t
+          sudo systemctl reload nginx
+
+          sleep 3
+          systemctl is-active --quiet neogogy
+          curl -fsS http://127.0.0.1:3000/ >/dev/null
+          curl -fsS http://127.0.0.1/ >/dev/null
+          REMOTE

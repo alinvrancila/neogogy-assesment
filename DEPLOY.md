@@ -112,6 +112,42 @@ sudo nginx -t && sudo systemctl reload nginx
 curl "https://assessment.neogogy.ai/api/stats?token=TOKEN"
 ```
 
+## CI/CD
+
+GitHub Actions is configured under `.github/workflows/`:
+
+- `CI` runs on every pull request and every branch push, regardless of who made
+  the push.
+- `Deploy` runs when a push lands on `main`, regardless of who made the push,
+  and can also be started manually from the Actions tab.
+
+Both workflows run:
+
+```
+npm ci --no-audit --no-fund
+npm run lint
+npm run build
+npm run typecheck
+```
+
+The deploy workflow then packages the source, uploads it to the EC2 host, runs
+`npm ci` and `npm run build` on the server, restarts the `neogogy` systemd
+service, reloads nginx, and checks the local app and nginx endpoints.
+
+Add these repository secrets in GitHub before enabling production deploys:
+
+| Secret | Value |
+| ------ | ----- |
+| `EC2_HOST` | `52.77.118.48` |
+| `EC2_USER` | `ec2-user` |
+| `EC2_PORT` | `22` |
+| `EC2_SSH_KEY` | Private key contents for the EC2 deploy key |
+
+The deploy job expects the production environment file to already exist on the
+server at `/home/ec2-user/.env.production`; it copies that file into
+`/opt/neogogy/app/.env.production` during each deploy. Do not commit
+`.env.production` or SSH keys.
+
 ## Secrets and keys
 
 - SSH private key: `C:\Users\lcfaj\OneDrive\Documents\Neogogy.Ai\keys\neogogy-fresh-20260625-180854.pem` (keep safe, not in the repo).
