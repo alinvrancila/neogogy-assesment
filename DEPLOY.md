@@ -142,11 +142,19 @@ Add these repository secrets in GitHub before enabling production deploys:
 | `EC2_USER` | `ec2-user` |
 | `EC2_PORT` | `22` |
 | `EC2_SSH_KEY` | Private key contents for the EC2 deploy key |
+| `EC2_SECURITY_GROUP_ID` | `sg-0b80f7572d5d02196` |
+| `AWS_ACCESS_KEY_ID` | AWS key allowed to edit the EC2 security group |
+| `AWS_SECRET_ACCESS_KEY` | Matching AWS secret key |
+| `AWS_REGION` | `ap-southeast-1` |
 
 The deploy job expects the production environment file to already exist on the
 server at `/home/ec2-user/.env.production`; it copies that file into
 `/opt/neogogy/app/.env.production` during each deploy. Do not commit
 `.env.production` or SSH keys.
+
+During deploy, the workflow discovers the GitHub runner's public IP, temporarily
+authorizes that `/32` for SSH on the EC2 security group, and revokes it in an
+`always()` cleanup step after the deploy attempt.
 
 ## Secrets and keys
 

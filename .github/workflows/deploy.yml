@@ -59,6 +59,33 @@ jobs:
             tsconfig.json \
             .env.example
 
+      - name: Authorize runner SSH access
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'ap-southeast-1' }}
+          EC2_SECURITY_GROUP_ID: ${{ secrets.EC2_SECURITY_GROUP_ID }}
+          EC2_PORT: ${{ secrets.EC2_PORT || '22' }}
+        run: |
+          set -euo pipefail
+          test -n "$AWS_ACCESS_KEY_ID"
+          test -n "$AWS_SECRET_ACCESS_KEY"
+          test -n "$EC2_SECURITY_GROUP_ID"
+
+          RUNNER_IP="$(curl -fsS https://checkip.amazonaws.com | tr -d '[:space:]')"
+          test -n "$RUNNER_IP"
+          echo "RUNNER_IP=$RUNNER_IP" >> "$GITHUB_ENV"
+
+          aws ec2 authorize-security-group-ingress \
+            --region "$AWS_REGION" \
+            --group-id "$EC2_SECURITY_GROUP_ID" \
+            --ip-permissions "IpProtocol=tcp,FromPort=$EC2_PORT,ToPort=$EC2_PORT,IpRanges=[{CidrIp=${RUNNER_IP}/32,Description=github-actions-${GITHUB_RUN_ID}}]" \
+          || aws ec2 describe-security-groups \
+            --region "$AWS_REGION" \
+            --group-ids "$EC2_SECURITY_GROUP_ID" \
+            --query "SecurityGroups[0].IpPermissions[?FromPort==\`$EC2_PORT\`].IpRanges[?CidrIp==\`${RUNNER_IP}/32\`]" \
+            --output text | grep -q "$RUNNER_IP/32"
+
       - name: Install SSH key
         env:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
@@ -69,7 +96,7 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/neogogy_deploy_key
           chmod 600 ~/.ssh/neogogy_deploy_key
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -T 20 -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
       - name: Upload release files
         env:
@@ -120,3 +147,22 @@ jobs:
           curl -fsS http://127.0.0.1:3000/ >/dev/null
           curl -fsS http://127.0.0.1/ >/dev/null
           REMOTE
+
+      - name: Revoke runner SSH access
+        if: always()
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'ap-southeast-1' }}
+          EC2_SECURITY_GROUP_ID: ${{ secrets.EC2_SECURITY_GROUP_ID }}
+          EC2_PORT: ${{ secrets.EC2_PORT || '22' }}
+        run: |
+          set -euo pipefail
+          if [ -n "${RUNNER_IP:-}" ]; then
+            aws ec2 revoke-security-group-ingress \
+              --region "$AWS_REGION" \
+              --group-id "$EC2_SECURITY_GROUP_ID" \
+              --protocol tcp \
+              --port "$EC2_PORT" \
+              --cidr "${RUNNER_IP}/32" || true
+          fi
