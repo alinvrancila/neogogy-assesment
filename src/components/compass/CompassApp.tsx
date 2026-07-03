@@ -27,6 +27,12 @@ const FLOW: Step[] = [
 
 const TOTAL_Q = FLOW.filter((s) => s.type === 'item' || s.type === 'scenario' || s.type === 'usage').length;
 
+const RELEASE_INFO = {
+  version: 'v0.1.1',
+  date: '2026-07-03',
+  copyright: 'Copyright 2026 Dr. Alin Vrancila'
+};
+
 // A sample result used only to preview the assessment's visuals on the home page.
 const SAMPLE_ANSWERS: Answers = (() => {
   const a: Answers = {};
@@ -303,7 +309,19 @@ export default function CompassApp() {
       {screen === 'thanks' && (
         <ThankYou firstName={submittedFirst} email={submittedEmail} onRetake={retake} />
       )}
+
+      <ReleaseStamp />
     </div>
+  );
+}
+
+function ReleaseStamp() {
+  return (
+    <aside className="release-stamp" aria-label={`Assessment ${RELEASE_INFO.version}, released ${RELEASE_INFO.date}`}>
+      <span>{RELEASE_INFO.version}</span>
+      <span>Release {RELEASE_INFO.date}</span>
+      <span>{RELEASE_INFO.copyright}</span>
+    </aside>
   );
 }
 
