@@ -28,8 +28,8 @@ const FLOW: Step[] = [
 const TOTAL_Q = FLOW.filter((s) => s.type === 'item' || s.type === 'scenario' || s.type === 'usage').length;
 
 const RELEASE_INFO = {
-  version: 'v0.1.1',
-  date: '2026-07-03',
+  version: 'v0.1.2',
+  date: '2026-07-06',
   copyright: 'Copyright 2026 Dr. Alin Vrancila'
 };
 

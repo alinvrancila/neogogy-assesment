@@ -3,6 +3,8 @@
    All selectors are scoped under .nfc so this never touches the
    Tailwind-based /admin route. Palette from Life College International.
    ============================================================ */
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..700&family=Spline+Sans:wght@300..700&family=Spline+Sans+Mono:wght@400;500;600&display=swap");
+
 .nfc{
   --maroon:#690F0D;
   --crimson:#9E1D20;
@@ -24,9 +26,9 @@
   --r-sm:11px;
 
   --page-pad:clamp(18px,5vw,24px);
-  --f-display:var(--font-serif),Georgia,serif;
-  --f-body:var(--font-sans),system-ui,sans-serif;
-  --f-mono:var(--font-sans),ui-monospace,monospace;
+  --f-display:"Fraunces",Georgia,serif;
+  --f-body:"Spline Sans",system-ui,sans-serif;
+  --f-mono:"Spline Sans Mono",ui-monospace,monospace;
 
   font-family:var(--f-body);
   color:var(--ink);
