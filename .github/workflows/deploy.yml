@@ -111,10 +111,22 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_PORT: ${{ secrets.EC2_PORT || '22' }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'ap-southeast-1' }}
         run: |
           test -n "$EC2_USER"
+          test -n "$AWS_ACCESS_KEY_ID"
+          test -n "$AWS_SECRET_ACCESS_KEY"
+          umask 077
+          {
+            printf 'AWS_ACCESS_KEY_ID=%s\n' "$AWS_ACCESS_KEY_ID"
+            printf 'AWS_SECRET_ACCESS_KEY=%s\n' "$AWS_SECRET_ACCESS_KEY"
+            printf 'AWS_REGION=%s\n' "$AWS_REGION"
+            printf 'AWS_DEFAULT_REGION=%s\n' "$AWS_REGION"
+          } > runtime.env
           scp -i ~/.ssh/neogogy_deploy_key -P "$EC2_PORT" \
-            app.tar.gz deploy/neogogy.service deploy/nginx.conf \
+            app.tar.gz runtime.env deploy/neogogy.service deploy/nginx.conf \
             "$EC2_USER@$EC2_HOST:/home/$EC2_USER/"
 
       - name: Deploy on server
@@ -135,6 +147,24 @@ jobs:
 
           if [ -f "$HOME/.env.production" ]; then
             cp "$HOME/.env.production" "$APP/.env.production"
+          fi
+          touch "$APP/.env.production"
+
+          set_env() {
+            key="$1"
+            value="$2"
+            tmp="$(mktemp)"
+            grep -v "^${key}=" "$APP/.env.production" > "$tmp" || true
+            printf '%s=%s\n' "$key" "$value" >> "$tmp"
+            mv "$tmp" "$APP/.env.production"
+          }
+
+          if [ -f "$HOME/runtime.env" ]; then
+            while IFS='=' read -r key value; do
+              [ -n "$key" ] || continue
+              set_env "$key" "$value"
+            done < "$HOME/runtime.env"
+            rm -f "$HOME/runtime.env"
           fi
 
           cd "$APP"

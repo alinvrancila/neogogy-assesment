@@ -148,10 +148,15 @@ export const deleteUser = async (username: string): Promise<void> => {
 };
 
 export const authenticate = async (username: string, password: string): Promise<boolean> => {
-  const user = await getUser(username);
-  if (user) return verifyPassword(password, user.salt, user.hash);
+  try {
+    const user = await getUser(username);
+    if (user) return verifyPassword(password, user.salt, user.hash);
+  } catch (error) {
+    console.error('Admin user lookup failed', error);
+  }
   // Break-glass: if the user is not in the table but ADMIN_PASSWORD is set and
-  // matches, allow it. Lets you recover access if the users table is ever empty.
+  // matches, allow it. Lets you recover access if the users table is ever empty
+  // or temporarily unreachable.
   const fallback = process.env.ADMIN_PASSWORD || '';
   return Boolean(fallback) && password === fallback;
 };
