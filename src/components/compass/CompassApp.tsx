@@ -16,11 +16,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { applicableItems } from '@/engine';
 import type { Item, Persona, Submission } from '@/engine/types';
 import { USAGE_ITEM } from '@/items/shared';
+import type { CompassResult } from '@/engine';
 import {
   ItemScreen, OptionCards, optionsFor, B1_CHOICES, BAND_CHOICES, type Choice
 } from './items';
+import Results, { GateForm, type GateData, type GateState } from './Results';
 
-type Screen = 'hero' | 'setup' | 'quiz' | 'gate';
+type Screen = 'hero' | 'setup' | 'quiz' | 'gate' | 'results';
 
 const PERSONAS: Array<{ id: Persona; name: string; blurb: string }> = [
   { id: 'student', name: 'Student', blurb: 'How AI shapes my own learning and my own work' },
@@ -53,6 +55,10 @@ export default function CompassApp() {
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [pos, setPos] = useState(0);
   const [submission, setSubmission] = useState<Submission | null>(null);
+  const [gate, setGate] = useState<GateState>({ submitting: false, error: null });
+  const [result, setResult] = useState<CompassResult | null>(null);
+  const [emailed, setEmailed] = useState(false);
+  const [firstName, setFirstName] = useState('');
 
   const restored = useRef(false);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -173,6 +179,36 @@ export default function CompassApp() {
     advanceSoon();
   }, [advanceSoon]);
 
+  /* ---------------------------------------------------------------- submit */
+  const submitGate = useCallback(async (data: GateData) => {
+    if (!submission) return;
+    if (!data.firstName.trim() || !data.email.trim()) {
+      setGate({ submitting: false, error: 'First name and email are required.' });
+      return;
+    }
+    setGate({ submitting: true, error: null });
+    try {
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...submission, ...data, name: `${data.firstName} ${data.lastName}`.trim() })
+      });
+      const payload = await res.json().catch(() => null);
+      if (!res.ok || !payload?.result) {
+        setGate({ submitting: false, error: payload?.error || 'Something went wrong. Please try again.' });
+        return;
+      }
+      setResult(payload.result as CompassResult);
+      setEmailed(Boolean(payload.emailSent));
+      setFirstName(data.firstName.trim());
+      setGate({ submitting: false, error: null });
+      clearDraft();
+      setScreen('results');
+    } catch {
+      setGate({ submitting: false, error: 'Network error. Please check your connection and try again.' });
+    }
+  }, [submission, clearDraft]);
+
   /* -------------------------------------------------------------- keyboard */
   const atUsage = pos === 0;
   const currentItem: Item | null = atUsage ? USAGE_ITEM : (items[pos - 1] ?? null);
@@ -198,6 +234,8 @@ export default function CompassApp() {
     clearDraft();
     setScreen('hero'); setPersona(null); setUsage(null); setB1(null); setB2(null);
     setAnswers({}); setPos(0); setSubmission(null);
+    setResult(null); setEmailed(false); setFirstName('');
+    setGate({ submitting: false, error: null });
   }, [clearDraft]);
 
   /* ---------------------------------------------------------------- render */
@@ -254,25 +292,17 @@ export default function CompassApp() {
     );
   }
 
-  // Phase 3 replaces this with the email gate and the results experience.
+  if (screen === 'results' && result) {
+    return <Results result={result} firstName={firstName} emailed={emailed} onRetake={restart} />;
+  }
+
+  // Gate: results are shown only after the respondent provides their details.
   return (
-    <section className="screen">
-      <div className="wrap results">
-        <div className="qcard">
-          <div className="qnum">Answers collected</div>
-          <div className="qstem">Your responses are ready to be scored.</div>
-          <p className="muted" style={{ marginTop: 12 }}>
-            {submission
-              ? `${Object.keys(submission.answers).length} answers recorded for the ${submission.persona} assessment.`
-              : 'No submission assembled.'}
-          </p>
-          <div className="qnav" style={{ marginTop: 20 }}>
-            <button className="back" onClick={back}><span>&larr;</span> Back</button>
-            <button className="btn btn-ghost" onClick={restart}>Start over</button>
-          </div>
-        </div>
-      </div>
-    </section>
+    <GateForm
+      gate={gate}
+      onSubmit={submitGate}
+      onBack={() => { setScreen('quiz'); setPos(itemsRef.current.length); }}
+    />
   );
 }
 

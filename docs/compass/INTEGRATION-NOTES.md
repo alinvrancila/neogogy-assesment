@@ -87,3 +87,43 @@ build succeeds and the hero renders v2 copy with no v1 archetype names anywhere 
 **Known gap at this phase.** The screen-list half of the Phase 2 gate is verified exhaustively and
 deterministically. The interactive half (clicking a full run as each persona at usage 1, 3 and 5)
 needs a browser and is carried out in the Phase 8 battery, not here.
+
+## Phase 3, gated results experience
+
+**Decision applied.** Results are shown only after the respondent provides their details. The gate
+comes first, the server scores the submission, and the full result then renders on screen in Part
+B10 order. The ungated path was never built. Lead capture keeps the exact v1 field set (first name,
+last name, email, mobile phone, how they heard, consent), so the admin panel and the stored user
+information are unchanged.
+
+**generateReportSections().** `narrative.ts` was restructured so section prose lives in one place
+and both the screen and the PDF render the same words in their own layouts. `generateReport()` now
+composes those sections into the markdown document.
+
+**The refactor is provably prose-preserving.** `tests/compass/dump.ts` generates reports for 60
+deterministic profiles (four personas, three usage levels, five answer shapes). The dump was
+produced from the pre-refactor `narrative.ts` and from the refactored one, and the two are
+byte-identical. The first attempt differed by exactly one blank line per report, because the roadmap
+section already ends with a blank and the composer added a second before section 11; the composer now
+collapses that. The 29-check suite, which asserts the report contains no em-dash or en-dash
+characters, stays green.
+
+**Scoring location.** The results screen renders a `CompassResult` returned by `POST /api/submit`.
+The client never calls `compute`, so no component scores anything even though the engine is
+isomorphic and could.
+
+**Submit route validation.** The route validates against the engine's own item model rather than a
+hand-maintained schema: unknown persona, usage outside 1 to 5, unknown item ids, item ids belonging
+to a different persona, values outside the item's own option set, and baselines outside 1 to 5 are
+all rejected with 400. Verified by request: all six rejection cases return 400 and a valid
+submission returns 200 with a full result. Cross-persona injection (posting a teacher item id under
+a student assessment) is rejected, which matters because the item id is what selects the construct.
+
+**Lead record.** `LeadRecord` gained `engineVersion`, `result`, `stage`, `stageName`, `archetypeId`,
+`archetypeName`, `confidence` and `rescoredFrom`. `resilience` and `readiness` became optional
+because v2 has no axes; v2 records omit them. Complete raw answers are still stored, which is what
+keeps future rescoring a batch job rather than a re-survey. Admin panel branching on
+`engineVersion` and the CSV column changes are Phase 6.
+
+**Confidence display.** Preliminary and insufficient confidence render as a prominent banner above
+the sections with the engine's own confidence notes listed, never as a footnote.

@@ -26,14 +26,30 @@ export type LeadRecord = {
   consent: boolean;
   persona: string;
   personaName: string;
-  resilience: number;
-  readiness: number;
+  /** v1 axis scores. Absent on engineVersion 2 records, which have no axes. */
+  resilience?: number;
+  readiness?: number;
   overall: number;
   dimensions?: Record<string, number>;
   answers?: Record<string, number>;
   baseline?: { b1: number; b2: number } | null;
   usageVal?: number | null;
   createdAt: string;
+
+  /** 1 for legacy Formation Compass records, 2 for Formation Compass v2.
+   *  Readers must branch on this: v1 and v2 records are not interchangeable. */
+  engineVersion?: number;
+  /** v2 only: the full CompassResult, stored so any future rescoring is a batch
+   *  job rather than a re-survey. */
+  result?: unknown;
+  /** v2 only: denormalized for listing and CSV without parsing result. */
+  stage?: number;
+  stageName?: string;
+  archetypeId?: string;
+  archetypeName?: string;
+  confidence?: string;
+  /** v2 only: set when this record was produced by rescoring a v1 submission. */
+  rescoredFrom?: string;
 };
 
 export type EventRecord = {

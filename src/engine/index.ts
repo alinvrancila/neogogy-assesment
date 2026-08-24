@@ -12,7 +12,10 @@ import { placeOnContinuum, nextTarget, findBottleneck, developmentalIndex } from
 import { classify, fingerprint } from "./archetypes";
 import { buildRecommendations } from "./recommendations";
 
-export { generateReport } from "./narrative";
+export {
+  generateReport, generateReportSections, reportHead, confidenceLabel, REPORT_DISCLAIMER,
+  type ReportSection, type ReportSectionKey, type ReportHead,
+} from "./narrative";
 export { applicableItems, allItems } from "./scoring";
 export * from "./types";
 
