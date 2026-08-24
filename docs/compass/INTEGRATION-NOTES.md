@@ -342,3 +342,38 @@ now, and a gate with no submission returns to the start rather than rendering an
 two server processes were left competing on port 3000. Next.js serves chunks by content hash, so the
 browser held a page requesting filenames that no longer existed. Rebuild under a running server, or
 leave duplicate servers up, and the page renders while every script behind it 404s.
+
+## Post-release: item clarity pass
+
+**Reported.** "AI walked you through a tough problem yesterday. Today a cousin of that problem
+appears in class." A respondent has to decode "a cousin of that problem" before they can answer, and
+the question is not about their reading of metaphor.
+
+**Audit.** All 140 prompts and roughly 200 scenario option labels across the four persona banks and
+the shared items were dumped and read, then swept programmatically against a list of metaphors,
+idioms and vague referents.
+
+**43 rewrites.** Each removes a figure of speech or an unclear referent and says the thing plainly.
+The flagged item now reads: "Yesterday AI helped you work through a hard problem step by step. Today
+in class you are given a different problem that uses the same method." Others included "AI
+explanations evaporate on me", "so the skill stays warm", "until it clicks", "I could grind through
+it", "generic beats nothing tonight", "what each scenario breaks two years out", "Adoption is the
+metric; we adopted", "purely transactional", "from zero", "I would be exposed", and "I trust it into
+my classroom", which was also ungrammatical.
+
+**Kept deliberately.** "Misses the point", "a blank page" and "exposed a real weakness" are ordinary
+English rather than figures of speech, and rewriting them would make the items stiffer without making
+them clearer.
+
+**Context lines added.** `Item` gained an optional `context` field, rendered under the prompt in a
+quieter style. 15 items per persona now carry one. They clarify what is being asked and never argue
+for an answer: the transfer scenarios say the question is about whether the method stayed with you
+rather than whether you recall the answer; the independence scenarios ask for what would realistically
+happen rather than what you would hope; the outcome items explain that the last option means you
+cannot tell yet and is excluded from scoring rather than counted as neutral; the usage item states
+that any tool counts and that the answer is never scored up or down; the responsible use scenarios
+say plainly that nothing is reported to anyone.
+
+**Verification.** Typecheck clean, 29 of 29, branch checks pass, no dashes in any item file, and the
+production build compiles. Item ids and construct mappings are untouched, so stored answers and every
+scored result remain comparable across the change.

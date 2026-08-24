@@ -117,7 +117,8 @@ export function ItemScreen({
     <div className="qcard">
       <div className="qnum">{header}</div>
       <div className="qstem">{item.prompt}</div>
-      {note ? <div className="qnote">{note}</div> : <div style={{ height: 14 }} />}
+      {item.context ? <p className="qcontext">{item.context}</p> : null}
+      {note ? <div className="qnote">{note}</div> : (item.context ? null : <div style={{ height: 14 }} />)}
       {cards
         ? <OptionCards choices={choices} selected={selected} onPick={onPick} />
         : <ScaleRow choices={choices} selected={selected} onPick={onPick} />}

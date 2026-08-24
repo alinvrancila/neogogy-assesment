@@ -857,3 +857,12 @@
   .ns-row { flex-direction: column; }
   .ns-arrow { transform: rotate(90deg); }
 }
+
+/* Plain-language clarification under a question stem. */
+.nfc .qcontext {
+  font-size: .95rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin: 10px 0 4px;
+  max-width: 62ch;
+}

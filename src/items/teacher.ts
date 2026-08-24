@@ -12,7 +12,7 @@ export const TEACHER_ITEMS: Item[] = [
     "frequency", "underexposure_fluency"),
   scenario(P, "fluency",
     "You need a differentiated activity for a mixed-ability class, and the AI's first version is generic.", [
-      "I use it; generic beats nothing tonight.",
+      "I use it as it is, because I need something ready tonight.",
       "I ask again with 'make this better' and take the second version.",
       "I feed it my class profile and regenerate until it fits.",
       "I decompose it: core task, extensions, and supports requested separately, then assembled.",
@@ -28,7 +28,7 @@ export const TEACHER_ITEMS: Item[] = [
     "frequency", "authority_transfer"),
   scenario(P, "agency",
     "AI proposes reordering your unit and cutting a lesson you consider formative.", [
-      "I adopt it; it has seen more curricula than I have.",
+      "I adopt it, on the basis that it has been trained on far more curricula than I have seen.",
       "I adopt most of it and drop the parts that feel wrong.",
       "I compare its rationale with mine before deciding anything.",
       "I take its rationale as a challenge, re-argue my own design, and keep what survives.",
@@ -36,7 +36,7 @@ export const TEACHER_ITEMS: Item[] = [
     ], "authority_transfer"),
 
   claim(P, "amplification",
-    "AI sharpens my thinking about teaching: it surfaces misconceptions, alternative explanations, and blind spots in my lessons.",
+    "AI improves how I think about teaching: it points out misconceptions, alternative explanations, and gaps in my lessons.",
     "agreement"),
   reverse(P, "amplification",
     "AI mostly saves me typing; it rarely changes how I think about a lesson.",
@@ -47,7 +47,7 @@ export const TEACHER_ITEMS: Item[] = [
       "I ask AI why students miss questions like this and use its list.",
       "I give AI the actual wrong answers and ask what misconception they share.",
       "I do that, then have it generate probes to test which misconception each group holds.",
-      "I do that, and pressure-test my own re-explanation with AI playing a confused student.",
+      "I do that, then practise my new explanation with AI acting as a confused student, to find where it falls down.",
     ], "shallow_use",
     { effects: { 5: { transfer: 5 } } }),
 
@@ -70,7 +70,7 @@ export const TEACHER_ITEMS: Item[] = [
     "I verify AI-generated content, including facts, sources, and solution steps, before any of it reaches students.",
     "frequency"),
   reverse(P, "verification",
-    "If AI material looks professionally formatted, I trust it into my classroom.",
+    "If AI material looks professional and well formatted, I use it in class without checking it.",
     "agreement", "uncritical_acceptance"),
   scenario(P, "verification",
     "AI produces a beautiful reading passage with historical details and a quotation, ready to print.", [
@@ -92,7 +92,7 @@ export const TEACHER_ITEMS: Item[] = [
       "Good; that is exactly what the tool is for.",
       "Slightly uneasy, but the comments read fine.",
       "I would alternate: some classes AI-drafted, some fully mine.",
-      "I draft first and use AI to refine, so the skill stays warm.",
+      "I write the first draft myself and use AI to refine it, so I keep the skill in practice.",
       "I put the freed time into the kind of feedback AI cannot give, and I can name what that is.",
     ], "skill_erosion"),
 
@@ -100,7 +100,7 @@ export const TEACHER_ITEMS: Item[] = [
     "I now design activities I would never have attempted before, using AI to extend my own ideas.",
     "frequency"),
   reverse(P, "creativity",
-    "My AI-assisted materials are converging on the same few templates.",
+    "The materials I make with AI are starting to look the same as each other.",
     "agreement", "creativity_homogenization"),
   scenario(P, "creativity",
     "You are designing a capstone project from scratch.", [
@@ -130,7 +130,7 @@ export const TEACHER_ITEMS: Item[] = [
     "What I learn through AI, whether content or method, sticks; I can teach it later without the tool.",
     "confidence"),
   reverse(P, "transfer",
-    "AI explanations evaporate on me; I have to re-ask the same things each time.",
+    "I have to ask AI to explain the same things again, because the explanations do not stay with me.",
     "agreement", "transfer_low"),
   scenario(P, "transfer",
     "AI taught you a new instructional strategy last month. A colleague asks you to explain it.", [

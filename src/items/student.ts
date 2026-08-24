@@ -46,10 +46,10 @@ export const STUDENT_ITEMS: Item[] = [
     "After using AI I usually end up with the same ideas I started with, just written faster.",
     "agreement", "shallow_use"),
   scenario(P, "amplification",
-    "You are stuck on a concept the textbook explains badly.", [
+    "You are stuck on a concept and the textbook explanation is not helping.", [
       "I ask AI for the answers to the homework built on that concept.",
       "I ask for a simple summary and move on once it sounds clear.",
-      "I ask for an explanation, then a different analogy, until it clicks.",
+      "I ask for an explanation, then ask for it a different way, until I actually understand it.",
       "I ask it to quiz me and to challenge my explanation of the concept.",
       "I explain the concept to the AI in my own words and have it attack the weak points.",
     ], "shallow_use",
@@ -64,9 +64,9 @@ export const STUDENT_ITEMS: Item[] = [
     "frequency", "dependency_starting_tasks"),
   scenario(P, "dependencySafety",
     "In a proctored exam with no AI allowed, a problem appears just like the ones AI has been solving with you all term.", [
-      "I would likely blank; I have not solved one alone in a while.",
+      "I would probably freeze, because I have not solved one without help in a while.",
       "I would recognize the type but struggle through the steps.",
-      "I could grind through it, more slowly than with AI.",
+      "I could work through it, more slowly than I would with AI.",
       "I could solve it; my practice with AI has included practice without it.",
       "I could solve it and explain each step, because I always re-derive what AI shows me.",
     ], "independent_capability_low",
@@ -98,7 +98,7 @@ export const STUDENT_ITEMS: Item[] = [
   scenario(P, "skillGrowth",
     "Your teacher announces that the next unit will be completed with no AI tools at all.", [
       "That worries me; my recent work does not reflect what I can do alone.",
-      "I would need serious review time to catch up to my own submissions.",
+      "I would need a lot of review time to reach the standard of the work I have been handing in.",
       "My grades might dip, but the basics are there.",
       "Fine by me; I practice the fundamentals even when AI could do them for me.",
       "I would welcome it; I use AI to train the skill, so unaided work is where the gains show.",
@@ -117,7 +117,7 @@ export const STUDENT_ITEMS: Item[] = [
       "I ask for ten ideas and pick the one I like most.",
       "I sketch my own idea first, then ask AI for variations on it.",
       "I draft my concept fully, then use AI to find its clichés and weak spots.",
-      "I alternate: my idea, its counter-idea, my synthesis, until something appears that neither of us started with.",
+      "I go back and forth with it: my idea, then its response, then my revision, until we reach something neither of us started with.",
     ], "creativity_homogenization"),
 
   // ---- Responsible Use -----------------------------------------------------
@@ -144,11 +144,11 @@ export const STUDENT_ITEMS: Item[] = [
     "Once the AI chat is closed, I cannot continue the work at the same level.",
     "agreement", "transfer_low"),
   scenario(P, "transfer",
-    "AI walked you through a tough problem yesterday. Today a cousin of that problem appears in class.", [
-      "I would need AI again, from the start.",
-      "I remember the answer but not the path to it.",
-      "I can start down the path but get stuck midway.",
-      "I can solve it; yesterday's walkthrough became a method I own.",
+    "Yesterday AI helped you work through a hard problem step by step. Today in class you are given a different problem that uses the same method.", [
+      "I would need AI again, starting from the beginning.",
+      "I remember yesterday's answer, but not how it was worked out.",
+      "I can start the steps, but I get stuck partway through.",
+      "I can solve it on my own, because I learned the method yesterday.",
       "I can solve it and explain the method to a classmate.",
     ], "transfer_low"),
 

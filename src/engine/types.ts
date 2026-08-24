@@ -77,6 +77,9 @@ export interface Item {
   construct?: ConstructId;        // primary construct (absent for baseline/branch)
   secondary?: SecondaryEffect[];  // §17: one answer, multiple weighted effects
   prompt: string;
+  /** Optional plain-language clarification shown under the prompt. Use it when
+   *  the question could be read more than one way; never to argue for an answer. */
+  context?: string;
   scale?: ScaleKey;               // for claim/reverse/outcome items
   options?: ItemOption[];         // for scenario/branch items
   weight?: number;                // default 1.0; scenarios default 1.5 (behavior > claim)

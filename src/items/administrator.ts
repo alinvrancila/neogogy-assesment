@@ -47,8 +47,8 @@ export const ADMINISTRATOR_ITEMS: Item[] = [
       "I ask AI where schools usually cut and follow the list.",
       "I ask for a cut list that hits my target number.",
       "I model several scenarios with AI and compare the tradeoffs.",
-      "I do that, and ask what each scenario breaks two years out.",
-      "I do that, and use AI to stress-test the option I prefer, hunting for my own bias.",
+      "I do that, and ask what problems each scenario would create two years from now.",
+      "I do that, and use AI to argue against the option I prefer, so I can find my own bias.",
     ], "shallow_use"),
 
   claim(P, "dependencySafety",
@@ -59,10 +59,10 @@ export const ADMINISTRATOR_ITEMS: Item[] = [
     "agreement", "dependency_starting_tasks"),
   scenario(P, "dependencySafety",
     "A crisis communication must go out within the hour, and no AI tool is available.", [
-      "I would be exposed; AI writes those for me.",
+      "I would be in real difficulty, because AI writes those for me.",
       "It would go out rough and late.",
       "It would go out: slower and plainer, but sound.",
-      "No issue; crisis writing is a skill I keep sharp myself.",
+      "No issue, because I practise crisis writing myself and keep the skill current.",
       "No issue, and by my own policy the core of crisis communication is drafted by a human anyway.",
     ], "independent_capability_low"),
 
@@ -70,7 +70,7 @@ export const ADMINISTRATOR_ITEMS: Item[] = [
     "Claims that enter institutional decisions, whether from AI or vendors, get verified against primary sources first.",
     "frequency"),
   reverse(P, "verification",
-    "Polished AI or vendor material generally goes into decks and decisions as received.",
+    "Polished AI or vendor material usually goes into my presentations and decisions unchanged.",
     "agreement", "uncritical_acceptance"),
   scenario(P, "verification",
     "A vendor's AI product demo claims a 30 percent learning gain, with a whitepaper attached.", [
@@ -89,7 +89,7 @@ export const ADMINISTRATOR_ITEMS: Item[] = [
     "agreement", "skill_erosion"),
   scenario(P, "skillGrowth",
     "A year into AI adoption, you review its effect on your leadership team.", [
-      "Adoption is the metric; we adopted.",
+      "We adopted it, and that is the result I would report.",
       "Output is up; that is what I report.",
       "I survey the team on time saved and perceived quality.",
       "I look for evidence of capability: better decisions, better analysis, better meetings.",
@@ -127,18 +127,18 @@ export const ADMINISTRATOR_ITEMS: Item[] = [
     ], "privacy_risk"),
 
   claim(P, "transfer",
-    "Insight gained with AI changes how I lead afterward, with no tool in the room.",
+    "What I work out with AI changes how I lead afterwards, when the tool is not involved.",
     "agreement"),
   reverse(P, "transfer",
-    "Insights from AI sessions rarely survive into my actual leadership practice.",
+    "What comes out of my AI sessions rarely changes how I actually lead.",
     "agreement", "transfer_low"),
   scenario(P, "transfer",
     "AI helped you work out a change-management approach for a difficult rollout. Six months later, a new rollout begins.", [
-      "I would start from zero with AI again.",
+      "I would start over with AI, from the beginning.",
       "I remember that it worked, not why.",
       "With my notes, I can reapply it.",
-      "It is in my repertoire; I apply and adapt it unaided.",
-      "It is in the institution's repertoire; I have taught it to my team.",
+      "I know it well enough to apply and adapt it without help.",
+      "My team knows it too, because I have taught it to them.",
     ], "transfer_low"),
 
   claim(P, "adaptability",
@@ -148,11 +148,11 @@ export const ADMINISTRATOR_ITEMS: Item[] = [
     "Our AI policy has not changed since we first wrote it.",
     "agreement", "workflow_stagnation"),
   scenario(P, "adaptability",
-    "A capability shift makes part of your AI policy obsolete.", [
+    "A change in what AI tools can do makes part of your AI policy out of date.", [
       "I keep the policy; stability matters most.",
       "I patch quietly when problems surface.",
       "I convene a review when someone raises it.",
       "We have a standing review cycle that catches this.",
-      "Standing cycle, plus a horizon watch, and staff know exactly how to flag gaps.",
+      "We have a standing review cycle, we watch for changes coming, and staff know exactly how to report gaps.",
     ], "workflow_stagnation"),
 ];

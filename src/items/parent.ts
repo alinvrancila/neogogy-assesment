@@ -8,7 +8,7 @@ export const PARENT_ITEMS: Item[] = [
     "I can use AI competently for my own tasks, at work and at home, and I get real value from it.",
     "confidence"),
   reverse(P, "fluency",
-    "I mostly know AI from headlines and other people; my own hands-on skill is thin.",
+    "Most of what I know about AI comes from the news or other people. I have little hands-on experience myself.",
     "agreement", "underexposure_fluency"),
   scenario(P, "fluency",
     "A dense school policy letter or insurance document lands in your inbox and you need to understand it properly.", [
@@ -21,7 +21,7 @@ export const PARENT_ITEMS: Item[] = [
     { effects: { 5: { verification: 6 } } }),
 
   claim(P, "agency",
-    "Where AI advises on family matters, we decide; the tool informs, it does not rule.",
+    "When AI gives advice on family matters, we make the decision. It is one input, not the answer.",
     "agreement"),
   reverse(P, "agency",
     "I follow AI suggestions on family matters without really weighing them, because it sounds authoritative.",
@@ -47,7 +47,7 @@ export const PARENT_ITEMS: Item[] = [
       "I ask for a ranked list and shortlist from it.",
       "I ask for the criteria that matter, then build the comparison myself.",
       "I do that, and ask AI to argue against my current favorite.",
-      "I do that, then bring the sharpened questions into school visits and conversations with real families.",
+      "I do that, then take those better questions into school visits and conversations with other families.",
     ], "shallow_use",
     { effects: { 1: { agency: -5 } } }),
 
@@ -90,8 +90,8 @@ export const PARENT_ITEMS: Item[] = [
     "agreement", "skill_erosion"),
   scenario(P, "skillGrowth",
     "A task you always did yourself, such as the family budget or trip planning, has quietly become something AI does for you.", [
-      "Good; less of that in my life is the point.",
-      "I had not noticed, and I probably could not pick it back up easily.",
+      "That suits me. Handing that task over is exactly what I wanted.",
+      "I had not noticed, and I would find it hard to take the task back now.",
       "I could take it back with some effort.",
       "I stay in the loop deliberately; AI assists, I still drive it.",
       "I use the saved time on things I chose, and I keep a hand in the task so the skill stays mine.",
@@ -101,7 +101,7 @@ export const PARENT_ITEMS: Item[] = [
     "AI expands what our family creates and explores together, from projects to trips to traditions.",
     "frequency"),
   reverse(P, "creativity",
-    "Our AI use is purely transactional; it has not opened up anything new for us.",
+    "We use AI only to get tasks done. It has not led us to try anything new.",
     "agreement", "creativity_homogenization"),
   scenario(P, "creativity",
     "You are planning a birthday or family celebration.", [
@@ -131,11 +131,11 @@ export const PARENT_ITEMS: Item[] = [
     "What I learn through AI becomes mine; I can use it and explain it later without the tool.",
     "confidence"),
   reverse(P, "transfer",
-    "Knowledge I pick up with AI's help does not seem to stick with me.",
+    "Things I learn with AI's help do not stay with me afterwards.",
     "agreement", "transfer_low"),
   scenario(P, "transfer",
     "You used AI to understand the method behind your child's math homework. Two weeks later, they ask for help again.", [
-      "Back to AI, from zero.",
+      "I would start over with AI, from the beginning.",
       "I recall the name of the method, nothing more.",
       "With a peek at my notes, I can help.",
       "I can help cold; the method became mine.",
