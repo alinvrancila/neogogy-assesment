@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { dimensions, axes, evidence } from '@/data/compass';
-import { bandOf, vulnList, type CompassResult } from '@/lib/engine';
+import { dimensions, axes, evidence } from '@/data/compassV1';
+import { bandOf, vulnList, type CompassResult } from '@/lib/engineV1';
 import { CompassGauge, QuadrantMap, RadarSvg, DimensionBars } from './Visuals';
 
 const Html = ({ html, ...rest }: { html: string } & React.HTMLAttributes<HTMLSpanElement>) => (

@@ -1,3 +1,7 @@
+/* DEPRECATED, v1 scoring engine (v0.1.2). Superseded by src/engine/ (engineVersion 2).
+   Retained only as reference and rollback until Phase 8 of the v2 migration.
+   Nothing new may import this file. Scheduled for deletion. */
+
 /* ============================================================================
    SCORING ENGINE  (isomorphic: runs identically on client and server)
    Produces: per-dimension 0-100, two axis scores (resilience, readiness),
@@ -5,7 +9,7 @@
    and the productivity-illusion gap.
    ============================================================================ */
 
-import { dimensions, personas, axes, type Dimension, type Item, type Persona, type PersonaKey, type AxisId } from '@/data/compass';
+import { dimensions, personas, axes, type Dimension, type Item, type Persona, type PersonaKey, type AxisId } from '@/data/compassV1';
 
 export type Baseline = { b1: number; b2: number };
 

@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { isAdminAuthed } from '@/lib/adminAuth';
 import { getLead } from '@/lib/storage';
 import { generateNeogogyPdfFromInputs } from '@/lib/reportPdf';
-import type { Answers, Baseline } from '@/lib/engine';
+import type { Answers, Baseline } from '@/lib/engineV1';
 
 export const runtime = 'nodejs';
 

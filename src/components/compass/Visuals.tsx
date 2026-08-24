@@ -2,8 +2,8 @@
 
 import Image from 'next/image';
 import { useEffect, useId, useState, type CSSProperties } from 'react';
-import { dimensions, axes } from '@/data/compass';
-import { bandOf, bandHex, type CompassResult } from '@/lib/engine';
+import { dimensions, axes } from '@/data/compassV1';
+import { bandOf, bandHex, type CompassResult } from '@/lib/engineV1';
 
 /* ----------------------------------------------------------------------------
    COMPASS GAUGE  ·  semicircular needle gauge, harm (left) to help (right).

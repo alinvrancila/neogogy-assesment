@@ -1,3 +1,7 @@
+/* DEPRECATED, v1 content bank (v0.1.2). Superseded by src/items/ (engineVersion 2).
+   Retained only as reference and rollback until Phase 8 of the v2 migration.
+   Nothing new may import this file. Scheduled for deletion. */
+
 export type AxisId = 'resilience' | 'readiness';
 export type RoleId = 'student' | 'educator' | 'parent' | 'leader';
 export type ItemType = 'agreement' | 'frequency' | 'confidence';

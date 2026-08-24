@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { randomUUID } from 'crypto';
 import { generateNeogogyPdf } from '@/lib/reportPdf';
-import { compute, type Answers, type Baseline } from '@/lib/engine';
-import { dimensions } from '@/data/compass';
+import { compute, type Answers, type Baseline } from '@/lib/engineV1';
+import { dimensions } from '@/data/compassV1';
 import { saveLead, logEvent } from '@/lib/storage';
 import { sendReportEmail, isEmailEnabled } from '@/lib/email';
 

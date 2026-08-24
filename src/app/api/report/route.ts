@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { generateNeogogyPdfFromInputs } from '@/lib/reportPdf';
-import type { Answers, Baseline } from '@/lib/engine';
+import type { Answers, Baseline } from '@/lib/engineV1';
 
 export const runtime = 'nodejs';
 

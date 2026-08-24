@@ -5,8 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   roles, dimensions, usageItem, scales, baselineLabels, applyRole, subjectLabel, modalityExamples,
   type RoleId, type Dimension, type Item, type Scenario
-} from '@/data/compass';
-import { compute, type Answers, type Baseline, type CompassResult } from '@/lib/engine';
+} from '@/data/compassV1';
+import { compute, type Answers, type Baseline, type CompassResult } from '@/lib/engineV1';
 import { CompassGauge, IcanLogo, ReportPreview, RadarSvg, QuadrantMap } from './Visuals';
 import Results, { ThankYou, type GateData } from './Results';
 

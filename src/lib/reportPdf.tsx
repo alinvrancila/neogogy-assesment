@@ -1,8 +1,8 @@
 import path from 'path';
 import QRCode from 'qrcode';
 import { Page, Document, Font, StyleSheet, Text, View, Svg, Path, Polygon, Circle, Line, Rect, Defs, LinearGradient, Stop, Text as SvgText } from '@react-pdf/renderer';
-import { dimensions, evidence, roles, microInsights, type RoleId } from '@/data/compass';
-import { compute, bandOf, bandHex, vulnList, type Answers, type Baseline, type CompassResult } from '@/lib/engine';
+import { dimensions, evidence, roles, microInsights, type RoleId } from '@/data/compassV1';
+import { compute, bandOf, bandHex, vulnList, type Answers, type Baseline, type CompassResult } from '@/lib/engineV1';
 
 /* ============================================================================
    CONFIGURATION  ·  page size, brand tokens, band ramp (one place)
