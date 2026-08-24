@@ -14,6 +14,8 @@
  * generous whitespace, no heavy fills.
  */
 
+import Image from 'next/image';
+import type { CSSProperties } from 'react';
 import type { CompassResult, ConstructId } from '@/engine';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
 
@@ -208,6 +210,62 @@ export function NextStagePanel({ result }: { result: CompassResult }) {
       <ul className="md-list">
         {result.nextTarget.requirements.map((r, i) => <li key={i}>{r}</li>)}
       </ul>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------- brand and preview */
+
+/** ICAN brand mark, carried over from v1 unchanged. */
+export function IcanLogo({ height = 46, className }: { height?: number; className?: string }) {
+  return (
+    <Image
+      src="/ican-logo.png"
+      alt="ICAN.ph, International Center for Applied Neogogy"
+      width={1039}
+      height={740}
+      className={className}
+      style={{ '--ican-logo-height': `${height}px` } as CSSProperties}
+      priority
+    />
+  );
+}
+
+/**
+ * Faux report cover for the landing page, so a visitor sees the deliverable.
+ * Static illustration with representative numbers, not a computed result.
+ */
+export function ReportPreview() {
+  return (
+    <div className="report-preview" aria-hidden="true">
+      <div className="rp-page rp-back2" />
+      <div className="rp-page rp-back1" />
+      <div className="rp-page rp-cover">
+        <div className="rp-band">
+          <div className="rp-band-eyebrow">The Neogogy Formation Compass</div>
+          <div className="rp-band-title">Your Formation Profile</div>
+        </div>
+        <div className="rp-pad">
+          <div className="rp-youare">Your answers are consistent with</div>
+          <div className="rp-profile">[YOUR ARCHETYPE]</div>
+          <div className="rp-tagline">your personal portrait, revealed inside</div>
+          <div className="rp-index">
+            <div className="rp-index-top">
+              <span className="rp-index-n">72</span>
+              <span className="rp-index-lab">Developmental index</span>
+            </div>
+            <div className="rp-indexbar"><span className="rp-indexmark" style={{ left: '72%' }} /></div>
+            <div className="rp-indexends"><span className="de">Stage 1</span><span className="fo">Stage 10</span></div>
+          </div>
+          <div className="rp-stats">
+            <div className="rp-stat"><span>7</span><label>Stage</label></div>
+            <div className="rp-stat"><span style={{ color: '#2F6F62' }}>10</span><label>Dimensions</label></div>
+            <div className="rp-stat"><span style={{ color: '#00A98A' }}>5</span><label>Next moves</label></div>
+          </div>
+          <div className="rp-meta"><span>Prepared for you</span><span>www.ican.ph</span></div>
+        </div>
+      </div>
+      <div className="rp-badge">Sample report</div>
     </div>
   );
 }

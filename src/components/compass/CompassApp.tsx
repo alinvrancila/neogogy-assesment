@@ -20,6 +20,7 @@ import type { CompassResult } from '@/engine';
 import {
   ItemScreen, OptionCards, optionsFor, B1_CHOICES, BAND_CHOICES, type Choice
 } from './items';
+import { IcanLogo, ReportPreview } from './Visuals';
 import Results, { GateForm, type GateData, type GateState } from './Results';
 
 type Screen = 'hero' | 'setup' | 'quiz' | 'gate' | 'results';
@@ -82,13 +83,22 @@ export default function CompassApp() {
       const raw = window.sessionStorage.getItem(STORE_KEY);
       if (raw) {
         const s = JSON.parse(raw) as Saved;
-        setScreen(s.screen ?? 'hero');
-        setPersona(s.persona ?? null);
-        setUsage(s.usage ?? null);
-        setB1(s.b1 ?? null);
-        setB2(s.b2 ?? null);
-        setAnswers(s.answers ?? {});
-        setPos(s.pos ?? 0);
+        // Only in-progress screens are resumable. The gate and results screens
+        // depend on a submission and a result that live in memory only, so
+        // restoring onto them would strand the respondent on a dead button.
+        const resumable = s.screen === 'setup' || s.screen === 'quiz';
+        const usable = resumable && (s.screen === 'setup' || (s.persona != null && s.usage != null));
+        if (usable) {
+          setScreen(s.screen);
+          setPersona(s.persona ?? null);
+          setUsage(s.usage ?? null);
+          setB1(s.b1 ?? null);
+          setB2(s.b2 ?? null);
+          setAnswers(s.answers ?? {});
+          setPos(s.pos ?? 0);
+        } else {
+          window.sessionStorage.removeItem(STORE_KEY);
+        }
       }
     } catch {
       /* a corrupt draft simply starts the assessment over */
@@ -239,12 +249,16 @@ export default function CompassApp() {
   }, [clearDraft]);
 
   /* ---------------------------------------------------------------- render */
+  // Every selector in compass.css is scoped under .nfc, so each screen must be
+  // wrapped in it or the entire design system silently fails to match.
+  const shell = (inner: React.ReactNode) => <div className="nfc">{inner}</div>;
+
   if (screen === 'hero') {
-    return <Hero onStart={() => setScreen('setup')} />;
+    return shell(<Hero onStart={() => setScreen('setup')} />);
   }
 
   if (screen === 'setup') {
-    return (
+    return shell(
       <Setup
         persona={persona}
         b1={b1}
@@ -267,7 +281,7 @@ export default function CompassApp() {
       ? 'This one is worded in the negative. Answer it as it really is.'
       : undefined;
 
-    return (
+    return shell(
       <section className="screen" id="quiz">
         <QuizBar
           personaName={PERSONAS.find((p) => p.id === persona)?.name ?? ''}
@@ -293,11 +307,16 @@ export default function CompassApp() {
   }
 
   if (screen === 'results' && result) {
-    return <Results result={result} firstName={firstName} emailed={emailed} onRetake={restart} />;
+    return shell(<Results result={result} firstName={firstName} emailed={emailed} onRetake={restart} />);
   }
 
   // Gate: results are shown only after the respondent provides their details.
-  return (
+  // If there is no assembled submission the gate cannot do anything, so send
+  // the respondent somewhere that works rather than to an inert form.
+  if (!submission) {
+    return shell(<Hero onStart={() => { restart(); setScreen('setup'); }} />);
+  }
+  return shell(
     <GateForm
       gate={gate}
       onSubmit={submitGate}
@@ -332,28 +351,120 @@ function Hero({ onStart }: { onStart: () => void }) {
   return (
     <section className="screen" id="hero">
       <div className="wrap">
-        <div className="hero-copy">
-          <span className="eyebrow">The Formation Compass</span>
-          <h1 className="display">How is AI shaping the way you think?</h1>
-          <p className="lede">
-            A reflective assessment that looks at your relationship with AI across ten dimensions:
-            how you use it, how carefully you check it, and what happens to your own capability
-            along the way. It takes about twelve minutes. Your answers place you on a ten stage
-            continuum and produce a report written from what you actually reported.
-          </p>
-          <div className="hero-cta">
-            <button className="btn btn-primary" onClick={onStart}>Begin <span className="arrow">&rarr;</span></button>
+        <div className="brandbar">
+          <IcanLogo height={132} className="brand-logo" />
+          <span className="bsep" />
+          <span className="btext">The Formation Compass<br />a reflective assessment</span>
+        </div>
+
+        <div className="hero-grid">
+          <div className="hero-copy">
+            <h1 className="display">Is AI making you <em>sharper</em>,<br />or just faster?</h1>
+            <p className="lede">
+              A free, research-informed assessment of your working relationship with AI. In about
+              twelve minutes it looks at ten dimensions of how you use it, how carefully you check
+              it, and what happens to your own capability along the way. You get your position on a
+              ten stage continuum and a personal report built from what you actually reported.
+            </p>
+            <div className="hero-cta">
+              <button className="btn btn-primary" onClick={onStart}>Get started <span className="arrow">&rarr;</span></button>
+              <button className="btn btn-ghost" onClick={() => document.getElementById('why')?.scrollIntoView({ behavior: 'smooth' })}>
+                Why this matters
+              </button>
+            </div>
+            <div className="hero-meta">
+              <span className="chip"><span className="dot" /> About 12 minutes</span>
+              <span className="chip"><span className="dot" /> 10 dimensions</span>
+              <span className="chip"><span className="dot" /> A personal PDF report</span>
+            </div>
           </div>
-          <div className="hero-meta">
-            <span className="chip"><span className="dot" /> About 12 minutes</span>
-            <span className="chip"><span className="dot" /> Ten dimensions</span>
-            <span className="chip"><span className="dot" /> A personal report</span>
+          <div className="hero-visual">
+            <ReportPreview />
           </div>
-          <p className="muted" style={{ marginTop: 24, maxWidth: '60ch' }}>
-            These are assessment indices built from self reported answers. They are designed to
-            support reflection, and they are not a validated psychometric measurement.
+        </div>
+
+        <div id="why" className="strip">
+          <div className="cell surface">
+            <div className="n">92%</div>
+            <div className="t">of students now learn with AI, yet only about a third have ever received guidance on how.</div>
+            <div className="src">HEPI / Kortext 2025</div>
+          </div>
+          <div className="cell surface">
+            <div className="n">17%</div>
+            <div className="t">worse on a later unaided exam for students who practiced with an unrestricted chatbot, against no AI at all.</div>
+            <div className="src">Bastani et al., PNAS 2025</div>
+          </div>
+          <div className="cell surface">
+            <div className="n">2&times;</div>
+            <div className="t">the learning gains when the same AI is designed well, against our best classroom practice.</div>
+            <div className="src">Kestin et al., Sci. Reports 2025</div>
+          </div>
+        </div>
+
+        <div className="report-gallery">
+          <p className="gallery-eyebrow">A glimpse of what you get</p>
+          <h2 className="gallery-title">A designed, keepsake-grade report. Built from your answers.</h2>
+          <div className="pages-grid">
+            <div className="page-card">
+              <div className="pc-banner">
+                <span className="pc-eyebrow">Where you stand</span>
+                <span className="pc-title">Ten stages, one position</span>
+              </div>
+              <div className="pc-body">
+                <p className="lede" style={{ fontSize: '.95rem' }}>
+                  Your placement is continuous, not a box. If you sit close to a boundary the report
+                  says so and shows the zone rather than pretending the line is sharp.
+                </p>
+              </div>
+            </div>
+            <div className="page-card">
+              <div className="pc-banner">
+                <span className="pc-eyebrow">The full picture</span>
+                <span className="pc-title">Your ten dimensions</span>
+              </div>
+              <div className="pc-body">
+                <p className="lede" style={{ fontSize: '.95rem' }}>
+                  Agency, verification, independent capability, fluency, transfer and five more, each
+                  with its own confidence level so thin evidence is labelled instead of hidden.
+                </p>
+              </div>
+            </div>
+            <div className="page-card">
+              <div className="pc-banner">
+                <span className="pc-eyebrow">Built for you, not a template</span>
+                <span className="pc-title">Your roadmap</span>
+              </div>
+              <div className="pc-body">
+                <div className="pc-illusion">
+                  <div className="pc-il-row"><span className="pc-il-lab">Felt</span><div className="pc-il-track"><span style={{ width: '90%', background: 'var(--gold)' }} /></div><b>90</b></div>
+                  <div className="pc-il-row"><span className="pc-il-lab">Measured</span><div className="pc-il-track"><span style={{ width: '72%', background: 'var(--growth-bright)' }} /></div><b>72</b></div>
+                </div>
+                <p className="pc-il-note">
+                  Your next moves are assembled from the patterns your own answers show, never looked
+                  up from a label.
+                </p>
+              </div>
+            </div>
+          </div>
+          <p className="gallery-foot">
+            Your position, the ten dimensions behind it, what appears to be helping and what may be
+            working against you, and concrete next moves, in a PDF you can keep.
           </p>
         </div>
+
+        <p className="lede center mt-l" style={{ maxWidth: '60ch', marginLeft: 'auto', marginRight: 'auto' }}>
+          Same technology, different outcomes. The difference is rarely the tool, it is the{' '}
+          <em style={{ color: 'var(--crimson)', fontStyle: 'italic' }}>design</em> of how you work
+          with it. This instrument helps you read that difference in your own practice.
+        </p>
+        <div className="center" style={{ marginTop: 32, paddingBottom: 16 }}>
+          <button className="btn btn-primary" onClick={onStart}>Get started <span className="arrow">&rarr;</span></button>
+        </div>
+
+        <p className="muted center" style={{ maxWidth: '62ch', margin: '28px auto 0', fontSize: '.85rem' }}>
+          These are assessment indices built from self reported answers. They are designed to support
+          reflection, and they are not a validated psychometric measurement.
+        </p>
       </div>
     </section>
   );

@@ -305,3 +305,40 @@ interaction was not clicked), and looking at the rendered `/dev/fixtures` page a
 for visual quality rather than structural correctness. The one visual pass that was done, rendering
 the gated cover to an image, immediately found a real defect, which is the argument for doing the
 rest.
+
+## Post-release fix: the missing .nfc wrapper
+
+**Symptom reported.** The landing page rendered as unstyled text, and on the setup screen no role
+could be selected; only the Back button appeared to work.
+
+**Cause.** Every selector in `src/app/compass.css` is scoped under `.nfc`, which exists so the design
+system never leaks into the Tailwind based `/admin` route. The v1 `CompassApp` returned a single
+`<div className="nfc">` wrapping all screens. When Phase 2 restructured the component into early
+returns per screen, that wrapper was dropped. The stylesheet was still built and served in full, but
+matched nothing, so the entire design system silently failed.
+
+That also explains the selection symptom, which was never a broken click handler: choosing a role did
+set state, but `.role.sel` had no styling to apply, so there was no visible feedback, and the enabled
+Begin button looked identical to the disabled one.
+
+**Fix.** Every screen is now returned through a `shell()` helper that wraps it in `.nfc`, with a
+comment recording why. The v1 hero layout was also restored: brand bar with the ICAN logo, the two
+column hero with the report preview, the three research statistics, and the report gallery, all
+carrying v2 content and copy. `IcanLogo` and `ReportPreview` were brought back into `Visuals.tsx`,
+the preview rewritten to show a developmental index and stage rather than v1 axes.
+
+**Why the automated battery missed it.** Every check was structural: typecheck, the validation suite,
+branch coverage, page fill, HTTP status, chunk integrity. None of them can see that a stylesheet
+matches no elements, because nothing about that is a type error, a failed assertion or a bad status
+code. This is precisely the gap flagged at the end of Phase 8 as needing a human in a browser, and it
+was the first thing a human in a browser found.
+
+**Second issue fixed at the same time.** A stale `sessionStorage` draft could restore a respondent
+onto the gate or results screen. Both depend on a submission and a result held only in memory, so a
+reload landed on a form whose button genuinely did nothing. Only `setup` and `quiz` are resumable
+now, and a gate with no submission returns to the start rather than rendering an inert form.
+
+**Also corrected.** A production build was run while `next start` was serving the previous build, and
+two server processes were left competing on port 3000. Next.js serves chunks by content hash, so the
+browser held a page requesting filenames that no longer existed. Rebuild under a running server, or
+leave duplicate servers up, and the page renders while every script behind it 404s.
