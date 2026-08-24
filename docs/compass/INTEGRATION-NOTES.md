@@ -127,3 +127,38 @@ keeps future rescoring a batch job rather than a re-survey. Admin panel branchin
 
 **Confidence display.** Preliminary and insufficient confidence render as a prominent banner above
 the sections with the engine's own confidence notes listed, never as a footnote.
+
+## Phase 4, visuals
+
+**What replaced what.** The v1 quadrant map and climb path are gone. In their place: a horizontal
+ten stage continuum strip with the marker placed by the continuous index, the substage label, a
+rendered borderline zone straddling the boundary when the engine reports one, and a gate marker that
+shows both the earned index and the capped stage with the engine's own one line reason. The ten
+dimension radar remains, fed from `dimensions`, with dependencySafety plotted as Dependency Risk
+from `reportedScore` and a caption saying that lower is healthier on that one spoke. The climb path
+became a current to next stage panel driven by `nextTarget`, which renders as a maintenance loop at
+stage 10 rather than pointing at a stage that does not exist.
+
+**Brand.** Deep Navy #1B2A4A ground, Electric Teal #00D4AA as the only accent, hairline rules at low
+opacity, no heavy fills (the radar polygon sits at 16 percent), existing app typography throughout.
+
+**Bug the fixtures page caught.** The first fixture builder answered every item with its highest
+option to represent a healthy respondent. That is wrong: reverse items are inverted at scoring, so
+the healthiest answer on a reverse item is the lowest option. The naive builder produced an
+"all highest" profile at stage 7 rather than stage 9 or 10. The builder is now direction aware
+(`healthiest` and `unhealthiest` helpers keyed on item type). This bug existed only in the fixture
+page, never in the engine or the flow, but it is worth recording because anyone hand building a test
+submission will hit it.
+
+**Fixtures verified.** All lowest lands at stage 1, index 0.5, five vulnerabilities and no strengths.
+All highest lands at stage 10, index 99.8, no vulnerabilities and five strengths, with the next stage
+panel showing the maintenance loop. The gated profile earns index 87.5, which would reach stage 9,
+and is held at stage 5 because verification sits at 4.9 against a floor of 45; both the earned
+position and the reason render on the strip. The borderline profile sits 2.7 points from stage 4 and
+draws its zone. The insufficient profile reports insufficient confidence.
+
+**Inspection.** The dev only page at `/dev/fixtures` returns 404 in production. Rendered in dev and
+checked structurally: ten SVGs, the gate marker and its reason appearing exactly once, the borderline
+zone once, the maintenance loop once, and the Dependency Risk spoke on every radar. A human pass over
+the rendered page is still worth doing before release, since structural checks confirm semantics
+rather than visual quality.

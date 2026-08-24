@@ -18,6 +18,7 @@ import {
   type CompassResult, type ReportSection,
 } from '@/engine';
 import { Markdown } from './Markdown';
+import { ContinuumStrip, DimensionRadar, NextStagePanel } from './Visuals';
 
 export type GateData = {
   firstName: string; lastName: string; email: string;
@@ -140,12 +141,22 @@ function ConfidenceBanner({ result }: { result: CompassResult }) {
   );
 }
 
-function SectionBlock({ section }: { section: ReportSection }) {
+function SectionBlock({ section, result }: { section: ReportSection; result: CompassResult }) {
+  // Visuals belong to specific sections. Everything else is prose only.
+  const visualBefore = section.key === 'continuum'
+    ? <ContinuumStrip result={result} />
+    : section.key === 'signature'
+      ? <DimensionRadar result={result} />
+      : null;
+  const visualAfter = section.key === 'nextStage' ? <NextStagePanel result={result} /> : null;
+
   return (
     <section className="results-section" id={`sec-${section.key}`}>
       <div className="rs-head"><span className="eyebrow">Section {section.n}</span></div>
       <h3>{section.title}</h3>
+      {visualBefore}
       <Markdown lines={section.lines} />
+      {visualAfter}
     </section>
   );
 }
@@ -182,7 +193,7 @@ export default function Results({
         </p>
       ) : null}
 
-      {sections.map((s) => <SectionBlock key={s.key} section={s} />)}
+      {sections.map((s) => <SectionBlock key={s.key} section={s} result={result} />)}
 
       <div className="results-cta">
         <h3>Come back to this</h3>

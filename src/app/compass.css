@@ -791,3 +791,69 @@
   color: var(--ink-soft);
   font-size: .95rem;
 }
+
+/* ---------------------------------------------------------------------------
+   v2 visuals: Deep Navy ground, one Electric Teal accent, hairline rules.
+   --------------------------------------------------------------------------- */
+
+.viz {
+  margin: 18px 0;
+  padding: 0;
+}
+
+.viz svg { display: block; border-radius: 12px; }
+
+.viz-cap {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin-top: 8px;
+}
+
+.nextstage { margin-top: 16px; }
+
+.ns-row {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.ns-node {
+  flex: 1;
+  border: 1px solid rgba(27, 42, 74, .18);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.ns-target { border-color: #00D4AA; }
+
+.ns-arrow {
+  align-self: center;
+  font-size: 1.4rem;
+  color: #00D4AA;
+}
+
+.ns-lab {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.ns-name { font-weight: 700; }
+
+.ns-sub {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+@media (max-width: 640px) {
+  .ns-row { flex-direction: column; }
+  .ns-arrow { transform: rotate(90deg); }
+}
