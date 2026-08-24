@@ -21,12 +21,14 @@ const PERSONA_COLORS: Record<string, string> = {
   wanderer: '#7a6b5c'
 };
 
-const PERSONA_LABEL: Record<string, string> = {
-  guide: 'The Guide',
-  anchor: 'The Anchor',
-  sprinter: 'The Sprinter',
-  wanderer: 'The Wanderer'
-};
+/** Turn a stored persona or archetype id into a readable label. Works for both
+ *  engine versions, so no version specific name list is needed here. */
+const idLabel = (id: string): string =>
+  String(id || '')
+    .split('_')
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
 
 const ROLE_LABEL: Record<string, string> = {
   student: 'Student',
@@ -469,7 +471,7 @@ export default function AdminPage() {
       if (zoneRef.current) {
         const order = ['guide', 'anchor', 'sprinter', 'wanderer'];
         const present = order.filter((z) => stats.byZone[z]);
-        const rows = present.map((z) => [PERSONA_LABEL[z] || z, stats.byZone[z]]);
+        const rows = present.map((z) => [idLabel(z) || z, stats.byZone[z]]);
         const data = g.arrayToDataTable([['Persona', 'Count'], ...(rows.length ? rows : [['No data', 1]])]);
         new g.PieChart(zoneRef.current).draw(data, {
           ...baseOptions,
@@ -711,7 +713,7 @@ export default function AdminPage() {
                   </div>
                   <div>
                     <span className="admin-mobile-label text-xs uppercase tracking-[0.14em] md:hidden">Persona</span>
-                    <p className="admin-strong font-medium md:whitespace-nowrap">{lead.personaName || PERSONA_LABEL[lead.persona] || '-'}</p>
+                    <p className="admin-strong font-medium md:whitespace-nowrap">{lead.personaName || idLabel(lead.persona) || '-'}</p>
                     {lead.engineVersion === 2 && lead.stage ? (
                       <p className="admin-muted text-xs md:whitespace-nowrap">Stage {lead.stage}, {lead.stageName}</p>
                     ) : null}

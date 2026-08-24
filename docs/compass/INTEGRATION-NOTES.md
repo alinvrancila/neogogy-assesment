@@ -266,3 +266,42 @@ source at all, as intended) while skillGrowth can reach high confidence from the
 evidence. The alternative reading would be to cap skillGrowth confidence because the evidence is a
 proxy. This is left as delivered because the mapping is stated explicitly and the validation suite
 asserts the behavior, but it is worth a decision before a production rescore runs.
+
+## Phase 8, cleanup and release
+
+**v1 deleted.** `src/lib/engineV1.ts`, `src/data/compassV1.ts` and `src/lib/reportPdf.tsx` are gone,
+and `src/data/` with them. Nothing imported them by this point: the Phase 6 `leadResult` helper had
+already removed the last dependency by rescoring legacy records instead of rendering them with the
+v1 engine. They remain recoverable from git history.
+
+**Admin label map removed.** The panel carried a hardcoded v1 persona name map. Since v1 records
+store `personaName` directly and v2 records store `archetypeName`, the map was a redundant fallback
+and the only reason v1 archetype names still appeared in `src/`. Replaced with a formatter that
+derives a readable label from any stored id, which works for both engine versions.
+
+**Two grep hits remain, both false positives.** The Phase 8 check greps for `0.55|0.72|Wanderer|Sprinter`.
+What survives is `rgba(242,232,220,0.55)`, a color alpha in the Open Graph image, and
+`0.55 * d("transfer")` in `scoring.ts`, which is the capabilityTransfer coefficient that Part B4
+specifies. Neither is the v1 abstention damping constant, and changing the second would violate the
+spec it came from.
+
+**Bug found by the release battery: the roadmap could exceed its cap.** Part B8 caps recommendations
+at 5 and separately guarantees that underexposed respondents always receive the exposure entry. The
+implementation applied the cap and then appended the exposure entry past it, so every underexposed
+respondent received 6 cards. The signal loop now reserves a slot when the profile is underexposed.
+Checked across 100 persona and usage and answer-shape combinations: maximum 5, zero over cap, and
+zero underexposed profiles missing the exposure entry.
+
+**Full battery, all green.** Typecheck clean. 29 of 29. Branch checks pass. Lint clean. No em-dash or
+en-dash characters anywhere in `src/`. Production build compiles. All twelve persona and usage
+combinations submit through the live API and return coherent results. The public PDF endpoint, the
+admin single report and the admin bulk report all return valid PDFs, including for a legacy record
+with no `engineVersion` field.
+
+**What still needs a human.** Two things in this build were verified structurally rather than by eye,
+and both are worth ten minutes before release: clicking a full assessment run in a browser as each
+persona (the screen list itself is verified exhaustively by `tests/compass/branches.ts`, but the
+interaction was not clicked), and looking at the rendered `/dev/fixtures` page and a generated PDF
+for visual quality rather than structural correctness. The one visual pass that was done, rendering
+the gated cover to an image, immediately found a real defect, which is the argument for doing the
+rest.

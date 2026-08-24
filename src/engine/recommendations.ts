@@ -109,8 +109,12 @@ export function buildRecommendations(signals: RiskSignal[], bottleneck: Bottlene
   }
   // 2. High/elevated risk signals, in severity order.
   const order = { high: 0, elevated: 1, watch: 2 } as const;
+  // Part B8 caps the roadmap at 5 AND guarantees the exposure entry to
+  // underexposed respondents. Reserve its slot here rather than appending it
+  // past the cap, which previously produced 6 cards.
+  const signalCap = up.underexposed ? 4 : 5;
   for (const s of [...signals].sort((a, b) => order[a.severity] - order[b.severity])) {
-    if (chosen.size >= 5) break;
+    if (chosen.size >= signalCap) break;
     if (LIBRARY[s.tag] && !chosen.has(s.tag)) chosen.set(s.tag, LIBRARY[s.tag]);
   }
   // 3. Underexposed low-users always get the fluency entry (§50), framed as exposure not volume.

@@ -1,7 +1,7 @@
 /**
  * Archetypes (§20): derived from multidimensional patterns, never from a single
  * threshold. Rules are ordered; the first match wins. A default always exists,
- * but unlike v1's Wanderer it is not a two-thirds residual: the rules above it
+ * but unlike the v1 residual bucket it does not absorb two thirds of respondents: the rules above it
  * absorb the meaningfully distinct profiles first (verified in tests).
  */
 import type { CompassResult, ConstructId, DimensionResult, UsageProfile } from "./types";
