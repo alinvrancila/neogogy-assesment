@@ -61,7 +61,10 @@ export const ARCHETYPES: ArchetypeDef[] = [
   {
     id: "hesitant_starter", name: "The Hesitant Starter",
     tagline: "Early, uncertain, and largely unformed AI habits.",
-    test: (d, u) => u.usage <= 2,
+    // Part B7 defines this as low usage AND low fluency AND not intentional.
+    // Testing usage alone made it a catch-all for every light user, including
+    // highly competent ones, which contradicts Part A: usage is not maturity.
+    test: (d, u) => u.usage <= 2 && s(d, "fluency") < 45 && !u.intentionalSelectiveUse,
     narrative: "Your relationship with AI is at its beginning, and your responses show more uncertainty than pattern, which is honest and common. The next step is small and concrete: one real task of your own, taken through an AI tool end to end, with attention to what it did well and where it failed.",
   },
   {

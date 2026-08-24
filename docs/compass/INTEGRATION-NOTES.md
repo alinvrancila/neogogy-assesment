@@ -226,3 +226,43 @@ injected into storage, since that is what genuine v1 rows look like. The admin P
 200 and a valid PDF for it by rescoring, the v2 lead also returns 200, and the CSV shows
 `engineVersion=1` with a v1 overall and empty stage next to `engineVersion=2` rows with a stage and
 index and empty v1 columns.
+
+## Phase 7, legacy rescoring
+
+**Script.** `scripts/rescore-legacy.ts`, run with `npm run rescore:legacy` (dry run) or
+`npm run rescore:legacy -- --write`. Dry run prints a v1 persona against v2 archetype and stage
+crosswalk, a stage histogram, a confidence histogram, and a count of records whose amplification
+confidence is preliminary or insufficient. It sends no email in either mode.
+
+**v1 data is preserved.** The rescored record keeps `persona`, `personaName`, `resilience`,
+`readiness` and `overall` exactly as they were and adds the v2 view beside them, tagged
+`rescoredFrom: "0.1.2"`. Nothing is overwritten.
+
+**Bug found: rescoring duplicated every record.** Writing 200 rescored records turned 203 stored
+records into 403. `saveLead` uses DynamoDB `PutCommand`, which upserts by key, but the local JSON
+fallback called `appendLocal`, which appends unconditionally. Any code path that re-saves an existing
+record therefore produced a duplicate id locally while behaving correctly on DynamoDB. The local path
+now upserts by id, matching Put semantics. Re-verified: 54 records in, 54 out, zero duplicate ids,
+and a second `--write` run correctly reports nothing to do.
+
+**Bug found: the Hesitant Starter archetype ignored everything except usage.** Its predicate was
+`u.usage <= 2`, so any light user landed there regardless of competence. A rescored record with
+fluency 100, agency 100, verification 98.5 and usage 2 was being called "Early, uncertain, and
+largely unformed AI habits". That contradicts Part B7, which defines the archetype as low usage AND
+low fluency AND not intentional, and it contradicts Part A's first principle directly: usage volume
+is not maturity. Every other archetype in the file has a compound predicate; this was the only one
+testing a single variable. Corrected to
+`u.usage <= 2 && fluency < 45 && !intentionalSelectiveUse`, with 45 chosen to match the existing
+`vulnerabilityCeiling`. The suite stays at 29 of 29, and that record now falls through to Forming
+Practitioner, whose narrative defers to the dimension level findings and assigns no deficits, which
+is the honest outcome for a competent light user.
+
+**Spec inconsistency, recorded not silently resolved.** Phase 7 gives the mapping "v1 transfer to
+skillGrowth" and then states that "amplification and skillGrowth evidence did not exist in v1, so
+rescored records carry preliminary or insufficient confidence there". Those two clauses disagree: if
+v1 transfer maps onto skillGrowth then skillGrowth does have evidence. The adapter implements the
+explicit mapping, so rescored records show amplification at insufficient confidence (it has no v1
+source at all, as intended) while skillGrowth can reach high confidence from the mapped v1 transfer
+evidence. The alternative reading would be to cap skillGrowth confidence because the evidence is a
+proxy. This is left as delivered because the mapping is stated explicitly and the validation suite
+asserts the behavior, but it is worth a decision before a production rescore runs.

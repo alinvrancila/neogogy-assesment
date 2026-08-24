@@ -111,7 +111,20 @@ export const saveLead = async (lead: LeadRecord): Promise<void> => {
     await doc.send(new PutCommand({ TableName: LEADS_TABLE, Item: lead }));
     return;
   }
-  await appendLocal('leads.json', lead);
+  // DynamoDB PutCommand upserts by key. The local JSON fallback must behave the
+  // same way, otherwise re-saving a record (rescoring, for example) silently
+  // appends a duplicate with the same id instead of replacing it.
+  await upsertLocalById('leads.json', lead);
+};
+
+const upsertLocalById = async (file: string, record: LeadRecord) => {
+  const fs = await import('fs/promises');
+  await fs.mkdir(localDir, { recursive: true });
+  const existing = await readLocal<LeadRecord>(file);
+  const at = existing.findIndex((r) => r.id === record.id);
+  if (at >= 0) existing[at] = record;
+  else existing.push(record);
+  await fs.writeFile(path.join(localDir, file), JSON.stringify(existing, null, 2), 'utf-8');
 };
 
 export const listLeads = async (): Promise<LeadRecord[]> => {
