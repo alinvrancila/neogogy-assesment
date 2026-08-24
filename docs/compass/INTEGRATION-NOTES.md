@@ -162,3 +162,36 @@ checked structurally: ten SVGs, the gate marker and its reason appearing exactly
 zone once, the maintenance loop once, and the Dependency Risk spoke on every radar. A human pass over
 the rendered page is still worth doing before release, since structural checks confirm semantics
 rather than visual quality.
+
+## Phase 5, PDF
+
+**Layout only.** `src/lib/reportPdfV2.tsx` renders `generateReportSections()`. It contains no prose
+about a respondent: every sentence comes from the narrative engine, so the screen and the PDF cannot
+drift apart.
+
+**Forced page assignments were the wrong structure.** The first build gave each group of sections its
+own `<Page>`. Measuring the output showed pages 5 and 6 sitting at 15 to 31 percent fill across every
+fixture, because a short section pair had a whole page to itself and long roadmaps spilled onto a
+nearly empty page. The light pages are now a single `<Page wrap>` that react-pdf paginates, so
+pagination follows content length. Interior pages went from 15 to 31 percent up to 78 to 98 percent.
+
+**No block splits, and no stranded headings.** Content blocks carry `wrap={false}`, so a block moves
+whole rather than splitting. Section headings are welded to their graphic in a `wrap={false}` wrapper
+while the prose after them is allowed to flow, which is what removed the half empty page 2 without
+ever splitting a figure from its title. The roadmap heading uses `minPresenceAhead` so it cannot be
+stranded at the foot of a page away from its first card.
+
+**Measurement, not eyeballing.** `pdfjs-dist` extracts per page text and the lowest text baseline on
+each page, which gives a fill percentage. Across five fixtures there are now zero interior pages
+below 60 percent fill and zero em-dash or en-dash characters in the rendered text. The only partly
+filled page in any report is the last page of the flowed content, which is inherent to pagination.
+
+**Visual inspection caught a real defect.** Rendering the cover to an image showed the gated profile
+with its marker sitting near the right hand end of the strip while the text read "Stage 5 of 10".
+Numerically correct (the index is 87.5) but misleading at a glance. The strip now shades the stage
+band actually occupied, draws the index marker hollow when gating means it overstates the placement,
+labels all ten stages, and carries a line reading "Index 87.5 would reach stage 9. Held at stage 5,
+see section 2." This is exactly the sort of thing the page-fill numbers could not have caught.
+
+**Fixtures rendered and inspected:** all-highest, all-lowest, gated, insufficient confidence, and a
+mixed parent profile. That covers the two the phase requires plus three more.
