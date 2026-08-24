@@ -81,9 +81,14 @@ type LeadRow = {
   consent: boolean;
   persona: string;
   personaName: string;
-  resilience: number;
-  readiness: number;
+  resilience?: number;
+  readiness?: number;
   overall: number;
+  engineVersion?: number;
+  stage?: number;
+  stageName?: string;
+  confidence?: string;
+  rescoredFrom?: string;
   dimensions?: Record<string, number>;
   answers?: Record<string, number>;
   baseline?: { b1: number; b2: number } | null;
@@ -551,7 +556,7 @@ export default function AdminPage() {
   const filteredLeads = leads.filter((lead) => {
     const query = leadQuery.trim().toLowerCase();
     if (!query) return true;
-    return [lead.name, lead.email, lead.mobilePhone, lead.role, lead.modality, lead.personaName, lead.heardFrom]
+    return [lead.name, lead.email, lead.mobilePhone, lead.role, lead.modality, lead.personaName, lead.heardFrom, lead.stageName]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(query));
   });
@@ -707,10 +712,18 @@ export default function AdminPage() {
                   <div>
                     <span className="admin-mobile-label text-xs uppercase tracking-[0.14em] md:hidden">Persona</span>
                     <p className="admin-strong font-medium md:whitespace-nowrap">{lead.personaName || PERSONA_LABEL[lead.persona] || '-'}</p>
+                    {lead.engineVersion === 2 && lead.stage ? (
+                      <p className="admin-muted text-xs md:whitespace-nowrap">Stage {lead.stage}, {lead.stageName}</p>
+                    ) : null}
                   </div>
                   <div>
                     <span className="admin-mobile-label text-xs uppercase tracking-[0.14em] md:hidden">Index</span>
                     <p className="admin-accent font-semibold">{lead.overall}</p>
+                    <p className="admin-muted text-xs md:whitespace-nowrap">
+                      {lead.engineVersion === 2 ? 'developmental' : 'v1 formation'}
+                      {lead.engineVersion === 2 && lead.confidence && lead.confidence !== 'high'
+                        ? `, ${lead.confidence}` : ''}
+                    </p>
                   </div>
                   <div className="admin-muted admin-submitted-cell hidden md:block" title={lead.createdAt}>
                     {formatDateTime(lead.createdAt)}

@@ -1,8 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { isAdminAuthed } from '@/lib/adminAuth';
 import { getLead } from '@/lib/storage';
-import { generateNeogogyPdfFromInputs } from '@/lib/reportPdf';
-import type { Answers, Baseline } from '@/lib/engineV1';
+import { generateCompassPdf } from '@/lib/reportPdfV2';
+import { resolveLeadResult } from '@/lib/leadResult';
 
 export const runtime = 'nodejs';
 
@@ -128,21 +128,19 @@ export async function POST(request: NextRequest) {
   const skipped: string[] = [];
   for (const id of ids) {
     const lead = await getLead(id);
-    if (!lead?.answers) {
-      skipped.push(`${id}: no stored answers`);
+    if (!lead) {
+      skipped.push(`${id}: not found`);
+      continue;
+    }
+    const resolved = resolveLeadResult(lead);
+    if (!resolved.ok) {
+      skipped.push(`${lead.name || id}: ${resolved.reason}`);
       continue;
     }
     try {
-      const pdf = await generateNeogogyPdfFromInputs({
-        name: lead.name || '',
-        role: lead.role || '',
-        modality: lead.modality || '',
-        answers: lead.answers as Answers,
-        baseline: (lead.baseline as Baseline | null | undefined) ?? null,
-        usageVal: lead.usageVal ?? null
-      });
+      const pdf = await generateCompassPdf({ result: resolved.result, name: lead.name || '' });
       files.push({
-        name: `${String(files.length + 1).padStart(2, '0')}_${safeFilePart(lead.name, 'Participant')}_${safeFilePart(lead.personaName || lead.persona, 'Result')}.pdf`,
+        name: `${String(files.length + 1).padStart(2, '0')}_${safeFilePart(lead.name, 'Participant')}_${safeFilePart(resolved.result.archetype.name, 'Result')}${resolved.rescored ? '_rescored' : ''}.pdf`,
         data: pdf
       });
     } catch (error) {

@@ -195,3 +195,34 @@ see section 2." This is exactly the sort of thing the page-fill numbers could no
 
 **Fixtures rendered and inspected:** all-highest, all-lowest, gated, insufficient confidence, and a
 mixed parent profile. That covers the two the phase requires plus three more.
+
+## Phase 6, API, persistence, admin and email
+
+**Submit route completed.** It now renders the v2 PDF and emails it, then returns the result for the
+on-screen render. A failure in the PDF or email path is caught and logged: the respondent still sees
+their result, which is the same principle already applied to storage failures.
+
+**Email copy.** Rewritten in archetype and stage language, hedged ("your answers are consistent
+with"), with the assessment-indices disclaimer in the body and no dashes. `sendReportEmail` gained an
+optional `subject` so callers set it rather than hardcoding a v1 phrase.
+
+**Legacy records made renderable without the v1 engine.** The obvious design would have kept the v1
+PDF around to render v1 leads, but that would have blocked the Phase 8 deletion forever. Instead
+`src/lib/leadResult.ts` resolves any stored lead to a v2 result: engineVersion 2 records return their
+stored result, and everything older goes through `rescoreLegacy`. The admin single report and bulk
+report now both use it, so no route imports the v1 engine and rescored PDFs are marked `_rescored` in
+bulk filenames.
+
+**Public report route rebuilt** on the v2 engine with the same item-model validation as submit.
+
+**Admin panel and CSV branch on engineVersion.** The CSV carries both column sets: v2 rows fill
+`stage`, `stageName`, `index`, `confidence` and `rescoredFrom` and leave `resilience`, `readiness`
+and `overall` empty, while v1 rows do the reverse. The panel shows the archetype with its stage
+underneath for v2 records, labels the index as developmental or v1 formation so the two are never
+read as the same number, and appends the confidence when it is not high.
+
+**Verified against a real legacy record.** A v1 shaped lead with no `engineVersion` field at all was
+injected into storage, since that is what genuine v1 rows look like. The admin PDF endpoint returns
+200 and a valid PDF for it by rescoring, the v2 lead also returns 200, and the CSV shows
+`engineVersion=1` with a v1 overall and empty stage next to `engineVersion=2` rows with a stage and
+index and empty v1 columns.

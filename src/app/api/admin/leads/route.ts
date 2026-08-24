@@ -17,9 +17,12 @@ const toCsv = (leads: LeadRecord[]): string => {
   const dimensionKeys = Array.from(
     new Set(leads.flatMap((lead) => Object.keys(lead.dimensions || {})))
   ).sort();
+  // v1 and v2 records are not interchangeable, so both column sets are present
+  // and each row fills only the ones that apply to its engineVersion.
   const headers = [
     'id',
     'createdAt',
+    'engineVersion',
     'name',
     'firstName',
     'lastName',
@@ -31,6 +34,11 @@ const toCsv = (leads: LeadRecord[]): string => {
     'consent',
     'persona',
     'personaName',
+    'stage',
+    'stageName',
+    'index',
+    'confidence',
+    'rescoredFrom',
     'resilience',
     'readiness',
     'overall',
@@ -41,6 +49,7 @@ const toCsv = (leads: LeadRecord[]): string => {
   const rows = leads.map((lead) => [
     lead.id,
     lead.createdAt,
+    lead.engineVersion ?? 1,
     lead.name,
     lead.firstName || '',
     lead.lastName || '',
@@ -52,9 +61,14 @@ const toCsv = (leads: LeadRecord[]): string => {
     lead.consent ? 'yes' : 'no',
     lead.persona,
     lead.personaName,
-    lead.resilience,
-    lead.readiness,
-    lead.overall,
+    lead.stage ?? '',
+    lead.stageName ?? '',
+    lead.engineVersion === 2 ? lead.overall : '',
+    lead.confidence ?? '',
+    lead.rescoredFrom ?? '',
+    lead.resilience ?? '',
+    lead.readiness ?? '',
+    lead.engineVersion === 2 ? '' : lead.overall,
     lead.usageVal ?? '',
     ...dimensionKeys.map((key) => lead.dimensions?.[key] ?? '')
   ]);

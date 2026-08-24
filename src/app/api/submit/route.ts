@@ -4,6 +4,8 @@ import { randomUUID } from 'crypto';
 import { compute, applicableItems } from '@/engine';
 import type { Persona, Submission } from '@/engine/types';
 import { saveLead, logEvent, type LeadRecord } from '@/lib/storage';
+import { generateCompassPdf } from '@/lib/reportPdfV2';
+import { sendReportEmail, isEmailEnabled } from '@/lib/email';
 
 export const runtime = 'nodejs';
 
@@ -133,5 +135,41 @@ export async function POST(request: NextRequest) {
     zone: result.archetype.id,
   });
 
-  return NextResponse.json({ success: true, result, emailSent: false });
+  let emailSent = false;
+  try {
+    const pdf = await generateCompassPdf({ result, name: fullName });
+    if (isEmailEnabled()) {
+      const first = body.firstName || fullName;
+      const sent = await sendReportEmail({
+        to: body.email,
+        name: fullName,
+        personaName: result.archetype.name,
+        subject: `Your Formation Compass result: ${result.archetype.name}`,
+        bodyText: [
+          `Hello ${first},`,
+          ``,
+          `Your Formation Compass report is attached.`,
+          ``,
+          `Your answers are consistent with ${result.archetype.name}: ${result.archetype.tagline}`,
+          `They place you at stage ${result.stage.stage} of 10 on the Neogogy continuum, ${result.stage.stageName}, with a developmental index of ${result.stage.rawIndex}.`,
+          ``,
+          `The report walks through all ten dimensions, where your answers suggest AI is helping and where it may be working against you, what appears to be holding your position, and a roadmap built from what you reported.`,
+          ``,
+          `These are assessment indices drawn from self reported answers, meant to support reflection rather than to measure you.`,
+          ``,
+          `Explore the framework at www.ican.ph.`,
+          ``,
+          `Warmly,`,
+          `The International Center for Applied Neogogy`,
+        ].join('\n'),
+        pdf,
+      });
+      emailSent = sent.sent;
+    }
+  } catch (error) {
+    console.error('pdf/email failed', error);
+    // The respondent still sees their result on screen.
+  }
+
+  return NextResponse.json({ success: true, result, emailSent });
 }

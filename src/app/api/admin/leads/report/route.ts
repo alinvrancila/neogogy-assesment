@@ -1,8 +1,8 @@
 import type { NextRequest } from 'next/server';
 import { isAdminAuthed } from '@/lib/adminAuth';
 import { getLead } from '@/lib/storage';
-import { generateNeogogyPdfFromInputs } from '@/lib/reportPdf';
-import type { Answers, Baseline } from '@/lib/engineV1';
+import { generateCompassPdf } from '@/lib/reportPdfV2';
+import { resolveLeadResult } from '@/lib/leadResult';
 
 export const runtime = 'nodejs';
 
@@ -25,23 +25,17 @@ export async function GET(request: NextRequest) {
       headers: { 'Content-Type': 'application/json' }
     });
   }
-  if (!lead.answers) {
-    return new Response(JSON.stringify({ error: 'This submission does not have stored answers.' }), {
+  const resolved = resolveLeadResult(lead);
+  if (!resolved.ok) {
+    return new Response(JSON.stringify({ error: resolved.reason }), {
       status: 422,
       headers: { 'Content-Type': 'application/json' }
     });
   }
 
-  const pdf = await generateNeogogyPdfFromInputs({
-    name: lead.name || '',
-    role: lead.role || '',
-    modality: lead.modality || '',
-    answers: lead.answers as Answers,
-    baseline: (lead.baseline as Baseline | null | undefined) ?? null,
-    usageVal: lead.usageVal ?? null
-  });
+  const pdf = await generateCompassPdf({ result: resolved.result, name: lead.name || '' });
 
-  return new Response(pdf, {
+  return new Response(new Uint8Array(pdf), {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',

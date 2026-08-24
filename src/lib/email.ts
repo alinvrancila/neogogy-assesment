@@ -18,12 +18,14 @@ export const sendReportEmail = async ({
   to,
   name,
   personaName,
+  subject,
   bodyText,
   pdf
 }: {
   to: string;
   name: string;
   personaName: string;
+  subject?: string;
   bodyText: string;
   pdf: Buffer;
 }): Promise<{ sent: boolean; reason?: string }> => {
@@ -37,7 +39,7 @@ export const sendReportEmail = async ({
   const mail = new MailComposer({
     from: process.env.EMAIL_FROM,
     to,
-    subject: `Your Neogogy Formation Compass: ${personaName}`,
+    subject: subject || `Your Neogogy Formation Compass: ${personaName}`,
     text: bodyText,
     attachments: [
       {
