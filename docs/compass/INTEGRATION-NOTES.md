@@ -45,3 +45,45 @@ continues to build during the transition. Nothing new imports them. They are del
 
 **Verification.** `npx tsc --noEmit` exits 0 across the whole app including the new engine, items and
 tests. `npm run test:compass` reports 29 passed, 0 failed.
+
+## Phase 2, assessment flow
+
+**Spec conflict resolved: micro-state threshold.** Part B3 defines micro-states as strong at 65 and
+above, developing from 40 to 64.9, watch below 40. The accelerator's `config.ts` shipped
+`microWatch: 45`, which appears to have been conflated with `vulnerabilityCeiling: 45`. Under the
+Part 0 rule that this prompt wins on assessment behavior, the constant was changed to 40. No test
+depended on the old value; the suite still reports 29 passed, 0 failed. Scores from 40 to 44.9 are
+now labeled developing rather than watch, which is the respondent-visible effect.
+
+**B2 rendering.** `BASELINE_ITEMS` declares B2 with `scale: "agreement"`, but the engine consumes
+b2 as a predicted band compared against the measured band ladder (80, 62, 44, 26). Rendering it on
+an agreement scale would have asked the respondent to agree or disagree with a prediction. B2 is
+therefore rendered with five band labels ("Near the start of the continuum" through "Near the far
+end"). This is a presentation choice only; no engine change was made, and the stored value is still
+1 to 5.
+
+**Screen order.** Persona selection, B1 and B2 sit together on the setup screen, since B1 is worded
+"before any questions" and neither is scored. The usage item is then the first scored screen, and
+everything after it comes from `applicableItems(persona, usage)` in the order that function returns.
+No item list is hardcoded anywhere in the components.
+
+**Stale answer pruning.** Changing the usage answer changes which adaptive branches apply. If a
+respondent answered at usage 5, went back, and changed usage to 1, the high-use probe answers would
+still be in state and would violate the "every key is an applicable item id" rule. `chooseUsage`
+therefore prunes answers to the new applicable set, and `finish` prunes again before assembling the
+Submission. The dev-only assertion logs any stray id.
+
+**Rendering split.** Claims and reverses use the compact scale row from `SCALE_LABELS`. Scenarios,
+branches and outcomes use full-width anchored option cards. The outcome value 0 option ("Not enough
+experience to say") is a full card of equal weight, distinguished only by a dashed border, never a
+skip link. Star decorations and the live estimate are gone, and no component performs scoring.
+
+**Verification.** `tests/compass/branches.ts` added: it asserts, for all four personas at all five
+usage levels, that the low-use branch appears only at usage 2 or below, the high-use probes only at
+usage 4 or above, that screen counts are exactly 33, 34 or 35 items plus the usage screen, that no
+item id repeats, and that no two persona banks share any prompt text. All checks pass. Production
+build succeeds and the hero renders v2 copy with no v1 archetype names anywhere in the page.
+
+**Known gap at this phase.** The screen-list half of the Phase 2 gate is verified exhaustively and
+deterministically. The interactive half (clicking a full run as each persona at usage 1, 3 and 5)
+needs a browser and is carried out in the Phase 8 battery, not here.

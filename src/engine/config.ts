@@ -80,7 +80,8 @@ export const SCORING = {
   /** Fewer scored inputs than this on a dimension drops its confidence a level. */
   minInputsForFullConfidence: 3,
   /** Micro-state cutoffs. */
-  microStrong: 65, microWatch: 45,
+  /** Part B3: strong >= 65, developing 40..64.9, watch < 40. */
+  microStrong: 65, microWatch: 40,
   /** A dimension counts as a genuine strength / vulnerability only past these. */
   strengthFloor: 65, vulnerabilityCeiling: 45,
 };

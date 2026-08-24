@@ -700,3 +700,40 @@
 .nfc .mt-m{margin-top:28px}
 .nfc .mt-l{margin-top:48px}
 .nfc .muted{color:var(--ink-soft)}
+
+/* ---------------------------------------------------------------------------
+   v2 item rendering: full-width anchored option cards for scenario, branch and
+   outcome items. Claims and reverses keep the compact scale row (.opts .opt).
+   --------------------------------------------------------------------------- */
+
+.opts-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.opts-cards .opt-card {
+  width: 100%;
+  text-align: left;
+  align-items: flex-start;
+  padding: 16px 18px;
+  line-height: 1.45;
+}
+
+.opts-cards .opt-card .otext {
+  white-space: normal;
+}
+
+/* The "not enough experience" option is a real option, not a skip link, so it
+   carries the same visual weight as every other card. */
+.opts-cards .opt-na {
+  border-style: dashed;
+}
+
+.qnote {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: .04em;
+  color: var(--gold);
+  margin: 10px 0 4px;
+}
