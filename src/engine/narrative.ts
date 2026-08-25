@@ -14,6 +14,7 @@
  */
 import type { CompassResult, ConstructId } from "./types";
 import { CONSTRUCTS, STAGES } from "./config";
+import { CONSTRUCT_CONTENT, STAGE_DETAIL, EVIDENCE_BASE } from "./content";
 import { helpHarm } from "./patterns";
 
 const PERSONA_LABEL: Record<string, string> = {
@@ -28,7 +29,7 @@ const CONF_LABEL: Record<string, string> = {
 export type ReportSectionKey =
   | "profile" | "continuum" | "signature" | "helping" | "harming"
   | "strengths" | "selfKnowledge" | "bottleneck" | "nextStage"
-  | "roadmap" | "experiment";
+  | "roadmap" | "plan" | "evidence" | "experiment";
 
 export interface ReportSection {
   key: ReportSectionKey;
@@ -58,6 +59,12 @@ export function confidenceLabel(level: string): string {
   return CONF_LABEL[level] ?? level;
 }
 
+function bandReading(r: CompassResult, c: ConstructId): string {
+  const content = CONSTRUCT_CONTENT[c];
+  const st = r.dimensions[c].microState;
+  return st === "strong" ? content.atStrong : st === "developing" ? content.atDeveloping : content.atWatch;
+}
+
 function dimLine(r: CompassResult, c: ConstructId): string {
   const d = r.dimensions[c];
   const def = CONSTRUCTS[c];
@@ -65,10 +72,66 @@ function dimLine(r: CompassResult, c: ConstructId): string {
     ? `Dependency Risk ${d.reportedScore} (independent capability ${d.score})`
     : `${def.name} ${d.score}`;
   const conf = d.confidence !== "high" ? ` · ${CONF_LABEL[d.confidence].toLowerCase()}` : "";
-  const gap = d.consistencyGap?.flagged
-    ? ` · note: your self-description here ran ahead of your situational answers, so the situational evidence was weighted more heavily`
-    : "";
-  return `- **${shown}** (${d.microState})${conf}${gap}. ${def.principle}`;
+  return `- **${shown}** (${d.microState})${conf}. ${def.principle}`;
+}
+
+/** The unpacked treatment: what it measures, how you read, and the evidence. */
+function dimBlock(r: CompassResult, c: ConstructId): string[] {
+  const d = r.dimensions[c];
+  const def = CONSTRUCTS[c];
+  const content = CONSTRUCT_CONTENT[c];
+  const shown = def.reportedAsRisk
+    ? `Dependency Risk ${d.reportedScore}, independent capability ${d.score}`
+    : `${def.name} ${d.score}`;
+  const L: string[] = [];
+  L.push(`### ${shown}`);
+  L.push(`*What this measures.* ${content.whatItMeasures}`);
+  L.push(`*Why it matters.* ${content.whyItMatters}`);
+  L.push(`*Your reading.* ${bandReading(r, c)}`);
+  if (d.consistencyGap?.flagged) {
+    L.push(`*A divergence worth noting.* On this dimension your self-description ran ahead of your situational answers by ${d.consistencyGap.gap} points. That is common and human. The situational evidence was weighted more heavily here, because what happens under pressure describes a habit better than what we intend.`);
+  }
+  if (d.confidence !== "high") {
+    L.push(`*Confidence.* ${CONF_LABEL[d.confidence]}. This reading rests on limited evidence, so treat it as a prompt rather than a finding.`);
+  }
+  L.push(`*Research.* ${content.research.claim} (${content.research.source})`);
+  L.push(`*What moves it.*`);
+  for (const pr of content.practices) L.push(`- ${pr}`);
+  return L;
+}
+
+/** Immediate, 30 day and 90 day horizons, assembled from detected behaviour. */
+export function improvementPlan(r: CompassResult): { horizon: string; timeframe: string; items: string[] }[] {
+  const weakest = [...Object.values(r.dimensions)].sort((a, b) => a.score - b.score);
+  const bottleneckContent = CONSTRUCT_CONTENT[r.bottleneck.construct];
+  const secondary = weakest.find((d) => d.construct !== r.bottleneck.construct);
+
+  const now: string[] = [];
+  if (!r.bottleneck.saturated) {
+    now.push(`Start where the constraint is: ${CONSTRUCTS[r.bottleneck.construct].name}. ${bottleneckContent.practices[0]}`);
+  }
+  const first = r.recommendations[0];
+  if (first) now.push(`${first.capability}: ${first.practice}`);
+  now.push(`Pick one recurring task this week and do it without AI, then compare it against how you would normally produce it. That comparison is the measurement everything else here depends on.`);
+
+  const thirty: string[] = [];
+  for (const rec of r.recommendations.slice(1, 3)) thirty.push(`${rec.capability}: ${rec.practice}`);
+  if (secondary) {
+    thirty.push(`${CONSTRUCTS[secondary.construct].name} is your next lowest reading. ${CONSTRUCT_CONTENT[secondary.construct].practices[0]}`);
+  }
+  if (!r.bottleneck.saturated) thirty.push(bottleneckContent.practices[1]);
+  thirty.push(`Re-read your roadmap and mark which practices actually happened. A plan that is not reviewed becomes a document rather than a change.`);
+
+  const ninety: string[] = [];
+  for (const req of r.nextTarget.requirements.slice(0, 3)) ninety.push(req);
+  ninety.push(`Retake this assessment. Your answers are stored with your result, so the comparison is like for like and will show movement rather than mood.`);
+  ninety.push(`Set a recurring review of your own AI habits, whatever the result says. Adaptive Growth is the dimension that keeps every other one current.`);
+
+  return [
+    { horizon: "Start now", timeframe: "This week", items: now },
+    { horizon: "Build the habit", timeframe: "Next 30 days", items: thirty },
+    { horizon: "Move a stage", timeframe: "Next 90 days", items: ninety },
+  ];
 }
 
 /**
@@ -101,6 +164,16 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     L.push(`**Stage ${r.stage.stage} of 10: ${r.stage.stageName}** (${r.stage.substage}) · developmental index ${r.stage.rawIndex}.`);
     L.push(``);
     L.push(stageDef.short);
+    L.push(``);
+    const det = STAGE_DETAIL[r.stage.stage];
+    if (det) {
+      L.push(`*What this stage usually looks like.* ${det.looksLike}`);
+      L.push(`*The trap at this stage.* ${det.trap}`);
+    }
+    L.push(``);
+    L.push(`The full continuum runs: ${STAGES.map(x => `${x.stage}. ${x.name}`).join(", ")}.`);
+    L.push(``);
+    L.push(`Placement is continuous rather than a box you fall into, and the stages above you are reached by specific, nameable changes rather than by general improvement. Stages 5 and above also carry gates: minimum readings on agency, verification, independent capability, responsible use and transfer, so that fluency alone cannot carry someone past a weakness that matters.`);
     if (r.stage.borderline) {
       L.push(``);
       L.push(`You are within ${r.stage.borderline.distance} points of stage ${r.stage.borderline.adjacentStage}; treat this placement as a zone, not a verdict. Small, real changes in habit will move it.`);
@@ -115,17 +188,33 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
   // 3. Developmental signature
   {
     const L: string[] = [];
+    L.push(`Ten dimensions, each scored 0 to 100. Higher is healthier on every one except Dependency Risk, which is shown as a risk, so lower is healthier there. Each carries its own confidence level, because some dimensions rest on more of your evidence than others.`);
+    L.push(``);
+    L.push(`**At a glance**`);
     for (const c of Object.keys(CONSTRUCTS) as ConstructId[]) L.push(dimLine(r, c));
     L.push(``);
-    L.push(`Composites: future readiness ${r.composites.futureReadiness} · augmentation ${r.composites.augmentation} · judgment ${r.composites.judgment} · capability transfer ${r.composites.capabilityTransfer} · dependency index ${r.composites.dependencyIndex} · underexposure ${r.composites.underexposure}.`);
+    L.push(`**Composite readings.** These combine dimensions into the questions people usually want answered.`);
+    L.push(`- **Future readiness ${r.composites.futureReadiness}.** Fluency, adaptability and transfer, discounted where underexposure is high.`);
+    L.push(`- **Augmentation ${r.composites.augmentation}.** Whether AI is improving your thinking rather than your throughput.`);
+    L.push(`- **Judgment ${r.composites.judgment}.** Verification, agency and responsible use together.`);
+    L.push(`- **Capability transfer ${r.composites.capabilityTransfer}.** Whether assisted work is becoming capability you own.`);
+    L.push(`- **Dependency index ${r.composites.dependencyIndex}.** High means more of your capability depends on the tool being present.`);
+    L.push(`- **Underexposure ${r.composites.underexposure}.** High means limited practice with the tools, which is a different risk from dependency and is not the same as caution.`);
+    L.push(``);
+    L.push(`**Each dimension, unpacked**`);
+    for (const c of Object.keys(CONSTRUCTS) as ConstructId[]) L.push(...dimBlock(r, c));
     S.push({ key: "signature", n: 3, title: "Your developmental signature", lines: L });
   }
 
   // 4. Helping
   {
     const L: string[] = [];
+    L.push(`This section reports patterns rather than scores. A pattern is a combination across several dimensions that means something the individual numbers do not: amplification travelling with transfer and retained independence, for example, is a different finding from any one of those being high on its own. Patterns are only reported when they actually cross their thresholds in your answers, so this section is sometimes short, and a short section here is information rather than an omission.`);
+    L.push(``);
     if (hh.helping.length) {
       for (const p of hh.helping) L.push(`- **${p.label}.** ${p.narrative}`);
+      L.push(``);
+      L.push(`These are the parts of your practice worth protecting deliberately. Patterns like these are built slowly and lost quickly, usually not through a decision but through a busy period in which the habit underneath them quietly stops happening.`);
     } else if (r.usageProfile.usage <= 2) {
       L.push(`With limited current use, there is little evidence either way here; this section will become meaningful as real exposure accumulates.`);
     } else {
@@ -135,6 +224,8 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
       } else {
         L.push(`Your responses show serviceable use, but no strong evidence yet that AI is deepening understanding, widening options, or building capability rather than output. That is the opportunity, not an accusation.`);
       }
+      L.push(``);
+      L.push(`Worth saying plainly: benefit from these tools is not automatic. The largest documented learning gains came from the same technology used with deliberate design, roughly double the gains of established classroom practice (Kestin et al., Scientific Reports, 2025), while unrestricted use of the same kind of tool left learners around 17 percent worse on a later unaided exam (Bastani et al., PNAS, 2025). Same technology, opposite outcomes. The variable is how it is used, which is what this section is looking for.`);
     }
     S.push({ key: "helping", n: 4, title: "Where AI appears to be helping you", lines: L });
   }
@@ -143,9 +234,15 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
   {
     const L: string[] = [];
     if (hh.harming.length) {
+      L.push(`Each item below fired because a specific combination in your answers crossed a threshold. None of them is a character judgment, and none is a prediction. They describe a pattern that your responses are consistent with today.`);
+      L.push(``);
       for (const p of hh.harming) L.push(`- **${p.label}.** ${p.narrative}`);
+      L.push(``);
+      L.push(`The reason these matter more than a low score on its own is that they tend to be self-reinforcing. Work that is easier feels like work that is going well, so the pattern removes the very signal that would prompt you to change it. That is why this instrument asks about situations rather than only about opinions.`);
     } else {
-      L.push(`No harm pattern crossed its threshold in your responses. That is a genuinely good result; the honest caveat is that this instrument sees what you reported, and its protective value depends on your answers staying honest as your use grows.`);
+      L.push(`No harm pattern crossed its threshold in your responses. That is a genuinely good result, and it is worth stating plainly rather than hedging into a warning.`);
+      L.push(``);
+      L.push(`Two honest caveats. This instrument sees what you reported, so its protective value depends on your answers staying honest as your use grows. And harm patterns here are combinations, not single readings: a dimension can be soft without any pattern firing, so read your signature above alongside this.`);
     }
     if (hh.mixed.length) {
       L.push(``);
@@ -157,16 +254,40 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
   // 6. Strengths and vulnerabilities
   {
     const L: string[] = [];
-    if (r.strengths.length) L.push(`**Genuine strengths:** ${r.strengths.map(x => `${CONSTRUCTS[x.construct].name} (${x.score})`).join(", ")}.`);
-    else L.push(`No dimension yet clears the bar for a genuine strength (65+). Nothing is collapsing either; your profile's story is formation, not repair.`);
-    if (r.vulnerabilities.length) L.push(`**Genuine vulnerabilities:** ${r.vulnerabilities.map(x => `${CONSTRUCTS[x.construct].name} (${x.score})`).join(", ")}.`);
-    else L.push(`No dimension falls below the vulnerability line (45). This report will not manufacture three risks to fill a template.`);
+    L.push(`These lists have a floor and a ceiling rather than a fixed length. A dimension is named a strength only at 65 or above, and a vulnerability only at 45 or below. Either list can be empty, and an empty list is a real result: this report does not fill a template with three strengths and three risks regardless of what you reported.`);
+    L.push(``);
+    if (r.strengths.length) {
+      L.push(`**Genuine strengths:** ${r.strengths.map(x => `${CONSTRUCTS[x.construct].name} (${x.score})`).join(", ")}.`);
+      L.push(``);
+      for (const x of r.strengths.slice(0, 3)) {
+        L.push(`- **${CONSTRUCTS[x.construct].name}.** ${CONSTRUCT_CONTENT[x.construct].atStrong}`);
+      }
+      L.push(``);
+      L.push(`Strengths are worth naming because they are what you build the rest on, and because they are the thing most likely to be assumed rather than maintained.`);
+    } else {
+      L.push(`No dimension yet clears the bar for a genuine strength, which is 65. Nothing is collapsing either. Your profile's story at the moment is formation rather than repair, and that is a more workable starting point than it sounds.`);
+    }
+    L.push(``);
+    if (r.vulnerabilities.length) {
+      L.push(`**Genuine vulnerabilities:** ${r.vulnerabilities.map(x => `${CONSTRUCTS[x.construct].name} (${x.score})`).join(", ")}.`);
+      L.push(``);
+      for (const x of r.vulnerabilities.slice(0, 3)) {
+        const c = CONSTRUCT_CONTENT[x.construct];
+        L.push(`- **${CONSTRUCTS[x.construct].name} (${x.score}).** ${c.atWatch} A first step: ${c.practices[0].charAt(0).toLowerCase()}${c.practices[0].slice(1)}`);
+      }
+    } else {
+      L.push(`No dimension falls below the vulnerability line, which is 45. That is worth reading as the genuine result it is, rather than as an invitation to look harder for something wrong.`);
+    }
     S.push({ key: "strengths", n: 6, title: "Strengths and vulnerabilities", lines: L });
   }
 
   // 7. Self-knowledge
   {
     const L: string[] = [];
+    L.push(`Before answering anything, you told us two things: how healthy your relationship with AI feels, and where you expected this result to land. Neither was scored. They are compared with your measured result here, because they measure two different things and both are useful.`);
+    L.push(``);
+    L.push(`**Desirability** is the gap between how good something feels and how it measures. It is the most documented effect in this field: assistance improves the visible output, the improved output feels like improved capability, and the feeling persists even as the underlying capability moves the other way (Bastani et al., PNAS, 2025). **Calibration** is different and narrower: it is simply the skill of predicting your own result, which is worth tracking on its own because people who can predict their own performance tend to manage it better.`);
+    L.push(``);
     L.push(r.calibration.note);
     if (r.calibration.calibrationGap !== undefined && Math.abs(r.calibration.calibrationGap) >= 2) {
       L.push(``);
@@ -176,13 +297,42 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
   }
 
   // 8. Bottleneck
-  S.push({ key: "bottleneck", n: 8, title: "What is keeping you here", lines: [r.bottleneck.reason] });
+  {
+    const L: string[] = [];
+    L.push(r.bottleneck.reason);
+    if (!r.bottleneck.saturated) {
+      const bc = CONSTRUCT_CONTENT[r.bottleneck.construct];
+      L.push(``);
+      L.push(`*Why this one and not your lowest score.* A bottleneck is the dimension doing most to hold your position, which is not always the weakest number. A low reading on a lightly weighted dimension can matter less than a middling reading on one that gates the stages above you.`);
+      L.push(``);
+      L.push(`*What it measures.* ${bc.whatItMeasures}`);
+      L.push(`*Why it matters here.* ${bc.whyItMatters}`);
+      L.push(`*Research.* ${bc.research.claim} (${bc.research.source})`);
+      L.push(``);
+      L.push(`*The three practices that move it*`);
+      for (const pr of bc.practices) L.push(`- ${pr}`);
+    }
+    S.push({ key: "bottleneck", n: 8, title: "What is keeping you here", lines: L });
+  }
 
   // 9. Next stage
   {
     const L: string[] = [];
-    L.push(`**Target: Stage ${r.nextTarget.stage}, ${r.nextTarget.stageName}.** To get there:`);
+    const atTop = r.nextTarget.stage === r.stage.stage;
+    L.push(`**Target: Stage ${r.nextTarget.stage}, ${r.nextTarget.stageName}.**`);
+    const nd = STAGE_DETAIL[r.nextTarget.stage];
+    if (nd) {
+      L.push(``);
+      L.push(atTop
+        ? `You are at the far end of the continuum, so the work changes from climbing to holding. ${nd.looksLike}`
+        : `*What it looks like from there.* ${nd.looksLike}`);
+      L.push(`*What to watch for once you arrive.* ${nd.trap}`);
+    }
+    L.push(``);
+    L.push(atTop ? `To hold this position:` : `To get there:`);
     for (const req of r.nextTarget.requirements) L.push(`- ${req}`);
+    L.push(``);
+    L.push(`Movement on this continuum comes from changed habits rather than changed intentions, and it shows up first in the situational answers rather than in how you would describe yourself.`);
     S.push({ key: "nextStage", n: 9, title: "Your next stage", lines: L });
   }
 
@@ -200,9 +350,36 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     S.push({ key: "roadmap", n: 10, title: "Your development roadmap", lines: L });
   }
 
-  // 11. Personal experiment
+  // 11. Improvement plan
+  {
+    const L: string[] = [];
+    L.push(`A roadmap lists what to change. This is the order to change it in, and the horizons are deliberate: one week is short enough to actually start, ninety days is long enough for a habit to show up in your answers rather than your intentions.`);
+    for (const block of improvementPlan(r)) {
+      L.push(``);
+      L.push(`### ${block.horizon} (${block.timeframe})`);
+      for (const it of block.items) L.push(`- ${it}`);
+    }
+    S.push({ key: "plan", n: 11, title: "Your improvement plan", lines: L });
+  }
+
+  // 12. Evidence base
+  {
+    const L: string[] = [];
+    L.push(`This instrument is built on a specific claim: that cognitive erosion and future readiness move independently, and that the combination worth catching is high capability sitting on low protection, because it feels like success while it develops. The studies below are the ones this assessment is willing to cite by name.`);
+    for (const e of EVIDENCE_BASE) {
+      L.push(``);
+      L.push(`- ${e.claim} *(${e.source})*`);
+    }
+    L.push(``);
+    L.push(`Everywhere else, this report points at a field of research rather than a single paper, because the underlying findings are well established while no single study settles them: retrieval practice and transfer, cognitive load, design fixation, metacognition and self-regulated learning, and the fluency effects that make polished output harder to doubt than rough output making the same claim.`);
+    L.push(``);
+    L.push(`Two honest limits. Two claim items, one reverse item and one scenario per dimension is below the conventional floor for a stable subscale, which is why confidence levels appear throughout rather than being hidden. And everything here rests on self-report: the instrument sees what you told it, and its value to you depends on those answers staying honest as your use grows.`);
+    S.push({ key: "evidence", n: 12, title: "The evidence behind this", lines: L });
+  }
+
+  // 13. Personal experiment
   S.push({
-    key: "experiment", n: 11, title: "One experiment to run on yourself",
+    key: "experiment", n: 13, title: "One experiment to run on yourself",
     lines: [`Take two comparable tasks from your real week. Do one with AI as you normally would, one without. Afterward compare not just time and quality, but what you can still explain, remember, and redo a week later. That comparison, run occasionally and honestly, is the best ongoing test of whether AI is building you or replacing you.`],
   });
 

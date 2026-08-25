@@ -377,3 +377,41 @@ say plainly that nothing is reported to anyone.
 **Verification.** Typecheck clean, 29 of 29, branch checks pass, no dashes in any item file, and the
 production build compiles. Item ids and construct mappings are untouched, so stored answers and every
 scored result remain comparable across the change.
+
+## Post-release: expanded results, charts and improvement plan
+
+**Continuum now shows the whole ladder.** The results page renders a half-page vertical ladder with
+all ten stages named, the current stage highlighted and described, the next stage marked, the gate
+requirements for the relevant stages shown, and the earned stage flagged separately when gating has
+capped the placement. Stages below are dimmed rather than hidden, so a respondent can see the shape
+of the whole path.
+
+**Report grew from about 3,600 to about 31,000 characters.** Every section was unpacked. Each of the
+ten dimensions now carries what it measures, why it matters, the reading for that respondent's band,
+a divergence note where a consistency gap fired, a confidence note where evidence is thin, a research
+line, and three concrete practices. The bottleneck explains why it is the constraint rather than
+simply the lowest score. The continuum section names every stage, describes what this one looks like
+and the trap that comes with it, and explains the gates. Help, harm, strengths and self-knowledge
+each gained real explanation of what the section is doing and how to read an empty result.
+
+**Two new sections.** An improvement plan on three horizons (this week, 30 days, 90 days) assembled
+from the bottleneck, the fired recommendations, the next lowest dimension and the next stage
+requirements; and an evidence section stating the instrument's central claim, the studies it cites,
+and two honest limits.
+
+**Evidence policy.** Only three studies are cited by name, because only those three are vetted in
+this repository: HEPI / Kortext 2025, Bastani et al. PNAS 2025, and Kestin et al. Scientific Reports
+2025. Everywhere else the report points at a field of research (retrieval practice and transfer,
+cognitive load, design fixation, metacognition, fluency effects in judgment) rather than inventing a
+paper, an author or a number. `src/engine/content.ts` holds this and states the policy in its header.
+
+**New charts, one colour vocabulary.** Teal for strong at 65 and above, amber for developing from 40
+to 64, crimson for watch below 40, used identically by every chart with a visible key. Added:
+dimension bars sorted by score with confidence labels, a six card composites panel, and a numbered
+plan timeline. The radar is kept alongside the bars. Dependency Risk is displayed as a risk value
+while its colour follows the underlying healthy reading, so a colour never means two things.
+
+**PDF kept honest.** The two new sections render there too. Sections became long enough that making
+each one atomic stranded pages, so section headings now stay attached to the start of their prose
+while the prose flows. Re-measured across five fixtures: reports run 11 to 13 pages with zero
+interior pages below 60 percent fill and no dashes.

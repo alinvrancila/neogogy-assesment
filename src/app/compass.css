@@ -866,3 +866,305 @@
   margin: 10px 0 4px;
   max-width: 62ch;
 }
+
+/* ---------------------------------------------------------------------------
+   v2 results charts. One colour vocabulary throughout:
+   teal  #00A98A  strong, 65 and above
+   amber #C58A33  developing, 40 to 64
+   crimson #9E1D20 watch, below 40
+   --------------------------------------------------------------------------- */
+
+/* ---- stage ladder, roughly half a page, every stage named ---- */
+.nfc .ladder {
+  border: 1px solid var(--paper-line);
+  border-radius: 14px;
+  background: var(--ivory-2);
+  padding: 18px 20px;
+  margin: 18px 0;
+}
+
+.nfc .lad-row {
+  display: grid;
+  grid-template-columns: 26px 22px 1fr;
+  align-items: start;
+  gap: 10px;
+  padding: 7px 0;
+  opacity: .62;
+  transition: opacity .2s;
+}
+
+.nfc .lad-row.lad-below { opacity: .42; }
+.nfc .lad-row.lad-here,
+.nfc .lad-row.lad-target { opacity: 1; }
+
+.nfc .lad-num {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-soft);
+  text-align: right;
+  padding-top: 3px;
+}
+
+.nfc .lad-rail {
+  position: relative;
+  height: 100%;
+  min-height: 22px;
+  display: flex;
+  justify-content: center;
+}
+
+.nfc .lad-rail::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: -14px;
+  width: 1px;
+  background: var(--paper-line);
+}
+
+.nfc .lad-row:last-of-type .lad-rail::before { bottom: 50%; }
+
+.nfc .lad-dot {
+  position: relative;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--paper-line);
+  margin-top: 5px;
+}
+
+.nfc .lad-here .lad-dot {
+  width: 15px; height: 15px;
+  margin-top: 2px;
+  background: #00A98A;
+  box-shadow: 0 0 0 4px rgba(0, 169, 138, .18);
+}
+
+.nfc .lad-target .lad-dot {
+  background: transparent;
+  border: 2px solid #00A98A;
+}
+
+.nfc .lad-name {
+  font-family: var(--f-display);
+  font-size: 1.02rem;
+  font-weight: 560;
+  color: var(--ink);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.nfc .lad-here .lad-name { color: var(--maroon); }
+
+.nfc .lad-tag {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.nfc .lad-tag-here { background: #00A98A; color: #fff; }
+.nfc .lad-tag-next { background: rgba(0, 169, 138, .14); color: #00806a; }
+.nfc .lad-tag-earned { background: rgba(197, 138, 51, .16); color: #8a5f16; }
+
+.nfc .lad-short {
+  font-size: .92rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin-top: 4px;
+  max-width: 62ch;
+}
+
+.nfc .lad-gates {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  color: var(--gold);
+  margin-top: 5px;
+}
+
+.nfc .lad-foot {
+  border-top: 1px solid var(--paper-line);
+  margin-top: 12px;
+  padding-top: 12px;
+  font-size: .92rem;
+  color: var(--ink-soft);
+}
+
+/* ---- dimension bars ---- */
+.nfc .bars { margin: 16px 0; }
+
+.nfc .bar-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 210px) 1fr 42px;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.nfc .bar-label {
+  font-size: .92rem;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.nfc .bar-conf {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.nfc .bar-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--paper-line);
+  overflow: hidden;
+}
+
+.nfc .bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width .6s ease;
+}
+
+.nfc .bar-val {
+  font-family: var(--f-mono);
+  font-size: .9rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.nfc .bars-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  color: var(--ink-soft);
+}
+
+.nfc .bars-key i {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+@media (max-width: 620px) {
+  .nfc .bar-row { grid-template-columns: 1fr 42px; }
+  .nfc .bar-track { grid-column: 1 / -1; }
+}
+
+/* ---- composites ---- */
+.nfc .composites {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 18px 0;
+}
+
+@media (max-width: 780px) { .nfc .composites { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .nfc .composites { grid-template-columns: 1fr; } }
+
+.nfc .comp-card {
+  border: 1px solid var(--paper-line);
+  border-radius: 12px;
+  padding: 16px 16px 14px;
+  background: var(--ivory-2);
+}
+
+.nfc .comp-val {
+  font-family: var(--f-display);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.nfc .comp-label {
+  font-size: .95rem;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.nfc .comp-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--paper-line);
+  margin: 9px 0 7px;
+  overflow: hidden;
+}
+
+.nfc .comp-track span { display: block; height: 100%; border-radius: 999px; }
+
+.nfc .comp-note {
+  font-size: .82rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+/* ---- improvement plan ---- */
+.nfc .plan { margin: 18px 0; }
+
+.nfc .plan-block {
+  border-left: 3px solid #00A98A;
+  padding: 4px 0 18px 18px;
+  margin-left: 6px;
+  position: relative;
+}
+
+.nfc .plan-block:last-child { padding-bottom: 0; }
+
+.nfc .plan-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.nfc .plan-n {
+  position: absolute;
+  left: -14px;
+  width: 25px; height: 25px;
+  border-radius: 50%;
+  background: #00A98A;
+  color: #fff;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  display: grid;
+  place-items: center;
+}
+
+.nfc .plan-horizon {
+  font-family: var(--f-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--maroon);
+  margin-left: 16px;
+}
+
+.nfc .plan-time {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-left: 16px;
+}
+
+.nfc .plan-items {
+  margin: 0 0 0 16px;
+  padding-left: 18px;
+  list-style: disc;
+}
+
+.nfc .plan-items li {
+  margin: 7px 0;
+  line-height: 1.55;
+}

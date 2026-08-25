@@ -269,3 +269,159 @@ export function ReportPreview() {
     </div>
   );
 }
+
+/* ------------------------------------------------- band colour vocabulary */
+
+/** One colour scale, used by every chart so a colour means the same thing
+ *  everywhere: healthy, developing, needs attention. */
+export const bandColor = (healthy: number): string =>
+  healthy >= 65 ? '#00A98A' : healthy >= 40 ? '#C58A33' : '#9E1D20';
+
+export const bandName = (healthy: number): string =>
+  healthy >= 65 ? 'strong' : healthy >= 40 ? 'developing' : 'watch';
+
+/* ------------------------------------------------------------ stage ladder */
+
+/**
+ * The full continuum, every stage named, occupying roughly half a page so a
+ * respondent can see where they sit and what else exists above and below.
+ */
+export function StageLadder({ result }: { result: CompassResult }) {
+  const here = result.stage.stage;
+  const target = result.nextTarget.stage;
+  const gatedFrom = result.stage.gated?.cappedFrom;
+
+  return (
+    <div className="ladder" aria-label={`Stage ${here} of 10 on the Neogogy continuum`}>
+      {[...STAGES].reverse().map((s) => {
+        const isHere = s.stage === here;
+        const isTarget = s.stage === target && target !== here;
+        const isEarned = gatedFrom !== undefined && s.stage === gatedFrom;
+        const below = s.stage < here;
+        const gates = s.gates ? Object.entries(s.gates) : [];
+        return (
+          <div
+            key={s.stage}
+            className={`lad-row${isHere ? ' lad-here' : ''}${isTarget ? ' lad-target' : ''}${below ? ' lad-below' : ''}`}
+          >
+            <div className="lad-num">{s.stage}</div>
+            <div className="lad-rail">
+              <span className="lad-dot" />
+            </div>
+            <div className="lad-body">
+              <div className="lad-name">
+                {s.name}
+                {isHere ? <span className="lad-tag lad-tag-here">You are here</span> : null}
+                {isTarget ? <span className="lad-tag lad-tag-next">Your next stage</span> : null}
+                {isEarned ? <span className="lad-tag lad-tag-earned">Your index reaches here</span> : null}
+              </div>
+              {(isHere || isTarget) && <div className="lad-short">{s.short}</div>}
+              {(isHere || isTarget) && gates.length > 0 && (
+                <div className="lad-gates">
+                  Requires: {gates.map(([g, v]) => `${CONSTRUCTS[g as ConstructId].name} ${v}`).join(', ')}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+      <div className="lad-foot">
+        Your developmental index is <strong>{result.stage.rawIndex}</strong> of 100
+        {result.stage.borderline
+          ? `, which sits ${result.stage.borderline.distance} points from stage ${result.stage.borderline.adjacentStage}, so treat this as a zone rather than a line.`
+          : `.`}
+        {result.stage.gated ? ` Your index alone would reach stage ${result.stage.gated.cappedFrom}, and a gate is holding the placement here.` : ''}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------- dimension bars */
+
+export function DimensionBars({ result }: { result: CompassResult }) {
+  const ids = Object.keys(CONSTRUCTS) as ConstructId[];
+  const rows = ids
+    .map((id) => ({ id, d: result.dimensions[id], def: CONSTRUCTS[id] }))
+    .sort((a, b) => b.d.score - a.d.score);
+
+  return (
+    <div className="bars">
+      {rows.map(({ id, d, def }) => {
+        const shownValue = def.reportedAsRisk ? d.reportedScore : d.score;
+        const color = bandColor(d.score); // colour always follows the healthy reading
+        return (
+          <div className="bar-row" key={id}>
+            <div className="bar-label">
+              {def.reportedAsRisk ? 'Dependency Risk' : def.name}
+              {d.confidence !== 'high' ? <span className="bar-conf">{d.confidence}</span> : null}
+            </div>
+            <div className="bar-track">
+              <span className="bar-fill" style={{ width: `${Math.max(2, shownValue)}%`, background: color }} />
+            </div>
+            <div className="bar-val" style={{ color }}>{shownValue}</div>
+          </div>
+        );
+      })}
+      <div className="bars-key">
+        <span><i style={{ background: '#00A98A' }} /> strong, 65 and above</span>
+        <span><i style={{ background: '#C58A33' }} /> developing, 40 to 64</span>
+        <span><i style={{ background: '#9E1D20' }} /> watch, below 40</span>
+      </div>
+    </div>
+  );
+}
+
+/* --------------------------------------------------------- composites */
+
+export function CompositesPanel({ result }: { result: CompassResult }) {
+  const c = result.composites;
+  // For the two risk composites a high number is a concern, so the colour is
+  // taken from the inverted value to keep one colour vocabulary.
+  const rows: Array<{ label: string; value: number; healthy: number; note: string }> = [
+    { label: 'Future readiness', value: c.futureReadiness, healthy: c.futureReadiness, note: 'Fluency, adaptability and transfer' },
+    { label: 'Augmentation', value: c.augmentation, healthy: c.augmentation, note: 'Better thinking, not just faster output' },
+    { label: 'Judgment', value: c.judgment, healthy: c.judgment, note: 'Verification, agency and responsible use' },
+    { label: 'Capability transfer', value: c.capabilityTransfer, healthy: c.capabilityTransfer, note: 'Assisted work becoming your own' },
+    { label: 'Dependency index', value: c.dependencyIndex, healthy: 100 - c.dependencyIndex, note: 'Higher means more depends on the tool' },
+    { label: 'Underexposure', value: c.underexposure, healthy: 100 - c.underexposure, note: 'Higher means limited practice with the tools' },
+  ];
+  return (
+    <div className="composites">
+      {rows.map((r) => (
+        <div className="comp-card" key={r.label}>
+          <div className="comp-val" style={{ color: bandColor(r.healthy) }}>{r.value}</div>
+          <div className="comp-label">{r.label}</div>
+          <div className="comp-track">
+            <span style={{ width: `${Math.max(2, r.value)}%`, background: bandColor(r.healthy) }} />
+          </div>
+          <div className="comp-note">{r.note}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------- plan timeline */
+
+export function PlanTimeline({
+  blocks
+}: { blocks: Array<{ horizon: string; timeframe: string; items: string[] }> }) {
+  return (
+    <div className="plan">
+      {blocks.map((b, i) => (
+        <div className="plan-block" key={b.horizon}>
+          <div className="plan-head">
+            <span className="plan-n">{i + 1}</span>
+            <div>
+              <div className="plan-horizon">{b.horizon}</div>
+              <div className="plan-time">{b.timeframe}</div>
+            </div>
+          </div>
+          <ul className="plan-items">
+            {b.items.map((it, j) => <li key={j}>{it}</li>)}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}

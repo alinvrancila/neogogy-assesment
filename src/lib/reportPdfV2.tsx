@@ -136,10 +136,15 @@ function Lines({ lines }: { lines: string[] }) {
 }
 
 function SectionBlock({ s }: { s: ReportSection }) {
+  // The heading stays with the start of its prose (minPresenceAhead), but the
+  // prose itself flows. Sections are long enough now that making the whole
+  // section atomic would strand pages rather than protect blocks.
   return (
-    <View style={S.section} wrap={false}>
-      <Text style={S.eyebrow}>Section {s.n}</Text>
-      <Text style={S.h2}>{s.title}</Text>
+    <View style={S.section}>
+      <View wrap={false} minPresenceAhead={70}>
+        <Text style={S.eyebrow}>Section {s.n}</Text>
+        <Text style={S.h2}>{s.title}</Text>
+      </View>
       <Lines lines={s.lines} />
     </View>
   );
@@ -329,6 +334,16 @@ export async function generateCompassPdf(args: {
             </View>
           ))}
         </View>
+
+        <View style={S.section}>
+          <View wrap={false} minPresenceAhead={90}>
+            <Text style={S.eyebrow}>Section {byKey('plan').n}</Text>
+            <Text style={S.h2}>{byKey('plan').title}</Text>
+          </View>
+          <Lines lines={byKey('plan').lines} />
+        </View>
+
+        <SectionBlock s={byKey('evidence')} />
 
         <Footer />
       </Page>

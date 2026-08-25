@@ -17,8 +17,11 @@ import {
   generateReportSections, reportHead, confidenceLabel, REPORT_DISCLAIMER,
   type CompassResult, type ReportSection,
 } from '@/engine';
+import { improvementPlan } from '@/engine/narrative';
 import { Markdown } from './Markdown';
-import { ContinuumStrip, DimensionRadar, NextStagePanel } from './Visuals';
+import {
+  DimensionRadar, NextStagePanel, StageLadder, DimensionBars, CompositesPanel, PlanTimeline,
+} from './Visuals';
 
 export type GateData = {
   firstName: string; lastName: string; email: string;
@@ -143,12 +146,22 @@ function ConfidenceBanner({ result }: { result: CompassResult }) {
 
 function SectionBlock({ section, result }: { section: ReportSection; result: CompassResult }) {
   // Visuals belong to specific sections. Everything else is prose only.
-  const visualBefore = section.key === 'continuum'
-    ? <ContinuumStrip result={result} />
-    : section.key === 'signature'
-      ? <DimensionRadar result={result} />
-      : null;
-  const visualAfter = section.key === 'nextStage' ? <NextStagePanel result={result} /> : null;
+  const visualBefore =
+    section.key === 'continuum' ? <StageLadder result={result} />
+    : section.key === 'signature' ? (
+        <>
+          <DimensionBars result={result} />
+          <div className="two-col" style={{ marginTop: 18 }}>
+            <DimensionRadar result={result} />
+            <div><CompositesPanel result={result} /></div>
+          </div>
+        </>
+      )
+    : null;
+  const visualAfter =
+    section.key === 'nextStage' ? <NextStagePanel result={result} />
+    : section.key === 'plan' ? <PlanTimeline blocks={improvementPlan(result)} />
+    : null;
 
   return (
     <section className="results-section" id={`sec-${section.key}`}>
