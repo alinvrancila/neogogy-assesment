@@ -127,11 +127,25 @@ export function ContinuumStrip({ result }: { result: CompassResult }) {
 
 /* --------------------------------------------------------------- radar */
 
+/** Short labels for the radar, so spokes never truncate mid-word. */
+const RADAR_LABEL: Record<string, string> = {
+  fluency: 'Fluency',
+  agency: 'Agency',
+  amplification: 'Amplification',
+  dependencySafety: 'Dependency Risk',
+  verification: 'Verification',
+  skillGrowth: 'Skill Growth',
+  creativity: 'Creativity',
+  responsibleUse: 'Responsible Use',
+  transfer: 'Transfer',
+  adaptability: 'Adaptability',
+};
+
 export function DimensionRadar({ result }: { result: CompassResult }) {
   const ids = Object.keys(CONSTRUCTS) as ConstructId[];
-  const S = 420;
+  const S = 440;
   const c = S / 2;
-  const R = 140;
+  const R = 138;
   const n = ids.length;
 
   const pt = (i: number, radius: number) => {
@@ -169,13 +183,12 @@ export function DimensionRadar({ result }: { result: CompassResult }) {
         })}
         {ids.map((id, i) => {
           const [x, y] = pt(i, R + 26);
-          const def = CONSTRUCTS[id];
           return (
             <text
               key={id} x={x} y={y} textAnchor="middle" fontSize={9} fill={MUTE}
               fontFamily="var(--f-mono)"
             >
-              {(def.reportedAsRisk ? 'Dependency Risk' : def.name).slice(0, 20)} {valueOf(id)}
+              {RADAR_LABEL[id]} {valueOf(id)}
             </text>
           );
         })}

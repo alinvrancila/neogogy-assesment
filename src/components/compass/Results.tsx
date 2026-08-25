@@ -144,6 +144,12 @@ function ConfidenceBanner({ result }: { result: CompassResult }) {
   );
 }
 
+/** Lines before the first sub-heading. */
+function introOnly(lines: string[]): string[] {
+  const at = lines.findIndex((l) => l.startsWith('### '));
+  return at === -1 ? lines : lines.slice(0, at);
+}
+
 function SectionBlock({ section, result }: { section: ReportSection; result: CompassResult }) {
   // Visuals belong to specific sections. Everything else is prose only.
   const visualBefore =
@@ -168,7 +174,10 @@ function SectionBlock({ section, result }: { section: ReportSection; result: Com
       <div className="rs-head"><span className="eyebrow">Section {section.n}</span></div>
       <h3>{section.title}</h3>
       {visualBefore}
-      <Markdown lines={section.lines} />
+      {/* The plan is rendered as a timeline below, so on screen this section
+          shows only its intro rather than repeating every item as prose. The
+          PDF still renders the full markdown. */}
+      <Markdown lines={section.key === 'plan' ? introOnly(section.lines) : section.lines} />
       {visualAfter}
     </section>
   );
