@@ -1,0 +1,339 @@
+'use client';
+
+/**
+ * Expedition modules for the ascent result.
+ *
+ * These are presentational. Every number arrives on the CompassResult; none is
+ * derived here. Where the design calls for a field the assessment does not
+ * collect, the field is omitted and the absence is stated plainly rather than
+ * filled with a plausible value.
+ */
+
+import type { CompassResult } from '@/engine';
+import { CONSTRUCTS, STAGES } from '@/engine/config';
+import { CONSTRUCT_CONTENT } from '@/engine/content';
+import type { ConstructId } from '@/engine/types';
+import { GATE_DEFS } from './AscentMapHero';
+
+/* ------------------------------------------------------------------ header */
+
+export function ResultHeader({ result }: { result: CompassResult }) {
+  return (
+    <header className="asc-header">
+      <div className="asc-header-main">
+        <p className="asc-eyebrow">Neogogy · AI relationship assessment</p>
+        <h1 className="asc-title">Your ascent with AI</h1>
+        <p className="asc-sub">
+          A developmental reading of how AI currently supports, or starts to substitute for, your
+          judgment, capability and creative agency. A journey, not a verdict.
+        </p>
+      </div>
+      <DevelopmentalIndex result={result} />
+    </header>
+  );
+}
+
+export function DevelopmentalIndex({ result }: { result: CompassResult }) {
+  return (
+    <div className="asc-index" role="group" aria-label="Developmental index">
+      <div className="asc-index-disc">
+        <span className="asc-index-n">{result.stage.rawIndex}</span>
+        <span className="asc-index-label">developmental index</span>
+      </div>
+      <p className="asc-index-note">out of 100</p>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------- orientation card */
+
+export function OrientationCard({ result }: { result: CompassResult }) {
+  const atTop = result.nextTarget.stage === result.stage.stage;
+  return (
+    <aside className="asc-orient" aria-label="Where you stand">
+      <h2 className="asc-orient-h">
+        Stage {result.stage.stage} of 10: {result.stage.stageName}
+      </h2>
+      <p className="asc-orient-sub">{result.stage.substage} within this stage</p>
+      <p className="asc-orient-body">
+        {STAGES.find((s) => s.stage === result.stage.stage)?.short}
+      </p>
+
+      {result.stage.borderline ? (
+        <p className="asc-orient-zone">
+          You are {result.stage.borderline.distance} points from stage{' '}
+          {result.stage.borderline.adjacentStage}. Placement here is a zone, not a fixed identity.
+        </p>
+      ) : null}
+
+      {result.stage.gated ? (
+        <p className="asc-orient-gate">
+          Your index alone would reach stage {result.stage.gated.cappedFrom}. A practice gate is
+          holding the placement here: {result.stage.gated.reasons[0]}
+        </p>
+      ) : null}
+
+      <div className="asc-orient-next">
+        <p className="asc-kicker">The next meaningful shift</p>
+        {atTop ? (
+          <p className="asc-orient-body">
+            You are at the far end of the route. The summit is a direction, not a finish line: from
+            here the work is holding the pattern as the tools change.
+          </p>
+        ) : (
+          <>
+            <p className="asc-orient-nextname">
+              Stage {result.nextTarget.stage}: {result.nextTarget.stageName}
+            </p>
+            <p className="asc-orient-body">
+              {STAGES.find((s) => s.stage === result.nextTarget.stage)?.short}
+            </p>
+          </>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+/* ------------------------------------------------------------ route stages */
+
+export function RouteStages({ result }: { result: CompassResult }) {
+  const here = result.stage.stage;
+  const next = result.nextTarget.stage;
+  return (
+    <section className="asc-stages" aria-labelledby="asc-stages-h">
+      <h2 id="asc-stages-h" className="asc-h2">The route, basecamp to summit</h2>
+      <ol className="asc-stage-list">
+        {STAGES.map((s) => {
+          const isHere = s.stage === here;
+          const isNext = s.stage === next && next !== here;
+          const reached = result.stage.rawIndex >= s.minIndex;
+          return (
+            <li
+              key={s.stage}
+              className={`asc-stage${isHere ? ' is-here' : ''}${isNext ? ' is-next' : ''}${reached ? ' is-reached' : ''}`}
+              tabIndex={0}
+              aria-current={isHere ? 'step' : undefined}
+            >
+              <span className="asc-stage-n" aria-hidden="true">{s.stage}</span>
+              <span className="asc-stage-body">
+                <span className="asc-stage-name">
+                  {s.name}
+                  {isHere ? <span className="asc-flag asc-flag-here">You are here</span> : null}
+                  {isNext ? <span className="asc-flag asc-flag-next">Next ledge</span> : null}
+                </span>
+                <span className="asc-stage-alt">index {s.minIndex} and above</span>
+                {(isHere || isNext) ? <span className="asc-stage-short">{s.short}</span> : null}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
+/* ----------------------------------------------------------- practice gates */
+
+export function PracticeGates({ result }: { result: CompassResult }) {
+  return (
+    <section className="asc-gates" aria-labelledby="asc-gates-h">
+      <h2 id="asc-gates-h" className="asc-h2">Practice gates on the route</h2>
+      <p className="asc-lead">
+        Stages 5 and above require minimum readings on the practices below, so that fluency alone
+        cannot carry someone past a weakness that matters. A gate that is not yet open is a place to
+        practise, not a failure.
+      </p>
+      <ul className="asc-gate-list">
+        {GATE_DEFS.map((g) => {
+          const d = result.dimensions[g.construct];
+          const stageDef = STAGES.find((s) => s.stage === g.firstStage);
+          const required = (stageDef?.gates as Record<string, number> | undefined)?.[g.construct];
+          const open = required === undefined ? undefined : d.score >= required;
+          return (
+            <li key={g.construct} className="asc-gate" tabIndex={0}>
+              <div className="asc-gate-top">
+                <span className="asc-gate-name">{g.label}</span>
+                <span className={`asc-gate-state ${open === undefined ? 'unknown' : open ? 'open' : 'pending'}`}>
+                  {open === undefined ? 'Not applicable' : open ? 'Open' : 'Not yet open'}
+                </span>
+              </div>
+              <div className="asc-gate-meta">
+                {CONSTRUCTS[g.construct].name} {d.score}
+                {required !== undefined ? ` · stage ${g.firstStage} needs ${required}` : ''}
+              </div>
+              <div className="asc-gate-track" aria-hidden="true">
+                <span style={{ width: `${Math.max(2, d.score)}%` }} className={open ? 'open' : 'pending'} />
+                {required !== undefined ? <b style={{ left: `${required}%` }} /> : null}
+              </div>
+              <p className="asc-gate-note">{CONSTRUCT_CONTENT[g.construct].whatItMeasures}</p>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------- foothold */
+
+const FOOTHOLD_ORDER: ConstructId[] = ['agency', 'verification', 'transfer', 'dependencySafety'];
+
+export function FootholdCard({ result }: { result: CompassResult }) {
+  return (
+    <section className="asc-card" aria-labelledby="asc-foot-h">
+      <p className="asc-kicker">Your foothold</p>
+      <h2 id="asc-foot-h" className="asc-card-h">Where you stand today</h2>
+      <ul className="asc-foot-list">
+        {FOOTHOLD_ORDER.map((id) => {
+          const d = result.dimensions[id];
+          const isRisk = CONSTRUCTS[id].reportedAsRisk;
+          const shown = isRisk ? d.reportedScore : d.score;
+          const state = d.microState;
+          const stateLabel = state === 'strong' ? 'Strength' : state === 'developing' ? 'Developing' : 'Needs attention';
+          return (
+            <li key={id} className={`asc-foot state-${state}`}>
+              <div className="asc-foot-name">
+                {isRisk ? 'Dependency risk' : CONSTRUCTS[id].name}
+              </div>
+              <div className="asc-foot-score">
+                <span className="asc-foot-n">{shown}</span>
+                <span className="asc-foot-den">/100</span>
+              </div>
+              {/* meaning is never carried by colour alone: every row states its status in words */}
+              <div className="asc-foot-state">
+                <span className={`asc-dot state-${state}`} aria-hidden="true" />
+                {stateLabel}
+              </div>
+              {isRisk ? (
+                <p className="asc-foot-dir"><strong>Lower is healthier.</strong> Independent capability {d.score}.</p>
+              ) : null}
+              <p className="asc-foot-note">
+                {state === 'strong'
+                  ? CONSTRUCT_CONTENT[id].atStrong
+                  : state === 'developing'
+                    ? CONSTRUCT_CONTENT[id].atDeveloping
+                    : CONSTRUCT_CONTENT[id].atWatch}
+              </p>
+              {d.confidence !== 'high' ? (
+                <p className="asc-foot-conf">Confidence: {d.confidence}</p>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------- route log */
+
+export function RouteLogCard({ result }: { result: CompassResult }) {
+  const measured = Object.values(result.dimensions).filter((d) => d.confidence === 'high').length;
+  const rows: Array<[string, string]> = [
+    ['Current stage', `${result.stage.stageName} (${result.stage.stage} of 10)`],
+    ['Position within stage', result.stage.substage],
+    ['Developmental index', `${result.stage.rawIndex} of 100`],
+    ['Reported AI use', result.usageProfile.category],
+    ['Assessment confidence', result.overallConfidence],
+    ['Dimensions at high confidence', `${measured} of ${Object.keys(result.dimensions).length}`],
+  ];
+  return (
+    <section className="asc-card" aria-labelledby="asc-log-h">
+      <p className="asc-kicker">Your route</p>
+      <h2 id="asc-log-h" className="asc-card-h">Your pattern so far</h2>
+      <dl className="asc-log">
+        {rows.map(([k, v]) => (
+          <div className="asc-log-row" key={k}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="asc-unavailable">
+        Practice history, experiment counts and a start date are not shown because this assessment
+        records a single sitting. They become available once you take it a second time.
+      </p>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------- next climb */
+
+const SUPPORTING = [
+  {
+    title: 'Make verification observable.',
+    body: 'Keep a small note of what you checked beside the final output.',
+  },
+  {
+    title: 'Protect one unassisted capability.',
+    body: 'Repeat one task without AI and compare what remains yours.',
+  },
+];
+
+export function NextClimbCard({ result }: { result: CompassResult }) {
+  const primary = result.recommendations[0];
+  return (
+    <section className="asc-card" aria-labelledby="asc-next-h">
+      <p className="asc-kicker">Your next climb</p>
+      <h2 id="asc-next-h" className="asc-card-h">The next ledge up</h2>
+
+      <div className="asc-experiment">
+        <p className="asc-kicker asc-kicker-gold">First step · start small, make it real</p>
+        <h3 className="asc-exp-h">Draft without assistance first.</h3>
+        <p className="asc-exp-b">
+          Create a short human outline before inviting AI into one meaningful task.
+        </p>
+        {primary ? (
+          <p className="asc-exp-why">
+            <strong>Why this one:</strong> {primary.behaviorChange}
+          </p>
+        ) : null}
+      </div>
+
+      <ul className="asc-support">
+        {SUPPORTING.map((s) => (
+          <li key={s.title}>
+            <strong>{s.title}</strong> {s.body}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/* ---------------------------------------------------------- methodology */
+
+export function MethodologyDisclosure() {
+  return (
+    <details className="asc-method">
+      <summary>How to read this map</summary>
+      <div className="asc-method-body">
+        <p>
+          The developmental index is a reading, not a grade. It places you along a route rather than
+          ranking you against anyone else, and the stage you land in is a zone rather than a fixed
+          identity: small, real changes in habit move it.
+        </p>
+        <p>
+          Position is continuous. An index of 37.8 sits at 37.8 percent of the route, not at the
+          middle of the stage that contains it, which is why the marker rarely lines up with a camp.
+        </p>
+        <p>
+          Stages 5 and above carry practice gates: minimum readings on authorship, verification,
+          boundaries and transfer. A gate can hold your placement below the stage your index alone
+          would reach. That is deliberate, so that fluency cannot carry someone past a weakness that
+          matters.
+        </p>
+        <p>
+          Dependency risk is reported as a risk, so a lower number is healthier there. Every other
+          dimension is reported so that a higher number is healthier.
+        </p>
+        <p>
+          These are assessment indices derived from your self-reported answers. They describe
+          patterns your answers are consistent with, and they are not clinical or validated
+          psychometric measurements. The summit is a direction, not a finish line.
+        </p>
+      </div>
+    </details>
+  );
+}

@@ -415,3 +415,50 @@ while its colour follows the underlying healthy reading, so a colour never means
 each one atomic stranded pages, so section headings now stay attached to the start of their prose
 while the prose flows. Re-measured across five fixtures: reports run 11 to 13 pages with zero
 interior pages below 60 percent fill and no dashes.
+
+## Ascent result redesign
+
+**Scope.** The results page was rebuilt around a climbing route motif. No scoring, threshold, gate or
+interpretation logic was touched. The only change under `src/engine/` is one display label: stage 10
+read "Future-Ready / Generative" and the brief specified "Future-ready / Generative". That is copy,
+not logic, and no test asserted the old casing.
+
+**Continuous placement.** `ascent/route.ts` holds the geometry as pure maths with no React and no
+scoring. The contract is that fraction along the route equals index divided by 100, measured on true
+arc length, so an index of 37.8 sits at 37.8 percent of the route rather than snapping to the middle
+of the stage that contains it. Tested directly: 37.8 and 37.9 resolve to different points, 37.8 sits
+before the centre of its own stage band, placement is monotonic across the range at half point steps,
+and out of range values clamp inside the viewbox.
+
+**Fields that do not exist were omitted, not invented.** The reference designs show an experiment
+count, a "on this path since" date, a practice history and a primary focus. None of those are
+collected by this assessment. `RouteLogCard` shows only real fields (stage, substage, index, reported
+usage category, overall confidence, and how many dimensions reached high confidence) and states
+plainly that history and experiment counts become available on a second sitting, rather than
+rendering a plausible looking number.
+
+**Dependency risk.** Shown as a risk with the words "Lower is healthier" and the underlying
+independent capability printed beside it. Its micro-state follows the healthy reading rather than the
+risk number, which is asserted in the suite so a high risk can never render as a strong dimension.
+
+**Meaning is never carried by colour alone.** Every foothold row prints its status as words
+(Strength, Developing, Needs attention) next to the dot, every gate prints Open or Not yet open, and
+the map legend labels each mark.
+
+**Three defects found by looking at renders rather than by tests.** The map was first squeezed into
+the prose column, which scaled 11px labels down to roughly 5px; the ascent block now breaks out to
+the full page width. Stage labels anchored to the terrain collided wherever the route steepened, and
+stage 1 clipped at the left edge; labels now sit in two fixed bands with leader lines and clamped x.
+The summit beacon collided with the stage 10 label, and the two gates that bind at stage 6 drew on
+top of each other; both now offset.
+
+**Responsive.** Below 860px the map keeps its label sizes and scrolls horizontally rather than
+shrinking ten names into illegibility, verified at 390px wide: the map scrolls, the body does not,
+and the lower modules stack as Foothold, Route log, Next climb in that order. Keyboard focus on stage
+and gate items was verified in a real browser. All motion is disabled under prefers-reduced-motion,
+and there is no score counting or celebratory effect anywhere.
+
+**New tests.** `npm run test:ascent`, 12 checks covering continuous placement, monotonicity, clamping,
+the ten stage labels, current and next stage rendering across every persona and usage level, the
+stage 10 case where no next ledge exists, dependency risk directionality, and that every practice
+gate maps to a real construct and a real stage threshold.

@@ -19,6 +19,8 @@ import {
 } from '@/engine';
 import { improvementPlan } from '@/engine/narrative';
 import { Markdown } from './Markdown';
+import AscentResults from './ascent/AscentResults';
+import { MethodologyDisclosure } from './ascent/modules';
 import {
   DimensionRadar, NextStagePanel, StageLadder, DimensionBars, CompositesPanel, PlanTimeline,
 } from './Visuals';
@@ -196,6 +198,8 @@ export default function Results({
 
   return (
     <div className="wrap results">
+      <AscentResults result={result} />
+
       <header className="results-hero">
         <span className="eyebrow">{head.title}</span>
         <h2 className="verdict-label">{result.archetype.name}</h2>
@@ -230,6 +234,8 @@ export default function Results({
           <button className="btn btn-ghost" onClick={onRetake}>Take it again</button>
         </div>
       </div>
+
+      <MethodologyDisclosure />
 
       <div className="foot">
         <div className="footmark">International Center for Applied Neogogy <span className="wm-ican">(ICAN)</span></div>

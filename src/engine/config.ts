@@ -153,7 +153,7 @@ export const STAGES: StageDef[] = [
     short: "Practices survive tool churn; new systems are absorbed quickly without losing judgment.",
     gates: { agency: 65, verification: 65, dependencySafety: 60, responsibleUse: 60, transfer: 60 },
     transitionRequirements: ["Periodically re-audit your own AI habits as tools change", "Contribute to the norms of your community, class, family, or institution"] },
-  { stage: 10, id: "generative", name: "Future-Ready / Generative", minIndex: 92,
+  { stage: 10, id: "generative", name: "Future-ready / Generative", minIndex: 92,
     short: "Mature human-AI collaboration that also builds capability in others.",
     gates: { agency: 70, verification: 70, dependencySafety: 65, responsibleUse: 65, transfer: 65 },
     transitionRequirements: ["Sustain the pattern as tools, roles, and institutions change around you"] },
