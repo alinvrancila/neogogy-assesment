@@ -19,11 +19,12 @@ import type { CSSProperties } from 'react';
 import type { CompassResult, ConstructId } from '@/engine';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
 
-const NAVY = '#1B2A4A';
-const TEAL = '#00D4AA';
-const HAIR = 'rgba(242, 232, 220, 0.22)';
-const INK = '#F2E8DC';
-const MUTE = 'rgba(242, 232, 220, 0.62)';
+// One palette across every chart, shared with the ascent map.
+const NAVY = '#FBF8F1';                 // card ground
+const TEAL = '#159E88';
+const HAIR = 'rgba(116, 110, 100, 0.26)';
+const INK = '#2B2926';
+const MUTE = '#746E64';
 
 /* ------------------------------------------------------- continuum strip */
 
@@ -164,7 +165,7 @@ export function DimensionRadar({ result }: { result: CompassResult }) {
   return (
     <figure className="viz" aria-label="Your ten dimensions">
       <svg viewBox={`0 0 ${S} ${S}`} width="100%" role="img">
-        <rect x={0} y={0} width={S} height={S} fill={NAVY} rx={12} />
+        <rect x={0} y={0} width={S} height={S} fill={NAVY} rx={12} stroke="#D7CEC0" strokeWidth={1} />
         {[0.25, 0.5, 0.75, 1].map((f) => (
           <polygon
             key={f}
@@ -176,7 +177,7 @@ export function DimensionRadar({ result }: { result: CompassResult }) {
           const [x, y] = pt(i, R);
           return <line key={i} x1={c} y1={c} x2={x} y2={y} stroke={HAIR} strokeWidth={1} />;
         })}
-        <polygon points={poly} fill={TEAL} fillOpacity={0.16} stroke={TEAL} strokeWidth={1.5} />
+        <polygon points={poly} fill={TEAL} fillOpacity={0.14} stroke={TEAL} strokeWidth={1.6} />
         {ids.map((id, i) => {
           const [x, y] = pt(i, (valueOf(id) / 100) * R);
           return <circle key={id} cx={x} cy={y} r={3} fill={TEAL} />;
@@ -288,7 +289,7 @@ export function ReportPreview() {
 /** One colour scale, used by every chart so a colour means the same thing
  *  everywhere: healthy, developing, needs attention. */
 export const bandColor = (healthy: number): string =>
-  healthy >= 65 ? '#00A98A' : healthy >= 40 ? '#C58A33' : '#9E1D20';
+  healthy >= 65 ? '#159E88' : healthy >= 40 ? '#E5AA45' : '#CF796E';
 
 export const bandName = (healthy: number): string =>
   healthy >= 65 ? 'strong' : healthy >= 40 ? 'developing' : 'watch';
@@ -376,9 +377,9 @@ export function DimensionBars({ result }: { result: CompassResult }) {
         );
       })}
       <div className="bars-key">
-        <span><i style={{ background: '#00A98A' }} /> strong, 65 and above</span>
-        <span><i style={{ background: '#C58A33' }} /> developing, 40 to 64</span>
-        <span><i style={{ background: '#9E1D20' }} /> watch, below 40</span>
+        <span><i style={{ background: '#159E88' }} /> strong, 65 and above</span>
+        <span><i style={{ background: '#E5AA45' }} /> developing, 40 to 64</span>
+        <span><i style={{ background: '#CF796E' }} /> watch, below 40</span>
       </div>
     </div>
   );

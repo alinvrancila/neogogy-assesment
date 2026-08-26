@@ -9,7 +9,7 @@
 import React from 'react';
 import path from 'path';
 import {
-  Page, Document, Font, StyleSheet, Text, View, Svg, Circle, Line, Polygon, Rect,
+  Page, Document, Font, StyleSheet, Text, View, Svg, Circle, Line, Polygon, Rect, Image,
 } from '@react-pdf/renderer';
 import { renderToBuffer } from '@react-pdf/renderer';
 import {
@@ -24,16 +24,22 @@ const M = 48;
 const CW = PAGE.w - M * 2;
 
 const T = {
-  navy: '#1B2A4A',
-  teal: '#00D4AA',
-  paper: '#FCFAF6',
-  ink: '#23303F',
-  mute: '#6C7787',
-  hair: '#DCE1E8',
-  ivory: '#F2E8DC',
-  hairDark: 'rgba(242,232,220,0.24)',
-  muteDark: 'rgba(242,232,220,0.66)',
+  navy: '#2B2926',          // deep ink, used for the dark pages
+  teal: '#159E88',
+  oxblood: '#7D2730',
+  paper: '#F5EFE5',
+  card: '#FBF8F1',
+  ink: '#2B2926',
+  mute: '#746E64',
+  hair: '#D7CEC0',
+  ivory: '#F7F1E4',
+  gold: '#E5AA45',
+  hairDark: 'rgba(247,241,228,0.26)',
+  muteDark: 'rgba(247,241,228,0.72)',
 };
+
+/** The painted backdrop, shared with the web page. Decorative only. */
+const BACKDROP = path.join(process.cwd(), 'public', 'ascent-backdrop.jpg');
 
 const fontPath = (f: string) => path.join(process.cwd(), 'src', 'fonts', f);
 Font.register({
@@ -61,6 +67,10 @@ const S = StyleSheet.create({
     backgroundColor: T.paper, color: T.ink,
     paddingTop: 42, paddingBottom: 46, paddingHorizontal: M, fontFamily: 'Spectral',
   },
+  cover: {
+    backgroundColor: T.paper, color: T.ink,
+    paddingTop: 42, paddingBottom: 46, paddingHorizontal: M, fontFamily: 'Spectral',
+  },
   dark: {
     backgroundColor: T.navy, color: T.ivory,
     paddingTop: 42, paddingBottom: 46, paddingHorizontal: M, fontFamily: 'Spectral',
@@ -69,7 +79,7 @@ const S = StyleSheet.create({
     fontFamily: 'Plex', fontWeight: 500, fontSize: 8, letterSpacing: 1.4,
     textTransform: 'uppercase', color: T.mute, marginBottom: 6,
   },
-  h2: { fontFamily: 'Spectral', fontWeight: 700, fontSize: 17, color: T.navy, marginBottom: 8 },
+  h2: { fontFamily: 'Spectral', fontWeight: 700, fontSize: 17, color: T.oxblood, marginBottom: 8 },
   h3: {
     fontFamily: 'Plex', fontWeight: 600, fontSize: 8.5, letterSpacing: 1.1,
     textTransform: 'uppercase', color: T.teal, marginTop: 10, marginBottom: 4,
@@ -77,7 +87,7 @@ const S = StyleSheet.create({
   body: { fontSize: 10, lineHeight: 1.55, color: T.ink, marginBottom: 6 },
   quote: {
     fontSize: 9.5, lineHeight: 1.5, color: T.mute,
-    borderLeft: `2pt solid ${T.teal}`, paddingLeft: 9, marginBottom: 6,
+    borderLeft: `2pt solid ${T.gold}`, paddingLeft: 9, marginBottom: 6,
   },
   bullet: { flexDirection: 'row', marginBottom: 4 },
   bulletDot: { width: 12, fontSize: 10, color: T.teal },
@@ -164,13 +174,13 @@ function StripSvg({ r }: { r: CompassResult }) {
 
   return (
     <Svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
-      <Rect x={0} y={0} width={W} height={H} fill={T.navy} rx={8} />
+      <Rect x={0} y={0} width={W} height={H} fill={T.card} rx={8} stroke={T.hair} strokeWidth={1} />
 
       {/* the stage band actually occupied, so a gated marker is not misread */}
       <Rect x={bandX1} y={y - 13} width={Math.max(4, bandX2 - bandX1)} height={26}
         fill={T.teal} fillOpacity={0.16} rx={3} />
 
-      <Line x1={padX} y1={y} x2={W - padX} y2={y} stroke={T.hairDark} strokeWidth={1} />
+      <Line x1={padX} y1={y} x2={W - padX} y2={y} stroke={T.hair} strokeWidth={1} />
 
       {STAGES.map((st) => {
         const x = xOf(st.minIndex);
@@ -178,9 +188,9 @@ function StripSvg({ r }: { r: CompassResult }) {
         return (
           <React.Fragment key={st.stage}>
             <Line x1={x} y1={y - 6} x2={x} y2={y + 6}
-              stroke={isHere ? T.teal : T.hairDark} strokeWidth={1} />
+              stroke={isHere ? T.teal : T.hair} strokeWidth={1} />
             <Text x={x - 2} y={y + 20} style={{ fontFamily: 'Plex', fontSize: 6.5 }}
-              fill={isHere ? T.teal : T.muteDark}>
+              fill={isHere ? T.teal : T.mute}>
               {String(st.stage)}
             </Text>
           </React.Fragment>
@@ -190,9 +200,9 @@ function StripSvg({ r }: { r: CompassResult }) {
       {/* index marker: hollow when gating means it overstates the placement */}
       <Line x1={marker} y1={y - 15} x2={marker} y2={y + 9} stroke={T.teal} strokeWidth={1.3} />
       <Circle cx={marker} cy={y} r={4}
-        fill={r.stage.gated ? T.navy : T.teal} stroke={T.teal} strokeWidth={1.3} />
+        fill={r.stage.gated ? T.card : T.teal} stroke={T.teal} strokeWidth={1.3} />
 
-      <Text x={padX} y={H - 8} style={{ fontFamily: 'Plex', fontSize: 7 }} fill={T.muteDark}>
+      <Text x={padX} y={H - 8} style={{ fontFamily: 'Plex', fontSize: 7 }} fill={T.mute}>
         {r.stage.gated
           ? `Index ${r.stage.rawIndex} would reach stage ${r.stage.gated.cappedFrom}. Held at stage ${r.stage.stage}, see section 2.`
           : `Shaded band is stage ${r.stage.stage}. Marker is your index, ${r.stage.rawIndex}.`}
@@ -213,10 +223,10 @@ function RadarSvg({ r }: { r: CompassResult }) {
   const poly = ids.map((id, i) => pt(i, (val(id) / 100) * R).join(',')).join(' ');
   return (
     <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <Rect x={0} y={0} width={size} height={size} fill={T.navy} rx={8} />
+      <Rect x={0} y={0} width={size} height={size} fill={T.card} rx={8} stroke={T.hair} strokeWidth={1} />
       {[0.33, 0.66, 1].map((f) => (
         <Polygon key={f} points={ids.map((_, i) => pt(i, R * f).join(',')).join(' ')}
-          fill="none" stroke={T.hairDark} strokeWidth={0.7} />
+          fill="none" stroke={T.hair} strokeWidth={0.7} />
       ))}
       <Polygon points={poly} fill={T.teal} fillOpacity={0.18} stroke={T.teal} strokeWidth={1.2} />
     </Svg>
@@ -235,34 +245,63 @@ const Footer = () => (
 function Cover({ r, name, dateStr }: { r: CompassResult; name: string; dateStr: string }) {
   const head = reportHead(r);
   return (
-    <Page size="A4" style={S.dark}>
-      <View style={{ flexGrow: 1, justifyContent: 'center' }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 8.5, letterSpacing: 1.6, textTransform: 'uppercase', color: T.teal, marginBottom: 14 }}>
-          {head.title}
+    <Page size="A4" style={S.cover}>
+      {/* the same painted illustration the web page uses. This is react-pdf's
+          Image primitive, not a DOM img, so it has no alt prop. */}
+      {/* eslint-disable-next-line jsx-a11y/alt-text */}
+      <Image src={BACKDROP} style={{ position: 'absolute', bottom: 0, left: 0, width: PAGE.w, height: PAGE.h * 0.52 }} />
+      <View style={{ position: 'absolute', top: 0, left: 0, width: PAGE.w, height: PAGE.h * 0.62, backgroundColor: T.paper, opacity: 0.55 }} />
+      <View style={{ marginTop: 40 }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 8.5, letterSpacing: 1.6, textTransform: 'uppercase', color: T.teal, marginBottom: 12 }}>
+          Neogogy · AI relationship assessment
         </Text>
-        <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 34, color: T.ivory, lineHeight: 1.12 }}>
-          {r.archetype.name}
+        <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 40, color: T.oxblood, lineHeight: 1.06 }}>
+          Your ascent with AI
         </Text>
-        <Text style={{ fontSize: 12, color: T.muteDark, marginTop: 10, lineHeight: 1.5 }}>
-          {r.archetype.tagline}
+        <Text style={{ fontSize: 11.5, color: T.mute, marginTop: 10, lineHeight: 1.55, maxWidth: 380 }}>
+          A developmental reading of how AI currently supports, or starts to substitute for, your
+          judgment, capability and creative agency. A journey, not a verdict.
         </Text>
-        <View style={{ height: 1, backgroundColor: T.hairDark, marginVertical: 22 }} />
-        <Text style={{ fontFamily: 'Plex', fontSize: 9.5, color: T.ivory, marginBottom: 5 }}>
-          Stage {r.stage.stage} of 10, {r.stage.stageName}
-        </Text>
-        <Text style={{ fontFamily: 'Plex', fontSize: 9.5, color: T.muteDark, marginBottom: 5 }}>
-          Developmental index {r.stage.rawIndex} ({r.stage.substage})
-        </Text>
-        <Text style={{ fontFamily: 'Plex', fontSize: 9.5, color: T.muteDark }}>
-          {confidenceLabel(r.overallConfidence)}
-        </Text>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 26 }}>
+          <View style={{
+            width: 96, height: 96, borderRadius: 48, backgroundColor: T.oxblood,
+            alignItems: 'center', justifyContent: 'center', marginRight: 18,
+          }}>
+            <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 26, color: T.ivory }}>
+              {r.stage.rawIndex}
+            </Text>
+            <Text style={{ fontFamily: 'Plex', fontSize: 5.6, letterSpacing: 1, color: T.ivory, marginTop: 2 }}>
+              DEVELOPMENTAL INDEX
+            </Text>
+          </View>
+          <View>
+            <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 15, color: T.ink }}>
+              Stage {r.stage.stage} of 10, {r.stage.stageName}
+            </Text>
+            <Text style={{ fontFamily: 'Plex', fontSize: 9, color: T.mute, marginTop: 4 }}>
+              {r.stage.substage} · {confidenceLabel(r.overallConfidence)}
+            </Text>
+            <Text style={{ fontFamily: 'Spectral', fontSize: 10.5, color: T.mute, marginTop: 6, maxWidth: 230 }}>
+              {r.archetype.name}. {r.archetype.tagline}
+            </Text>
+          </View>
+        </View>
+
         <View style={{ marginTop: 26 }}>
           <StripSvg r={r} />
         </View>
       </View>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 8.5, color: T.muteDark }}>{name || 'Your report'}</Text>
-        <Text style={{ fontFamily: 'Plex', fontSize: 8.5, color: T.muteDark }}>{dateStr}</Text>
+
+      {/* sits over the painted area, so it carries its own light plate */}
+      <View style={{
+        position: 'absolute', bottom: 30, left: M, right: M,
+        flexDirection: 'row', justifyContent: 'space-between',
+        backgroundColor: T.paper, opacity: 0.92,
+        paddingVertical: 7, paddingHorizontal: 12, borderRadius: 6,
+      }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 8.5, color: T.ink }}>{name || 'Your report'}</Text>
+        <Text style={{ fontFamily: 'Plex', fontSize: 8.5, color: T.ink }}>{dateStr}</Text>
       </View>
     </Page>
   );
@@ -349,21 +388,27 @@ export async function generateCompassPdf(args: {
       </Page>
 
       {/* Closing */}
-      <Page size="A4" style={S.dark}>
+      <Page size="A4" style={S.cover}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text */}
+        <Image src={BACKDROP} style={{ position: 'absolute', bottom: 0, left: 0, width: PAGE.w, height: PAGE.h * 0.42, opacity: 0.85 }} />
+        <View style={{ position: 'absolute', top: 0, left: 0, width: PAGE.w, height: PAGE.h * 0.6, backgroundColor: T.paper, opacity: 0.5 }} />
         <View style={{ flexGrow: 1, justifyContent: 'center' }}>
           <Text style={{ fontFamily: 'Plex', fontSize: 8.5, letterSpacing: 1.4, textTransform: 'uppercase', color: T.teal, marginBottom: 10 }}>
-            Section 11
+            Section {byKey('experiment').n}
           </Text>
-          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 20, color: T.ivory, marginBottom: 14 }}>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 22, color: T.oxblood, marginBottom: 14 }}>
             {byKey('experiment').title}
           </Text>
           {byKey('experiment').lines.filter(Boolean).map((l, i) => (
-            <Text key={i} style={{ fontSize: 11, lineHeight: 1.6, color: T.muteDark, marginBottom: 8 }}>{l}</Text>
+            <Text key={i} style={{ fontSize: 11, lineHeight: 1.6, color: T.ink, marginBottom: 8, maxWidth: 400 }}>{l}</Text>
           ))}
-          <View style={{ height: 1, backgroundColor: T.hairDark, marginVertical: 22 }} />
-          <Text style={{ fontSize: 9, lineHeight: 1.55, color: T.muteDark }}>{REPORT_DISCLAIMER}</Text>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 13, color: T.oxblood, marginTop: 16 }}>
+            The summit is a direction, not a finish line.
+          </Text>
+          <View style={{ height: 1, backgroundColor: T.hair, marginVertical: 20 }} />
+          <Text style={{ fontSize: 9, lineHeight: 1.55, color: T.mute, maxWidth: 400 }}>{REPORT_DISCLAIMER}</Text>
         </View>
-        <Text style={{ fontFamily: 'Plex', fontSize: 8.5, color: T.muteDark }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 8.5, color: T.mute }}>
           International Center for Applied Neogogy · www.ican.ph
         </Text>
       </Page>

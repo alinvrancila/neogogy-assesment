@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test:compass": "tsx tests/compass/synthetic.ts",
     "rescore:legacy": "tsx scripts/rescore-legacy.ts",
-    "test:ascent": "tsx tests/compass/ascent.ts"
+    "test:ascent": "tsx tests/compass/ascent.ts",
+    "art:backdrop": "node scripts/art/render-backdrop.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.620.0",

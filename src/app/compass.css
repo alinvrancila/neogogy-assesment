@@ -1917,3 +1917,107 @@
   background: rgba(205, 235, 227, .22);
 }
 .nfc .asc-retake-note { font-size: .88rem; color: var(--asc-muted); margin: 0; }
+
+/* Labels that sit on the painted terrain get a light halo so they stay legible
+   wherever the illustration is dark. */
+.nfc .asc-anchor-label,
+.nfc .asc-prev-chip,
+.nfc .asc-move-chip {
+  paint-order: stroke fill;
+  stroke: #F7F1E4;
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+}
+.nfc .asc-anchor-label { fill: #5C513C; font-weight: 600; }
+
+/* ===========================================================================
+   One continuous result design: the whole page adopts the ascent ground and
+   card system, so the map, the charts and the prose read as one document.
+   =========================================================================== */
+
+.nfc .results {
+  background: var(--asc-page);
+  color: var(--asc-ink);
+}
+
+.nfc .results .results-section {
+  background: var(--asc-card);
+  border: 1px solid var(--asc-border);
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+}
+
+.nfc .results .results-section h3,
+.nfc .results .results-cta h3 {
+  font-family: var(--f-display);
+  color: var(--asc-oxblood);
+}
+
+.nfc .results .rs-head .eyebrow,
+.nfc .results .eyebrow {
+  color: var(--asc-muted);
+}
+
+.nfc .results .md-p,
+.nfc .results .md-list li { color: var(--asc-ink); }
+
+.nfc .results .md-h4 { color: var(--asc-teal); }
+
+.nfc .results .md-quote {
+  border-left-color: var(--asc-gold);
+  color: var(--asc-muted);
+}
+
+.nfc .results .results-hero {
+  background: var(--asc-card);
+  border: 1px solid var(--asc-border);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 18px;
+}
+
+.nfc .results .verdict-label { color: var(--asc-oxblood); }
+.nfc .results .verdict-sub { color: var(--asc-muted); }
+
+.nfc .results .index-badge {
+  background: var(--asc-teal-pale);
+  color: #0d6d5d;
+  border: 1px solid var(--asc-teal);
+}
+
+.nfc .results .conf-banner {
+  background: rgba(229, 170, 69, .10);
+  border-color: var(--asc-gold);
+}
+.nfc .results .conf-label { color: #a9741f; }
+
+/* charts inherit the parchment card */
+.nfc .results .bar-track,
+.nfc .results .comp-track { background: #EDE5D7; }
+.nfc .results .comp-card,
+.nfc .results .viz svg { background: var(--asc-card); }
+.nfc .results .comp-card { border-color: var(--asc-border); }
+.nfc .results .viz-cap,
+.nfc .results .bars-key { color: var(--asc-muted); }
+.nfc .results .bar-conf { color: #a9741f; }
+
+.nfc .results .nextstage .ns-node { border-color: var(--asc-border); }
+.nfc .results .nextstage .ns-target { border-color: var(--asc-teal); }
+.nfc .results .ns-arrow { color: var(--asc-teal); }
+.nfc .results .ns-lab { color: var(--asc-muted); }
+.nfc .results .ns-name { color: var(--asc-ink); }
+
+.nfc .results .plan-block { border-left-color: var(--asc-teal); }
+.nfc .results .plan-n { background: var(--asc-teal); }
+.nfc .results .plan-horizon { color: var(--asc-oxblood); }
+.nfc .results .plan-time { color: var(--asc-muted); }
+
+.nfc .results .results-cta {
+  background: var(--asc-card);
+  border: 1px solid var(--asc-border);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.nfc .results .foot { color: var(--asc-muted); }

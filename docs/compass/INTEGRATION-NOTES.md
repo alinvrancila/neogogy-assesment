@@ -499,3 +499,39 @@ on the high peaks, a compass rose, a vignette and an feTurbulence paper grain ov
 nearest range now follows the route itself, so the climber reads as walking a ridge crest instead of
 having a peak drawn in front of them, which was the main thing making the earlier version look like a
 filled area chart.
+
+## Painted treatment, unified page, matching PDF
+
+**The illustration is generated, not sourced.** `scripts/art/backdrop.svg.mjs` builds a painterly
+mountain scene in SVG (four ranges with deterministic jagged silhouettes, aerial haze bands,
+displacement-mapped painterly edges, dry-brush streaks, watercolour granulation and a vignette).
+`npm run art:backdrop` rasterises it once with headless Chrome to `public/ascent-backdrop.jpg`.
+Nothing was licensed, downloaded or fabricated from an external source, and the asset is
+reproducible from the script.
+
+**It is decorative and carries no data.** The backdrop sits at the bottom of the layer stack. Every
+stage label, camp, gate, route point, marker and score is drawn live on top of it, so a change in the
+data always changes the drawing. A light gradient scrim sits between the illustration and the label
+band. The scrim was first drawn last, which washed out the labels it was meant to protect; it now
+renders before any live element.
+
+**Labels on terrain get a halo.** Basecamp, the previous-attempt marker and the movement chip sit
+over dark painted rock, so they carry a paint-order stroke in the page colour. Without it they were
+grey on brown and unreadable.
+
+**One continuous design.** The whole results page now uses the ascent ground and card system:
+sections became parchment cards with oxblood headings, and the charts moved onto the ascent palette
+(teal, gold, coral). The radar left its navy slab for the same parchment card as everything else, so
+the map, the charts and the prose read as one document rather than three.
+
+**The PDF matches.** Same painted backdrop on the cover and the closing page, same palette, same
+title, the index disc and the continuum strip rendered as vectors over the illustration. The cover
+footer sits on a light plate because it overlaps the painted area and was previously dark on dark.
+
+**File size mattered.** The first backdrop was a 2.8 MB PNG, which pushed every emailed report to
+about 2.9 MB. The scene is photographic and needs no transparency, so it is now an 85 KB JPEG at
+quality 82, and reports are back to roughly 185 KB.
+
+**Verified.** Typecheck, lint, 29 of 29 engine, 17 of 17 ascent, branch checks and the production
+build all pass. PDFs re-measured across five fixtures: 11 to 13 pages, zero interior pages below 60
+percent fill, no dashes.

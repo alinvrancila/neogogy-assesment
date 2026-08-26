@@ -13,7 +13,7 @@ import type { AttemptComparison } from '@/lib/history';
 import { STAGES } from '@/engine/config';
 import type { ConstructId } from '@/engine/types';
 import {
-  VIEW, ROUTE_POINTS, pointAtIndex, routePath, contourPaths, mountainRange, snowCap, routeRidge,
+  VIEW, ROUTE_POINTS, pointAtIndex, routePath, contourPaths, routeRidge,
 } from './route';
 
 /** Gates that bind on the route, in the language of the climb. */
@@ -27,13 +27,6 @@ export const GATE_DEFS: Array<{ construct: ConstructId; label: string; firstStag
 const minIndexOf = (stage: number) => STAGES.find((s) => s.stage === stage)?.minIndex ?? 0;
 
 /** Ridge extended past both edges so the terrain never shows a cut seam. */
-/** Peaks that carry snow, on the high right-hand side of the range. */
-const SNOW = [
-  { x: 766, y: 240 },
-  { x: 924, y: 204 },
-  { x: 1074, y: 168 },
-];
-
 export default function AscentMapHero(
   { result, comparison }: { result: CompassResult; comparison?: AttemptComparison | null }
 ) {
@@ -83,6 +76,11 @@ export default function AscentMapHero(
               <stop offset="0%" stopColor="#9A8C77" />
               <stop offset="100%" stopColor="#B6A992" />
             </linearGradient>
+            <linearGradient id="ascScrim" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#F7F1E4" stopOpacity="0.92" />
+              <stop offset="62%" stopColor="#F7F1E4" stopOpacity="0.78" />
+              <stop offset="100%" stopColor="#F7F1E4" stopOpacity="0" />
+            </linearGradient>
             <radialGradient id="ascVignette" cx="50%" cy="46%" r="72%">
               <stop offset="60%" stopColor="#000000" stopOpacity="0" />
               <stop offset="100%" stopColor="#5A4B34" stopOpacity="0.16" />
@@ -102,25 +100,26 @@ export default function AscentMapHero(
           </defs>
 
           <g clipPath="url(#ascClip)">
-            {/* layer 1: sky */}
-            <rect x="0" y="0" width={VIEW.w} height={VIEW.h} fill="url(#ascSky)" />
+            {/* layer 1: the painted backdrop. Decorative only: it carries no
+                data, and every label, route point and marker is drawn over it. */}
+            <image
+              href="/ascent-backdrop.jpg"
+              x={0} y={0} width={VIEW.w} height={VIEW.h}
+              preserveAspectRatio="xMidYMid slice"
+              aria-hidden="true"
+            />
 
-            {/* layer 3: three jagged ranges, far to near, with snow on the high peaks */}
-            <g aria-hidden="true">
-              <polygon
-                points={mountainRange({ seed: 11, peaks: 13, baseY: VIEW.h, startY: 392, endY: 176, jitter: 44 })}
-                fill="url(#ascRockFar)" opacity={0.75}
-              />
-              <polygon
-                points={mountainRange({ seed: 29, peaks: 10, baseY: VIEW.h, startY: 452, endY: 226, jitter: 54 })}
-                fill="url(#ascRockMid)" opacity={0.82}
-              />
-              {SNOW.map((p, i) => (
-                <polygon key={i} points={snowCap(p, 46 - i * 3, 30, 40 + i)} fill="#F6F1E6" opacity={0.9} />
-              ))}
-              {/* near range follows the route, so the climber walks its crest */}
-              <polygon points={routeRidge(8)} fill="url(#ascRockNear)" opacity={0.92} />
-            </g>
+            {/* a light scrim beneath the label band, drawn before any live
+                element so it never washes out the labels it protects */}
+            <rect x="0" y="0" width={VIEW.w} height={188} fill="url(#ascScrim)" aria-hidden="true" />
+
+            {/* layer 2: a soft crest beneath the route, so the path reads as
+                sitting on ground rather than floating over the illustration */}
+            <polygon points={routeRidge(10)} fill="#6E6147" opacity={0.22} aria-hidden="true" />
+            <path
+              d={full} fill="none" stroke="#4A3F2C" strokeWidth={14}
+              strokeLinecap="round" opacity={0.13} aria-hidden="true"
+            />
 
             {/* layer 3b: contour lines, over the terrain so they read as a map */}
             <g aria-hidden="true">
@@ -273,13 +272,6 @@ export default function AscentMapHero(
                 </g>
               </g>
             </g>
-            {/* finish: vignette and paper grain over the whole panel */}
-            <rect x="0" y="0" width={VIEW.w} height={VIEW.h} fill="url(#ascVignette)" pointerEvents="none" aria-hidden="true" />
-            <rect
-              x="0" y="0" width={VIEW.w} height={VIEW.h} fill="#EFE7D8"
-              filter="url(#ascGrain)" opacity={0.5} pointerEvents="none" aria-hidden="true"
-              style={{ mixBlendMode: 'multiply' }}
-            />
           </g>
         </svg>
       </div>
