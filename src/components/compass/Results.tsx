@@ -20,6 +20,7 @@ import {
 import { improvementPlan } from '@/engine/narrative';
 import { Markdown } from './Markdown';
 import AscentResults from './ascent/AscentResults';
+import type { AttemptComparison } from '@/lib/history';
 import { MethodologyDisclosure } from './ascent/modules';
 import {
   DimensionRadar, NextStagePanel, StageLadder, DimensionBars, CompositesPanel, PlanTimeline,
@@ -186,19 +187,20 @@ function SectionBlock({ section, result }: { section: ReportSection; result: Com
 }
 
 export default function Results({
-  result, firstName, emailed, onRetake
+  result, firstName, emailed, onRetake, comparison
 }: {
   result: CompassResult;
   firstName?: string;
   emailed: boolean;
   onRetake: () => void;
+  comparison?: AttemptComparison | null;
 }) {
   const head = reportHead(result);
   const sections = generateReportSections(result);
 
   return (
     <div className="wrap results">
-      <AscentResults result={result} />
+      <AscentResults result={result} comparison={comparison} />
 
       <header className="results-hero">
         <span className="eyebrow">{head.title}</span>

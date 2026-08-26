@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { compute, applicableItems } from '@/engine';
 import type { Persona, Submission } from '@/engine/types';
 import ResultsPreview from '@/components/compass/ResultsPreview';
+import { compareToPrevious } from '@/lib/history';
 import '@/app/compass.css';
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +28,7 @@ function build(persona: Persona, usage: number, pick: (it: It, i: number) => num
 }
 
 export default async function DevResultsPage(
-  { searchParams }: { searchParams: Promise<{ p?: string; persona?: string }> }
+  { searchParams }: { searchParams: Promise<{ p?: string; persona?: string; compare?: string }> }
 ) {
   if (process.env.NODE_ENV === 'production') notFound();
   const sp = await searchParams;
@@ -52,5 +53,25 @@ export default async function DevResultsPage(
     });
   }
 
-  return <ResultsPreview result={compute(sub)} />;
+  const result = compute(sub);
+
+  // ?compare=1 builds a comparison from a genuinely weaker earlier submission,
+  // so the module is exercised with real engine output rather than fake numbers.
+  let comparison = null;
+  if (sp.compare) {
+    const earlier = compute(build(persona, 3, (it) => (it.type === 'reverse' ? 4 : 2)));
+    comparison = compareToPrevious(
+      result,
+      {
+        id: 'dev-prev', name: 'Dev', email: 'dev@example.com', role: persona, modality: '',
+        consent: true, persona: earlier.archetype.id, personaName: earlier.archetype.name,
+        overall: earlier.stage.rawIndex, createdAt: '2026-06-02T10:00:00.000Z',
+        engineVersion: 2, result: earlier,
+      },
+      2,
+      new Date('2026-08-26T10:00:00.000Z')
+    );
+  }
+
+  return <ResultsPreview result={result} comparison={comparison} />;
 }

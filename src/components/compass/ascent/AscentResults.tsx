@@ -8,22 +8,28 @@
  */
 
 import type { CompassResult } from '@/engine';
+import type { AttemptComparison } from '@/lib/history';
 import AscentMapHero from './AscentMapHero';
 import {
   ResultHeader, OrientationCard, RouteStages, PracticeGates,
-  FootholdCard, RouteLogCard, NextClimbCard,
+  FootholdCard, RouteLogCard, NextClimbCard, ComparisonCard, RetakeInvite,
 } from './modules';
 
-export default function AscentResults({ result }: { result: CompassResult }) {
+export default function AscentResults(
+  { result, comparison }: { result: CompassResult; comparison?: AttemptComparison | null }
+) {
   return (
     <div className="asc">
       <ResultHeader result={result} />
 
       {/* position */}
       <div className="asc-hero-grid">
-        <AscentMapHero result={result} />
+        <AscentMapHero result={result} comparison={comparison} />
         <OrientationCard result={result} />
       </div>
+
+      {/* movement, when this is a return visit */}
+      {comparison ? <ComparisonCard comparison={comparison} /> : null}
 
       {/* interpretation */}
       <RouteStages result={result} />
@@ -35,6 +41,8 @@ export default function AscentResults({ result }: { result: CompassResult }) {
         <RouteLogCard result={result} />
         <NextClimbCard result={result} />
       </div>
+
+      <RetakeInvite hasHistory={!!comparison} />
     </div>
   );
 }

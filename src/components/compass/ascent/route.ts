@@ -104,3 +104,88 @@ export function contourPaths(count = 7): string[] {
   }
   return out;
 }
+
+/* ---------------------------------------------------------------- terrain */
+
+/** Deterministic pseudo-random, so terrain is identical on server and client. */
+function rng(seed: number) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 0xffffffff;
+  };
+}
+
+/**
+ * A jagged mountain range as an SVG polygon.
+ * Peaks rise toward the right so the terrain agrees with the route's climb.
+ */
+export function mountainRange(opts: {
+  seed: number;
+  peaks: number;
+  baseY: number;
+  startY: number;
+  endY: number;
+  jitter: number;
+}): string {
+  const { seed, peaks, baseY, startY, endY, jitter } = opts;
+  const rand = rng(seed);
+  const left = -160;
+  const right = VIEW.w + 200;
+  const span = right - left;
+  const pts: Pt[] = [{ x: left, y: baseY }];
+
+  for (let i = 0; i <= peaks; i++) {
+    const t = i / peaks;
+    const x = left + span * t;
+    const ridge = startY + (endY - startY) * t;
+    // alternate peak and saddle so the silhouette has real teeth
+    const isPeak = i % 2 === 0;
+    const amp = jitter * (0.55 + rand() * 0.9);
+    const y = isPeak ? ridge - amp : ridge + amp * 0.55;
+    if (i > 0) {
+      const px = left + span * ((i - 0.5) / peaks);
+      const pr = startY + (endY - startY) * ((i - 0.5) / peaks);
+      pts.push({ x: px, y: pr + amp * 0.25 });
+    }
+    pts.push({ x, y });
+  }
+
+  pts.push({ x: right, y: baseY });
+  return pts.map((p) => `${p.x},${p.y}`).join(' ');
+}
+
+/** Snow cap sitting on a peak: a small triangle with a ragged lower edge. */
+export function snowCap(peak: Pt, width: number, depth: number, seed: number): string {
+  const rand = rng(seed);
+  const l = { x: peak.x - width / 2, y: peak.y + depth };
+  const r = { x: peak.x + width / 2, y: peak.y + depth };
+  const mid1 = { x: peak.x - width / 6, y: peak.y + depth * (0.55 + rand() * 0.3) };
+  const mid2 = { x: peak.x + width / 5, y: peak.y + depth * (0.6 + rand() * 0.35) };
+  return `${peak.x},${peak.y} ${r.x},${r.y} ${mid2.x},${mid2.y} ${peak.x},${peak.y + depth * 0.85} ${mid1.x},${mid1.y} ${l.x},${l.y}`;
+}
+
+
+/**
+ * The near range follows the route itself, so the climber reads as walking a
+ * ridge crest rather than having a peak drawn in front of them. A little
+ * deterministic jitter keeps it from looking like a chart area fill.
+ */
+export function routeRidge(offset = 8): string {
+  const rand = rng(97);
+  const pts: Pt[] = [{ x: -160, y: ROUTE_POINTS[0].y + 46 }];
+  for (let i = 0; i < ROUTE_POINTS.length; i++) {
+    const p = ROUTE_POINTS[i];
+    if (i > 0) {
+      const prev = ROUTE_POINTS[i - 1];
+      const mx = (prev.x + p.x) / 2;
+      const my = (prev.y + p.y) / 2;
+      pts.push({ x: mx, y: my + offset + rand() * 16 });
+    }
+    pts.push({ x: p.x, y: p.y + offset });
+  }
+  pts.push({ x: VIEW.w + 200, y: ROUTE_POINTS[ROUTE_POINTS.length - 1].y - 30 });
+  pts.push({ x: VIEW.w + 200, y: VIEW.h });
+  pts.push({ x: -160, y: VIEW.h });
+  return pts.map((p) => `${p.x},${p.y}`).join(' ');
+}

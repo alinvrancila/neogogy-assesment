@@ -17,6 +17,7 @@ import { applicableItems } from '@/engine';
 import type { Item, Persona, Submission } from '@/engine/types';
 import { USAGE_ITEM } from '@/items/shared';
 import type { CompassResult } from '@/engine';
+import type { AttemptComparison } from '@/lib/history';
 import {
   ItemScreen, OptionCards, optionsFor, B1_CHOICES, BAND_CHOICES, type Choice
 } from './items';
@@ -59,6 +60,7 @@ export default function CompassApp() {
   const [gate, setGate] = useState<GateState>({ submitting: false, error: null });
   const [result, setResult] = useState<CompassResult | null>(null);
   const [emailed, setEmailed] = useState(false);
+  const [comparison, setComparison] = useState<AttemptComparison | null>(null);
   const [firstName, setFirstName] = useState('');
 
   const restored = useRef(false);
@@ -209,6 +211,7 @@ export default function CompassApp() {
         return;
       }
       setResult(payload.result as CompassResult);
+      setComparison((payload.comparison as AttemptComparison | null) ?? null);
       setEmailed(Boolean(payload.emailSent));
       setFirstName(data.firstName.trim());
       setGate({ submitting: false, error: null });
@@ -244,7 +247,7 @@ export default function CompassApp() {
     clearDraft();
     setScreen('hero'); setPersona(null); setUsage(null); setB1(null); setB2(null);
     setAnswers({}); setPos(0); setSubmission(null);
-    setResult(null); setEmailed(false); setFirstName('');
+    setResult(null); setEmailed(false); setFirstName(''); setComparison(null);
     setGate({ submitting: false, error: null });
   }, [clearDraft]);
 
@@ -307,7 +310,10 @@ export default function CompassApp() {
   }
 
   if (screen === 'results' && result) {
-    return shell(<Results result={result} firstName={firstName} emailed={emailed} onRetake={restart} />);
+    return shell(
+      <Results result={result} firstName={firstName} emailed={emailed}
+        onRetake={restart} comparison={comparison} />
+    );
   }
 
   // Gate: results are shown only after the respondent provides their details.

@@ -14,6 +14,7 @@ import { CONSTRUCTS, STAGES } from '@/engine/config';
 import { CONSTRUCT_CONTENT } from '@/engine/content';
 import type { ConstructId } from '@/engine/types';
 import { GATE_DEFS } from './AscentMapHero';
+import type { AttemptComparison } from '@/lib/history';
 
 /* ------------------------------------------------------------------ header */
 
@@ -335,5 +336,118 @@ export function MethodologyDisclosure() {
         </p>
       </div>
     </details>
+  );
+}
+
+
+/* ------------------------------------------------------- since last ascent */
+
+const fmtDate = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? 'your previous attempt'
+    : d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+};
+
+export function ComparisonCard({ comparison }: { comparison: AttemptComparison }) {
+  const c = comparison;
+  const up = c.indexDelta > 0;
+  const flat = c.indexDelta === 0;
+  const moved = c.dimensions.filter((d) => d.delta !== 0);
+  const gained = moved.filter((d) => d.improved).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+  const slipped = moved.filter((d) => d.improved === false).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+
+  return (
+    <section className="asc-compare" aria-labelledby="asc-cmp-h">
+      <div className="asc-cmp-head">
+        <div>
+          <p className="asc-kicker">Since your last ascent</p>
+          <h2 id="asc-cmp-h" className="asc-h2">
+            {flat
+              ? 'You are holding your position'
+              : up ? 'You have climbed higher' : 'You have moved down the route'}
+          </h2>
+          <p className="asc-lead" style={{ marginBottom: 0 }}>
+            This is attempt {c.attemptNumber}. Your previous reading was taken on {fmtDate(c.previousAt)}
+            {c.daysBetween > 0 ? `, ${c.daysBetween} day${c.daysBetween === 1 ? '' : 's'} ago` : ''}.
+            Movement on this route comes from changed habits, so a small shift over a short gap is
+            normal and a large one is worth understanding.
+          </p>
+        </div>
+        <div className={`asc-cmp-delta ${flat ? 'is-flat' : up ? 'is-up' : 'is-down'}`}>
+          <span className="asc-cmp-arrow" aria-hidden="true">{flat ? '=' : up ? '\u2191' : '\u2193'}</span>
+          <span className="asc-cmp-n">{up ? '+' : ''}{c.indexDelta}</span>
+          <span className="asc-cmp-lab">index change</span>
+        </div>
+      </div>
+
+      <div className="asc-cmp-rows">
+        <div className="asc-cmp-row">
+          <span>Developmental index</span>
+          <span><b>{c.previousIndex}</b> to <b>{c.currentIndex}</b></span>
+        </div>
+        <div className="asc-cmp-row">
+          <span>Stage</span>
+          <span>
+            <b>{c.previousStage}. {c.previousStageName}</b> to <b>{c.currentStage}. {c.currentStageName}</b>
+            {c.stageDelta === 0 ? ' (same stage)' : ''}
+          </span>
+        </div>
+      </div>
+
+      <div className="asc-cmp-cols">
+        <div>
+          <h3 className="asc-cmp-h3">Where you gained</h3>
+          {gained.length ? (
+            <ul className="asc-cmp-list">
+              {gained.slice(0, 4).map((d) => (
+                <li key={d.construct}>
+                  <span className="asc-cmp-name">{d.name}</span>
+                  <span className="asc-cmp-move up">
+                    {d.previous} to {d.current}
+                    <em>{d.reportedAsRisk ? ' (lower is healthier)' : ''}</em>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="asc-cmp-empty">No dimension improved since last time.</p>}
+        </div>
+        <div>
+          <h3 className="asc-cmp-h3">Where you slipped</h3>
+          {slipped.length ? (
+            <ul className="asc-cmp-list">
+              {slipped.slice(0, 4).map((d) => (
+                <li key={d.construct}>
+                  <span className="asc-cmp-name">{d.name}</span>
+                  <span className="asc-cmp-move down">
+                    {d.previous} to {d.current}
+                    <em>{d.reportedAsRisk ? ' (lower is healthier)' : ''}</em>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="asc-cmp-empty">Nothing slipped since last time.</p>}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------ retake call */
+
+export function RetakeInvite({ hasHistory }: { hasHistory: boolean }) {
+  return (
+    <section className="asc-retake" aria-labelledby="asc-retake-h">
+      <h2 id="asc-retake-h" className="asc-h2">Come back and climb it again</h2>
+      <p className="asc-lead">
+        {hasHistory
+          ? 'Each time you return with the same email address, this map adds your previous position so you can see the movement rather than guess at it.'
+          : 'Take this again in a few months using the same email address. Your previous position is remembered, so the map will show where you stood last time and how far you have moved.'}
+      </p>
+      <p className="asc-retake-note">
+        A useful gap is eight to twelve weeks: long enough for a changed habit to show up in your
+        answers, short enough that you still remember what you tried.
+      </p>
+    </section>
   );
 }

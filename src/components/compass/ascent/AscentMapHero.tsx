@@ -9,10 +9,11 @@
  */
 
 import type { CompassResult } from '@/engine';
+import type { AttemptComparison } from '@/lib/history';
 import { STAGES } from '@/engine/config';
 import type { ConstructId } from '@/engine/types';
 import {
-  VIEW, ROUTE_POINTS, pointAtIndex, routePath, ridgePolygon, contourPaths,
+  VIEW, ROUTE_POINTS, pointAtIndex, routePath, contourPaths, mountainRange, snowCap, routeRidge,
 } from './route';
 
 /** Gates that bind on the route, in the language of the climb. */
@@ -26,13 +27,16 @@ export const GATE_DEFS: Array<{ construct: ConstructId; label: string; firstStag
 const minIndexOf = (stage: number) => STAGES.find((s) => s.stage === stage)?.minIndex ?? 0;
 
 /** Ridge extended past both edges so the terrain never shows a cut seam. */
-const EXTENDED = [
-  { x: -200, y: ROUTE_POINTS[0].y + 30 },
-  ...ROUTE_POINTS,
-  { x: VIEW.w + 260, y: ROUTE_POINTS[ROUTE_POINTS.length - 1].y - 40 },
+/** Peaks that carry snow, on the high right-hand side of the range. */
+const SNOW = [
+  { x: 766, y: 240 },
+  { x: 924, y: 204 },
+  { x: 1074, y: 168 },
 ];
 
-export default function AscentMapHero({ result }: { result: CompassResult }) {
+export default function AscentMapHero(
+  { result, comparison }: { result: CompassResult; comparison?: AttemptComparison | null }
+) {
   const index = result.stage.rawIndex;
   const here = pointAtIndex(index);
   const nextStage = result.nextTarget.stage;
@@ -63,9 +67,35 @@ export default function AscentMapHero({ result }: { result: CompassResult }) {
         >
           <defs>
             <linearGradient id="ascSky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--asc-sky-1)" />
+              <stop offset="0%" stopColor="#F7F1E5" />
+              <stop offset="55%" stopColor="var(--asc-sky-1)" />
               <stop offset="100%" stopColor="var(--asc-sky-2)" />
             </linearGradient>
+            <linearGradient id="ascRockFar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#C9BEAC" />
+              <stop offset="100%" stopColor="#DCD3C3" />
+            </linearGradient>
+            <linearGradient id="ascRockMid" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#B3A794" />
+              <stop offset="100%" stopColor="#C8BDAA" />
+            </linearGradient>
+            <linearGradient id="ascRockNear" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#9A8C77" />
+              <stop offset="100%" stopColor="#B6A992" />
+            </linearGradient>
+            <radialGradient id="ascVignette" cx="50%" cy="46%" r="72%">
+              <stop offset="60%" stopColor="#000000" stopOpacity="0" />
+              <stop offset="100%" stopColor="#5A4B34" stopOpacity="0.16" />
+            </radialGradient>
+            {/* paper grain, so the panel reads as printed parchment */}
+            <filter id="ascGrain" x="0" y="0" width="100%" height="100%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="7" result="n" />
+              <feColorMatrix in="n" type="saturate" values="0" result="d" />
+              <feComponentTransfer in="d" result="g">
+                <feFuncA type="linear" slope="0.08" />
+              </feComponentTransfer>
+              <feComposite in="g" in2="SourceGraphic" operator="over" />
+            </filter>
             <clipPath id="ascClip">
               <rect x="0" y="0" width={VIEW.w} height={VIEW.h} rx="14" />
             </clipPath>
@@ -75,11 +105,21 @@ export default function AscentMapHero({ result }: { result: CompassResult }) {
             {/* layer 1: sky */}
             <rect x="0" y="0" width={VIEW.w} height={VIEW.h} fill="url(#ascSky)" />
 
-            {/* layer 3: terrain ridges, far to near */}
+            {/* layer 3: three jagged ranges, far to near, with snow on the high peaks */}
             <g aria-hidden="true">
-              <polygon points={ridgePolygon(EXTENDED, VIEW.h, -120, 96)} fill="var(--asc-ridge-far)" opacity={0.85} />
-              <polygon points={ridgePolygon(EXTENDED, VIEW.h, -58, 54)} fill="var(--asc-ridge-mid)" opacity={0.8} />
-              <polygon points={ridgePolygon(EXTENDED, VIEW.h, 0, 14)} fill="var(--asc-ridge-near)" opacity={0.7} />
+              <polygon
+                points={mountainRange({ seed: 11, peaks: 13, baseY: VIEW.h, startY: 392, endY: 176, jitter: 44 })}
+                fill="url(#ascRockFar)" opacity={0.75}
+              />
+              <polygon
+                points={mountainRange({ seed: 29, peaks: 10, baseY: VIEW.h, startY: 452, endY: 226, jitter: 54 })}
+                fill="url(#ascRockMid)" opacity={0.82}
+              />
+              {SNOW.map((p, i) => (
+                <polygon key={i} points={snowCap(p, 46 - i * 3, 30, 40 + i)} fill="#F6F1E6" opacity={0.9} />
+              ))}
+              {/* near range follows the route, so the climber walks its crest */}
+              <polygon points={routeRidge(8)} fill="url(#ascRockNear)" opacity={0.92} />
             </g>
 
             {/* layer 3b: contour lines, over the terrain so they read as a map */}
@@ -152,6 +192,15 @@ export default function AscentMapHero({ result }: { result: CompassResult }) {
                 );
               })}
 
+              {/* compass rose */}
+              <g aria-hidden="true" transform="translate(86 176)" opacity={0.5}>
+                <circle r={26} fill="none" stroke="var(--asc-muted)" strokeWidth={1} />
+                <circle r={18} fill="none" stroke="var(--asc-muted)" strokeWidth={0.6} />
+                <polygon points="0,-24 5,0 0,24 -5,0" fill="var(--asc-oxblood)" opacity={0.75} />
+                <polygon points="-24,0 0,4 24,0 0,-4" fill="var(--asc-muted)" opacity={0.45} />
+                <text x={0} y={-30} textAnchor="middle" className="asc-anchor-label">N</text>
+              </g>
+
               {/* basecamp */}
               <g aria-hidden="true">
                 <text x={ROUTE_POINTS[0].x + 4} y={ROUTE_POINTS[0].y + 34} className="asc-anchor-label">BASECAMP</text>
@@ -167,17 +216,42 @@ export default function AscentMapHero({ result }: { result: CompassResult }) {
               {/* next ledge marker */}
               {!nextAtTop && (
                 <g>
-                  <line x1={nextPt.x} y1={nextPt.y - 12} x2={nextPt.x} y2={nextPt.y - 30}
+                  <line x1={nextPt.x} y1={nextPt.y - 12} x2={nextPt.x} y2={nextPt.y - 46}
                     stroke="var(--asc-teal)" strokeWidth={1.2} />
                   <rect
-                    x={nextPt.x - 64} y={nextPt.y - 58} width={128} height={28} rx={14}
+                    x={nextPt.x - 64} y={nextPt.y - 74} width={128} height={28} rx={14}
                     fill="var(--asc-teal-pale)" stroke="var(--asc-teal)" strokeWidth={1}
                   />
-                  <text x={nextPt.x} y={nextPt.y - 39} textAnchor="middle" className="asc-next-chip">
+                  <text x={nextPt.x} y={nextPt.y - 55} textAnchor="middle" className="asc-next-chip">
                     NEXT LEDGE
                   </text>
                 </g>
               )}
+
+              {/* where the previous attempt stood, when there is one */}
+              {comparison ? (() => {
+                const prev = pointAtIndex(comparison.previousIndex);
+                const rising = comparison.indexDelta >= 0;
+                return (
+                  <g>
+                    <path
+                      d={`M ${prev.x} ${prev.y - 20} L ${here.x} ${here.y - 20}`}
+                      stroke="var(--asc-muted)" strokeWidth={1.4} strokeDasharray="5 5" fill="none"
+                    />
+                    <circle cx={prev.x} cy={prev.y} r={9} fill="none"
+                      stroke="var(--asc-muted)" strokeWidth={2.5} strokeDasharray="3 3" />
+                    <text x={prev.x} y={prev.y + 34} textAnchor="middle" className="asc-prev-chip">
+                      LAST TIME {comparison.previousIndex}
+                    </text>
+                    <text
+                      x={(prev.x + here.x) / 2} y={Math.min(prev.y, here.y) - 28}
+                      textAnchor="middle" className="asc-move-chip"
+                    >
+                      {rising ? '+' : ''}{comparison.indexDelta} since last time
+                    </text>
+                  </g>
+                );
+              })() : null}
 
               {/* the climber, placed at the exact index */}
               <g>
@@ -199,6 +273,13 @@ export default function AscentMapHero({ result }: { result: CompassResult }) {
                 </g>
               </g>
             </g>
+            {/* finish: vignette and paper grain over the whole panel */}
+            <rect x="0" y="0" width={VIEW.w} height={VIEW.h} fill="url(#ascVignette)" pointerEvents="none" aria-hidden="true" />
+            <rect
+              x="0" y="0" width={VIEW.w} height={VIEW.h} fill="#EFE7D8"
+              filter="url(#ascGrain)" opacity={0.5} pointerEvents="none" aria-hidden="true"
+              style={{ mixBlendMode: 'multiply' }}
+            />
           </g>
         </svg>
       </div>

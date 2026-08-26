@@ -462,3 +462,40 @@ and there is no score counting or celebratory effect anywhere.
 the ten stage labels, current and next stage rendering across every persona and usage level, the
 stage 10 case where no next ledge exists, dependency risk directionality, and that every practice
 gate maps to a real construct and a real stage threshold.
+
+## Retake benchmarking and the terrain pass
+
+**Repeat attempts are matched on email.** `src/lib/history.ts` finds prior engineVersion 2 records
+for the same address (trimmed, lowercased), compares the current result against the most recent one,
+and returns index movement, stage movement, days elapsed, attempt number and per dimension deltas.
+The lookup runs before the new record is saved, so it can never compare a result against itself.
+
+**Reversed scales are handled explicitly.** Dependency Risk is compared as a risk, so a fall counts
+as an improvement and a rise does not. Both directions are asserted in the suite, along with the case
+where nothing moved (no dimension may claim improvement) and the case where a stored record has no
+result (no comparison rather than a broken one).
+
+**What the respondent sees.** A "Since your last ascent" section stating whether they climbed, held
+or moved down, the index and stage movement, and two columns for where they gained and where they
+slipped. On the map, the previous position renders as a dashed ghost marker labelled with the earlier
+index and joined to the current marker by a dashed connector carrying the change. A "Come back and
+climb it again" panel explains that returning with the same email is what makes the comparison
+possible, and suggests eight to twelve weeks as a useful gap. Language stays in the movement register:
+a decline says "you have moved down the route", never that anything failed.
+
+**A privacy point worth deciding on.** Matching on email alone means anyone who enters an address can
+see the movement summary for prior attempts under that address. The exposure is limited to indices,
+stages and dimension deltas rather than the full prior report, but it is real. This was built as
+asked; if these results are ever sensitive, the fix is to verify ownership of the address (a link
+sent to the inbox before the comparison is revealed) rather than to weaken the feature. Flagged rather
+than silently mitigated because it changes the flow.
+
+**Storage note.** `priorAttempts` uses `listLeads`, which is a full scan on DynamoDB. Fine at current
+volume; if lead counts grow this wants an email index rather than a scan.
+
+**Terrain pass.** The smooth ridge polygons were replaced with generated jagged ranges: three layers,
+deterministic pseudo-random so server and client render identically, with rock gradients, snow caps
+on the high peaks, a compass rose, a vignette and an feTurbulence paper grain over the panel. The
+nearest range now follows the route itself, so the climber reads as walking a ridge crest instead of
+having a peak drawn in front of them, which was the main thing making the earlier version look like a
+filled area chart.

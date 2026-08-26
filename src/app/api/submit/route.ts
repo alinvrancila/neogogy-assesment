@@ -6,6 +6,7 @@ import type { Persona, Submission } from '@/engine/types';
 import { saveLead, logEvent, type LeadRecord } from '@/lib/storage';
 import { generateCompassPdf } from '@/lib/reportPdfV2';
 import { sendReportEmail, isEmailEnabled } from '@/lib/email';
+import { buildComparison } from '@/lib/history';
 
 export const runtime = 'nodejs';
 
@@ -87,6 +88,17 @@ export async function POST(request: NextRequest) {
   if (!checked.ok) return NextResponse.json({ error: checked.error }, { status: 400 });
 
   const result = compute(checked.submission);
+
+  // A returning respondent is matched on email so their movement can be shown.
+  // This runs before the new record is saved, so it compares against genuine
+  // prior attempts only.
+  let comparison = null;
+  try {
+    comparison = await buildComparison(body.email, result, new Date());
+  } catch (error) {
+    console.error('comparison lookup failed', error);
+    // A missing comparison is never allowed to cost the respondent their result.
+  }
 
   const dimensionScores: Record<string, number> = {};
   Object.values(result.dimensions).forEach((d) => { dimensionScores[d.construct] = d.score; });
@@ -171,5 +183,5 @@ export async function POST(request: NextRequest) {
     // The respondent still sees their result on screen.
   }
 
-  return NextResponse.json({ success: true, result, emailSent });
+  return NextResponse.json({ success: true, result, comparison, emailSent });
 }

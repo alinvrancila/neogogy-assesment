@@ -145,5 +145,61 @@ check("gate state follows the score against the real threshold", () => {
     "this profile should sit below the verification gate");
 });
 
+
+/* ------------------------------------------------------- retake comparison */
+
+import { compareToPrevious } from "../../src/lib/history";
+import type { LeadRecord } from "../../src/lib/storage";
+
+const asLead = (r: ReturnType<typeof compute>, createdAt: string): LeadRecord => ({
+  id: "prev", name: "T", email: "t@e.com", role: r.persona, modality: "", consent: true,
+  persona: r.archetype.id, personaName: r.archetype.name, overall: r.stage.rawIndex,
+  createdAt, engineVersion: 2, result: r,
+});
+
+console.log("\n== Retake comparison ==");
+
+const weaker = compute(build("student", 4, (it) => (it.type === "reverse" ? 4 : 2)));
+const stronger = compute(build("student", 4, (it) => (it.type === "reverse" ? 2 : 4)));
+
+check("an improvement reports a positive index delta and a higher stage", () => {
+  const c = compareToPrevious(stronger, asLead(weaker, "2026-06-01T10:00:00.000Z"), 2, new Date("2026-08-26T10:00:00.000Z"));
+  assert(c, "expected a comparison");
+  assert(c!.indexDelta > 0, "index delta should be positive");
+  assert(c!.currentStage > c!.previousStage, "stage should rise");
+  assert.strictEqual(c!.attemptNumber, 2);
+  assert(c!.daysBetween > 80 && c!.daysBetween < 90, `unexpected day gap ${c!.daysBetween}`);
+});
+
+check("a decline reports a negative delta without calling it a failure", () => {
+  const c = compareToPrevious(weaker, asLead(stronger, "2026-06-01T10:00:00.000Z"), 2, new Date("2026-08-26T10:00:00.000Z"));
+  assert(c!.indexDelta < 0, "index delta should be negative");
+  assert(c!.currentStage < c!.previousStage, "stage should fall");
+});
+
+check("dependency risk improvement is a fall, not a rise", () => {
+  const c = compareToPrevious(stronger, asLead(weaker, "2026-06-01T10:00:00.000Z"), 2, new Date("2026-08-26T10:00:00.000Z"));
+  const dep = c!.dimensions.find((d) => d.construct === "dependencySafety")!;
+  assert(dep.reportedAsRisk, "dependency must be flagged as a risk scale");
+  assert(dep.delta < 0, `expected the risk to fall, got ${dep.delta}`);
+  assert.strictEqual(dep.improved, true, "a falling risk must count as an improvement");
+  // and the reverse direction
+  const back = compareToPrevious(weaker, asLead(stronger, "2026-06-01T10:00:00.000Z"), 2, new Date("2026-08-26T10:00:00.000Z"));
+  const dep2 = back!.dimensions.find((d) => d.construct === "dependencySafety")!;
+  assert(dep2.delta > 0 && dep2.improved === false, "a rising risk must not count as an improvement");
+});
+
+check("an unchanged dimension is neither gain nor slip", () => {
+  const c = compareToPrevious(stronger, asLead(stronger, "2026-06-01T10:00:00.000Z"), 2, new Date("2026-08-26T10:00:00.000Z"));
+  assert(c!.dimensions.every((d) => d.delta === 0), "identical results should show no movement");
+  assert(c!.dimensions.every((d) => d.improved === null), "no dimension should claim improvement");
+  assert.strictEqual(c!.indexDelta, 0);
+});
+
+check("a prior record without a stored result yields no comparison", () => {
+  const broken = { ...asLead(weaker, "2026-06-01T10:00:00.000Z"), result: undefined };
+  assert.strictEqual(compareToPrevious(stronger, broken, 2, new Date()), null);
+});
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
