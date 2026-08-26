@@ -29,6 +29,29 @@ export const EVIDENCE_BASE: Citation[] = [
   },
 ];
 
+/**
+ * The books the framework itself comes from. These are kept separate from
+ * EVIDENCE_BASE on purpose: they are the source texts for the model this
+ * assessment implements, written by its author, not independent evidence for
+ * it. Presenting them as research would overstate the case.
+ */
+export interface FrameworkSource { title: string; year: string; author: string; note: string }
+
+export const FRAMEWORK_SOURCES: FrameworkSource[] = [
+  {
+    title: "Neogogy: Learning at the Speed of Mind",
+    year: "2025",
+    author: "Dr. Alin Vrancila",
+    note: "The complete framework for education in the age of artificial intelligence, introducing the seven principles of Neogogy and the role of the educator as wisdom collaborator. This is where the ideas behind the ten dimensions you were measured on are set out in full.",
+  },
+  {
+    title: "Understanding Neogogy: Academic Intelligence in the Age of AI",
+    year: "2026",
+    author: "Dr. Alin Vrancila",
+    note: "The companion volume focused entirely on higher education, making the case for why the framework is needed. It carries reflection questions written for faculty learning communities and seminars, which suit a group working through their results together.",
+  },
+];
+
 export interface ConstructContent {
   /** One paragraph: what this dimension actually measures. */
   whatItMeasures: string;

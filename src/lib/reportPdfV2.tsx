@@ -163,7 +163,7 @@ function SectionBlock({ s }: { s: ReportSection }) {
 /* --------------------------------------------------------------- graphics */
 
 function StripSvg({ r }: { r: CompassResult }) {
-  const W = CW; const H = 104; const padX = 12; const y = 46;
+  const W = CW; const H = 78; const padX = 12; const y = 34;
   const tw = W - padX * 2;
   const xOf = (i: number) => padX + (Math.max(0, Math.min(100, i)) / 100) * tw;
   const marker = xOf(r.stage.rawIndex);
@@ -177,7 +177,7 @@ function StripSvg({ r }: { r: CompassResult }) {
       <Rect x={0} y={0} width={W} height={H} fill={T.card} rx={8} stroke={T.hair} strokeWidth={1} />
 
       {/* the stage band actually occupied, so a gated marker is not misread */}
-      <Rect x={bandX1} y={y - 13} width={Math.max(4, bandX2 - bandX1)} height={26}
+      <Rect x={bandX1} y={y - 11} width={Math.max(4, bandX2 - bandX1)} height={22}
         fill={T.teal} fillOpacity={0.16} rx={3} />
 
       <Line x1={padX} y1={y} x2={W - padX} y2={y} stroke={T.hair} strokeWidth={1} />
@@ -189,7 +189,7 @@ function StripSvg({ r }: { r: CompassResult }) {
           <React.Fragment key={st.stage}>
             <Line x1={x} y1={y - 6} x2={x} y2={y + 6}
               stroke={isHere ? T.teal : T.hair} strokeWidth={1} />
-            <Text x={x - 2} y={y + 20} style={{ fontFamily: 'Plex', fontSize: 6.5 }}
+            <Text x={x - 2} y={y + 17} style={{ fontFamily: 'Plex', fontSize: 6.5 }}
               fill={isHere ? T.teal : T.mute}>
               {String(st.stage)}
             </Text>
@@ -198,11 +198,11 @@ function StripSvg({ r }: { r: CompassResult }) {
       })}
 
       {/* index marker: hollow when gating means it overstates the placement */}
-      <Line x1={marker} y1={y - 15} x2={marker} y2={y + 9} stroke={T.teal} strokeWidth={1.3} />
+      <Line x1={marker} y1={y - 13} x2={marker} y2={y + 8} stroke={T.teal} strokeWidth={1.3} />
       <Circle cx={marker} cy={y} r={4}
         fill={r.stage.gated ? T.card : T.teal} stroke={T.teal} strokeWidth={1.3} />
 
-      <Text x={padX} y={H - 8} style={{ fontFamily: 'Plex', fontSize: 7 }} fill={T.mute}>
+      <Text x={padX} y={H - 6} style={{ fontFamily: 'Plex', fontSize: 7 }} fill={T.mute}>
         {r.stage.gated
           ? `Index ${r.stage.rawIndex} would reach stage ${r.stage.gated.cappedFrom}. Held at stage ${r.stage.stage}, see section 2.`
           : `Shaded band is stage ${r.stage.stage}. Marker is your index, ${r.stage.rawIndex}.`}
@@ -213,7 +213,7 @@ function StripSvg({ r }: { r: CompassResult }) {
 
 function RadarSvg({ r }: { r: CompassResult }) {
   const ids = Object.keys(CONSTRUCTS) as ConstructId[];
-  const size = 210; const c = size / 2; const R = 72; const n = ids.length;
+  const size = 190; const c = size / 2; const R = 66; const n = ids.length;
   const pt = (i: number, rad: number) => {
     const a = (Math.PI * 2 * i) / n - Math.PI / 2;
     return [c + Math.cos(a) * rad, c + Math.sin(a) * rad] as const;

@@ -535,3 +535,50 @@ quality 82, and reports are back to roughly 185 KB.
 **Verified.** Typecheck, lint, 29 of 29 engine, 17 of 17 ascent, branch checks and the production
 build all pass. PDFs re-measured across five fixtures: 11 to 13 pages, zero interior pages below 60
 percent fill, no dashes.
+
+## Clarity and flow pass on the results page
+
+**The real problem was structure, not wording.** Dumping the page in reading order showed two
+parallel structures talking over each other. Position was stated twice (the ascent map and then a
+continuum section), the next stage twice, advice three times (next climb card, roadmap, improvement
+plan), the retake invitation twice, and the reader was handed two separate identities: a stage and,
+further down, an archetype presented as a second verdict.
+
+**One arc now.** The ascent block owns "where am I" and "what is next". The narrative sections that
+repeated those are no longer rendered on screen (the PDF still carries them, since a document can be
+more complete than a screen). What remains runs as a single argument: what your answers say, why you
+are at this stage, the ten dimensions behind that, what is helping and what may be hurting, what you
+do well and what needs attention, how your own sense compares, what to do in order, the practices in
+detail, and finally what this rests on. A short connective sentence introduces each major move, so
+the reader is told why they are being shown the next thing.
+
+**The second identity is gone.** The archetype is now folded into the opening section as "the
+pattern your answers match most closely, not a label for who you are", rather than appearing as a
+rival headline to the stage.
+
+**A false ending was removed.** The retake invitation sat in the middle of the page, reading as a
+closing call to action while the report continued below it. It now closes the page. The next-climb
+card says explicitly that the full plan is further down, so the two are read as a first step and a
+complete plan rather than as competing advice.
+
+**Plain language throughout.** Section titles became questions a reader would actually ask ("Why you
+are at this stage and not the next one", "How your sense of it compares with your answers"). The
+developmental index is glossed the first time it appears. The substage is written out ("you are
+moving toward the next stage") instead of the word "transitioning". The six composites are now
+phrased as the questions they answer, with an explicit note that on two of them lower is better. The
+consistency gap, confidence levels and calibration are all described in ordinary words. A sweep
+across the whole report for a jargon list now returns only glossed-on-first-use terms, a false
+positive on "reconstruct", and field names inside research citations.
+
+**The books were added.** The two Neogogy titles from ican.ph/books appear in the evidence section
+under "Where the framework itself comes from", deliberately separated from the three research
+studies. They are the source texts for the model this assessment implements, written by its author,
+and presenting them as independent evidence for it would overstate the case.
+
+**Test improved rather than weakened.** Renaming sections broke the report smoke test, which matched
+old title strings. It now asserts section keys, that every section has a title and content, and that
+each title appears in the composed report, so a heading can be rewritten for clarity but a section
+cannot silently disappear.
+
+**PDF re-measured** after the content changes: graphics trimmed slightly so the continuum block fits
+beside the profile section, giving zero interior pages below 60 percent fill again.

@@ -97,7 +97,7 @@ export function findBottleneck(dims: Dims, stage: StageResult): Bottleneck {
     const firstReason = stage.gated.reasons[0];
     const construct = (Object.values(CONSTRUCTS).find(c => firstReason.startsWith(c.name))?.id ?? "verification") as ConstructId;
     return { construct, viaGate: true,
-      reason: `Your overall development index (${stage.rawIndex}) already supports a higher stage, but ${CONSTRUCTS[construct].name.toLowerCase()} is holding the classification down. ${firstReason}. Raising it unlocks the stage your other capabilities have earned.` };
+      reason: `Your developmental index (${stage.rawIndex}) already supports a higher stage, but ${CONSTRUCTS[construct].name.toLowerCase()} is holding the classification down. ${firstReason}. Raising it unlocks the stage your other capabilities have earned.` };
   }
   const next = STAGES.find(s => s.stage === stage.stage + 1);
   const targets: Partial<Record<ConstructId, number>> = next?.gates ?? {};

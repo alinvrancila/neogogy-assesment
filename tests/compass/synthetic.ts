@@ -6,7 +6,7 @@
  * Run: npx tsx tests/synthetic.ts
  */
 import assert from "node:assert";
-import { compute, applicableItems, generateReport } from "../../src/engine/index";
+import { compute, applicableItems, generateReport, generateReportSections } from "../../src/engine/index";
 import type { Persona, Submission } from "../../src/engine/types";
 import { rescoreLegacy } from "../../src/engine/legacyAdapter";
 
@@ -303,9 +303,17 @@ console.log("\n== Report generation smoke ==");
 check("reports render for every synthetic profile and answer the §48 questions structurally", () => {
   for (const r of [r1, r2, r4, r5, r6, r7, r10]) {
     const md = generateReport(r);
-    for (const h of ["Executive profile", "continuum", "developmental signature", "helping", "against you",
-      "keeping you here", "next stage", "roadmap", "experiment"]) {
-      assert(md.toLowerCase().includes(h.toLowerCase()), `missing section: ${h}`);
+    // Assert on section keys rather than on title prose, so that rewriting a
+    // heading for clarity cannot silently drop a section.
+    const keys = generateReportSections(r).map(s => s.key);
+    for (const k of ["profile", "continuum", "signature", "helping", "harming", "strengths",
+      "selfKnowledge", "bottleneck", "nextStage", "roadmap", "plan", "evidence", "experiment"]) {
+      assert(keys.includes(k as never), `missing section: ${k}`);
+    }
+    for (const s of generateReportSections(r)) {
+      assert(s.title.trim().length > 0, `section ${s.key} has no title`);
+      assert(s.lines.join("").trim().length > 0, `section ${s.key} has no content`);
+      assert(md.includes(s.title), `report is missing the ${s.key} heading`);
     }
     assert(!md.includes("—") && !md.includes("–"), "no em/en dashes in report prose");
   }

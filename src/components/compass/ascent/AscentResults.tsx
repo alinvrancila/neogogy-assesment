@@ -12,7 +12,7 @@ import type { AttemptComparison } from '@/lib/history';
 import AscentMapHero from './AscentMapHero';
 import {
   ResultHeader, OrientationCard, RouteStages, PracticeGates,
-  FootholdCard, RouteLogCard, NextClimbCard, ComparisonCard, RetakeInvite,
+  FootholdCard, RouteLogCard, NextClimbCard, ComparisonCard,
 } from './modules';
 
 export default function AscentResults(
@@ -41,8 +41,6 @@ export default function AscentResults(
         <RouteLogCard result={result} />
         <NextClimbCard result={result} />
       </div>
-
-      <RetakeInvite hasHistory={!!comparison} />
     </div>
   );
 }

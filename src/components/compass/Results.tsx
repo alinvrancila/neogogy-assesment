@@ -15,13 +15,13 @@
 import { useState } from 'react';
 import {
   generateReportSections, reportHead, confidenceLabel, REPORT_DISCLAIMER,
-  type CompassResult, type ReportSection,
+  type CompassResult, type ReportSection, type ReportSectionKey,
 } from '@/engine';
 import { improvementPlan } from '@/engine/narrative';
 import { Markdown } from './Markdown';
 import AscentResults from './ascent/AscentResults';
 import type { AttemptComparison } from '@/lib/history';
-import { MethodologyDisclosure } from './ascent/modules';
+import { MethodologyDisclosure, RetakeInvite } from './ascent/modules';
 import {
   DimensionRadar, NextStagePanel, StageLadder, DimensionBars, CompositesPanel, PlanTimeline,
 } from './Visuals';
@@ -147,13 +147,52 @@ function ConfidenceBanner({ result }: { result: CompassResult }) {
   );
 }
 
+/**
+ * Reading order for the screen.
+ *
+ * The ascent block above already answers "where am I" and "what is next", so
+ * the narrative sections that repeated those are left to the PDF rather than
+ * shown twice. What remains runs as one argument: what your answers say, why
+ * you are here, the detail behind that, what is helping and hurting, how your
+ * own sense of it compares, then what to do, then what this rests on.
+ *
+ * `lead` is the sentence that hands one section to the next.
+ */
+const SCREEN_ORDER: Array<{ key: ReportSectionKey; lead?: string }> = [
+  { key: 'profile' },
+  { key: 'bottleneck', lead: 'The map shows where you are. This is why you are there rather than a stage further on.' },
+  { key: 'signature', lead: 'That constraint comes out of ten separate readings. Here is each one, what it measures, and how yours reads.' },
+  { key: 'helping', lead: 'Individual scores only say so much. These next two sections look at how your answers combine, which is where the useful findings usually sit.' },
+  { key: 'harming' },
+  { key: 'strengths' },
+  { key: 'selfKnowledge' },
+  { key: 'plan', lead: 'That is the picture. This is what to do with it.' },
+  { key: 'roadmap' },
+  { key: 'evidence', lead: 'Finally, where all of this comes from, and what it honestly cannot tell you.' },
+  { key: 'experiment' },
+];
+
+function orderedForScreen(
+  sections: ReportSection[]
+): Array<{ section: ReportSection; lead?: string }> {
+  const byKey = new Map(sections.map((s) => [s.key, s]));
+  const out: Array<{ section: ReportSection; lead?: string }> = [];
+  for (const { key, lead } of SCREEN_ORDER) {
+    const section = byKey.get(key);
+    if (section) out.push({ section, lead });
+  }
+  return out;
+}
+
 /** Lines before the first sub-heading. */
 function introOnly(lines: string[]): string[] {
   const at = lines.findIndex((l) => l.startsWith('### '));
   return at === -1 ? lines : lines.slice(0, at);
 }
 
-function SectionBlock({ section, result }: { section: ReportSection; result: CompassResult }) {
+function SectionBlock(
+  { section, result, lead }: { section: ReportSection; result: CompassResult; lead?: string }
+) {
   // Visuals belong to specific sections. Everything else is prose only.
   const visualBefore =
     section.key === 'continuum' ? <StageLadder result={result} />
@@ -174,7 +213,7 @@ function SectionBlock({ section, result }: { section: ReportSection; result: Com
 
   return (
     <section className="results-section" id={`sec-${section.key}`}>
-      <div className="rs-head"><span className="eyebrow">Section {section.n}</span></div>
+      {lead ? <p className="rs-lead">{lead}</p> : null}
       <h3>{section.title}</h3>
       {visualBefore}
       {/* The plan is rendered as a timeline below, so on screen this section
@@ -202,17 +241,6 @@ export default function Results({
     <div className="wrap results">
       <AscentResults result={result} comparison={comparison} />
 
-      <header className="results-hero">
-        <span className="eyebrow">{head.title}</span>
-        <h2 className="verdict-label">{result.archetype.name}</h2>
-        <p className="verdict-sub">{result.archetype.tagline}</p>
-        <div className="index-badge">
-          Stage {result.stage.stage} of 10, {result.stage.stageName}
-          {' · '}index {result.stage.rawIndex}
-          {' · '}{confidenceLabel(result.overallConfidence)}
-        </div>
-      </header>
-
       <ConfidenceBanner result={result} />
 
       {emailed ? (
@@ -221,21 +249,25 @@ export default function Results({
         </p>
       ) : null}
 
-      {sections.map((s) => <SectionBlock key={s.key} section={s} result={result} />)}
+      {orderedForScreen(sections).map(({ section, lead }) => (
+        <SectionBlock key={section.key} section={section} result={result} lead={lead} />
+      ))}
 
       <div className="results-cta">
-        <h3>Come back to this</h3>
+        <h3>Keep going</h3>
         <p>
-          Habits move. Retaking this in a few months is the simplest way to see whether your
-          position on the continuum is holding, rising, or slipping.
+          The books behind this framework, and the work of the International Center for Applied
+          Neogogy, are at ican.ph.
         </p>
         <div className="dlrow">
-          <a className="btn btn-primary" href="https://www.ican.ph" target="_blank" rel="noopener noreferrer">
-            Visit www.ican.ph <span className="arrow">&rarr;</span>
+          <a className="btn btn-primary" href="https://ican.ph/books" target="_blank" rel="noopener noreferrer">
+            See the books <span className="arrow">&rarr;</span>
           </a>
           <button className="btn btn-ghost" onClick={onRetake}>Take it again</button>
         </div>
       </div>
+
+      <RetakeInvite hasHistory={!!comparison} />
 
       <MethodologyDisclosure />
 

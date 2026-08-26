@@ -14,7 +14,7 @@
  */
 import type { CompassResult, ConstructId } from "./types";
 import { CONSTRUCTS, STAGES } from "./config";
-import { CONSTRUCT_CONTENT, STAGE_DETAIL, EVIDENCE_BASE } from "./content";
+import { CONSTRUCT_CONTENT, STAGE_DETAIL, EVIDENCE_BASE, FRAMEWORK_SOURCES } from "./content";
 import { helpHarm } from "./patterns";
 
 const PERSONA_LABEL: Record<string, string> = {
@@ -89,10 +89,10 @@ function dimBlock(r: CompassResult, c: ConstructId): string[] {
   L.push(`*Why it matters.* ${content.whyItMatters}`);
   L.push(`*Your reading.* ${bandReading(r, c)}`);
   if (d.consistencyGap?.flagged) {
-    L.push(`*A divergence worth noting.* On this dimension your self-description ran ahead of your situational answers by ${d.consistencyGap.gap} points. That is common and human. The situational evidence was weighted more heavily here, because what happens under pressure describes a habit better than what we intend.`);
+    L.push(`*Worth noticing.* When you described yourself here you rated yourself higher than your answers to the real-situation questions suggested. That gap is common and human. We gave more weight to what you said you would actually do, because what happens under pressure describes a habit better than what we intend.`);
   }
   if (d.confidence !== "high") {
-    L.push(`*Confidence.* ${CONF_LABEL[d.confidence]}. This reading rests on limited evidence, so treat it as a prompt rather than a finding.`);
+    L.push(`*How sure we are:* ${CONF_LABEL[d.confidence].toLowerCase()}. Fewer of your answers spoke to this one, so treat it as something to think about rather than a firm finding.`);
   }
   L.push(`*Research.* ${content.research.claim} (${content.research.source})`);
   L.push(`*What moves it.*`);
@@ -146,22 +146,37 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
   // 1. Executive profile
   {
     const L: string[] = [];
-    L.push(`**Archetype: ${r.archetype.name}.** ${r.archetype.tagline}`);
+    L.push(`Your answers describe a recognisable pattern, and this is the one they match most closely. It is a description of how you are working with AI right now, not a label for who you are.`);
+    L.push(``);
+    L.push(`**${r.archetype.name}.** ${r.archetype.tagline}`);
     L.push(``);
     L.push(r.archetype.narrative);
     L.push(``);
-    L.push(`**Fingerprint:** ${r.fingerprint.join(" · ")}`);
+    // The fingerprint is stored in capitals for compactness. Sentence case reads
+// better in prose, but "AI" has to stay an acronym.
+    const readable = r.fingerprint.map((f) => {
+      const lower = f.toLowerCase();
+      const sentence = lower.charAt(0).toUpperCase() + lower.slice(1);
+      return sentence.replace(/\bai\b/g, "AI");
+    });
+    L.push(`**The short version.** Seven quick readings of your profile:`);
+    for (const f of readable) L.push(`- ${f}`);
     if (r.confidenceNotes.length) {
       L.push(``);
       for (const n of r.confidenceNotes) L.push(`> ${n}`);
     }
-    S.push({ key: "profile", n: 1, title: "Executive profile", lines: L });
+    S.push({ key: "profile", n: 1, title: "What your answers say about you", lines: L });
   }
 
   // 2. Continuum position
   {
     const L: string[] = [];
-    L.push(`**Stage ${r.stage.stage} of 10: ${r.stage.stageName}** (${r.stage.substage}) · developmental index ${r.stage.rawIndex}.`);
+    const subPlain = r.stage.substage === "early"
+      ? "you have recently arrived here"
+      : r.stage.substage === "established"
+        ? "you are settled in this stage"
+        : "you are moving toward the next one";
+    L.push(`**Stage ${r.stage.stage} of 10: ${r.stage.stageName}.** Your developmental index is ${r.stage.rawIndex} out of 100. That number is simply how far along the route your answers place you, where 0 is no meaningful use of AI and 100 is a mature, self-renewing practice. Within this stage, ${subPlain}.`);
     L.push(``);
     L.push(stageDef.short);
     L.push(``);
@@ -182,7 +197,7 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
       L.push(``);
       L.push(`Your overall index would support stage ${r.stage.gated.cappedFrom}, but advanced stages require minimum thresholds on the safety-critical dimensions, and one of yours sits below the line: ${r.stage.gated.reasons[0]}. This is deliberate: strong fluency is not allowed to paper over weak judgment.`);
     }
-    S.push({ key: "continuum", n: 2, title: "Your position on the Neogogy continuum", lines: L });
+    S.push({ key: "continuum", n: 2, title: "Where you are on the route", lines: L });
   }
 
   // 3. Developmental signature
@@ -193,17 +208,17 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     L.push(`**At a glance**`);
     for (const c of Object.keys(CONSTRUCTS) as ConstructId[]) L.push(dimLine(r, c));
     L.push(``);
-    L.push(`**Composite readings.** These combine dimensions into the questions people usually want answered.`);
-    L.push(`- **Future readiness ${r.composites.futureReadiness}.** Fluency, adaptability and transfer, discounted where underexposure is high.`);
-    L.push(`- **Augmentation ${r.composites.augmentation}.** Whether AI is improving your thinking rather than your throughput.`);
-    L.push(`- **Judgment ${r.composites.judgment}.** Verification, agency and responsible use together.`);
-    L.push(`- **Capability transfer ${r.composites.capabilityTransfer}.** Whether assisted work is becoming capability you own.`);
-    L.push(`- **Dependency index ${r.composites.dependencyIndex}.** High means more of your capability depends on the tool being present.`);
-    L.push(`- **Underexposure ${r.composites.underexposure}.** High means limited practice with the tools, which is a different risk from dependency and is not the same as caution.`);
+    L.push(`**Six bigger questions.** Each of these combines several dimensions to answer something you probably want to know. On the first four, higher is better. On the last two, lower is better, because they measure a risk rather than a strength.`);
+    L.push(`- **Are you ready for what is coming? ${r.composites.futureReadiness} out of 100.** How skilled and adaptable you are with these tools, reduced if you have had little real practice.`);
+    L.push(`- **Is AI making your thinking better, or just faster? ${r.composites.augmentation} out of 100.** Higher means it is changing what you think, not only how quickly you produce it.`);
+    L.push(`- **How sound is your judgment? ${r.composites.judgment} out of 100.** Checking, ownership of decisions, and clear boundaries, taken together.`);
+    L.push(`- **Is assisted work becoming your own? ${r.composites.capabilityTransfer} out of 100.** Higher means what you do with AI is turning into something you can do without it.`);
+    L.push(`- **How much depends on the tool? ${r.composites.dependencyIndex} out of 100.** Higher means more of what you produce would be hard to reproduce without AI.`);
+    L.push(`- **Are you practising enough to keep up? ${r.composites.underexposure} out of 100.** Higher means limited hands-on practice. This is a different risk from dependency, and it is not the same as being careful.`);
     L.push(``);
     L.push(`**Each dimension, unpacked**`);
     for (const c of Object.keys(CONSTRUCTS) as ConstructId[]) L.push(...dimBlock(r, c));
-    S.push({ key: "signature", n: 3, title: "Your developmental signature", lines: L });
+    S.push({ key: "signature", n: 3, title: "Your ten dimensions, one at a time", lines: L });
   }
 
   // 4. Helping
@@ -227,7 +242,7 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
       L.push(``);
       L.push(`Worth saying plainly: benefit from these tools is not automatic. The largest documented learning gains came from the same technology used with deliberate design, roughly double the gains of established classroom practice (Kestin et al., Scientific Reports, 2025), while unrestricted use of the same kind of tool left learners around 17 percent worse on a later unaided exam (Bastani et al., PNAS, 2025). Same technology, opposite outcomes. The variable is how it is used, which is what this section is looking for.`);
     }
-    S.push({ key: "helping", n: 4, title: "Where AI appears to be helping you", lines: L });
+    S.push({ key: "helping", n: 4, title: "Where AI seems to be helping you", lines: L });
   }
 
   // 5. Harming
@@ -278,7 +293,7 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     } else {
       L.push(`No dimension falls below the vulnerability line, which is 45. That is worth reading as the genuine result it is, rather than as an invitation to look harder for something wrong.`);
     }
-    S.push({ key: "strengths", n: 6, title: "Strengths and vulnerabilities", lines: L });
+    S.push({ key: "strengths", n: 6, title: "What you do well, and what needs attention", lines: L });
   }
 
   // 7. Self-knowledge
@@ -286,14 +301,14 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     const L: string[] = [];
     L.push(`Before answering anything, you told us two things: how healthy your relationship with AI feels, and where you expected this result to land. Neither was scored. They are compared with your measured result here, because they measure two different things and both are useful.`);
     L.push(``);
-    L.push(`**Desirability** is the gap between how good something feels and how it measures. It is the most documented effect in this field: assistance improves the visible output, the improved output feels like improved capability, and the feeling persists even as the underlying capability moves the other way (Bastani et al., PNAS, 2025). **Calibration** is different and narrower: it is simply the skill of predicting your own result, which is worth tracking on its own because people who can predict their own performance tend to manage it better.`);
+    L.push(`**The first is about feel.** It is the gap between how good something feels and how it measures. It is the most documented effect in this field: assistance improves the visible output, the improved output feels like improved capability, and the feeling persists even as the underlying capability moves the other way (Bastani et al., PNAS, 2025). **The second is about aim.** It is simply how close your prediction came, which is worth knowing on its own, because people who can predict their own performance tend to manage it better.`);
     L.push(``);
     L.push(r.calibration.note);
     if (r.calibration.calibrationGap !== undefined && Math.abs(r.calibration.calibrationGap) >= 2) {
       L.push(``);
       L.push(`Separately from how healthy things *feel*, your *prediction* of this result missed by ${Math.abs(r.calibration.calibrationGap)} bands. Calibration, knowing what your own result will be, is itself a skill this instrument tracks, and yours has room to grow.`);
     }
-    S.push({ key: "selfKnowledge", n: 7, title: "Self-knowledge check", lines: L });
+    S.push({ key: "selfKnowledge", n: 7, title: "How your sense of it compares with your answers", lines: L });
   }
 
   // 8. Bottleneck
@@ -312,7 +327,7 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
       L.push(`*The three practices that move it*`);
       for (const pr of bc.practices) L.push(`- ${pr}`);
     }
-    S.push({ key: "bottleneck", n: 8, title: "What is keeping you here", lines: L });
+    S.push({ key: "bottleneck", n: 8, title: "Why you are at this stage and not the next one", lines: L });
   }
 
   // 9. Next stage
@@ -347,19 +362,19 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
       L.push(`**Watch for:** ${rec.riskToMonitor}`);
       L.push(``);
     }
-    S.push({ key: "roadmap", n: 10, title: "Your development roadmap", lines: L });
+    S.push({ key: "roadmap", n: 10, title: "Your practices, in detail", lines: L });
   }
 
   // 11. Improvement plan
   {
     const L: string[] = [];
-    L.push(`A roadmap lists what to change. This is the order to change it in, and the horizons are deliberate: one week is short enough to actually start, ninety days is long enough for a habit to show up in your answers rather than your intentions.`);
+    L.push(`You now know where you are, why you are there, and what your ten dimensions look like. This is what to do about it, in the order to do it. The timings are deliberate: one week is short enough that you will actually start, and ninety days is long enough for a changed habit to show up in your answers rather than in your intentions.`);
     for (const block of improvementPlan(r)) {
       L.push(``);
       L.push(`### ${block.horizon} (${block.timeframe})`);
       for (const it of block.items) L.push(`- ${it}`);
     }
-    S.push({ key: "plan", n: 11, title: "Your improvement plan", lines: L });
+    S.push({ key: "plan", n: 11, title: "What to do next, in order", lines: L });
   }
 
   // 12. Evidence base
@@ -373,13 +388,21 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     L.push(``);
     L.push(`Everywhere else, this report points at a field of research rather than a single paper, because the underlying findings are well established while no single study settles them: retrieval practice and transfer, cognitive load, design fixation, metacognition and self-regulated learning, and the fluency effects that make polished output harder to doubt than rough output making the same claim.`);
     L.push(``);
-    L.push(`Two honest limits. Two claim items, one reverse item and one scenario per dimension is below the conventional floor for a stable subscale, which is why confidence levels appear throughout rather than being hidden. And everything here rests on self-report: the instrument sees what you told it, and its value to you depends on those answers staying honest as your use grows.`);
-    S.push({ key: "evidence", n: 12, title: "The evidence behind this", lines: L });
+    L.push(`**Where the framework itself comes from.** The ten dimensions you were measured on come from the Neogogy framework, set out in these two books. They are the source of the model rather than independent evidence for it, which is a distinction worth keeping clear: they explain the thinking, while the studies above are what the thinking is tested against.`);
+    for (const b of FRAMEWORK_SOURCES) {
+      L.push(``);
+      L.push(`- **${b.title}** (${b.year}), ${b.author}. ${b.note}`);
+    }
+    L.push(``);
+    L.push(`Both are available at ican.ph/books.`);
+    L.push(``);
+    L.push(`**Two honest limits.** Each dimension rests on two self-description questions, one reverse-worded question and one real-situation question. That is fewer questions per dimension than a formal psychological test would use, which is exactly why you see a confidence level on each one rather than a single confident number. And all of it is self-reported: this assessment sees what you told it, so its usefulness to you depends on your answers staying honest as your use of AI grows.`);
+    S.push({ key: "evidence", n: 12, title: "What this is built on, and what it cannot tell you", lines: L });
   }
 
   // 13. Personal experiment
   S.push({
-    key: "experiment", n: 13, title: "One experiment to run on yourself",
+    key: "experiment", n: 13, title: "One thing to try on yourself",
     lines: [`Take two comparable tasks from your real week. Do one with AI as you normally would, one without. Afterward compare not just time and quality, but what you can still explain, remember, and redo a week later. That comparison, run occasionally and honestly, is the best ongoing test of whether AI is building you or replacing you.`],
   });
 

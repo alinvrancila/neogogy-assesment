@@ -25,8 +25,9 @@ export function ResultHeader({ result }: { result: CompassResult }) {
         <p className="asc-eyebrow">Neogogy · AI relationship assessment</p>
         <h1 className="asc-title">Your ascent with AI</h1>
         <p className="asc-sub">
-          A developmental reading of how AI currently supports, or starts to substitute for, your
-          judgment, capability and creative agency. A journey, not a verdict.
+          This is a reading of how AI is currently shaping your judgment, your capability and your
+          own creative agency. It is a journey, not a verdict. Below you will find where you are on
+          the route, why you are there, what your ten dimensions look like, and what to do next.
         </p>
       </div>
       <DevelopmentalIndex result={result} />
@@ -41,7 +42,9 @@ export function DevelopmentalIndex({ result }: { result: CompassResult }) {
         <span className="asc-index-n">{result.stage.rawIndex}</span>
         <span className="asc-index-label">developmental index</span>
       </div>
-      <p className="asc-index-note">out of 100</p>
+      <p className="asc-index-note">
+        out of 100. How far along the route your answers place you.
+      </p>
     </div>
   );
 }
@@ -55,22 +58,31 @@ export function OrientationCard({ result }: { result: CompassResult }) {
       <h2 className="asc-orient-h">
         Stage {result.stage.stage} of 10: {result.stage.stageName}
       </h2>
-      <p className="asc-orient-sub">{result.stage.substage} within this stage</p>
+      <p className="asc-orient-sub">
+        {result.stage.substage === 'early'
+          ? 'You have recently arrived here'
+          : result.stage.substage === 'established'
+            ? 'You are settled in this stage'
+            : 'You are moving toward the next stage'}
+      </p>
       <p className="asc-orient-body">
         {STAGES.find((s) => s.stage === result.stage.stage)?.short}
       </p>
 
       {result.stage.borderline ? (
         <p className="asc-orient-zone">
-          You are {result.stage.borderline.distance} points from stage{' '}
-          {result.stage.borderline.adjacentStage}. Placement here is a zone, not a fixed identity.
+          You are only {result.stage.borderline.distance} points from stage{' '}
+          {result.stage.borderline.adjacentStage}, so treat this as a stretch of the route rather
+          than a line you have crossed. A small change in habit moves it either way.
         </p>
       ) : null}
 
       {result.stage.gated ? (
         <p className="asc-orient-gate">
-          Your index alone would reach stage {result.stage.gated.cappedFrom}. A practice gate is
-          holding the placement here: {result.stage.gated.reasons[0]}
+          Your score alone would put you at stage {result.stage.gated.cappedFrom}, but one practice
+          is holding you here: {result.stage.gated.reasons[0]} The later stages ask for a minimum on
+          a few practices, so that being skilled with the tools cannot carry you past a weakness
+          that matters.
         </p>
       ) : null}
 
@@ -141,9 +153,9 @@ export function PracticeGates({ result }: { result: CompassResult }) {
     <section className="asc-gates" aria-labelledby="asc-gates-h">
       <h2 id="asc-gates-h" className="asc-h2">Practice gates on the route</h2>
       <p className="asc-lead">
-        Stages 5 and above require minimum readings on the practices below, so that fluency alone
-        cannot carry someone past a weakness that matters. A gate that is not yet open is a place to
-        practise, not a failure.
+        From stage 5 onward, the route asks for a minimum on each of the practices below before you
+        can move up. This is deliberate: being skilled with AI should not carry anyone past a
+        weakness that matters. A gate that is not yet open is simply the next place to practise.
       </p>
       <ul className="asc-gate-list">
         {GATE_DEFS.map((g) => {
@@ -185,6 +197,10 @@ export function FootholdCard({ result }: { result: CompassResult }) {
     <section className="asc-card" aria-labelledby="asc-foot-h">
       <p className="asc-kicker">Your foothold</p>
       <h2 id="asc-foot-h" className="asc-card-h">Where you stand today</h2>
+      <p className="asc-foot-intro">
+        Four of the ten dimensions matter most for staying steady on this route. Each is scored out
+        of 100.
+      </p>
       <ul className="asc-foot-list">
         {FOOTHOLD_ORDER.map((id) => {
           const d = result.dimensions[id];
@@ -243,6 +259,9 @@ export function RouteLogCard({ result }: { result: CompassResult }) {
     <section className="asc-card" aria-labelledby="asc-log-h">
       <p className="asc-kicker">Your route</p>
       <h2 id="asc-log-h" className="asc-card-h">Your pattern so far</h2>
+      <p className="asc-foot-intro">
+        The facts behind your placement, in one place.
+      </p>
       <dl className="asc-log">
         {rows.map(([k, v]) => (
           <div className="asc-log-row" key={k}>
@@ -278,6 +297,10 @@ export function NextClimbCard({ result }: { result: CompassResult }) {
     <section className="asc-card" aria-labelledby="asc-next-h">
       <p className="asc-kicker">Your next climb</p>
       <h2 id="asc-next-h" className="asc-card-h">The next ledge up</h2>
+      <p className="asc-foot-intro">
+        One thing to start with, and two habits to build around it. Small and repeatable beats
+        ambitious and abandoned. The full plan, in order, is further down this page.
+      </p>
 
       <div className="asc-experiment">
         <p className="asc-kicker asc-kicker-gold">First step · start small, make it real</p>
