@@ -2041,3 +2041,296 @@
   color: var(--asc-muted);
   margin: -6px 0 14px;
 }
+
+/* ===========================================================================
+   LANDING AND SETUP
+   =========================================================================== */
+
+.nfc .lp-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 30px;
+  margin: 8px 0 34px;
+  padding: 44px clamp(20px, 5vw, 64px);
+  background: var(--asc-page);
+  border-top: 1px solid var(--asc-border);
+  border-bottom: 1px solid var(--asc-border);
+  overflow: hidden;
+}
+
+.nfc .lp-hero-copy { position: relative; z-index: 2; max-width: 56ch; }
+
+.nfc .lp-hero-art {
+  position: absolute;
+  inset: 0 0 0 42%;
+  background-image: url('/ascent-backdrop.jpg');
+  background-size: cover;
+  background-position: center right;
+  opacity: .95;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 26%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 26%);
+}
+
+@media (max-width: 900px) {
+  .nfc .lp-hero { grid-template-columns: 1fr; padding-bottom: 200px; }
+  .nfc .lp-hero-art {
+    inset: auto 0 0 0; height: 210px;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 34%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 34%);
+  }
+}
+
+.nfc .lp-block { margin: 0 0 44px; }
+
+.nfc .lp-kicker {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--asc-teal);
+  margin: 0 0 8px;
+}
+
+.nfc .lp-h2 {
+  font-family: var(--f-display);
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: 660;
+  color: var(--asc-oxblood);
+  margin: 0 0 12px;
+  line-height: 1.14;
+}
+
+.nfc .lp-h3 {
+  font-family: var(--f-display);
+  font-size: 1.08rem;
+  font-weight: 640;
+  margin: 0 0 7px;
+}
+
+.nfc .lp-lead {
+  font-size: 1rem;
+  line-height: 1.62;
+  color: var(--asc-muted);
+  max-width: 72ch;
+  margin: 0 0 18px;
+}
+
+/* the whole continuum, so nobody starts blind */
+.nfc .lp-stages {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+  gap: 10px;
+  counter-reset: none;
+}
+
+.nfc .lp-stages li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--asc-card);
+  border: 1px solid var(--asc-border);
+  border-radius: 12px;
+  padding: 13px 14px;
+}
+
+.nfc .lp-stage-n {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: #fff;
+  background: var(--asc-teal);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.nfc .lp-stages li:nth-child(n+8) .lp-stage-n { background: var(--asc-oxblood); }
+
+.nfc .lp-stage-body { display: block; }
+.nfc .lp-stage-body strong { font-family: var(--f-display); font-size: 1rem; display: block; }
+.nfc .lp-stage-body span { font-size: .88rem; line-height: 1.5; color: var(--asc-muted); display: block; margin-top: 3px; }
+
+/* example result */
+.nfc .lp-sample {
+  position: relative;
+  background: var(--asc-card);
+  border: 1px solid var(--asc-border);
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 22px;
+}
+
+.nfc .lp-sample-tag {
+  position: absolute;
+  top: -11px; left: 20px;
+  background: var(--asc-gold);
+  color: #3a2a08;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.nfc .lp-sample-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 24px;
+  align-items: start;
+  margin-top: 6px;
+}
+
+@media (max-width: 880px) { .nfc .lp-sample-grid { grid-template-columns: 1fr; } }
+
+.nfc .lp-gets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+}
+
+.nfc .lp-get {
+  background: var(--asc-card);
+  border: 1px solid var(--asc-border);
+  border-radius: 12px;
+  padding: 16px 17px;
+}
+
+.nfc .lp-get p { font-size: .9rem; line-height: 1.55; color: var(--asc-muted); margin: 0; }
+
+/* persona choice */
+.nfc .lp-persona-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+  gap: 14px;
+}
+
+.nfc .lp-persona {
+  display: block;
+  text-align: left;
+  background: var(--asc-card);
+  border: 1.5px solid var(--asc-border);
+  border-radius: 14px;
+  padding: 17px 18px;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+
+.nfc .lp-persona:hover { transform: translateY(-2px); border-color: var(--asc-teal); }
+.nfc .lp-persona:focus-visible { outline: 3px solid var(--asc-teal); outline-offset: 3px; }
+
+.nfc .lp-persona.sel {
+  border-color: var(--asc-oxblood);
+  box-shadow: 0 0 0 3px rgba(125, 39, 48, .14);
+  background: #FFFDF8;
+}
+
+.nfc .lp-persona-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+
+.nfc .lp-persona-name {
+  font-family: var(--f-display);
+  font-size: 1.24rem;
+  font-weight: 660;
+  color: var(--asc-oxblood);
+}
+
+.nfc .lp-persona-check {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 1.5px solid var(--asc-border);
+  display: grid; place-items: center;
+  font-size: 13px; color: #fff;
+}
+
+.nfc .lp-persona.sel .lp-persona-check { background: var(--asc-oxblood); border-color: var(--asc-oxblood); }
+
+.nfc .lp-persona-who {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 10.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--asc-teal);
+  margin: 4px 0 7px;
+}
+
+.nfc .lp-persona-blurb { display: block; font-size: .93rem; line-height: 1.5; }
+
+.nfc .lp-persona-expect {
+  display: block;
+  border-top: 1px dotted var(--asc-border);
+  margin-top: 11px;
+  padding-top: 9px;
+  font-size: .84rem;
+  line-height: 1.5;
+  color: var(--asc-muted);
+}
+
+.nfc .lp-persona-expect-h {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--asc-muted);
+  margin-bottom: 3px;
+}
+
+.nfc .lp-chosen {
+  background: var(--asc-teal-pale);
+  border: 1px solid var(--asc-teal);
+  border-radius: 12px;
+  padding: 12px 15px;
+  margin-top: 14px;
+  font-size: .93rem;
+}
+
+/* before you start */
+.nfc .lp-howto {
+  background: var(--asc-card);
+  border: 1px solid var(--asc-border);
+  border-left: 4px solid var(--asc-teal);
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin-top: 26px;
+}
+
+.nfc .lp-howto-list { margin: 10px 0 0; padding-left: 20px; }
+.nfc .lp-howto-list li { margin: 10px 0; line-height: 1.6; font-size: .94rem; }
+
+.nfc .lp-howto-time {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--asc-muted);
+  border-top: 1px solid var(--asc-border);
+  margin: 16px 0 0;
+  padding-top: 12px;
+}
+
+/* The v1 hero was a single centred block, so #hero was a flex row. The landing
+   page is now a stacked document, so it flows normally. */
+.nfc #hero {
+  display: block;
+  min-height: 0;
+  align-items: initial;
+  padding: 34px 0 50px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nfc .screen { animation: none !important; }
+}
+
+/* Four personas read better as a balanced 2x2 than as a row of three with one
+   stranded underneath. */
+.nfc .lp-persona-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 700px) { .nfc .lp-persona-grid { grid-template-columns: 1fr; } }
+
+.nfc .lp-persona-head { align-items: flex-start; }
+.nfc .lp-persona-check { flex: 0 0 auto; margin-top: 2px; }

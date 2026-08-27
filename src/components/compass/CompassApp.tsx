@@ -21,16 +21,59 @@ import type { AttemptComparison } from '@/lib/history';
 import {
   ItemScreen, OptionCards, optionsFor, B1_CHOICES, BAND_CHOICES, type Choice
 } from './items';
-import { IcanLogo, ReportPreview } from './Visuals';
+import { IcanLogo, DimensionBars, DimensionRadar } from './Visuals';
+import { STAGES } from '@/engine/config';
 import Results, { GateForm, type GateData, type GateState } from './Results';
 
 type Screen = 'hero' | 'setup' | 'quiz' | 'gate' | 'results';
 
-const PERSONAS: Array<{ id: Persona; name: string; blurb: string }> = [
-  { id: 'student', name: 'Student', blurb: 'How AI shapes my own learning and my own work' },
-  { id: 'teacher', name: 'Teacher', blurb: 'How AI shapes my teaching practice' },
-  { id: 'parent', name: 'Parent', blurb: 'How AI shapes my parenting and my family life' },
-  { id: 'administrator', name: 'Administrator', blurb: 'How AI shapes my leadership and my decisions' }
+const PERSONAS: Array<{
+  id: Persona; name: string; who: string; blurb: string; expect: string[];
+}> = [
+  {
+    id: 'student',
+    name: 'Student',
+    who: 'You are studying, at any level',
+    blurb: 'Questions about your own learning and your own work.',
+    expect: [
+      'Essays, assignments and revision',
+      'What happens in an exam with no AI allowed',
+      'Group work, and being honest about what AI wrote',
+    ],
+  },
+  {
+    id: 'teacher',
+    name: 'Teacher',
+    who: 'You teach, train or lecture',
+    blurb: 'Questions about your own practice, not about grading your students.',
+    expect: [
+      'Planning lessons and building materials',
+      'Checking AI content before it reaches a class',
+      'Student data, feedback, and what you will not paste into a tool',
+    ],
+  },
+  {
+    id: 'parent',
+    name: 'Parent',
+    who: 'You are raising a child of any age',
+    blurb: 'Questions about your own use and your family decisions.',
+    expect: [
+      'Homework help and screen time decisions',
+      'Understanding school letters and documents',
+      'What you share about your children with a tool',
+    ],
+  },
+  {
+    id: 'administrator',
+    name: 'Leader or administrator',
+    who: 'You lead a team, school or organisation',
+    blurb: 'Questions about your own leadership work and your decisions.',
+    expect: [
+      'Analysis, budgets and board-ready work',
+      'Vendor claims, dashboards and personnel decisions',
+      'Policy, disclosure and confidential information',
+    ],
+  },
 ];
 
 /** Coarse screen count used only before the usage answer is known. */
@@ -48,7 +91,7 @@ type Saved = {
   pos: number;
 };
 
-export default function CompassApp() {
+export default function CompassApp({ sample }: { sample?: CompassResult }) {
   const [screen, setScreen] = useState<Screen>('hero');
   const [persona, setPersona] = useState<Persona | null>(null);
   const [usage, setUsage] = useState<number | null>(null);
@@ -257,7 +300,7 @@ export default function CompassApp() {
   const shell = (inner: React.ReactNode) => <div className="nfc">{inner}</div>;
 
   if (screen === 'hero') {
-    return shell(<Hero onStart={() => setScreen('setup')} />);
+    return shell(<Hero onStart={() => setScreen('setup')} sample={sample} />);
   }
 
   if (screen === 'setup') {
@@ -320,7 +363,7 @@ export default function CompassApp() {
   // If there is no assembled submission the gate cannot do anything, so send
   // the respondent somewhere that works rather than to an inert form.
   if (!submission) {
-    return shell(<Hero onStart={() => { restart(); setScreen('setup'); }} />);
+    return shell(<Hero onStart={() => { restart(); setScreen('setup'); }} sample={sample} />);
   }
   return shell(
     <GateForm
@@ -353,124 +396,160 @@ function QuizBar({ personaName, progress, exact }: { personaName: string; progre
   );
 }
 
-function Hero({ onStart }: { onStart: () => void }) {
+function Hero({ onStart, sample }: { onStart: () => void; sample?: CompassResult }) {
   return (
     <section className="screen" id="hero">
       <div className="wrap">
         <div className="brandbar">
-          <IcanLogo height={132} className="brand-logo" />
+          <IcanLogo height={120} className="brand-logo" />
           <span className="bsep" />
           <span className="btext">The Formation Compass<br />a reflective assessment</span>
         </div>
+      </div>
 
-        <div className="hero-grid">
-          <div className="hero-copy">
-            <h1 className="display">Is AI making you <em>sharper</em>,<br />or just faster?</h1>
-            <p className="lede">
-              A free, research-informed assessment of your working relationship with AI. In about
-              twelve minutes it looks at ten dimensions of how you use it, how carefully you check
-              it, and what happens to your own capability along the way. You get your position on a
-              ten stage continuum and a personal report built from what you actually reported.
-            </p>
-            <div className="hero-cta">
-              <button className="btn btn-primary" onClick={onStart}>Get started <span className="arrow">&rarr;</span></button>
-              <button className="btn btn-ghost" onClick={() => document.getElementById('why')?.scrollIntoView({ behavior: 'smooth' })}>
-                Why this matters
-              </button>
-            </div>
-            <div className="hero-meta">
-              <span className="chip"><span className="dot" /> About 12 minutes</span>
-              <span className="chip"><span className="dot" /> 10 dimensions</span>
-              <span className="chip"><span className="dot" /> A personal PDF report</span>
-            </div>
+      {/* the painted route, used here as the promise of the result */}
+      <div className="lp-hero">
+        <div className="lp-hero-copy">
+          <h1 className="display">Find out where<br />you stand with AI.</h1>
+          <p className="lede">
+            Most of us can tell whether AI makes us faster. Almost none of us can tell whether it is
+            making us sharper. This assessment answers that, across ten dimensions of how you work
+            with AI, and places you on a ten stage route from first contact to a mature practice.
+          </p>
+          <div className="hero-cta">
+            <button className="btn btn-primary" onClick={onStart}>
+              Start the assessment <span className="arrow">&rarr;</span>
+            </button>
+            <button className="btn btn-ghost" onClick={() => document.getElementById('lp-what')?.scrollIntoView({ behavior: 'smooth' })}>
+              See what you get
+            </button>
           </div>
-          <div className="hero-visual">
-            <ReportPreview />
+          <div className="hero-meta">
+            <span className="chip"><span className="dot" /> About 12 minutes</span>
+            <span className="chip"><span className="dot" /> 33 to 36 questions</span>
+            <span className="chip"><span className="dot" /> Free, with a report to keep</span>
           </div>
         </div>
+        <div className="lp-hero-art" aria-hidden="true" />
+      </div>
 
-        <div id="why" className="strip">
-          <div className="cell surface">
-            <div className="n">92%</div>
-            <div className="t">of students now learn with AI, yet only about a third have ever received guidance on how.</div>
-            <div className="src">HEPI / Kortext 2025</div>
-          </div>
-          <div className="cell surface">
-            <div className="n">17%</div>
-            <div className="t">worse on a later unaided exam for students who practiced with an unrestricted chatbot, against no AI at all.</div>
-            <div className="src">Bastani et al., PNAS 2025</div>
-          </div>
-          <div className="cell surface">
-            <div className="n">2&times;</div>
-            <div className="t">the learning gains when the same AI is designed well, against our best classroom practice.</div>
-            <div className="src">Kestin et al., Sci. Reports 2025</div>
-          </div>
-        </div>
+      <div className="wrap">
+        {/* the whole route, so nobody starts blind */}
+        <section className="lp-block" id="lp-continuum">
+          <p className="lp-kicker">The route</p>
+          <h2 className="lp-h2">Ten stages, from first contact to a practice that renews itself</h2>
+          <p className="lp-lead">
+            Your answers place you somewhere along this route. It is not a ranking and there is no
+            pass mark. Most people land in the middle, and the useful part is knowing which stage you
+            are in and what the next one actually asks of you.
+          </p>
+          <ol className="lp-stages">
+            {STAGES.map((st) => (
+              <li key={st.stage}>
+                <span className="lp-stage-n">{st.stage}</span>
+                <span className="lp-stage-body">
+                  <strong>{st.name}</strong>
+                  <span>{st.short}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </section>
 
-        <div className="report-gallery">
-          <p className="gallery-eyebrow">A glimpse of what you get</p>
-          <h2 className="gallery-title">A designed, keepsake-grade report. Built from your answers.</h2>
-          <div className="pages-grid">
-            <div className="page-card">
-              <div className="pc-banner">
-                <span className="pc-eyebrow">Where you stand</span>
-                <span className="pc-title">Ten stages, one position</span>
-              </div>
-              <div className="pc-body">
-                <p className="lede" style={{ fontSize: '.95rem' }}>
-                  Your placement is continuous, not a box. If you sit close to a boundary the report
-                  says so and shows the zone rather than pretending the line is sharp.
-                </p>
-              </div>
-            </div>
-            <div className="page-card">
-              <div className="pc-banner">
-                <span className="pc-eyebrow">The full picture</span>
-                <span className="pc-title">Your ten dimensions</span>
-              </div>
-              <div className="pc-body">
-                <p className="lede" style={{ fontSize: '.95rem' }}>
-                  Agency, verification, independent capability, fluency, transfer and five more, each
-                  with its own confidence level so thin evidence is labelled instead of hidden.
-                </p>
-              </div>
-            </div>
-            <div className="page-card">
-              <div className="pc-banner">
-                <span className="pc-eyebrow">Built for you, not a template</span>
-                <span className="pc-title">Your roadmap</span>
-              </div>
-              <div className="pc-body">
-                <div className="pc-illusion">
-                  <div className="pc-il-row"><span className="pc-il-lab">Felt</span><div className="pc-il-track"><span style={{ width: '90%', background: 'var(--gold)' }} /></div><b>90</b></div>
-                  <div className="pc-il-row"><span className="pc-il-lab">Measured</span><div className="pc-il-track"><span style={{ width: '72%', background: 'var(--growth-bright)' }} /></div><b>72</b></div>
+        {/* what the result actually looks like, from a real computed example */}
+        <section className="lp-block" id="lp-what">
+          <p className="lp-kicker">What you get</p>
+          <h2 className="lp-h2">A report built from your answers, not a label</h2>
+          <p className="lp-lead">
+            Everything below is a genuine result produced by the same engine that will score you,
+            from one example set of answers. Your own numbers will be different.
+          </p>
+
+          {sample ? (
+            <div className="lp-sample">
+              <div className="lp-sample-tag">Example profile, not your result</div>
+              <div className="lp-sample-grid">
+                <div>
+                  <h3 className="lp-h3">Ten dimensions, scored and explained</h3>
+                  <DimensionBars result={sample} />
                 </div>
-                <p className="pc-il-note">
-                  Your next moves are assembled from the patterns your own answers show, never looked
-                  up from a label.
-                </p>
+                <div>
+                  <h3 className="lp-h3">The shape of a profile</h3>
+                  <DimensionRadar result={sample} />
+                </div>
               </div>
             </div>
+          ) : null}
+
+          <div className="lp-gets">
+            <div className="lp-get">
+              <h3 className="lp-h3">Where you are, and why</h3>
+              <p>
+                Your stage on the route, and the one practice doing most to hold you there. Not
+                always your lowest score, which is usually the more useful finding.
+              </p>
+            </div>
+            <div className="lp-get">
+              <h3 className="lp-h3">What is helping and what is costing you</h3>
+              <p>
+                Patterns across your answers, including the one this instrument exists to catch:
+                high capability sitting on thin independent skill, which feels like success while it
+                develops.
+              </p>
+            </div>
+            <div className="lp-get">
+              <h3 className="lp-h3">A plan you can actually start</h3>
+              <p>
+                One thing for this week, a habit for the next month, and what would move you a stage
+                over three months. Built from your answers rather than looked up from a label.
+              </p>
+            </div>
+            <div className="lp-get">
+              <h3 className="lp-h3">Honest limits</h3>
+              <p>
+                Each dimension carries a confidence level. Where your answers gave us little to work
+                with, the report says so instead of pretending to certainty.
+              </p>
+            </div>
           </div>
-          <p className="gallery-foot">
-            Your position, the ten dimensions behind it, what appears to be helping and what may be
-            working against you, and concrete next moves, in a PDF you can keep.
+        </section>
+
+        {/* why it matters */}
+        <section className="lp-block" id="why">
+          <p className="lp-kicker">Why this matters</p>
+          <h2 className="lp-h2">Same tool, opposite outcomes</h2>
+          <div className="strip">
+            <div className="cell surface">
+              <div className="n">92%</div>
+              <div className="t">of students now learn with AI, while only about a third have ever had guidance on how.</div>
+              <div className="src">HEPI / Kortext 2025</div>
+            </div>
+            <div className="cell surface">
+              <div className="n">17%</div>
+              <div className="t">worse on a later unaided exam for those who practised with an unrestricted chatbot, against no AI at all.</div>
+              <div className="src">Bastani et al., PNAS 2025</div>
+            </div>
+            <div className="cell surface">
+              <div className="n">2&times;</div>
+              <div className="t">the learning gains when the same technology is used deliberately, against established classroom practice.</div>
+              <div className="src">Kestin et al., Sci. Reports 2025</div>
+            </div>
+          </div>
+          <p className="lp-lead center" style={{ maxWidth: '62ch', margin: '22px auto 0' }}>
+            The difference between those two results is not the tool. It is how it is used. This
+            assessment is a way of reading that difference in your own practice.
+          </p>
+        </section>
+
+        <div className="center" style={{ marginTop: 30, paddingBottom: 10 }}>
+          <button className="btn btn-primary" onClick={onStart}>
+            Start the assessment <span className="arrow">&rarr;</span>
+          </button>
+          <p className="muted" style={{ maxWidth: '58ch', margin: '18px auto 0', fontSize: '.86rem' }}>
+            These are assessment indices built from self reported answers. They are designed to
+            support reflection, and they are not a validated psychometric measurement.
           </p>
         </div>
-
-        <p className="lede center mt-l" style={{ maxWidth: '60ch', marginLeft: 'auto', marginRight: 'auto' }}>
-          Same technology, different outcomes. The difference is rarely the tool, it is the{' '}
-          <em style={{ color: 'var(--crimson)', fontStyle: 'italic' }}>design</em> of how you work
-          with it. This instrument helps you read that difference in your own practice.
-        </p>
-        <div className="center" style={{ marginTop: 32, paddingBottom: 16 }}>
-          <button className="btn btn-primary" onClick={onStart}>Get started <span className="arrow">&rarr;</span></button>
-        </div>
-
-        <p className="muted center" style={{ maxWidth: '62ch', margin: '28px auto 0', fontSize: '.85rem' }}>
-          These are assessment indices built from self reported answers. They are designed to support
-          reflection, and they are not a validated psychometric measurement.
-        </p>
       </div>
     </section>
   );
@@ -489,38 +568,98 @@ function Setup({
   onStart: () => void;
 }) {
   const ready = !!persona;
+  const chosen = PERSONAS.find((p) => p.id === persona);
+
   return (
     <section className="screen">
       <div className="wrap setup">
-        <span className="eyebrow">Set your lens</span>
-        <h2 className="section-title mt-s">Which of these fits you best?</h2>
-        <p className="lede" style={{ maxWidth: '58ch' }}>
-          Every question that follows is about you and your own practice. Choosing a role selects a
-          set of questions written for the situations you actually meet.
+        <span className="eyebrow">Step 1 of 2</span>
+        <h2 className="section-title mt-s">Which of these is closest to you?</h2>
+        <p className="lede" style={{ maxWidth: '62ch' }}>
+          There are four sets of questions. They ask about different situations, so pick the one that
+          matches the life you actually live day to day. If two fit, choose the one where you use AI
+          most. Every question is about <strong>you and your own practice</strong>, never about
+          judging anyone else.
         </p>
 
         <div className="field mt-m">
-          <div className="role-grid">
-            {PERSONAS.map((p) => (
-              <button
-                key={p.id}
-                className={`role ${persona === p.id ? 'sel' : ''}`}
-                onClick={() => onPersona(p.id)}
-              >
-                <span className="check" />
-                <span className="ic">{p.name.charAt(0)}</span>
-                <span className="rname">{p.name}</span>
-                <span className="rq">{p.blurb}</span>
-              </button>
-            ))}
+          <div className="lp-persona-grid">
+            {PERSONAS.map((p) => {
+              const sel = persona === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`lp-persona${sel ? ' sel' : ''}`}
+                  onClick={() => onPersona(p.id)}
+                  aria-pressed={sel}
+                >
+                  <span className="lp-persona-head">
+                    <span className="lp-persona-name">{p.name}</span>
+                    <span className="lp-persona-check" aria-hidden="true">{sel ? '\u2713' : ''}</span>
+                  </span>
+                  <span className="lp-persona-who">{p.who}</span>
+                  <span className="lp-persona-blurb">{p.blurb}</span>
+                  <span className="lp-persona-expect">
+                    <span className="lp-persona-expect-h">You will be asked about</span>
+                    <span>{p.expect.join(' · ')}</span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="surface" style={{ padding: '26px 28px', marginTop: 30 }}>
+        {chosen ? (
+          <div className="lp-chosen" role="status">
+            <strong>{chosen.name} selected.</strong> {chosen.blurb} You can go back and change this
+            before you begin.
+          </div>
+        ) : null}
+
+        {/* how to take it, and why honesty is the whole point */}
+        <div className="lp-howto">
+          <h3 className="lp-h3">Before you start</h3>
+          <ul className="lp-howto-list">
+            <li>
+              <strong>Answer for what is true, not what sounds right.</strong> Several questions ask
+              what you would actually do under time pressure. Those answers carry more weight than
+              the ones where you describe yourself, because habits show up in situations rather than
+              in intentions.
+            </li>
+            <li>
+              <strong>Your answers are not shared with anyone.</strong> No teacher, employer or
+              school sees this. There is no pass mark and nothing here is reported. An honest result
+              is the only kind that is any use to you.
+            </li>
+            <li>
+              <strong>Some questions are worded in the negative.</strong> Those are marked. Answer
+              them as they really are; the scoring accounts for the wording.
+            </li>
+            <li>
+              <strong>If you genuinely cannot judge something, say so.</strong> A few questions offer
+              a &ldquo;not enough experience to say&rdquo; option. Choosing it is treated as missing evidence and
+              excluded, which is more accurate than guessing at the middle.
+            </li>
+            <li>
+              <strong>You can take it again.</strong> Come back in a couple of months with the same
+              email address and your previous position is remembered, so you see how far you moved
+              rather than guessing. That only works if both readings were honest.
+            </li>
+          </ul>
+          <p className="lp-howto-time">
+            About twelve minutes, 33 to 36 questions depending on your answers. You can go back
+            and change any answer before the end.
+          </p>
+        </div>
+
+        {/* the two unscored calibration questions */}
+        <div className="surface" style={{ padding: '24px 26px', marginTop: 26 }}>
           <span className="eyebrow">Two questions we do not score</span>
-          <p className="muted" style={{ fontSize: '.92rem', margin: '8px 0 20px' }}>
-            Neither answer affects your result. They are compared with your result at the end, so you
-            can see how your sense of things lines up with what your answers describe.
+          <p className="muted" style={{ fontSize: '.92rem', margin: '8px 0 18px', maxWidth: '62ch' }}>
+            Neither of these affects your result. We compare them with your result at the end, so you
+            can see how your own sense of things lines up with what your answers describe. Answering
+            them is optional.
           </p>
 
           <div className="baseline">
@@ -529,15 +668,15 @@ function Setup({
           </div>
 
           <div className="baseline" style={{ marginTop: 22 }}>
-            <div className="q">Prediction: where do you expect your result to land on a ten stage continuum?</div>
+            <div className="q">Prediction: where do you expect your result to land on a ten stage route?</div>
             <OptionCards choices={BAND_CHOICES} selected={b2} onPick={onB2} />
           </div>
         </div>
 
-        <div className="qnav" style={{ marginTop: 34 }}>
+        <div className="qnav" style={{ marginTop: 30 }}>
           <button className="back" onClick={onBack}><span>&larr;</span> Back</button>
           <button className="btn btn-primary" onClick={onStart} disabled={!ready}>
-            Begin the assessment <span className="arrow">&rarr;</span>
+            {ready ? 'Begin the assessment' : 'Choose a role to begin'} <span className="arrow">&rarr;</span>
           </button>
         </div>
       </div>

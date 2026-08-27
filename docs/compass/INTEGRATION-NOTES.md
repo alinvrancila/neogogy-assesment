@@ -582,3 +582,33 @@ cannot silently disappear.
 
 **PDF re-measured** after the content changes: graphics trimmed slightly so the continuum block fits
 beside the profile section, giving zero interior pages below 60 percent fill again.
+
+## Landing and setup pages rebuilt for v2
+
+**The landing page now shows the thing it is selling.** It leads with the painted route as a wide
+band, then lays out all ten stages with their names and one-line descriptions, so nobody starts the
+assessment without knowing what the route is or where they might land. Below that, a "what you get"
+section shows the dimension bars and the radar.
+
+**The preview is a real result, labelled as an example.** `page.tsx` computes it server-side from one
+fixed set of illustrative answers using the same engine that scores respondents, and it is tagged
+"Example profile, not your result" on the card. Nothing on the landing page is an invented number,
+and no scoring happens on the client.
+
+**Layout bug worth recording.** `.nfc #hero` was `display: flex` from v1, when the hero was a single
+centred block. The new landing page is a stacked document, so its sections were laying out as flex
+columns side by side, with the headline breaking one word per line. `#hero` is now a normal block.
+
+**The setup page tells people what they are choosing.** Each of the four roles is a card carrying who
+it is for, what the questions are about, and three concrete examples drawn from the actual item bank
+for that persona (essays and exams for students, lesson planning and student data for teachers,
+homework and screen time for parents, board work and personnel decisions for leaders). Selecting one
+confirms the choice in words underneath. Four cards sit as a balanced two by two rather than a row of
+three with one stranded.
+
+**A "before you start" panel makes the case for honesty.** It states plainly that answers are not
+shared with any teacher, employer or school, that there is no pass mark, that the situational
+questions carry more weight than the self-descriptions, that reverse-worded questions are marked,
+that the "not enough experience to say" option is excluded rather than counted as neutral, and that
+returning with the same email shows movement over time, which only works if both readings were
+honest. That last point ties the honesty argument to the retake feature rather than just asserting it.
