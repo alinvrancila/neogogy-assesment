@@ -2334,3 +2334,92 @@
 
 .nfc .lp-persona-head { align-items: flex-start; }
 .nfc .lp-persona-check { flex: 0 0 auto; margin-top: 2px; }
+
+/* ---- home page alignment ----------------------------------------------- */
+
+/* The hero used its own padding, so its left edge did not line up with the
+   sections below it. It now sits in the same container as everything else. */
+.nfc .lp-hero {
+  display: block;
+  padding: 0;
+  margin: 0 0 40px;
+}
+
+.nfc .lp-hero-inner {
+  position: relative;
+  z-index: 2;
+  padding-top: 58px;
+  padding-bottom: 58px;
+}
+
+.nfc .lp-hero-copy { max-width: 54ch; }
+
+@media (max-width: 900px) {
+  .nfc .lp-hero { padding-bottom: 0; }
+  .nfc .lp-hero-inner { padding-bottom: 210px; }
+}
+
+/* a centred brand bar reads as the head of a page rather than a stray mark */
+.nfc #hero .brandbar {
+  justify-content: center;
+  text-align: left;
+  margin-bottom: 6px;
+}
+
+.nfc #hero .brandbar .btext { text-align: left; }
+
+/* ---- mobile corrections ------------------------------------------------ */
+
+/* The index block was flex: 0 0 auto, so its caption could not shrink and ran
+   off the right edge on narrow screens. */
+.nfc .asc-index { min-width: 0; }
+.nfc .asc-index-note { max-width: 22ch; margin-inline: auto; }
+
+@media (max-width: 620px) {
+  .nfc .asc-header { flex-direction: column; align-items: flex-start; }
+  .nfc .asc-index { align-self: center; }
+  .nfc .asc-index-note { max-width: 30ch; }
+  .nfc .asc-title { font-size: clamp(1.9rem, 8vw, 2.4rem); }
+}
+
+/* The brand bar put the logo and the wordmark on one row, which left no room
+   for the text on a phone. */
+@media (max-width: 560px) {
+  .nfc .brandbar {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+  }
+  .nfc .brandbar .bsep { display: none; }
+  .nfc #hero .brandbar .btext { text-align: center; }
+  .nfc .brand-logo { height: auto; }
+}
+
+/* Tablet: the ascent block breaks out to the viewport width, so keep its own
+   padding sensible and let the lower modules use the room they have. */
+@media (min-width: 620px) and (max-width: 1040px) {
+  .nfc .asc { padding: 22px 20px 26px; }
+  .nfc .asc-stage-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .nfc .asc-gate-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Long option cards and prose should never force a horizontal scroll. */
+.nfc .opts-cards .opt-card .otext,
+.nfc .asc-log-row dd,
+.nfc .lp-persona-expect { overflow-wrap: anywhere; }
+
+/* In column direction the header's flex-basis of 460px became 460px of height,
+   leaving a large gap above the index. */
+@media (max-width: 620px) {
+  .nfc .asc-header-main { flex: 0 0 auto; }
+  .nfc .asc-header { gap: 18px; }
+}
+
+/* The v1 rule stacked the hero buttons full width from 820px down, which on a
+   tablet made two full-width bars. Full width is right on a phone, not on a
+   tablet, so the stacking now starts where it is actually needed. */
+@media (min-width: 561px) {
+  .nfc .hero-cta { flex-direction: row; align-items: center; gap: 14px; }
+  .nfc .hero-cta .btn { width: auto; }
+}

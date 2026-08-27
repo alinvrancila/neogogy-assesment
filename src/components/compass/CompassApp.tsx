@@ -409,25 +409,27 @@ function Hero({ onStart, sample }: { onStart: () => void; sample?: CompassResult
 
       {/* the painted route, used here as the promise of the result */}
       <div className="lp-hero">
-        <div className="lp-hero-copy">
-          <h1 className="display">Find out where<br />you stand with AI.</h1>
-          <p className="lede">
-            Most of us can tell whether AI makes us faster. Almost none of us can tell whether it is
-            making us sharper. This assessment answers that, across ten dimensions of how you work
-            with AI, and places you on a ten stage route from first contact to a mature practice.
-          </p>
-          <div className="hero-cta">
-            <button className="btn btn-primary" onClick={onStart}>
-              Start the assessment <span className="arrow">&rarr;</span>
-            </button>
-            <button className="btn btn-ghost" onClick={() => document.getElementById('lp-what')?.scrollIntoView({ behavior: 'smooth' })}>
-              See what you get
-            </button>
-          </div>
-          <div className="hero-meta">
-            <span className="chip"><span className="dot" /> About 12 minutes</span>
-            <span className="chip"><span className="dot" /> 33 to 36 questions</span>
-            <span className="chip"><span className="dot" /> Free, with a report to keep</span>
+        <div className="wrap lp-hero-inner">
+          <div className="lp-hero-copy">
+            <h1 className="display">Find out where<br />you stand with AI.</h1>
+            <p className="lede">
+              Most of us can tell whether AI makes us faster. Almost none of us can tell whether it is
+              making us sharper. This assessment answers that, across ten dimensions of how you work
+              with AI, and places you on a ten stage route from first contact to a mature practice.
+            </p>
+            <div className="hero-cta">
+              <button className="btn btn-primary" onClick={onStart}>
+                Start the assessment <span className="arrow">&rarr;</span>
+              </button>
+              <button className="btn btn-ghost" onClick={() => document.getElementById('lp-what')?.scrollIntoView({ behavior: 'smooth' })}>
+                See what you get
+              </button>
+            </div>
+            <div className="hero-meta">
+              <span className="chip"><span className="dot" /> About 12 minutes</span>
+              <span className="chip"><span className="dot" /> 33 to 36 questions</span>
+              <span className="chip"><span className="dot" /> Free, with a report to keep</span>
+            </div>
           </div>
         </div>
         <div className="lp-hero-art" aria-hidden="true" />

@@ -612,3 +612,44 @@ questions carry more weight than the self-descriptions, that reverse-worded ques
 that the "not enough experience to say" option is excluded rather than counted as neutral, and that
 returning with the same email shows movement over time, which only works if both readings were
 honest. That last point ties the honesty argument to the retake feature rather than just asserting it.
+
+## Legibility, alignment and responsive pass
+
+**The map was carrying four labels in one spot.** With the current position, the next stage and a
+previous attempt all falling close together, "YOU ARE HERE", "NEXT LEDGE", the movement figure and
+the previous index stacked on top of each other and on the terrain. Three of the four are gone from
+the map:
+
+- The next-ledge chip was removed. The camp for the next stage is already ringed in teal and its name
+  is already teal in the label band, so the chip was repeating what the map showed.
+- The movement figure was removed. The comparison card states it in full, larger, a few centimetres
+  below.
+- The previous-attempt label now only appears when it has room (eight index points of separation),
+  and the connector only when there are four. Below that, the ghost ring alone marks the spot.
+
+The one remaining callout now carries the number, so the map states position once: "YOU ARE HERE ·
+67.6". It is clamped so it cannot run off the panel when the climber sits near either end, with a
+short leader back to the marker.
+
+**The illustration is the setting, not the content.** A light wash over the painted backdrop, and a
+pale halo under the route, put the live layer first to the eye. Before this the teal route competed
+with dark painted rock.
+
+**Home page alignment.** The hero had its own horizontal padding while every section below used the
+page container, so the headline started at a different left edge from everything under it. The hero
+copy now sits in the same container, and all left edges line up down the page.
+
+**Responsive.** Checked at 390, 820 and 1280 with a script that reports document overflow and names
+any element extending past the viewport. All three are clean on both the landing page and the result.
+Fixed along the way: the index caption could not shrink and ran off the right edge on a phone; the
+ascent header's 460px flex-basis became 460px of dead height once the header stacked; the brand bar
+had no room for its wordmark beside the logo under 560px; and a v1 rule stacked the hero buttons full
+width from 820px down, which made two full-width bars on a tablet where side by side fits fine.
+
+**Also verified on a phone:** reduced motion disables animation, keyboard focus reaches stages and
+gates, the lower modules stack in the specified order, and the map scrolls horizontally rather than
+shrinking ten stage names into illegibility.
+
+**Process note, twice now.** Running `npm run build` while `next dev` is serving replaces `.next`
+underneath it and the dev server starts returning 500s with MODULE_NOT_FOUND. It looked like the map
+component had broken. Restart the dev server after any build, or the probe results are meaningless.

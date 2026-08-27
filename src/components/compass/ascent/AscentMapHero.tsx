@@ -32,6 +32,8 @@ export default function AscentMapHero(
 ) {
   const index = result.stage.rawIndex;
   const here = pointAtIndex(index);
+  // The callout is clamped so it cannot run off the panel at either extreme.
+  const calloutX = Math.max(104, Math.min(VIEW.w - 104, here.x));
   const nextStage = result.nextTarget.stage;
   const nextAtTop = nextStage === result.stage.stage;
   const nextPt = pointAtIndex(minIndexOf(nextStage));
@@ -109,6 +111,10 @@ export default function AscentMapHero(
               aria-hidden="true"
             />
 
+            {/* the illustration is the setting, not the content: a light wash
+                over it keeps the route, camps and labels first to the eye */}
+            <rect x={0} y={0} width={VIEW.w} height={VIEW.h} fill="#F7F1E4" opacity={0.34} aria-hidden="true" />
+
             {/* a light scrim beneath the label band, drawn before any live
                 element so it never washes out the labels it protects */}
             <rect x="0" y="0" width={VIEW.w} height={188} fill="url(#ascScrim)" aria-hidden="true" />
@@ -129,9 +135,9 @@ export default function AscentMapHero(
             </g>
 
             {/* layer 4: the route, travelled then remaining */}
-            <path d={full} fill="none" stroke="var(--asc-border)" strokeWidth={7} strokeLinecap="round" />
+            <path d={full} fill="none" stroke="#FBF8F1" strokeWidth={11} strokeLinecap="round" opacity={0.75} />
             <path
-              d={full} fill="none" stroke="var(--asc-teal)" strokeWidth={6} strokeLinecap="round"
+              d={full} fill="none" stroke="var(--asc-teal)" strokeWidth={7} strokeLinecap="round"
               pathLength={1} strokeDasharray={`${travelledLen} ${1 - travelledLen}`}
             />
             <path
@@ -212,42 +218,28 @@ export default function AscentMapHero(
                 <text x={1150} y={150} textAnchor="middle" className="asc-anchor-label">SUMMIT</text>
               </g>
 
-              {/* next ledge marker */}
-              {!nextAtTop && (
-                <g>
-                  <line x1={nextPt.x} y1={nextPt.y - 12} x2={nextPt.x} y2={nextPt.y - 46}
-                    stroke="var(--asc-teal)" strokeWidth={1.2} />
-                  <rect
-                    x={nextPt.x - 64} y={nextPt.y - 74} width={128} height={28} rx={14}
-                    fill="var(--asc-teal-pale)" stroke="var(--asc-teal)" strokeWidth={1}
-                  />
-                  <text x={nextPt.x} y={nextPt.y - 55} textAnchor="middle" className="asc-next-chip">
-                    NEXT LEDGE
-                  </text>
-                </g>
-              )}
-
               {/* where the previous attempt stood, when there is one */}
               {comparison ? (() => {
                 const prev = pointAtIndex(comparison.previousIndex);
-                const rising = comparison.indexDelta >= 0;
+                // Only label the ghost when it is far enough from the current
+                // marker to be readable. The comparison card below states the
+                // movement in full either way, so the map never repeats it.
+                const gap = Math.abs(comparison.currentIndex - comparison.previousIndex);
                 return (
                   <g>
-                    <path
-                      d={`M ${prev.x} ${prev.y - 20} L ${here.x} ${here.y - 20}`}
-                      stroke="var(--asc-muted)" strokeWidth={1.4} strokeDasharray="5 5" fill="none"
-                    />
+                    {gap >= 4 ? (
+                      <path
+                        d={`M ${prev.x} ${prev.y + 16} L ${here.x} ${here.y + 16}`}
+                        stroke="var(--asc-muted)" strokeWidth={1.4} strokeDasharray="5 5" fill="none"
+                      />
+                    ) : null}
                     <circle cx={prev.x} cy={prev.y} r={9} fill="none"
-                      stroke="var(--asc-muted)" strokeWidth={2.5} strokeDasharray="3 3" />
-                    <text x={prev.x} y={prev.y + 34} textAnchor="middle" className="asc-prev-chip">
-                      LAST TIME {comparison.previousIndex}
-                    </text>
-                    <text
-                      x={(prev.x + here.x) / 2} y={Math.min(prev.y, here.y) - 28}
-                      textAnchor="middle" className="asc-move-chip"
-                    >
-                      {rising ? '+' : ''}{comparison.indexDelta} since last time
-                    </text>
+                      stroke="#5C513C" strokeWidth={2.5} strokeDasharray="3 3" />
+                    {gap >= 8 ? (
+                      <text x={prev.x} y={prev.y + 36} textAnchor="middle" className="asc-prev-chip">
+                        LAST TIME
+                      </text>
+                    ) : null}
                   </g>
                 );
               })() : null}
@@ -255,6 +247,7 @@ export default function AscentMapHero(
               {/* the climber, placed at the exact index */}
               <g>
                 <line x1={here.x} y1={here.y} x2={here.x} y2={here.y - 40} stroke="var(--asc-oxblood)" strokeWidth={2} />
+                <line x1={here.x} y1={here.y - 40} x2={calloutX} y2={here.y - 74} stroke="var(--asc-oxblood)" strokeWidth={1.4} />
                 <polygon
                   points={`${here.x},${here.y - 40} ${here.x + 30},${here.y - 33} ${here.x},${here.y - 26}`}
                   fill="var(--asc-oxblood)"
@@ -263,11 +256,11 @@ export default function AscentMapHero(
                 <circle cx={here.x} cy={here.y} r={6} fill="var(--asc-oxblood)" />
                 <g>
                   <rect
-                    x={here.x - 78} y={here.y - 104} width={156} height={30} rx={15}
+                    x={calloutX - 92} y={here.y - 106} width={184} height={32} rx={16}
                     fill="var(--asc-oxblood)"
                   />
-                  <text x={here.x} y={here.y - 84} textAnchor="middle" className="asc-here-chip">
-                    YOU ARE HERE
+                  <text x={calloutX} y={here.y - 85} textAnchor="middle" className="asc-here-chip">
+                    YOU ARE HERE · {result.stage.rawIndex}
                   </text>
                 </g>
               </g>
