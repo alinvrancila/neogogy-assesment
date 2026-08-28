@@ -12,7 +12,7 @@ const crimson = Crimson_Pro({ subsets: ['latin'], weight: ['400', '600', '700'],
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
 
 const SHARE_TITLE = 'The Neogogy Formation Compass';
-const SHARE_DESC = 'Is AI making you wiser, or just faster? A free, research-backed diagnostic of how you learn with AI, with a personal report. From the International Center for Applied Neogogy (ICAN).';
+const SHARE_DESC = 'Find out where you stand with AI. A free assessment across ten dimensions of how you work with AI, placing you on a ten stage route from first contact to a mature practice, with a personal report to keep. From the International Center for Applied Neogogy (ICAN).';
 
 export const metadata: Metadata = {
   title: SHARE_TITLE,

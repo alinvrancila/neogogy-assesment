@@ -64,13 +64,13 @@ export default async function Image() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', fontSize: 62, fontWeight: 700, lineHeight: 1.04, color: 'rgba(242,232,220,0.92)' }}>Is AI making you</div>
-            <div style={{ display: 'flex', fontSize: 104, fontWeight: 800, lineHeight: 1.0, color: '#5FB4A1', marginTop: 6 }}>wiser,</div>
-            <div style={{ display: 'flex', fontSize: 62, fontWeight: 700, lineHeight: 1.04, color: 'rgba(242,232,220,0.92)' }}>or just faster?</div>
+            <div style={{ display: 'flex', fontSize: 62, fontWeight: 700, lineHeight: 1.04, color: 'rgba(242,232,220,0.92)' }}>Find out where</div>
+            <div style={{ display: 'flex', fontSize: 96, fontWeight: 800, lineHeight: 1.0, color: '#5FB4A1', marginTop: 6 }}>you stand</div>
+            <div style={{ display: 'flex', fontSize: 62, fontWeight: 700, lineHeight: 1.04, color: 'rgba(242,232,220,0.92)' }}>with AI.</div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', fontFamily: 'Plex', fontSize: 16, letterSpacing: 3, color: '#CDB07A' }}>A FREE 10-MINUTE DIAGNOSTIC</div>
+            <div style={{ display: 'flex', fontFamily: 'Plex', fontSize: 16, letterSpacing: 3, color: '#CDB07A' }}>A FREE 12-MINUTE ASSESSMENT</div>
             <div style={{ display: 'flex', fontFamily: 'Plex', fontSize: 24, letterSpacing: 1, color: '#F2E8DC', marginTop: 8 }}>assessment.neogogy.ai</div>
           </div>
         </div>
