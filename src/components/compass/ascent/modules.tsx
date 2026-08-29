@@ -80,7 +80,7 @@ export function OrientationCard({ result }: { result: CompassResult }) {
       {result.stage.gated ? (
         <p className="asc-orient-gate">
           Your score alone would put you at stage {result.stage.gated.cappedFrom}, but one practice
-          is holding you here: {result.stage.gated.reasons[0]} The later stages ask for a minimum on
+          is holding you here: {result.stage.gated.reasons[0]}. The later stages ask for a minimum on
           a few practices, so that being skilled with the tools cannot carry you past a weakness
           that matters.
         </p>

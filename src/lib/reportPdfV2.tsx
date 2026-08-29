@@ -1075,6 +1075,25 @@ export async function generateCompassPdf(args: {
             <Text style={S.eyebrow}>Where you are</Text>
             <Text style={S.h2}>{byKey('continuum').title}</Text>
             <View style={{ marginBottom: 8 }}><AscentMap r={r} /></View>
+            {/* the same legend the page carries, so the marks are readable */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, marginBottom: 4 }}>
+              <View style={{ width: 14, height: 3, borderRadius: 2, backgroundColor: T.teal, marginRight: 5 }} />
+              <Text style={{ fontFamily: 'Plex', fontSize: 6.2, color: T.mute, marginRight: 12 }}>Route travelled</Text>
+              <View style={{ width: 14, height: 3, borderRadius: 2, backgroundColor: '#C9BFAE', marginRight: 5 }} />
+              <Text style={{ fontFamily: 'Plex', fontSize: 6.2, color: T.mute, marginRight: 12 }}>Route ahead</Text>
+              <View style={{
+                width: 7, height: 7, borderRadius: 4, borderWidth: 1,
+                borderColor: '#C9BFAE', backgroundColor: T.card, marginRight: 5,
+              }} />
+              <Text style={{ fontFamily: 'Plex', fontSize: 6.2, color: T.mute, marginRight: 12 }}>Stage camp</Text>
+              <View style={{ width: 7, height: 7, backgroundColor: T.gold, marginRight: 5 }} />
+              <Text style={{ fontFamily: 'Plex', fontSize: 6.2, color: T.mute, marginRight: 12 }}>Practice gate</Text>
+              <View style={{
+                width: 8, height: 8, borderRadius: 4, borderWidth: 2,
+                borderColor: T.oxblood, backgroundColor: T.card, marginRight: 5,
+              }} />
+              <Text style={{ fontFamily: 'Plex', fontSize: 6.2, color: T.mute }}>You</Text>
+            </View>
             <Text style={{ fontFamily: 'Plex', fontSize: 6.5, color: T.mute, marginBottom: 10 }}>
               {'Altitude reflects the developmental index, 0 at basecamp to 100 at the summit. '}
               {'The marker sits at your exact index rather than at the middle of a stage, and the '}
