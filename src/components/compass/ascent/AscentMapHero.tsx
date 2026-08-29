@@ -13,16 +13,10 @@ import type { AttemptComparison } from '@/lib/history';
 import { STAGES } from '@/engine/config';
 import type { ConstructId } from '@/engine/types';
 import {
-  VIEW, ROUTE_POINTS, pointAtIndex, routePath, contourPaths, routeRidge,
+  VIEW, ROUTE_POINTS, pointAtIndex, routePath, contourPaths, routeRidge, GATE_DEFS,
 } from './route';
 
-/** Gates that bind on the route, in the language of the climb. */
-export const GATE_DEFS: Array<{ construct: ConstructId; label: string; firstStage: number }> = [
-  { construct: 'agency', label: 'Authorship', firstStage: 6 },
-  { construct: 'verification', label: 'Verification', firstStage: 6 },
-  { construct: 'responsibleUse', label: 'Boundaries', firstStage: 7 },
-  { construct: 'transfer', label: 'Transfer', firstStage: 8 },
-];
+export { GATE_DEFS };
 
 const minIndexOf = (stage: number) => STAGES.find((s) => s.stage === stage)?.minIndex ?? 0;
 

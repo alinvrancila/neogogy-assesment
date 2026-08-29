@@ -11,6 +11,16 @@
 
 export interface Pt { x: number; y: number }
 
+import type { ConstructId } from '@/engine/types';
+
+/** Practice gates that bind on the route, in the language of the climb. */
+export const GATE_DEFS: Array<{ construct: ConstructId; label: string; firstStage: number }> = [
+  { construct: 'agency', label: 'Authorship', firstStage: 6 },
+  { construct: 'verification', label: 'Verification', firstStage: 6 },
+  { construct: 'responsibleUse', label: 'Boundaries', firstStage: 7 },
+  { construct: 'transfer', label: 'Transfer', firstStage: 8 },
+];
+
 export const VIEW = { w: 1200, h: 560 };
 
 /**

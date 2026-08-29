@@ -10,6 +10,7 @@ import React from 'react';
 import path from 'path';
 import {
   Page, Document, Font, StyleSheet, Text, View, Svg, Circle, Line, Polygon, Rect, Image,
+  Path, Text as SvgText, Defs, LinearGradient, Stop,
 } from '@react-pdf/renderer';
 import { renderToBuffer } from '@react-pdf/renderer';
 import {
@@ -19,6 +20,10 @@ import {
 } from '@/engine';
 import type { AttemptComparison } from '@/lib/history';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
+import {
+  VIEW as MAP_VIEW, pointAtIndex, routePath, routeRidge,
+  GATE_DEFS,
+} from '@/components/compass/ascent/route';
 import type { ConstructId } from '@/engine/types';
 
 const PAGE = { w: 595.28, h: 841.89 };
@@ -110,6 +115,7 @@ const S = StyleSheet.create({
   bulletText: { flex: 1, fontSize: 10, lineHeight: 1.5, color: T.ink },
   rule: { borderBottom: `0.6pt solid ${T.hair}`, marginVertical: 12 },
   section: { marginBottom: 12 },
+  gap: { height: 12 },
   foot: {
     position: 'absolute', bottom: 22, left: M, right: M,
     fontFamily: 'Plex', fontSize: 7.5, color: T.mute,
@@ -167,6 +173,9 @@ function introOnly(lines: string[]): string[] {
   return at === -1 ? lines : lines.slice(0, at);
 }
 
+/** Drop bullet lines where the same items are drawn as cards. */
+const withoutBullets = (lines: string[]) => lines.filter((l) => !l.trimStart().startsWith('- '));
+
 /** Lines up to a marker, where a chart replaces the prose below it. */
 function upTo(lines: string[], marker: string): string[] {
   const at = lines.findIndex((l) => l.includes(marker));
@@ -177,13 +186,16 @@ function SectionBlock({ s }: { s: ReportSection }) {
   // The heading stays with the start of its prose (minPresenceAhead), but the
   // prose itself flows. Sections are long enough now that making the whole
   // section atomic would strand pages rather than protect blocks.
+  // A container View cannot be split by react-pdf when its own children are
+  // atomic, which loops pagination, so sections are flat with a spacer.
   return (
-    <View style={S.section}>
+    <>
       <View wrap={false} minPresenceAhead={70}>
           <Text style={S.h2}>{s.title}</Text>
       </View>
       <Lines lines={s.lines} />
-    </View>
+      <View style={S.gap} />
+    </>
   );
 }
 
@@ -240,27 +252,174 @@ function StripSvg({ r }: { r: CompassResult }) {
 
 function RadarSvg({ r }: { r: CompassResult }) {
   const ids = Object.keys(CONSTRUCTS) as ConstructId[];
-  const size = 190; const c = size / 2; const R = 66; const n = ids.length;
+  // Two-word labels ride the outside of the web, so each spoke can be named.
+  const SHORT: Record<string, string> = {
+    agency: 'Agency', verification: 'Verification', dependencySafety: 'Dependency',
+    fluency: 'Fluency', transfer: 'Transfer', amplification: 'Amplification',
+    skillGrowth: 'Skill growth', adaptability: 'Adaptability',
+    responsibleUse: 'Responsible use', creativity: 'Creativity',
+  };
+  const W = 300; const H = 216; const cx = W / 2; const cy = H / 2 + 2; const R = 72;
+  const n = ids.length;
   const pt = (i: number, rad: number) => {
     const a = (Math.PI * 2 * i) / n - Math.PI / 2;
-    return [c + Math.cos(a) * rad, c + Math.sin(a) * rad] as const;
+    return [cx + Math.cos(a) * rad, cy + Math.sin(a) * rad] as const;
   };
   const val = (id: ConstructId) =>
     CONSTRUCTS[id].reportedAsRisk ? r.dimensions[id].reportedScore : r.dimensions[id].score;
   const poly = ids.map((id, i) => pt(i, (val(id) / 100) * R).join(',')).join(' ');
   return (
-    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <Rect x={0} y={0} width={size} height={size} fill={T.card} rx={8} stroke={T.hair} strokeWidth={1} />
-      {[0.33, 0.66, 1].map((f) => (
+    <Svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
+      <Rect x={0} y={0} width={W} height={H} fill={T.card} rx={8} stroke={T.hair} strokeWidth={1} />
+      {[0.25, 0.5, 0.75, 1].map((f) => (
         <Polygon key={f} points={ids.map((_, i) => pt(i, R * f).join(',')).join(' ')}
-          fill="none" stroke={T.hair} strokeWidth={0.7} />
+          fill="none" stroke={T.hair} strokeWidth={f === 1 ? 1 : 0.6} />
       ))}
-      <Polygon points={poly} fill={T.teal} fillOpacity={0.18} stroke={T.teal} strokeWidth={1.2} />
+      {ids.map((_, i) => {
+        const [x, y] = pt(i, R);
+        return <Line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke={T.hair} strokeWidth={0.5} />;
+      })}
+      <Polygon points={poly} fill={T.teal} fillOpacity={0.2} stroke={T.teal} strokeWidth={1.4} />
+      {ids.map((id, i) => {
+        const [px, py] = pt(i, (val(id) / 100) * R);
+        return <Circle key={`d${id}`} cx={px} cy={py} r={1.8} fill={T.teal} />;
+      })}
+      {ids.map((id, i) => {
+        const [lx, ly] = pt(i, R + 16);
+        const label = SHORT[id] ?? CONSTRUCTS[id].name;
+        // rough centring: the renderer has no text metrics inside Svg
+        const x = Math.max(3, Math.min(W - label.length * 3.9 - 3, lx - label.length * 1.95));
+        return (
+          <SvgText key={`l${id}`} x={x} y={ly + 2} style={{ fontFamily: 'Plex', fontSize: 6.4 }} fill={T.mute}>
+            {label}
+          </SvgText>
+        );
+      })}
     </Svg>
   );
 }
 
 /* --------------------------------------------- charts, mirroring the web */
+
+/**
+ * The ascent map, drawn the same way as the page: the painted scene with the
+ * live route, the ten camps and the marker placed at the exact index over it.
+ * Geometry comes from the same module the web uses, so the two cannot drift.
+ */
+function AscentMap({ r }: { r: CompassResult }) {
+  const W = CW;
+  const H = Math.round((CW * MAP_VIEW.h) / MAP_VIEW.w);
+  const sx = W / MAP_VIEW.w;
+  const here = pointAtIndex(r.stage.rawIndex);
+  const nextStage = r.nextTarget.stage;
+  const atTop = nextStage === r.stage.stage;
+  const travelled = r.stage.rawIndex / 100;
+  // Near the summit the callout would land in the label band, so it flips down.
+  const calloutBelow = here.y < 250;
+  const pillX = Math.max(12, Math.min(MAP_VIEW.w - 200, here.x - 94));
+  const pillY = calloutBelow ? here.y + 40 : here.y - 104;
+
+  return (
+    <View style={{ width: W, height: H, position: 'relative' }}>
+      {/* eslint-disable-next-line jsx-a11y/alt-text */}
+      <Image src={BACKDROP} style={{ position: 'absolute', top: 0, left: 0, width: W, height: H }} />
+      <View style={{ position: 'absolute', top: 0, left: 0, width: W, height: H }}>
+        <Svg width={W} height={H} viewBox={`0 0 ${MAP_VIEW.w} ${MAP_VIEW.h}`}>
+          {/* the illustration is the setting; a wash keeps the route first,
+              and the label band fades out rather than ending in a hard edge */}
+          <Defs>
+            <LinearGradient id="mapScrim" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor="#F7F1E4" stopOpacity={0.94} />
+              <Stop offset="0.62" stopColor="#F7F1E4" stopOpacity={0.8} />
+              <Stop offset="1" stopColor="#F7F1E4" stopOpacity={0} />
+            </LinearGradient>
+          </Defs>
+          <Rect x={0} y={0} width={MAP_VIEW.w} height={MAP_VIEW.h} fill="#F7F1E4" fillOpacity={0.34} />
+          <Rect x={0} y={0} width={MAP_VIEW.w} height={230} fill="url(#mapScrim)" />
+
+          {/* the crest the route sits on */}
+          <Polygon points={routeRidge(10)} fill="#6E6147" fillOpacity={0.2} />
+
+          {/* route: a light halo, the travelled portion, then the rest dashed */}
+          <Path d={routePath()} stroke="#FBF8F1" strokeWidth={11} strokeOpacity={0.75} fill="none" strokeLinecap="round" />
+          <Path d={routePath()} stroke="#D7CEC0" strokeWidth={5} fill="none" strokeLinecap="round" />
+          <Path
+            d={routePath()} stroke={T.teal} strokeWidth={7} fill="none" strokeLinecap="round"
+            strokeDasharray={`${Math.round(travelled * 1180)},1180`}
+          />
+
+          {/* Camps. Every camp carries its number in the band above the
+              range; names are drawn for the ones that orient the reader, so
+              ten long labels never fight each other for the same strip. */}
+          {STAGES.map((st) => {
+            const p = pointAtIndex(st.minIndex);
+            const isHere = st.stage === r.stage.stage;
+            const isNext = !atTop && st.stage === nextStage;
+            const reached = r.stage.rawIndex >= st.minIndex;
+            const named = isHere || isNext || st.stage === 1 || st.stage === STAGES.length;
+            const band = st.stage % 2 === 1 ? 52 : 104;
+            const lx = Math.max(80, Math.min(MAP_VIEW.w - 130, p.x));
+            // keep long names clear of the summit marker on the right edge
+            const nw = st.name.length * 6.6;
+            const nx = Math.min(lx - Math.min(st.name.length * 3.4, 100), MAP_VIEW.w - 60 - nw);
+            return (
+              <React.Fragment key={st.stage}>
+                <Line x1={lx} y1={band + 8} x2={p.x} y2={p.y - 14}
+                  stroke="#C9BFAE" strokeWidth={1} strokeDasharray="2,4" />
+                <SvgText x={lx - 5} y={band} style={{ fontFamily: 'Plex', fontSize: 16 }}
+                  fill={isHere ? T.oxblood : isNext ? T.teal : T.mute}>
+                  {String(st.stage)}
+                </SvgText>
+                {named ? (
+                  <SvgText x={nx} y={band + 20} style={{ fontFamily: 'Spectral', fontSize: 15 }}
+                    fill={isHere ? T.oxblood : isNext ? T.teal : T.ink}>
+                    {st.name}
+                  </SvgText>
+                ) : null}
+                <Circle cx={p.x} cy={p.y} r={isHere ? 11 : 7}
+                  fill={reached ? T.teal : T.card}
+                  stroke={isNext ? T.teal : '#C9BFAE'} strokeWidth={isNext ? 2.5 : 1.5} />
+              </React.Fragment>
+            );
+          })}
+
+          {/* Practice gates, drawn where they first bind, as on the page. */}
+          {GATE_DEFS.map((g) => {
+            const stageMin = STAGES.find((st) => st.stage === g.firstStage)?.minIndex ?? 0;
+            const base = pointAtIndex(stageMin);
+            const peers = GATE_DEFS.filter((o) => o.firstStage === g.firstStage);
+            const slot = peers.findIndex((o) => o.construct === g.construct);
+            const x = base.x + (slot - (peers.length - 1) / 2) * 22;
+            return (
+              <React.Fragment key={g.construct}>
+                <Line x1={x} y1={base.y + 14} x2={x} y2={base.y + 44} stroke={T.gold} strokeWidth={1.2} />
+                <Polygon
+                  points={`${x},${base.y + 39} ${x + 7},${base.y + 46} ${x},${base.y + 53} ${x - 7},${base.y + 46}`}
+                  fill={T.gold}
+                />
+              </React.Fragment>
+            );
+          })}
+
+          {/* The climber, at the exact index. The callout sits above the marker
+              unless that would run into the label band, in which case below. */}
+          <Circle cx={here.x} cy={here.y} r={14} fill={T.card} stroke={T.oxblood} strokeWidth={3} />
+          <Circle cx={here.x} cy={here.y} r={6} fill={T.oxblood} />
+          <Line
+            x1={here.x} y1={here.y + (calloutBelow ? 14 : -14)}
+            x2={here.x} y2={here.y + (calloutBelow ? 40 : -40)}
+            stroke={T.oxblood} strokeWidth={2}
+          />
+          <Rect x={pillX} y={pillY} width={188} height={32} rx={16} fill={T.oxblood} />
+          <SvgText x={pillX + 22} y={pillY + 21} style={{ fontFamily: 'Plex', fontSize: 14 }} fill="#F7F1E4">
+            {`YOU ARE HERE  ${r.stage.rawIndex}`}
+          </SvgText>
+        </Svg>
+      </View>
+    </View>
+  );
+}
+
 
 /** The full ten stage ladder, as on the results page. */
 function Ladder({ r }: { r: CompassResult }) {
@@ -504,6 +663,269 @@ function Plan({ r }: { r: CompassResult }) {
   );
 }
 
+/** The bottleneck as a bar against the number it must clear. */
+function GateGap({ r }: { r: CompassResult }) {
+  if (r.bottleneck.saturated) return null;
+  const c = r.bottleneck.construct;
+  const d = r.dimensions[c];
+  const next = r.nextTarget.stage;
+  let required: number | undefined;
+  let requiredStage: number | undefined;
+  for (const st of STAGES) {
+    if (st.stage < next) continue;
+    const g = st.gates as Record<string, number> | undefined;
+    if (g && g[c] !== undefined) { required = g[c]; requiredStage = st.stage; break; }
+  }
+  const col = bandColor(d.score);
+  return (
+    <View wrap={false} style={{
+      borderWidth: 1, borderColor: T.hair, borderRadius: 8, padding: 10,
+      backgroundColor: T.card, marginBottom: 8,
+    }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 10.5 }}>{CONSTRUCTS[c].name}</Text>
+        <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 15, color: bandTextColor(d.score) }}>{d.score}</Text>
+      </View>
+      <View style={{ height: 9, borderRadius: 5, backgroundColor: '#EDE5D7', marginTop: 6, position: 'relative' }}>
+        <View style={{ width: `${Math.max(2, d.score)}%`, height: 9, borderRadius: 5, backgroundColor: col }} />
+        {required !== undefined ? (
+          <View style={{ position: 'absolute', left: `${required}%`, top: -3, width: 2, height: 15, backgroundColor: T.ink, opacity: 0.6 }} />
+        ) : null}
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 6.5, color: T.mute }}>you are here</Text>
+        {required !== undefined ? (
+          <Text style={{ fontFamily: 'Plex', fontSize: 6.5, color: T.mute }}>
+            stage {requiredStage} needs {required}
+          </Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+/** All ten dimensions on one scale, against the 45 and 65 lines. */
+function ThresholdStrip({ r }: { r: CompassResult }) {
+  const rows = (Object.keys(CONSTRUCTS) as ConstructId[])
+    .map((id) => ({
+      name: CONSTRUCTS[id].reportedAsRisk ? 'Dependency Risk' : CONSTRUCTS[id].name,
+      healthy: r.dimensions[id].score,
+      shown: CONSTRUCTS[id].reportedAsRisk ? r.dimensions[id].reportedScore : r.dimensions[id].score,
+    }))
+    .sort((a, b) => a.healthy - b.healthy);
+  return (
+    <View wrap={false}>
+      {/* the zones, named once, so the two rules read as meaning something */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+        <View style={{ width: 108 }} />
+        <View style={{ flex: 1, flexDirection: 'row' }}>
+          <View style={{ width: '45%' }}>
+            <Text style={{ fontFamily: 'Plex', fontSize: 6, letterSpacing: 0.7, color: '#B0685E' }}>NEEDS ATTENTION</Text>
+          </View>
+          <View style={{ width: '20%' }}>
+            <Text style={{ fontFamily: 'Plex', fontSize: 6, letterSpacing: 0.7, color: T.gold }}>DEVELOPING</Text>
+          </View>
+          <View style={{ width: '35%' }}>
+            <Text style={{ fontFamily: 'Plex', fontSize: 6, letterSpacing: 0.7, color: T.teal }}>STRENGTH</Text>
+          </View>
+        </View>
+        <View style={{ width: 30 }} />
+      </View>
+      {rows.map((row) => (
+        <View key={row.name} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+          <Text style={{ fontSize: 7.5, width: 108 }}>{row.name}</Text>
+          <View style={{ flex: 1, height: 12, position: 'relative' }}>
+            <View style={{ position: 'absolute', left: 0, right: 0, top: 5, height: 2, backgroundColor: '#EDE5D7', borderRadius: 1 }} />
+            <View style={{ position: 'absolute', left: '45%', top: 1, width: 1, height: 10, backgroundColor: T.ink, opacity: 0.28 }} />
+            <View style={{ position: 'absolute', left: '65%', top: 1, width: 1, height: 10, backgroundColor: T.ink, opacity: 0.28 }} />
+            <View style={{
+              position: 'absolute', left: `${row.healthy}%`, top: 1.5,
+              width: 9, height: 9, borderRadius: 5, backgroundColor: bandColor(row.healthy),
+            }} />
+          </View>
+          <Text style={{ fontFamily: 'Plex', fontSize: 7.5, width: 30, textAlign: 'right', color: bandTextColor(row.healthy) }}>
+            {row.shown}
+          </Text>
+        </View>
+      ))}
+      <Text style={{ fontFamily: 'Plex', fontSize: 6.2, color: T.mute, marginTop: 4 }}>
+        Plotted on the healthy reading, so Dependency Risk sits by its independent capability
+        rather than by the risk number. Below 45 is named a vulnerability, above 65 a strength.
+      </Text>
+    </View>
+  );
+}
+
+/** Felt against predicted against measured, on one five band scale. */
+function CalibrationScale({ r }: { r: CompassResult }) {
+  const idx = r.stage.rawIndex;
+  const measured = idx >= 80 ? 5 : idx >= 62 ? 4 : idx >= 44 ? 3 : idx >= 26 ? 2 : 1;
+  const clamp = (b: number) => Math.max(1, Math.min(5, b));
+  const rows: Array<[string, number, string]> = [];
+  if (r.calibration.desirabilityGap !== undefined) {
+    rows.push(['How it felt', clamp(measured + r.calibration.desirabilityGap), T.gold]);
+  }
+  if (r.calibration.calibrationGap !== undefined) {
+    rows.push(['What you predicted', clamp(measured + r.calibration.calibrationGap), '#8a6b91']);
+  }
+  rows.push(['What your answers measured', measured, T.oxblood]);
+  const BANDS = ['Lowest', 'Lower', 'Middle', 'Higher', 'Highest'];
+  return (
+    <View wrap={false} style={{ marginBottom: 8 }}>
+      {/* the five bands named once, so the rows below have a scale */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+        <View style={{ width: 118 }} />
+        <View style={{ flex: 1, flexDirection: 'row' }}>
+          {BANDS.map((b) => (
+            <Text key={b} style={{
+              flex: 1, marginRight: 3, fontFamily: 'Plex', fontSize: 5.6,
+              letterSpacing: 0.5, color: T.mute,
+            }}>
+              {b.toUpperCase()}
+            </Text>
+          ))}
+        </View>
+        <View style={{ width: 42 }} />
+      </View>
+      {rows.map(([label, band, col]) => (
+        <View key={label} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+          <Text style={{ fontSize: 7.5, width: 118 }}>{label}</Text>
+          <View style={{ flex: 1, flexDirection: 'row' }}>
+            {[1, 2, 3, 4, 5].map((b) => (
+              <View key={b} style={{
+                flex: 1, height: 12, marginRight: 3, borderRadius: 3,
+                backgroundColor: b === band ? col : '#EDE5D7',
+              }} />
+            ))}
+          </View>
+          <Text style={{ fontFamily: 'Plex', fontSize: 6.5, width: 42, textAlign: 'right', color: T.mute }}>
+            {BANDS[band - 1]}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** Fired patterns as cards, so helping and harming are visible at a glance. */
+function PatternCards({ r, kind }: { r: CompassResult; kind: 'help' | 'harm' }) {
+  const hits = r.patterns.filter((p) => p.kind === kind);
+  const col = kind === 'help' ? T.teal : '#CF796E';
+  // An empty list is a real result, so it gets a card rather than silence.
+  if (!hits.length) {
+    const clear = kind === 'harm';
+    return (
+      <View wrap={false} style={{
+        borderWidth: 1, borderColor: clear ? T.teal : T.hair, borderRadius: 8,
+        padding: 10, backgroundColor: T.card, marginTop: 4, marginBottom: 6,
+        flexDirection: 'row', alignItems: 'center',
+      }}>
+        <View style={{
+          width: 20, height: 20, borderRadius: 10, marginRight: 9,
+          backgroundColor: clear ? T.teal : '#E6DCC9',
+          alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Text style={{ fontFamily: 'Plex', fontSize: 10, color: clear ? '#F7F1E4' : T.mute }}>
+            {clear ? '\u2713' : '\u2022'}
+          </Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 9.5, color: clear ? T.teal : T.ink }}>
+            {clear ? 'No harm pattern fired' : 'No help pattern fired yet'}
+          </Text>
+          <Text style={{ fontSize: 8, lineHeight: 1.45, marginTop: 1, color: T.mute }}>
+            {clear
+              ? 'Nothing in your answers crossed a harm threshold. That is a real result, not a blank.'
+              : 'Nothing crossed a help threshold yet. These are combinations, so they arrive together rather than one at a time.'}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+  return (
+    <View style={{ marginTop: 4 }}>
+      {hits.map((p) => (
+        <View key={p.id} wrap={false} style={{
+          borderWidth: 1, borderColor: T.hair, borderLeftWidth: 3, borderLeftColor: col,
+          borderRadius: 8, padding: 9, marginBottom: 6, backgroundColor: T.card,
+        }}>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 9.5, color: col }}>
+            {kind === 'help' ? '\u2191  ' : '\u2193  '}{p.label}
+          </Text>
+          <Text style={{ fontSize: 8, lineHeight: 1.45, marginTop: 2 }}>{p.narrative}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** One practice as a card, so the roadmap scans instead of reading as prose. */
+function PracticeCard({ rec, n }: { rec: CompassResult['recommendations'][number]; n: number }) {
+  const col = rec.priority === 'immediate' ? T.oxblood : rec.priority === 'developmental' ? T.gold : T.teal;
+  const Field = ({ k, v }: { k: string; v: string }) => (
+    <View style={{ flexDirection: 'row', marginTop: 3 }}>
+      <Text style={{ fontFamily: 'Plex', fontSize: 6, letterSpacing: 0.7, color: T.mute, width: 62 }}>
+        {k}
+      </Text>
+      <Text style={{ flex: 1, fontSize: 8, lineHeight: 1.45 }}>{v}</Text>
+    </View>
+  );
+  return (
+    <View wrap={false} style={{
+      borderWidth: 1, borderColor: T.hair, borderRadius: 8, padding: 10,
+      backgroundColor: T.card, marginBottom: 8,
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+        <View style={{
+          width: 16, height: 16, borderRadius: 8, backgroundColor: col,
+          alignItems: 'center', justifyContent: 'center', marginRight: 7,
+        }}>
+          <Text style={{ fontFamily: 'Plex', fontSize: 8, color: '#F7F1E4' }}>{n}</Text>
+        </View>
+        <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 10.5, flex: 1 }}>
+          {rec.capability}
+        </Text>
+        <Text style={{ fontFamily: 'Plex', fontSize: 6, letterSpacing: 0.8, color: col }}>
+          {rec.priority.toUpperCase()}
+        </Text>
+      </View>
+      <Field k="CHANGE" v={rec.behaviorChange} />
+      <Field k="PRACTICE" v={rec.practice} />
+      <Field k="PROGRESS" v={rec.evidenceOfProgress} />
+      <Field k="WATCH FOR" v={rec.riskToMonitor} />
+    </View>
+  );
+}
+
+/** Current position beside the next one. */
+function NextStagePanel({ r }: { r: CompassResult }) {
+  const atTop = r.nextTarget.stage === r.stage.stage;
+  return (
+    <View wrap={false} style={{ flexDirection: 'row', marginBottom: 8 }}>
+      <View style={{ flex: 1, borderWidth: 1, borderColor: T.hair, borderRadius: 8, padding: 9, marginRight: 8 }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 6, letterSpacing: 0.9, color: T.mute }}>NOW</Text>
+        <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 10 }}>
+          Stage {r.stage.stage}, {r.stage.stageName}
+        </Text>
+        <Text style={{ fontFamily: 'Plex', fontSize: 6.5, color: T.mute, marginTop: 2 }}>
+          {r.stage.substage} · index {r.stage.rawIndex}
+        </Text>
+      </View>
+      <View style={{ flex: 1, borderWidth: 1, borderColor: T.teal, borderRadius: 8, padding: 9 }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 6, letterSpacing: 0.9, color: T.mute }}>
+          {atTop ? 'MAINTAINING' : 'NEXT'}
+        </Text>
+        <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 10, color: T.teal }}>
+          Stage {r.nextTarget.stage}, {r.nextTarget.stageName}
+        </Text>
+        <Text style={{ fontFamily: 'Plex', fontSize: 6.5, color: T.mute, marginTop: 2 }}>
+          {atTop ? 'the loop that keeps it' : 'what it asks of you'}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 /* ----------------------------------------------------------------- pages */
 
 const Footer = () => (
@@ -646,7 +1068,29 @@ export async function generateCompassPdf(args: {
         by fixed page assignments, which is what keeps pages full.
       */}
       <Page size="A4" style={S.light} wrap>
-        <View style={S.section}>
+        {/* The map opens the page: a plate this tall cannot re-flow past a
+            page break, so it is placed where it always has full height. */}
+        <>
+          <View wrap={false}>
+            <Text style={S.eyebrow}>Where you are</Text>
+            <Text style={S.h2}>{byKey('continuum').title}</Text>
+            <View style={{ marginBottom: 8 }}><AscentMap r={r} /></View>
+            <Text style={{ fontFamily: 'Plex', fontSize: 6.5, color: T.mute, marginBottom: 10 }}>
+              {'Altitude reflects the developmental index, 0 at basecamp to 100 at the summit. '}
+              {'The marker sits at your exact index rather than at the middle of a stage, and the '}
+              {'gold marks are the practice gates, where a stage asks for a minimum reading before '}
+              {'it opens. '}
+              {r.stage.gated
+                ? `A gate is holding your stage at ${r.stage.stage} even though your index reads ${r.stage.rawIndex}, which the section below explains.`
+                : ''}
+            </Text>
+          </View>
+          <View wrap={false} style={{ marginBottom: 10 }}><Ladder r={r} /></View>
+          <Lines lines={byKey('continuum').lines} />
+          <View style={S.gap} />
+        </>
+
+        <>
           <View wrap={false} minPresenceAhead={70}>
             <Text style={S.eyebrow}>Your profile</Text>
             <Text style={S.h2}>{byKey('profile').title}</Text>
@@ -656,21 +1100,12 @@ export async function generateCompassPdf(args: {
             <Text style={S.h3}>The short version</Text>
             <Fingerprint r={r} />
           </View>
-        </View>
-
-        <View style={S.section}>
-          <View wrap={false}>
-            <Text style={S.eyebrow}>Where you are</Text>
-            <Text style={S.h2}>{byKey('continuum').title}</Text>
-            <View style={{ marginBottom: 10 }}><StripSvg r={r} /></View>
-          </View>
-          <View wrap={false} style={{ marginBottom: 10 }}><Ladder r={r} /></View>
-          <Lines lines={byKey('continuum').lines} />
-        </View>
+          <View style={S.gap} />
+        </>
 
         {comparison ? <Comparison c={comparison} /> : null}
 
-        <View style={S.section}>
+        <>
           <View wrap={false}>
             <Text style={S.eyebrow}>The full picture</Text>
             <Text style={S.h2}>{byKey('signature').title}</Text>
@@ -684,49 +1119,99 @@ export async function generateCompassPdf(args: {
           </View>
           <View wrap={false} style={{ marginBottom: 8 }}><Composites r={r} /></View>
           <Lines lines={upTo(byKey('signature').lines, 'Each dimension, unpacked')} />
-        </View>
+          <View style={S.gap} />
+        </>
 
         {/* the ten dimensions as cards, replacing ten blocks of prose */}
-        <View style={S.section}>
+        <>
           <View wrap={false} minPresenceAhead={90}>
             <Text style={S.eyebrow}>Each dimension, unpacked</Text>
             <Text style={S.h2}>Your ten dimensions, worst first</Text>
           </View>
           {[...dimensionDetails(r)].sort((a, b) => a.healthy - b.healthy)
             .map((d) => <DimCard key={d.construct} d={d} />)}
-        </View>
+          <View style={S.gap} />
+        </>
 
-        <SectionBlock s={byKey('helping')} />
-        <SectionBlock s={byKey('harming')} />
-        <SectionBlock s={byKey('strengths')} />
-        <SectionBlock s={byKey('selfKnowledge')} />
-        <SectionBlock s={byKey('bottleneck')} />
-        <SectionBlock s={byKey('nextStage')} />
+        <>
+          <View wrap={false} minPresenceAhead={70}>
+            <Text style={S.eyebrow}>What is working</Text>
+            <Text style={S.h2}>{byKey('helping').title}</Text>
+          </View>
+          <Lines lines={withoutBullets(byKey('helping').lines)} />
+          <PatternCards r={r} kind="help" />
+          <View style={S.gap} />
+        </>
 
-        <View style={S.section}>
+        <>
+          <View wrap={false} minPresenceAhead={70}>
+            <Text style={S.eyebrow}>What to watch</Text>
+            <Text style={S.h2}>{byKey('harming').title}</Text>
+          </View>
+          <Lines lines={withoutBullets(byKey('harming').lines)} />
+          <PatternCards r={r} kind="harm" />
+          <View style={S.gap} />
+        </>
+
+        <>
+          <View wrap={false} minPresenceAhead={90}>
+            <Text style={S.eyebrow}>At a glance</Text>
+            <Text style={S.h2}>{byKey('strengths').title}</Text>
+            <View style={{ marginBottom: 8 }}><ThresholdStrip r={r} /></View>
+          </View>
+          <Lines lines={byKey('strengths').lines} />
+          <View style={S.gap} />
+        </>
+
+        <>
+          <View wrap={false} minPresenceAhead={80}>
+            <Text style={S.eyebrow}>Feel against measure</Text>
+            <Text style={S.h2}>{byKey('selfKnowledge').title}</Text>
+            <CalibrationScale r={r} />
+          </View>
+          <Lines lines={byKey('selfKnowledge').lines} />
+          <View style={S.gap} />
+        </>
+        <>
+          <View wrap={false} minPresenceAhead={80}>
+            <Text style={S.eyebrow}>The constraint</Text>
+            <Text style={S.h2}>{byKey('bottleneck').title}</Text>
+            <GateGap r={r} />
+          </View>
+          <Lines lines={byKey('bottleneck').lines} />
+          <View style={S.gap} />
+        </>
+
+        <>
+          <View wrap={false} minPresenceAhead={80}>
+            <Text style={S.eyebrow}>Where next</Text>
+            <Text style={S.h2}>{byKey('nextStage').title}</Text>
+            <NextStagePanel r={r} />
+          </View>
+          <Lines lines={byKey('nextStage').lines} />
+          <View style={S.gap} />
+        </>
+
+        <>
           <View wrap={false} minPresenceAhead={90}>
             <Text style={S.eyebrow}>Section 10</Text>
             <Text style={S.h2}>{byKey('roadmap').title}</Text>
           </View>
           {r.recommendations.map((rec, i) => (
-            <View key={i} style={{ marginBottom: 12 }} wrap={false}>
-              <Text style={S.h3}>{rec.capability} ({rec.priority})</Text>
-              <Text style={S.body}><Text style={{ fontWeight: 700 }}>Change: </Text>{rec.behaviorChange}</Text>
-              <Text style={S.body}><Text style={{ fontWeight: 700 }}>Practice: </Text>{rec.practice}</Text>
-              <Text style={S.body}><Text style={{ fontWeight: 700 }}>Progress looks like: </Text>{rec.evidenceOfProgress}</Text>
-              <Text style={S.body}><Text style={{ fontWeight: 700 }}>Watch for: </Text>{rec.riskToMonitor}</Text>
-            </View>
+            <PracticeCard key={i} rec={rec} n={i + 1} />
           ))}
-        </View>
+          <View style={S.gap} />
+        </>
 
-        <View style={S.section}>
+        <>
           <View wrap={false} minPresenceAhead={90}>
             <Text style={S.eyebrow}>What to do</Text>
             <Text style={S.h2}>{byKey('plan').title}</Text>
           </View>
           <Lines lines={introOnly(byKey('plan').lines)} />
           <Plan r={r} />
-        </View>
+          <View style={S.gap} />
+        </>
 
         <SectionBlock s={byKey('evidence')} />
 
