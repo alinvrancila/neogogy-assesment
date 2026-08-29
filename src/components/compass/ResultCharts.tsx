@@ -11,7 +11,7 @@
 
 import type { CompassResult, DimensionDetail } from '@/engine';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
-import { bandColor } from './Visuals';
+import { bandColor, bandTextColor } from './Visuals';
 
 const stateWord = (s: DimensionDetail['microState']) =>
   s === 'strong' ? 'Strength' : s === 'developing' ? 'Developing' : 'Needs attention';
@@ -24,6 +24,7 @@ function ScoreRing({ value, healthy, size = 74 }: { value: number; healthy: numb
   const circ = 2 * Math.PI * r;
   const filled = Math.max(0, Math.min(100, value)) / 100;
   const col = bandColor(healthy);
+  const textCol = bandTextColor(healthy);
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true" className="score-ring">
       <circle cx={c} cy={c} r={r} fill="none" stroke="#EDE5D7" strokeWidth={7} />
@@ -31,7 +32,7 @@ function ScoreRing({ value, healthy, size = 74 }: { value: number; healthy: numb
         cx={c} cy={c} r={r} fill="none" stroke={col} strokeWidth={7} strokeLinecap="round"
         strokeDasharray={`${circ * filled} ${circ}`} transform={`rotate(-90 ${c} ${c})`}
       />
-      <text x={c} y={c + 5} textAnchor="middle" className="score-ring-n" fill={col}>{value}</text>
+      <text x={c} y={c + 5} textAnchor="middle" className="score-ring-n" fill={textCol}>{value}</text>
     </svg>
   );
 }
@@ -115,7 +116,7 @@ export function FingerprintMeters({ readings }: { readings: Array<{ level: strin
           <div className="fp-row" key={r.label}>
             <span className="fp-label">{r.label}</span>
             <span className="fp-track"><span style={{ width: `${p}%`, background: col }} /></span>
-            <span className="fp-level" style={{ color: col }}>{r.level}</span>
+            <span className="fp-level" style={{ color: bandTextColor(healthyFor(r.label, p)) }}>{r.level}</span>
           </div>
         );
       })}
@@ -146,7 +147,7 @@ export function GateGap({ result }: { result: CompassResult }) {
     <div className="gategap">
       <div className="gg-head">
         <span className="gg-name">{CONSTRUCTS[c].name}</span>
-        <span className="gg-now" style={{ color: bandColor(d.score) }}>{d.score}</span>
+        <span className="gg-now" style={{ color: bandTextColor(d.score) }}>{d.score}</span>
       </div>
       <div className="gg-track">
         <span className="gg-fill" style={{ width: `${Math.max(2, d.score)}%`, background: bandColor(d.score) }} />
@@ -191,7 +192,7 @@ export function ThresholdStrip({ result }: { result: CompassResult }) {
             <b className="ts-line ts-l65" />
             <span className="ts-dot" style={{ left: `${r.healthy}%`, background: bandColor(r.healthy) }} />
           </span>
-          <span className="ts-val" style={{ color: bandColor(r.healthy) }}>{r.shown}</span>
+          <span className="ts-val" style={{ color: bandTextColor(r.healthy) }}>{r.shown}</span>
         </div>
       ))}
       <p className="ts-note">
@@ -206,25 +207,58 @@ export function ThresholdStrip({ result }: { result: CompassResult }) {
 
 export function CalibrationScale({ result }: { result: CompassResult }) {
   const { desirabilityGap, calibrationGap } = result.calibration;
-  // Measured band from the same ladder the engine uses.
   const idx = result.stage.rawIndex;
+  // The same band ladder the engine uses for the gaps.
   const measured = idx >= 80 ? 5 : idx >= 62 ? 4 : idx >= 44 ? 3 : idx >= 26 ? 2 : 1;
-  const felt = desirabilityGap !== undefined ? measured + desirabilityGap : undefined;
-  const predicted = calibrationGap !== undefined ? measured + calibrationGap : undefined;
-  const at = (band: number) => `${((band - 0.5) / 5) * 100}%`;
+  const clamp = (b: number) => Math.max(1, Math.min(5, b));
+
+  const rows: Array<{ key: string; label: string; band: number; note: string; tone: string }> = [];
+  if (desirabilityGap !== undefined) {
+    rows.push({
+      key: 'felt', label: 'How it felt', band: clamp(measured + desirabilityGap),
+      note: 'Before any questions', tone: 'felt',
+    });
+  }
+  if (calibrationGap !== undefined) {
+    rows.push({
+      key: 'pred', label: 'What you predicted', band: clamp(measured + calibrationGap),
+      note: 'Your own forecast', tone: 'pred',
+    });
+  }
+  rows.push({
+    key: 'meas', label: 'What your answers measured', band: measured,
+    note: 'The result', tone: 'meas',
+  });
+
+  const BANDS = ['Lowest', 'Lower', 'Middle', 'Higher', 'Highest'];
 
   return (
     <div className="calib">
-      <div className="cal-track" aria-hidden="true">
-        {[1, 2, 3, 4, 5].map((b) => <span className="cal-seg" key={b} />)}
-        {felt !== undefined ? <span className="cal-pin cal-felt" style={{ left: at(felt) }}><i />Felt</span> : null}
-        {predicted !== undefined ? <span className="cal-pin cal-pred" style={{ left: at(predicted) }}><i />Predicted</span> : null}
-        <span className="cal-pin cal-meas" style={{ left: at(measured) }}><i />Measured</span>
+      {/* Each reading gets its own row, so two markers on the same band can
+          never sit on top of one another. */}
+      {rows.map((r) => (
+        <div className={`cal-row tone-${r.tone}`} key={r.key}>
+          <span className="cal-label">
+            {r.label}
+            <em>{r.note}</em>
+          </span>
+          <span className="cal-scale" role="img" aria-label={`${r.label}: band ${r.band} of 5`}>
+            {[1, 2, 3, 4, 5].map((b) => (
+              <span key={b} className={`cal-seg${b === r.band ? ' is-on' : ''}`}>
+                {b === r.band ? <b /> : null}
+              </span>
+            ))}
+          </span>
+          <span className="cal-band">{BANDS[r.band - 1]}</span>
+        </div>
+      ))}
+      <div className="cal-axis" aria-hidden="true">
+        {BANDS.map((b) => <span key={b}>{b}</span>)}
       </div>
-      <div className="cal-ends"><span>lower band</span><span>higher band</span></div>
       <p className="cal-note">
-        Three readings on the same five band scale: how healthy it felt before you started, where you
-        predicted you would land, and where your answers actually placed you.
+        Three readings on one five band scale: how healthy your relationship with AI felt before you
+        started, where you predicted you would land, and where your answers actually placed you. The
+        first two were never scored.
       </p>
     </div>
   );

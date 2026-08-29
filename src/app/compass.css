@@ -2655,50 +2655,85 @@
   .nfc .ts-row { grid-template-columns: 130px 1fr 42px; }
 }
 
-/* ---- calibration scale ---- */
+/* ---- calibration scale ----
+   Three separate rows rather than pins on one axis: two readings landing on the
+   same band used to sit on top of each other and read as a broken chart. */
 .nfc .calib { margin: 4px 0 16px; }
 
-.nfc .cal-track {
-  position: relative;
+.nfc .cal-row {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 3px;
-  height: 26px;
-  margin-top: 42px;
+  grid-template-columns: 190px 1fr 76px;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 0;
 }
 
-.nfc .cal-seg { background: #EDE5D7; border-radius: 4px; }
-
-.nfc .cal-pin {
-  position: absolute;
-  top: -38px;
-  transform: translateX(-50%);
+.nfc .cal-label { font-size: .92rem; font-weight: 600; }
+.nfc .cal-label em {
+  display: block;
   font-family: var(--f-mono);
   font-size: 9.5px;
+  font-style: normal;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--asc-muted);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.nfc .cal-scale {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+
+.nfc .cal-seg {
+  position: relative;
+  height: 16px;
+  border-radius: 4px;
+  background: #EDE5D7;
+}
+
+.nfc .cal-seg b {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  display: block;
+}
+
+.nfc .tone-felt .cal-seg.is-on b { background: var(--asc-gold); }
+.nfc .tone-pred .cal-seg.is-on b { background: #8a6b91; }
+.nfc .tone-meas .cal-seg.is-on b { background: var(--asc-oxblood); }
+
+.nfc .cal-band {
+  font-family: var(--f-mono);
+  font-size: 10.5px;
   letter-spacing: .06em;
   text-transform: uppercase;
-  white-space: nowrap;
+  color: var(--asc-muted);
+  text-align: right;
+}
+
+.nfc .cal-axis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin: 4px 0 0 204px;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--asc-muted);
   text-align: center;
 }
 
-.nfc .cal-pin i {
-  display: block;
-  width: 2px; height: 30px;
-  margin: 4px auto 0;
-  background: currentColor;
+.nfc .cal-note { font-size: .85rem; line-height: 1.55; color: var(--asc-muted); margin: 12px 0 0; }
+
+@media (max-width: 700px) {
+  .nfc .cal-row { grid-template-columns: 1fr 70px; }
+  .nfc .cal-scale { grid-column: 1 / -1; }
+  .nfc .cal-axis { display: none; }
 }
-
-.nfc .cal-felt { color: var(--asc-gold); }
-.nfc .cal-pred { color: #6b4a72; top: -62px; }
-.nfc .cal-pred i { height: 54px; }
-.nfc .cal-meas { color: var(--asc-oxblood); font-weight: 600; }
-
-.nfc .cal-ends {
-  display: flex; justify-content: space-between;
-  font-family: var(--f-mono); font-size: 9.5px; color: var(--asc-muted); margin-top: 6px;
-}
-
-.nfc .cal-note { font-size: .85rem; line-height: 1.5; color: var(--asc-muted); margin: 10px 0 0; }
 
 /* ---- pattern cards ---- */
 .nfc .patterns { display: grid; gap: 10px; margin-top: 12px; }
@@ -2725,3 +2760,40 @@
 
 .nfc .pattern h4 { font-family: var(--f-display); font-size: 1.02rem; font-weight: 640; margin: 0 0 4px; }
 .nfc .pattern p { font-size: .9rem; line-height: 1.55; color: var(--asc-muted); margin: 0; }
+
+
+/* ---------------------------------------------------------------------------
+   The closing block was a dark maroon panel in v1. The palette pass changed its
+   background to cream but left the text ivory, so everything except the button
+   went invisible. Its colours now come from the ascent palette.
+   --------------------------------------------------------------------------- */
+.nfc .results .results-cta {
+  background: var(--asc-card);
+  border: 1px solid var(--asc-border);
+  color: var(--asc-ink);
+  overflow: visible;
+}
+
+.nfc .results .results-cta::after { display: none; }
+
+.nfc .results .results-cta h3 { color: var(--asc-oxblood); }
+
+.nfc .results .results-cta p {
+  color: var(--asc-muted);
+  font-weight: 400;
+}
+
+.nfc .results .results-cta .btn-primary {
+  background: var(--asc-oxblood);
+  color: #F7F1E4;
+}
+
+.nfc .results .results-cta .btn-primary:hover { background: #6a1f27; }
+
+.nfc .results .results-cta .btn-ghost {
+  color: var(--asc-oxblood);
+  border-color: var(--asc-border);
+  background: transparent;
+}
+
+.nfc .results .results-cta .btn-ghost:hover { background: rgba(125, 39, 48, .07); }

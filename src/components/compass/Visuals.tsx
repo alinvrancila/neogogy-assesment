@@ -291,6 +291,14 @@ export function ReportPreview() {
 export const bandColor = (healthy: number): string =>
   healthy >= 65 ? '#159E88' : healthy >= 40 ? '#E5AA45' : '#CF796E';
 
+/**
+ * Darker variants for text. The fill colours are tuned for bars and dots on
+ * cream; used as type they fall below a readable contrast ratio, the amber
+ * worst of all at about 1.95 to 1.
+ */
+export const bandTextColor = (healthy: number): string =>
+  healthy >= 65 ? '#0F7A69' : healthy >= 40 ? '#A9741F' : '#B4564A';
+
 export const bandName = (healthy: number): string =>
   healthy >= 65 ? 'strong' : healthy >= 40 ? 'developing' : 'watch';
 
@@ -372,7 +380,7 @@ export function DimensionBars({ result }: { result: CompassResult }) {
             <div className="bar-track">
               <span className="bar-fill" style={{ width: `${Math.max(2, shownValue)}%`, background: color }} />
             </div>
-            <div className="bar-val" style={{ color }}>{shownValue}</div>
+            <div className="bar-val" style={{ color: bandTextColor(d.score) }}>{shownValue}</div>
           </div>
         );
       })}
@@ -403,7 +411,7 @@ export function CompositesPanel({ result }: { result: CompassResult }) {
     <div className="composites">
       {rows.map((r) => (
         <div className="comp-card" key={r.label}>
-          <div className="comp-val" style={{ color: bandColor(r.healthy) }}>{r.value}</div>
+          <div className="comp-val" style={{ color: bandTextColor(r.healthy) }}>{r.value}</div>
           <div className="comp-label">{r.label}</div>
           <div className="comp-track">
             <span style={{ width: `${Math.max(2, r.value)}%`, background: bandColor(r.healthy) }} />

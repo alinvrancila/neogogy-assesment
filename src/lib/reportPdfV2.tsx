@@ -44,6 +44,10 @@ const T = {
 const bandColor = (healthy: number) =>
   healthy >= 65 ? '#159E88' : healthy >= 40 ? '#E5AA45' : '#CF796E';
 
+/** Darker variants for type: the fill colours are not legible as text on cream. */
+const bandTextColor = (healthy: number) =>
+  healthy >= 65 ? '#0F7A69' : healthy >= 40 ? '#A9741F' : '#B4564A';
+
 /** The painted backdrop, shared with the web page. Decorative only. */
 const BACKDROP = path.join(process.cwd(), 'public', 'ascent-backdrop.jpg');
 
@@ -310,7 +314,7 @@ function Bars({ r }: { r: CompassResult }) {
             <View style={{ flex: 1, height: 7, borderRadius: 4, backgroundColor: '#EDE5D7' }}>
               <View style={{ width: `${Math.max(2, shown)}%`, height: 7, borderRadius: 4, backgroundColor: col }} />
             </View>
-            <Text style={{ fontFamily: 'Plex', fontSize: 8, width: 30, textAlign: 'right', color: col }}>{shown}</Text>
+            <Text style={{ fontFamily: 'Plex', fontSize: 8, width: 30, textAlign: 'right', color: bandTextColor(d.score) }}>{shown}</Text>
           </View>
         );
       })}
@@ -344,7 +348,7 @@ function Composites({ r }: { r: CompassResult }) {
           width: '31.5%', marginRight: '2.75%', marginBottom: 8,
           borderWidth: 1, borderColor: T.hair, borderRadius: 8, padding: 8, backgroundColor: T.card,
         }}>
-          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 15, color: bandColor(healthy) }}>{value}</Text>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 15, color: bandTextColor(healthy) }}>{value}</Text>
           <Text style={{ fontSize: 8, fontWeight: 700, marginTop: 1 }}>{label}</Text>
           <View style={{ height: 4, borderRadius: 2, backgroundColor: '#EDE5D7', marginTop: 4, marginBottom: 4 }}>
             <View style={{ width: `${Math.max(2, value)}%`, height: 4, borderRadius: 2, backgroundColor: bandColor(healthy) }} />
@@ -367,10 +371,10 @@ function DimCard({ d }: { d: DimensionDetail }) {
       borderRadius: 8, padding: 10, marginBottom: 8, backgroundColor: T.card,
     }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-        <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 17, color: col, width: 42 }}>{d.shown}</Text>
+        <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 17, color: bandTextColor(d.healthy), width: 42 }}>{d.shown}</Text>
         <View style={{ flex: 1 }}>
           <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 10.5 }}>{d.label}</Text>
-          <Text style={{ fontFamily: 'Plex', fontSize: 6.5, letterSpacing: 0.8, color: col, marginTop: 1 }}>
+          <Text style={{ fontFamily: 'Plex', fontSize: 6.5, letterSpacing: 0.8, color: bandTextColor(d.healthy), marginTop: 1 }}>
             {state}{d.confidence !== 'high' ? `  ·  ${d.confidence.toUpperCase()}` : ''}
           </Text>
         </View>
@@ -423,7 +427,7 @@ function Fingerprint({ r }: { r: CompassResult }) {
             <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: '#EDE5D7' }}>
               <View style={{ width: `${p}%`, height: 6, borderRadius: 3, backgroundColor: bandColor(healthy) }} />
             </View>
-            <Text style={{ fontFamily: 'Plex', fontSize: 6.5, width: 52, textAlign: 'right', color: bandColor(healthy) }}>
+            <Text style={{ fontFamily: 'Plex', fontSize: 6.5, width: 52, textAlign: 'right', color: bandTextColor(healthy) }}>
               {f.level.toUpperCase()}
             </Text>
           </View>
