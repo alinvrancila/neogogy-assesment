@@ -50,6 +50,8 @@ const bandTextColor = (healthy: number) =>
 
 /** The painted backdrop, shared with the web page. Decorative only. */
 const BACKDROP = path.join(process.cwd(), 'public', 'ascent-backdrop.jpg');
+/** Dusk variant, used full bleed on the cover. Decorative only. */
+const COVER_ART = path.join(process.cwd(), 'public', 'ascent-cover.jpg');
 
 const fontPath = (f: string) => path.join(process.cwd(), 'src', 'fonts', f);
 Font.register({
@@ -78,6 +80,10 @@ const S = StyleSheet.create({
     paddingTop: 42, paddingBottom: 46, paddingHorizontal: M, fontFamily: 'Spectral',
   },
   cover: {
+    backgroundColor: '#14120F', color: T.ivory,
+    fontFamily: 'Spectral',
+  },
+  closing: {
     backgroundColor: T.paper, color: T.ink,
     paddingTop: 42, paddingBottom: 46, paddingHorizontal: M, fontFamily: 'Spectral',
   },
@@ -508,65 +514,112 @@ const Footer = () => (
 );
 
 function Cover({ r, name, dateStr }: { r: CompassResult; name: string; dateStr: string }) {
-  const head = reportHead(r);
+  const IVORY = '#F7F1E4';
+  const SOFT = 'rgba(247,241,228,0.74)';
+  const FAINT = 'rgba(247,241,228,0.55)';
+
+  // The archetype is the headline. Long names are given a smaller size so they
+  // still fit on two lines rather than overflowing the page.
+  const archetype = r.archetype.name;
+  const archSize = archetype.length > 22 ? 34 : archetype.length > 16 ? 40 : 46;
+
   return (
     <Page size="A4" style={S.cover}>
-      {/* the same painted illustration the web page uses. This is react-pdf's
-          Image primitive, not a DOM img, so it has no alt prop. */}
-      {/* eslint-disable-next-line jsx-a11y/alt-text */}
-      <Image src={BACKDROP} style={{ position: 'absolute', bottom: 0, left: 0, width: PAGE.w, height: PAGE.h * 0.52 }} />
-      <View style={{ position: 'absolute', top: 0, left: 0, width: PAGE.w, height: PAGE.h * 0.62, backgroundColor: T.paper, opacity: 0.55 }} />
-      <View style={{ marginTop: 40 }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 8.5, letterSpacing: 1.6, textTransform: 'uppercase', color: T.teal, marginBottom: 12 }}>
-          Neogogy · AI relationship assessment
-        </Text>
-        <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 40, color: T.oxblood, lineHeight: 1.06 }}>
-          Your ascent with AI
-        </Text>
-        <Text style={{ fontSize: 11.5, color: T.mute, marginTop: 10, lineHeight: 1.55, maxWidth: 380 }}>
-          A developmental reading of how AI currently supports, or starts to substitute for, your
-          judgment, capability and creative agency. A journey, not a verdict.
+      {/* full bleed dusk scene, decorative only */}
+      <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text */}
+        <Image src={COVER_ART} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </View>
+
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: M, paddingTop: 54 }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 8, letterSpacing: 2.4, color: '#4FD3B8' }}>
+          NEOGOGY  ·  THE FORMATION COMPASS
         </Text>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 26 }}>
-          <View style={{
-            width: 96, height: 96, borderRadius: 48, backgroundColor: T.oxblood,
-            alignItems: 'center', justifyContent: 'center', marginRight: 18,
-          }}>
-            <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 26, color: T.ivory }}>
-              {r.stage.rawIndex}
-            </Text>
-            <Text style={{ fontFamily: 'Plex', fontSize: 5.6, letterSpacing: 1, color: T.ivory, marginTop: 2 }}>
-              DEVELOPMENTAL INDEX
-            </Text>
-          </View>
-          <View>
-            <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 15, color: T.ink }}>
-              Stage {r.stage.stage} of 10, {r.stage.stageName}
-            </Text>
-            <Text style={{ fontFamily: 'Plex', fontSize: 9, color: T.mute, marginTop: 4 }}>
-              {r.stage.substage} · {confidenceLabel(r.overallConfidence)}
-            </Text>
-            <Text style={{ fontFamily: 'Spectral', fontSize: 10.5, color: T.mute, marginTop: 6, maxWidth: 230 }}>
-              {r.archetype.name}. {r.archetype.tagline}
-            </Text>
-          </View>
+        {/* the reader's own name, given real presence */}
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.8, color: FAINT, marginTop: 40 }}>
+          PREPARED FOR
+        </Text>
+        <Text style={{
+          fontFamily: 'Spectral', fontWeight: 700, fontSize: 30, color: IVORY,
+          marginTop: 6, lineHeight: 1.12,
+        }}>
+          {name || 'Your report'}
+        </Text>
+
+        <View style={{ height: 1, backgroundColor: 'rgba(247,241,228,0.28)', marginTop: 26, marginBottom: 26 }} />
+
+        {/* the result, as the headline */}
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.8, color: FAINT }}>
+          YOUR ASCENT WITH AI
+        </Text>
+        <Text style={{
+          fontFamily: 'Spectral', fontWeight: 800, fontSize: archSize, color: IVORY,
+          marginTop: 10, lineHeight: 1.04,
+        }}>
+          {archetype}
+        </Text>
+        <Text style={{
+          fontFamily: 'Spectral', fontSize: 12.5, color: SOFT, marginTop: 12,
+          lineHeight: 1.5, maxWidth: 340,
+        }}>
+          {r.archetype.tagline}
+        </Text>
+      </View>
+
+      {/* the stage band sits over the brightest part of the glow, so it
+          carries its own scrim rather than relying on the artwork */}
+      <View style={{
+        position: 'absolute', left: 0, right: 0, bottom: 96,
+        height: 148, backgroundColor: '#14120F', opacity: 0.42,
+      }} />
+
+      {/* stage and index, sitting over the glow near the horizon */}
+      <View style={{
+        position: 'absolute', left: M, right: M, bottom: 118,
+        flexDirection: 'row', alignItems: 'center',
+      }}>
+        <View style={{
+          width: 104, height: 104, borderRadius: 52,
+          borderWidth: 1.6, borderColor: 'rgba(247,241,228,0.55)',
+          alignItems: 'center', justifyContent: 'center', marginRight: 20,
+          backgroundColor: 'rgba(20,18,15,0.58)',
+        }}>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 30, color: IVORY }}>
+            {r.stage.rawIndex}
+          </Text>
+          <Text style={{ fontFamily: 'Plex', fontSize: 5.4, letterSpacing: 1.1, color: IVORY, marginTop: 3, opacity: 0.82 }}>
+            DEVELOPMENTAL INDEX
+          </Text>
         </View>
 
-        <View style={{ marginTop: 26 }}>
-          <StripSvg r={r} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.6, color: '#4FD3B8' }}>
+            STAGE {r.stage.stage} OF 10
+          </Text>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 21, color: IVORY, marginTop: 3 }}>
+            {r.stage.stageName}
+          </Text>
+          <Text style={{ fontFamily: 'Plex', fontSize: 8, color: IVORY, marginTop: 5, opacity: 0.86 }}>
+            {r.stage.substage}  ·  {confidenceLabel(r.overallConfidence).toLowerCase()}
+          </Text>
         </View>
       </View>
 
-      {/* sits over the painted area, so it carries its own light plate */}
+      {/* a quiet line of orientation, and the imprint */}
+      <View style={{ position: 'absolute', left: M, right: M, bottom: 52 }}>
+        <View style={{ height: 1, backgroundColor: 'rgba(247,241,228,0.22)', marginBottom: 12 }} />
+        <Text style={{ fontFamily: 'Spectral', fontSize: 10, color: SOFT, lineHeight: 1.5 }}>
+          A journey, not a verdict. The summit is a direction, not a finish line.
+        </Text>
+      </View>
+
       <View style={{
-        position: 'absolute', bottom: 30, left: M, right: M,
+        position: 'absolute', left: M, right: M, bottom: 26,
         flexDirection: 'row', justifyContent: 'space-between',
-        backgroundColor: T.paper, opacity: 0.92,
-        paddingVertical: 7, paddingHorizontal: 12, borderRadius: 6,
       }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 8.5, color: T.ink }}>{name || 'Your report'}</Text>
-        <Text style={{ fontFamily: 'Plex', fontSize: 8.5, color: T.ink }}>{dateStr}</Text>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: FAINT }}>{dateStr}</Text>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: FAINT }}>assessment.neogogy.ai</Text>
       </View>
     </Page>
   );
@@ -681,7 +734,7 @@ export async function generateCompassPdf(args: {
       </Page>
 
       {/* Closing */}
-      <Page size="A4" style={S.cover}>
+      <Page size="A4" style={S.closing}>
         {/* eslint-disable-next-line jsx-a11y/alt-text */}
         <Image src={BACKDROP} style={{ position: 'absolute', bottom: 0, left: 0, width: PAGE.w, height: PAGE.h * 0.42, opacity: 0.85 }} />
         <View style={{ position: 'absolute', top: 0, left: 0, width: PAGE.w, height: PAGE.h * 0.6, backgroundColor: T.paper, opacity: 0.5 }} />

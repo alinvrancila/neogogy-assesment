@@ -157,3 +157,108 @@ export function backdropSvg() {
   <rect width="${W}" height="${H}" fill="url(#vig)"/>
 </svg>`;
 }
+
+/**
+ * Cover variant: the same range at dusk, for the report cover.
+ *
+ * Deeper, cooler rock against a warm horizon glow, so large light type reads
+ * cleanly over the lower two thirds. Still decorative: no data is encoded.
+ */
+export const CW = 1800;
+export const CH = 2546; // A4 proportion
+
+export function coverSvg() {
+  function range({ seed, peaks, baseY, startY, endY, jitter, roughness = 3 }) {
+    const rand = rng(seed);
+    const left = -200, right = CW + 200, span = right - left;
+    const pts = [[left, baseY]];
+    for (let i = 0; i <= peaks; i++) {
+      const t = i / peaks;
+      const x = left + span * t;
+      const ridge = startY + (endY - startY) * t;
+      const isPeak = i % 2 === 0;
+      const amp = jitter * (0.5 + rand() * 1.0);
+      const y = isPeak ? ridge - amp : ridge + amp * 0.5;
+      if (i > 0) {
+        for (let k = 1; k <= roughness; k++) {
+          const tt = (i - 1 + k / (roughness + 1)) / peaks;
+          const xx = left + span * tt;
+          const rr = startY + (endY - startY) * tt;
+          pts.push([xx, rr + (rand() - 0.35) * jitter * 0.85]);
+        }
+      }
+      pts.push([x, y]);
+    }
+    pts.push([right, baseY]);
+    return pts.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${CW}" height="${CH}" viewBox="0 0 ${CW} ${CH}">
+  <defs>
+    <linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#23262F"/>
+      <stop offset="34%"  stop-color="#3B3730"/>
+      <stop offset="58%"  stop-color="#7A5F3C"/>
+      <stop offset="72%"  stop-color="#C08B4A"/>
+      <stop offset="84%"  stop-color="#8A6636"/>
+      <stop offset="100%" stop-color="#2E2A24"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="66%" cy="72%" r="34%">
+      <stop offset="0%"   stop-color="#FFD9A0" stop-opacity="0.95"/>
+      <stop offset="45%"  stop-color="#E9A85C" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#E9A85C" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="m1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6B5F53"/><stop offset="100%" stop-color="#4A4239"/>
+    </linearGradient>
+    <linearGradient id="m2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4A4038"/><stop offset="100%" stop-color="#332D28"/>
+    </linearGradient>
+    <linearGradient id="m3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2E2823"/><stop offset="100%" stop-color="#1D1A17"/>
+    </linearGradient>
+    <linearGradient id="m4" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#171512"/><stop offset="100%" stop-color="#0E0D0B"/>
+    </linearGradient>
+    <linearGradient id="topShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#14161C" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#14161C" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="soft2"><feGaussianBlur stdDeviation="40"/></filter>
+    <filter id="paintC" x="-6%" y="-6%" width="112%" height="112%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.010" numOctaves="4" seed="9" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="30" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="grainC" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" seed="4" result="n"/>
+      <feColorMatrix in="n" type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.13"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="${CW}" height="${CH}" fill="url(#dusk)"/>
+  <rect width="${CW}" height="${CH}" fill="url(#sun)"/>
+
+  <!-- haze above the horizon -->
+  <rect x="-100" y="${CH * 0.66}" width="${CW + 200}" height="220" fill="#E7B473" opacity="0.20" filter="url(#soft2)"/>
+
+  <!-- receding ranges, far to near -->
+  <g filter="url(#paintC)">
+    <polygon points="${range({ seed: 5,  peaks: 15, baseY: CH, startY: CH * 0.80, endY: CH * 0.60, jitter: 120 })}" fill="url(#m1)" opacity="0.75"/>
+  </g>
+  <rect x="-100" y="${CH * 0.70}" width="${CW + 200}" height="200" fill="#D9A468" opacity="0.16" filter="url(#soft2)"/>
+  <g filter="url(#paintC)">
+    <polygon points="${range({ seed: 21, peaks: 11, baseY: CH, startY: CH * 0.86, endY: CH * 0.66, jitter: 150 })}" fill="url(#m2)" opacity="0.9"/>
+  </g>
+  <g filter="url(#paintC)">
+    <polygon points="${range({ seed: 47, peaks: 9,  baseY: CH, startY: CH * 0.92, endY: CH * 0.73, jitter: 165 })}" fill="url(#m3)"/>
+  </g>
+  <g filter="url(#paintC)">
+    <polygon points="${range({ seed: 83, peaks: 7,  baseY: CH + 60, startY: CH * 0.99, endY: CH * 0.84, jitter: 150 })}" fill="url(#m4)"/>
+  </g>
+
+  <!-- keeps the upper third dark so large light type stays readable -->
+  <rect width="${CW}" height="${CH * 0.62}" fill="url(#topShade)"/>
+  <rect width="${CW}" height="${CH}" filter="url(#grainC)" opacity="0.7" style="mix-blend-mode:overlay"/>
+</svg>`;
+}
