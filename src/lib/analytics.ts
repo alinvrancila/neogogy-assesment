@@ -9,7 +9,7 @@
  * same claim as a mean over three hundred and the admin needs to see which
  * it is looking at.
  */
-import type { LeadRecord } from '@/lib/storage';
+import type { LeadRecord, SubmissionMeta } from '@/lib/storage';
 import type { CompassResult } from '@/engine';
 import type { ConstructId } from '@/engine/types';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
@@ -31,6 +31,13 @@ export interface Attempt {
   createdAt: string;
   result: CompassResult;
   rescored: boolean;
+  /** Everything asked of the respondent outside the scored items. */
+  heardFrom: string;
+  consent: boolean;
+  hasPhone: boolean;
+  answers: Record<string, number>;
+  baseline: { b1: number; b2: number } | null;
+  meta?: SubmissionMeta;
 }
 
 /** One person, with every attempt they have made, oldest first. */
@@ -71,6 +78,12 @@ export function toAttempts(leads: LeadRecord[]): Attempt[] {
       createdAt: l.createdAt || '',
       result: l.result as CompassResult,
       rescored: !!l.rescoredFrom,
+      heardFrom: (l.heardFrom || '').trim(),
+      consent: !!l.consent,
+      hasPhone: !!(l.mobilePhone || '').trim(),
+      answers: (l.answers || {}) as Record<string, number>,
+      baseline: l.baseline ?? null,
+      meta: l.meta,
     }))
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
@@ -410,4 +423,175 @@ export function buildOrgReports(people: Person[], minPeople = 2): OrgReport[] {
     });
   }
   return out.sort((a, b) => b.people - a.people);
+}
+
+
+/* ------------------------------------------------- audience and quality */
+
+export interface AudienceReport {
+  /** Where people say they heard about it. Asked at the gate, never shown before. */
+  heardFrom: Array<{ label: string; count: number }>;
+  /** Where the browser says they came from, which often disagrees with the above. */
+  referrers: Array<{ label: string; count: number }>;
+  campaigns: Array<{ label: string; count: number }>;
+  devices: Array<{ label: string; count: number }>;
+  /** Local hour of submission, for scheduling reminders. */
+  hours: Array<{ hour: number; count: number }>;
+  consentRate: number;
+  phoneRate: number;
+  /** Why light users say their use is low. Collected since v2, never surfaced. */
+  lowUseReasons: Array<{ label: string; count: number }>;
+  known: number;
+}
+
+const LOW_USE_LABELS: Record<number, string> = {
+  1: 'Deliberately selective',
+  2: 'Access, cost or rules limit me',
+  3: 'Privacy or trust concerns',
+  4: 'Do not know how or where it helps',
+  5: 'Tried it and did not find it useful',
+};
+
+const tally = (values: string[]): Array<{ label: string; count: number }> => {
+  const m = new Map<string, number>();
+  for (const v of values) { if (v) m.set(v, (m.get(v) ?? 0) + 1); }
+  return [...m.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
+};
+
+export function buildAudienceReport(latest: Attempt[]): AudienceReport {
+  const n = latest.length;
+  const hourCounts = new Map<number, number>();
+  for (const a of latest) {
+    const h = a.meta?.localHour;
+    if (typeof h === 'number') hourCounts.set(h, (hourCounts.get(h) ?? 0) + 1);
+  }
+  return {
+    heardFrom: tally(latest.map((a) => a.heardFrom || 'Not answered')),
+    referrers: tally(latest.map((a) => a.meta?.referrerHost || '').filter(Boolean)),
+    campaigns: tally(latest.map((a) => [a.meta?.utmSource, a.meta?.utmCampaign].filter(Boolean).join(' / ')).filter(Boolean)),
+    devices: tally(latest.map((a) => a.meta?.device || '').filter(Boolean)),
+    hours: [...hourCounts.entries()].sort((a, b) => a[0] - b[0]).map(([hour, count]) => ({ hour, count })),
+    consentRate: shareOfPublic(latest.filter((a) => a.consent).length, n),
+    phoneRate: shareOfPublic(latest.filter((a) => a.hasPhone).length, n),
+    lowUseReasons: tally(latest
+      .map((a) => a.answers.lowuse_reason)
+      .filter((v): v is number => typeof v === 'number')
+      .map((v) => LOW_USE_LABELS[v] ?? `Option ${v}`)),
+    known: latest.filter((a) => a.meta).length,
+  };
+}
+
+const shareOfPublic = (count: number, total: number) => (total ? Math.round((count / total) * 1000) / 10 : 0);
+
+export interface QualityReport {
+  /** Completion time, where it was recorded. */
+  duration: Spread;
+  durationKnown: number;
+  fastCount: number;
+  revisions: Spread;
+  /** Longest run of identical answers, a proxy for straight-lining. */
+  straightLining: Spread;
+  suspect: Array<{ email: string; reason: string }>;
+  notApplicableRate: number;
+  lowConfidenceRate: number;
+}
+
+/** Longest run of the same answer, walking the items in presentation order. */
+export function longestRun(answers: Record<string, number>, keys: string[]): number {
+  let best = 0, run = 0, prev: number | undefined;
+  for (const k of keys) {
+    const v = answers[k];
+    if (v === undefined) continue;
+    run = v === prev ? run + 1 : 1;
+    prev = v;
+    if (run > best) best = run;
+  }
+  return best;
+}
+
+export function buildQualityReport(latest: Attempt[], minutesFloor = 3): QualityReport {
+  const durations = latest.map((a) => a.meta?.durationMs).filter((v): v is number => typeof v === 'number');
+  const runs = latest.map((a) => longestRun(a.answers, Object.keys(a.answers)));
+  const suspect: Array<{ email: string; reason: string }> = [];
+
+  latest.forEach((a, i) => {
+    const mins = a.meta?.durationMs ? a.meta.durationMs / 60000 : undefined;
+    const reasons: string[] = [];
+    if (mins !== undefined && mins < minutesFloor) reasons.push(`finished in ${mins.toFixed(1)} minutes`);
+    if (runs[i] >= 12) reasons.push(`${runs[i]} identical answers in a row`);
+    if (a.result.overallConfidence === 'insufficient') reasons.push('insufficient evidence');
+    if (reasons.length) suspect.push({ email: a.email, reason: reasons.join(', ') });
+  });
+
+  const outcomeKeys = ['out_begin', 'out_explain', 'out_persist'];
+  let outcomeAnswered = 0, outcomeNa = 0;
+  for (const a of latest) {
+    for (const k of outcomeKeys) {
+      const v = a.answers[k];
+      if (v === undefined) continue;
+      outcomeAnswered++;
+      if (v === 0) outcomeNa++;
+    }
+  }
+
+  return {
+    duration: spread(durations.map((d) => Math.round((d / 60000) * 10) / 10)),
+    durationKnown: durations.length,
+    fastCount: durations.filter((d) => d / 60000 < minutesFloor).length,
+    revisions: spread(latest.map((a) => a.meta?.revisions ?? 0)),
+    straightLining: spread(runs),
+    suspect: suspect.slice(0, 40),
+    notApplicableRate: shareOfPublic(outcomeNa, outcomeAnswered),
+    lowConfidenceRate: shareOfPublic(
+      latest.filter((a) => a.result.overallConfidence === 'preliminary' || a.result.overallConfidence === 'insufficient').length,
+      latest.length),
+  };
+}
+
+/* ---------------------------------------------------------- item review */
+
+export interface ItemStat {
+  id: string;
+  construct: string;
+  type: string;
+  n: number;
+  mean: number;
+  /** Share choosing each option, so a dead option is visible. */
+  distribution: Array<{ value: number; count: number }>;
+  /**
+   * How strongly the item tracks its own dimension. A near-zero value means
+   * the question is not distinguishing anyone and is a candidate for rewriting.
+   */
+  discrimination: number;
+}
+
+/**
+ * Item level review, computed from stored raw answers.
+ *
+ * This is what tells you whether a question is earning its place: a flat
+ * distribution with near-zero discrimination is a question everyone answers
+ * the same way, which costs a respondent time and tells you nothing.
+ */
+export function buildItemStats(latest: Attempt[], itemMeta: Array<{ id: string; construct?: string; type: string }>): ItemStat[] {
+  const out: ItemStat[] = [];
+  for (const item of itemMeta) {
+    const rows = latest.filter((a) => a.answers[item.id] !== undefined);
+    if (rows.length < 3) continue;
+    const values = rows.map((a) => a.answers[item.id]);
+    const dist = new Map<number, number>();
+    for (const v of values) dist.set(v, (dist.get(v) ?? 0) + 1);
+    const dimScores = item.construct
+      ? rows.map((a) => num((a.result.dimensions as Record<string, { score: number }>)[item.construct!]?.score))
+      : [];
+    out.push({
+      id: item.id,
+      construct: item.construct ?? '',
+      type: item.type,
+      n: rows.length,
+      mean: spread(values).mean,
+      distribution: [...dist.entries()].sort((a, b) => a[0] - b[0]).map(([value, count]) => ({ value, count })),
+      discrimination: item.construct ? correlate(values, dimScores).r : 0,
+    });
+  }
+  return out.sort((a, b) => Math.abs(a.discrimination) - Math.abs(b.discrimination));
 }

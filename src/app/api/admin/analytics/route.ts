@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { isAdminAuthed } from '@/lib/adminAuth';
 import { listLeads } from '@/lib/storage';
-import { toAttempts, toPeople, buildCohortReport, buildOrgReports } from '@/lib/analytics';
+import {
+  toAttempts, toPeople, buildCohortReport, buildOrgReports,
+  buildAudienceReport, buildQualityReport, buildItemStats,
+} from '@/lib/analytics';
+import { allItems } from '@/engine';
+import type { Persona } from '@/engine/types';
 
 export const runtime = 'nodejs';
 
@@ -35,6 +40,17 @@ export async function GET(request: NextRequest) {
   if (domain) people = people.filter((p) => p.domain === domain);
 
   const cohort = buildCohortReport(attempts, people);
+  const latest = people.map((p) => p.latest);
+  const audience = buildAudienceReport(latest);
+  const quality = buildQualityReport(latest);
+
+  // Item review needs the item definitions for whichever personas appear.
+  const personaSet = new Set(latest.map((a) => a.persona));
+  const itemMeta = [...personaSet].flatMap((p) =>
+    allItems(p as Persona).map((i) => ({ id: i.id, construct: i.construct, type: i.type })));
+  const seen = new Set<string>();
+  const uniqueItems = itemMeta.filter((i) => (seen.has(i.id) ? false : (seen.add(i.id), true)));
+  const items = buildItemStats(latest, uniqueItems);
   const organisations = buildOrgReports(toPeople(toAttempts(leads)));
 
   // A compact row per person; the full result is fetched on demand.
@@ -64,6 +80,9 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     cohort,
+    audience,
+    quality,
+    items,
     organisations,
     people: rows,
     filters: { persona, domain, from, to },

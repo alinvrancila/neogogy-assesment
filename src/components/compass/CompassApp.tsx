@@ -81,6 +81,38 @@ const COARSE_TOTAL = 34;
 
 const STORE_KEY = 'nfc2Progress';
 
+const ATTRIB_KEY = 'nfc2Attrib';
+
+/**
+ * Capture where the visit came from, once, on first load. Kept coarse on
+ * purpose: the referring host and any UTM tags, nothing that identifies a
+ * person. Stored locally so it survives the walk through the questions.
+ */
+function captureAttribution() {
+  try {
+    if (window.localStorage.getItem(ATTRIB_KEY)) return;
+    const q = new URLSearchParams(window.location.search);
+    let referrerHost = '';
+    try {
+      if (document.referrer) {
+        const u = new URL(document.referrer);
+        if (u.host !== window.location.host) referrerHost = u.host;
+      }
+    } catch { /* an unparseable referrer is simply unknown */ }
+    window.localStorage.setItem(ATTRIB_KEY, JSON.stringify({
+      referrerHost,
+      utmSource: q.get('utm_source') || '',
+      utmMedium: q.get('utm_medium') || '',
+      utmCampaign: q.get('utm_campaign') || '',
+    }));
+  } catch { /* attribution is a convenience */ }
+}
+
+function readAttribution(): Record<string, string> {
+  try { return JSON.parse(window.localStorage.getItem(ATTRIB_KEY) || '{}'); }
+  catch { return {}; }
+}
+
 /** Best-effort funnel tracking. Never blocks or fails the assessment. */
 const track = (event: string, extra: Record<string, unknown> = {}) => {
   try {
@@ -122,6 +154,8 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
 
   const sessionId = useRef<string>('');
   const startedRef = useRef(false);
+  const startedAt = useRef<number | null>(null);
+  const revisions = useRef(0);
   const restored = useRef(false);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -148,6 +182,7 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
         window.localStorage.setItem('nfc2Session', sid);
       }
       sessionId.current = sid;
+      captureAttribution();
     } catch {
       /* a session id is a convenience, not a requirement */
     }
@@ -260,7 +295,12 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
   }, [persona, advanceSoon]);
 
   const chooseItem = useCallback((id: string, v: number) => {
-    setAnswers((a) => ({ ...a, [id]: v }));
+    setAnswers((a) => {
+      // A different value for a question already answered is a revision, which
+      // is a useful signal about how considered the responses are.
+      if (a[id] !== undefined && a[id] !== v) revisions.current += 1;
+      return { ...a, [id]: v };
+    });
     advanceSoon();
   }, [advanceSoon]);
 
@@ -280,6 +320,15 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
           ...submission, ...data,
           name: `${data.firstName} ${data.lastName}`.trim(),
           sessionId: sessionId.current,
+          meta: {
+            durationMs: startedAt.current ? Date.now() - startedAt.current : undefined,
+            revisions: revisions.current,
+            viewportWidth: window.innerWidth,
+            device: window.innerWidth < 640 ? 'phone' : window.innerWidth < 1024 ? 'tablet' : 'desktop',
+            localHour: new Date().getHours(),
+            weekday: new Date().getDay(),
+            ...readAttribution(),
+          },
         })
       });
       const payload = await res.json().catch(() => null);
@@ -354,7 +403,11 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
         onB1={setB1}
         onB2={setB2}
         onBack={() => setScreen('hero')}
-        onStart={() => { setPos(0); setScreen('quiz'); }}
+        onStart={() => {
+          startedAt.current = Date.now();
+          setPos(0);
+          setScreen('quiz');
+        }}
       />
     );
   }

@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { randomUUID } from 'crypto';
 import { compute, applicableItems } from '@/engine';
 import type { Persona, Submission } from '@/engine/types';
-import { saveLead, logEvent, type LeadRecord } from '@/lib/storage';
+import { saveLead, logEvent, type LeadRecord, type SubmissionMeta } from '@/lib/storage';
 import { generateCompassPdf } from '@/lib/reportPdfV2';
 import { sendReportEmail, isEmailEnabled } from '@/lib/email';
 import { buildComparison } from '@/lib/history';
@@ -26,7 +26,34 @@ type Body = {
   heardFrom?: string;
   consent?: boolean;
   sessionId?: string;
+  meta?: Record<string, unknown>;
 };
+
+/** Accept only known fields, in sane ranges. Untrusted client input. */
+function cleanMeta(raw: unknown): SubmissionMeta | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const m = raw as Record<string, unknown>;
+  const int = (v: unknown, min: number, max: number) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n >= min && n <= max ? Math.round(n) : undefined;
+  };
+  const str = (v: unknown, max = 80) =>
+    (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : undefined);
+  const out: SubmissionMeta = {
+    // capped at four hours: anything longer is a tab left open, not a sitting
+    durationMs: int(m.durationMs, 0, 4 * 60 * 60 * 1000),
+    revisions: int(m.revisions, 0, 500),
+    viewportWidth: int(m.viewportWidth, 0, 10000),
+    device: ['phone', 'tablet', 'desktop'].includes(String(m.device)) ? String(m.device) : undefined,
+    referrerHost: str(m.referrerHost, 120),
+    utmSource: str(m.utmSource),
+    utmMedium: str(m.utmMedium),
+    utmCampaign: str(m.utmCampaign),
+    localHour: int(m.localHour, 0, 23),
+    weekday: int(m.weekday, 0, 6),
+  };
+  return Object.values(out).some((v) => v !== undefined) ? out : undefined;
+}
 
 /** Validate the Submission against the engine's own item model. */
 function validate(body: Body): { ok: true; submission: Submission } | { ok: false; error: string } {
@@ -131,6 +158,7 @@ export async function POST(request: NextRequest) {
     archetypeId: result.archetype.id,
     archetypeName: result.archetype.name,
     confidence: result.overallConfidence,
+    meta: cleanMeta(body.meta),
   };
 
   try {

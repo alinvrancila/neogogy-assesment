@@ -10,6 +10,7 @@ import type { Persona } from "../../src/engine/types";
 import type { LeadRecord } from "../../src/lib/storage";
 import {
   toAttempts, toPeople, buildCohortReport, buildOrgReports, spread, correlate, domainOf, isOrgDomain,
+  buildAudienceReport, buildQualityReport, buildItemStats, longestRun,
 } from "../../src/lib/analytics";
 
 let pass = 0, fail = 0;
@@ -157,6 +158,85 @@ check("an empty cohort does not throw", () => {
   assert.strictEqual(c.n, 0);
   assert.strictEqual(c.index.mean, 0);
   assert.strictEqual(c.segments.length, 0);
+});
+
+/* ------------------------------------------- audience, quality and items */
+
+console.log("\n== Audience, quality and items ==");
+
+// The fast completion is given to a single-attempt person, because the cohort
+// reads each person's latest attempt and a fast first attempt would be
+// superseded.
+const withExtras = leads.map((l, i) => ({
+  ...l,
+  heardFrom: i % 2 ? "Search engine" : "",
+  consent: i !== 0,
+  mobilePhone: i === 1 ? "+63 900" : "",
+  meta: {
+    durationMs: l.email === "c@gmail.com" ? 60_000 : 900_000,
+    revisions: i, device: i ? "desktop" : "phone",
+    referrerHost: i ? "google.com" : "", localHour: 9 + i,
+    utmSource: i === 2 ? "newsletter" : "",
+  },
+}));
+const exAtt = toAttempts(withExtras);
+const exLatest = toPeople(exAtt).map(p => p.latest);
+
+check("heard-about-us is reported, including the people who skipped it", () => {
+  const a = buildAudienceReport(exLatest);
+  const labels = a.heardFrom.map(h => h.label);
+  assert(labels.includes("Search engine"), "answers must be counted");
+  assert(labels.includes("Not answered"), "skipping must be visible rather than dropped");
+  const total = a.heardFrom.reduce((x, h) => x + h.count, 0);
+  assert.strictEqual(total, exLatest.length, "every person must appear exactly once");
+});
+
+check("consent and phone are reported as rates of the cohort", () => {
+  const a = buildAudienceReport(exLatest);
+  assert(a.consentRate >= 0 && a.consentRate <= 100);
+  assert(a.phoneRate >= 0 && a.phoneRate <= 100);
+});
+
+check("a fast completion is flagged for review", () => {
+  const q = buildQualityReport(exLatest);
+  assert.strictEqual(q.fastCount, 1, "the one minute submission must be flagged");
+  assert(q.suspect.some(x => /minutes/.test(x.reason)), "the reason must name the speed");
+});
+
+check("straight-lining is detected as the longest identical run", () => {
+  assert.strictEqual(longestRun({ a: 3, b: 3, c: 3, d: 1 }, ["a", "b", "c", "d"]), 3);
+  assert.strictEqual(longestRun({ a: 1, b: 2, c: 3 }, ["a", "b", "c"]), 1);
+  assert.strictEqual(longestRun({}, []), 0, "no answers must not throw");
+});
+
+check("quality survives records with no recorded context", () => {
+  const q = buildQualityReport(toPeople(toAttempts(leads)).map(p => p.latest));
+  assert.strictEqual(q.durationKnown, 0, "older records have no duration");
+  assert.strictEqual(q.duration.n, 0);
+  assert(q.straightLining.n > 0, "runs are computed from answers, which always exist");
+});
+
+check("item stats need at least three responses and report a distribution", () => {
+  const meta = [
+    { id: "student_agency_claim", construct: "agency", type: "claim" },
+    { id: "does_not_exist", construct: "agency", type: "claim" },
+  ];
+  const stats = buildItemStats(exLatest, meta);
+  assert(!stats.some(s => s.id === "does_not_exist"), "an unanswered item must be skipped");
+  const one = stats.find(s => s.id === "student_agency_claim");
+  if (one) {
+    assert(one.n >= 3);
+    const total = one.distribution.reduce((x, d) => x + d.count, 0);
+    assert.strictEqual(total, one.n, "the distribution must account for every response");
+  }
+});
+
+check("the new reports do not throw on an empty cohort", () => {
+  const a = buildAudienceReport([]);
+  const q = buildQualityReport([]);
+  assert.strictEqual(a.consentRate, 0);
+  assert.strictEqual(q.suspect.length, 0);
+  assert.strictEqual(buildItemStats([], []).length, 0);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

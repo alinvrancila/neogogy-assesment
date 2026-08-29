@@ -50,6 +50,33 @@ export type LeadRecord = {
   confidence?: string;
   /** v2 only: set when this record was produced by rescoring a v1 submission. */
   rescoredFrom?: string;
+
+  /**
+   * v2 only: context about how the assessment was taken.
+   *
+   * Deliberately coarse. No IP address, no fingerprinting, nothing that
+   * identifies a person beyond the details they typed themselves. These exist
+   * to judge data quality and to tell where respondents come from.
+   */
+  meta?: SubmissionMeta;
+};
+
+export type SubmissionMeta = {
+  /** Milliseconds between starting the questions and submitting. */
+  durationMs?: number;
+  /** How many times an answer was changed before submitting. */
+  revisions?: number;
+  /** phone, tablet or desktop, from viewport width at submission. */
+  device?: string;
+  viewportWidth?: number;
+  /** Where the visit came from, when the browser discloses it. */
+  referrerHost?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  /** Local hour and weekday, useful for scheduling reminders. */
+  localHour?: number;
+  weekday?: number;
 };
 
 export type EventRecord = {

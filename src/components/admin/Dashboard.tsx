@@ -11,7 +11,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CONSTRUCTS } from '@/engine/config';
-import type { CohortReport, OrgReport } from '@/lib/analytics';
+import type { CohortReport, OrgReport, AudienceReport, QualityReport, ItemStat } from '@/lib/analytics';
 import { Card, Kpi, BarList, SpreadChart, Heatmap, Sparkline, bandColor } from './charts';
 
 type PersonRow = {
@@ -25,6 +25,9 @@ type PersonRow = {
 
 type Payload = {
   cohort: CohortReport;
+  audience: AudienceReport;
+  quality: QualityReport;
+  items: ItemStat[];
   organisations: OrgReport[];
   people: PersonRow[];
   legacyCount: number;
@@ -53,7 +56,7 @@ const fmtDate = (iso: string) => {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-type Tab = 'overview' | 'dimensions' | 'people' | 'organisations' | 'segments';
+type Tab = 'overview' | 'dimensions' | 'people' | 'organisations' | 'segments' | 'audience' | 'quality';
 
 export default function Dashboard() {
   const [tab, setTab] = useState<Tab>('overview');
@@ -125,6 +128,7 @@ export default function Dashboard() {
   const TABS: Array<[Tab, string]> = [
     ['overview', 'Overview'], ['dimensions', 'Dimensions'], ['people', 'People'],
     ['organisations', 'Organisations'], ['segments', 'Segments'],
+    ['audience', 'Audience'], ['quality', 'Quality and items'],
   ];
 
   return (
@@ -452,6 +456,154 @@ export default function Dashboard() {
             </Card>
           ))}
           {!c.segments.length ? <Card title="No segments" hint="No group crossed its threshold."><span /></Card> : null}
+        </div>
+      ) : null}
+
+      {/* -------------------------------------------------------- audience */}
+      {tab === 'audience' ? (
+        <div className="space-y-5">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Kpi label="Marketing consent" value={`${data.audience.consentRate}%`}
+              sub="Agreed to occasional insights at the gate" />
+            <Kpi label="Phone provided" value={`${data.audience.phoneRate}%`}
+              sub="Optional field, so this is a measure of willingness" />
+            <Kpi label="Context recorded" value={`${data.audience.known} of ${c.n}`}
+              sub="Referrer and device are only on submissions taken since this was added" />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="Where they say they heard about it"
+              hint="Asked at the gate. This was being collected all along and never shown anywhere.">
+              <BarList total={c.n} rows={data.audience.heardFrom.map((h) => ({ label: h.label, count: h.count }))} />
+            </Card>
+            <Card title="Where the browser says they came from"
+              hint="Referring host. Worth comparing against the answer above, since people misremember.">
+              {data.audience.referrers.length
+                ? <BarList total={c.n} rows={data.audience.referrers} />
+                : <p className="admin-muted text-sm">No referrer recorded yet. Direct visits and privacy settings both report nothing.</p>}
+            </Card>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="Why light users say their use is low"
+              hint="The adaptive branch shown to anyone reporting low use. Collected since v2 and never surfaced until now. This separates deliberate restraint from not knowing where to start.">
+              {data.audience.lowUseReasons.length
+                ? <BarList total={0} rows={data.audience.lowUseReasons} />
+                : <p className="admin-muted text-sm">Nobody reporting low use has answered this yet.</p>}
+            </Card>
+            <Card title="Campaigns and devices" hint="UTM tags where present, and the device used to finish.">
+              {data.audience.campaigns.length ? (
+                <div className="mb-4">
+                  <p className="admin-muted mb-1 text-[11px] uppercase tracking-[0.12em]">Campaigns</p>
+                  <BarList total={0} rows={data.audience.campaigns} />
+                </div>
+              ) : null}
+              {data.audience.devices.length
+                ? <BarList total={0} rows={data.audience.devices} />
+                : <p className="admin-muted text-sm">No device recorded yet.</p>}
+            </Card>
+          </div>
+
+          {data.audience.hours.length ? (
+            <Card title="When people finish" hint="Local hour of submission. Useful for timing reminders and sessions.">
+              <BarList total={0} rows={data.audience.hours.map((h) => ({ label: `${String(h.hour).padStart(2, '0')}:00`, count: h.count }))} />
+            </Card>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* ------------------------------------------------ quality and items */}
+      {tab === 'quality' ? (
+        <div className="space-y-5">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Kpi label="Median time to complete"
+              value={data.quality.durationKnown ? `${data.quality.duration.median} min` : 'n/a'}
+              sub={data.quality.durationKnown ? `recorded for ${data.quality.durationKnown} submissions` : 'recorded from now on'} />
+            <Kpi label="Finished suspiciously fast" value={data.quality.fastCount} tone={data.quality.fastCount ? 'watch' : 'good'}
+              sub="Under three minutes. Too quick to have read the questions." />
+            <Kpi label="Longest identical run" value={data.quality.straightLining.median}
+              sub="Median across respondents. A high number suggests answering without reading." />
+            <Kpi label="Low confidence profiles" value={`${data.quality.lowConfidenceRate}%`} tone="watch"
+              sub="Preliminary or insufficient evidence" />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="Responses worth a second look"
+              hint="Fast completions, long runs of identical answers, or too little evidence. Not proof of anything, but these are the records to check before drawing conclusions from a cohort.">
+              {data.quality.suspect.length ? (
+                <div className="space-y-1.5">
+                  {data.quality.suspect.map((sx) => (
+                    <div key={sx.email} className="flex items-baseline justify-between gap-3 text-xs">
+                      <button onClick={() => void openPerson(sx.email)} className="admin-accent underline">{sx.email}</button>
+                      <span className="admin-muted text-right">{sx.reason}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="admin-muted text-sm">Nothing flagged.</p>}
+            </Card>
+
+            <Card title="Answer revisions and skipped outcomes"
+              hint="How often people changed an answer, and how often they chose not enough experience to say.">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between"><span className="admin-muted">Median revisions</span><span className="font-mono">{data.quality.revisions.median}</span></div>
+                <div className="flex justify-between"><span className="admin-muted">Most revisions by one person</span><span className="font-mono">{data.quality.revisions.max}</span></div>
+                <div className="flex justify-between"><span className="admin-muted">Outcome questions answered not enough experience</span><span className="font-mono">{data.quality.notApplicableRate}%</span></div>
+              </div>
+              <p className="admin-muted mt-3 text-[11px] leading-relaxed">
+                A high skip rate on the outcome questions means people cannot yet judge their own
+                change, which is itself a finding about how new AI is to them.
+              </p>
+            </Card>
+          </div>
+
+          <Card title="Which questions are earning their place"
+            hint="Computed from stored answers. Discrimination is how strongly an item tracks its own dimension: near zero means everyone answers it the same way, so it costs time and tells you little. Sorted weakest first.">
+            {data.items.length ? (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[680px] text-xs">
+                  <thead>
+                    <tr className="admin-muted text-left uppercase tracking-[0.12em]">
+                      <th className="p-2">Item</th><th className="p-2">Dimension</th><th className="p-2">Type</th>
+                      <th className="p-2 text-right">n</th><th className="p-2 text-right">Mean</th>
+                      <th className="p-2 text-right">Discrimination</th><th className="p-2">Spread of answers</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.items.slice(0, 24).map((it) => {
+                      const max = Math.max(1, ...it.distribution.map((d) => d.count));
+                      return (
+                        <tr key={it.id} className="border-t" style={{ borderColor: 'rgba(128,116,100,0.18)' }}>
+                          <td className="p-2 font-mono text-[11px]">{it.id}</td>
+                          <td className="admin-muted p-2">{it.construct}</td>
+                          <td className="admin-muted p-2">{it.type}</td>
+                          <td className="p-2 text-right font-mono">{it.n}</td>
+                          <td className="p-2 text-right font-mono">{it.mean}</td>
+                          <td className="p-2 text-right font-mono"
+                            style={{ color: Math.abs(it.discrimination) < 0.2 ? '#CF796E' : Math.abs(it.discrimination) > 0.5 ? '#159E88' : undefined }}>
+                            {it.discrimination}
+                          </td>
+                          <td className="p-2">
+                            <div className="flex items-end gap-0.5" style={{ height: 18 }}>
+                              {it.distribution.map((d) => (
+                                <div key={d.value} title={`${d.value}: ${d.count}`}
+                                  style={{ width: 9, height: `${(d.count / max) * 18}px`, background: '#159E88', opacity: 0.75 }} />
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <p className="admin-muted mt-2 text-[11px]">
+                  Showing the 24 weakest of {data.items.length} items with enough responses. Read this
+                  cautiously below about thirty respondents.
+                </p>
+              </div>
+            ) : (
+              <p className="admin-muted text-sm">Not enough responses yet for item level review.</p>
+            )}
+          </Card>
         </div>
       ) : null}
 
