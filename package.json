@@ -13,7 +13,8 @@
     "rescore:legacy": "tsx scripts/rescore-legacy.ts",
     "test:ascent": "tsx tests/compass/ascent.ts",
     "art:backdrop": "node scripts/art/render-backdrop.mjs",
-    "art:cover": "node scripts/art/render-cover.mjs"
+    "art:cover": "node scripts/art/render-cover.mjs",
+    "test:analytics": "tsx tests/compass/analytics.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.620.0",

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { isAdminAuthed } from '@/lib/adminAuth';
-import { getLead, listLeads, type LeadRecord } from '@/lib/storage';
+import { getLead, listLeads, deleteLead, type LeadRecord } from '@/lib/storage';
 
 export const runtime = 'nodejs';
 
@@ -98,4 +98,17 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({ leads });
+}
+
+/** Delete a single submission. A person's other attempts are untouched. */
+export async function DELETE(request: NextRequest) {
+  const denied = guard(request);
+  if (denied) return denied;
+  const id = request.nextUrl.searchParams.get('id') || '';
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+  const lead = await getLead(id);
+  if (!lead) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const ok = await deleteLead(id);
+  if (!ok) return NextResponse.json({ error: 'Could not delete' }, { status: 500 });
+  return NextResponse.json({ ok: true, id, email: lead.email });
 }

@@ -147,6 +147,48 @@ export const listLeads = async (): Promise<LeadRecord[]> => {
   return leads.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
 };
 
+/** Remove one submission. Returns false when nothing matched. */
+export const deleteLead = async (id: string): Promise<boolean> => {
+  if (!id) return false;
+  if (LEADS_TABLE) {
+    const { DeleteCommand } = await import('@aws-sdk/lib-dynamodb');
+    const doc = await getDocClient();
+    await doc.send(new DeleteCommand({ TableName: LEADS_TABLE, Key: { id } }));
+    return true;
+  }
+  const fs = await import('fs/promises');
+  const existing = await readLocal<LeadRecord>('leads.json');
+  const next = existing.filter((l) => l.id !== id);
+  if (next.length === existing.length) return false;
+  await fs.writeFile(path.join(localDir, 'leads.json'), JSON.stringify(next, null, 2), 'utf-8');
+  return true;
+};
+
+/**
+ * Remove every submission for an email address. This is the "delete a person"
+ * operation, used for erasure requests as well as clearing test accounts.
+ */
+export const deleteLeadsByEmail = async (email: string): Promise<number> => {
+  const target = email.trim().toLowerCase();
+  if (!target) return 0;
+  const all = await listLeads();
+  const doomed = all.filter((l) => (l.email || '').trim().toLowerCase() === target);
+  if (!doomed.length) return 0;
+
+  if (LEADS_TABLE) {
+    const { DeleteCommand } = await import('@aws-sdk/lib-dynamodb');
+    const doc = await getDocClient();
+    for (const l of doomed) {
+      await doc.send(new DeleteCommand({ TableName: LEADS_TABLE, Key: { id: l.id } }));
+    }
+    return doomed.length;
+  }
+  const fs = await import('fs/promises');
+  const keep = all.filter((l) => (l.email || '').trim().toLowerCase() !== target);
+  await fs.writeFile(path.join(localDir, 'leads.json'), JSON.stringify(keep, null, 2), 'utf-8');
+  return doomed.length;
+};
+
 export const getLead = async (id: string): Promise<LeadRecord | null> => {
   if (!id) return null;
   if (LEADS_TABLE) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Dashboard from '@/components/admin/Dashboard';
 
 type Stats = {
   totalEvents: number;
@@ -199,6 +200,7 @@ export default function AdminPage() {
   const [leadQuery, setLeadQuery] = useState('');
   const [leadPage, setLeadPage] = useState(1);
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null);
+  const [view, setView] = useState<'analytics' | 'records'>('analytics');
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   const [bulkDownloading, setBulkDownloading] = useState(false);
 
@@ -515,6 +517,22 @@ export default function AdminPage() {
               <p className="admin-eyebrow text-sm uppercase tracking-[0.3em]">Neogogy</p>
               <h1 className="admin-title mt-3 font-serif text-2xl">Admin sign in</h1>
             </div>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setView('analytics')}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  view === 'analytics' ? 'admin-button admin-button-primary' : 'admin-button admin-button-muted'}`}
+              >
+                Analytics
+              </button>
+              <button
+                onClick={() => setView('records')}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  view === 'records' ? 'admin-button admin-button-primary' : 'admin-button admin-button-muted'}`}
+              >
+                Records
+              </button>
+            </div>
             <ThemeToggleButton theme={theme} onClick={toggleTheme} />
           </div>
           <p className="admin-muted mt-2 text-sm">Enter your username and password to continue.</p>
@@ -585,9 +603,27 @@ export default function AdminPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="admin-eyebrow text-sm uppercase tracking-[0.3em]">The Neogogy Formation Compass</p>
-            <h1 className="admin-title mt-2 font-serif text-3xl">Analytics dashboard</h1>
+            <h1 className="admin-title mt-2 font-serif text-3xl">
+              {view === 'analytics' ? 'Analytics dashboard' : 'Records and admin'}
+            </h1>
           </div>
           <div className="flex flex-wrap gap-3">
+            <div className="flex gap-1">
+              <button
+                onClick={() => setView('analytics')}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  view === 'analytics' ? 'admin-button admin-button-primary' : 'admin-button admin-button-muted'}`}
+              >
+                Analytics
+              </button>
+              <button
+                onClick={() => setView('records')}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  view === 'records' ? 'admin-button admin-button-primary' : 'admin-button admin-button-muted'}`}
+              >
+                Records
+              </button>
+            </div>
             <ThemeToggleButton theme={theme} onClick={toggleTheme} />
             <button onClick={refreshDashboard} disabled={loading || leadsLoading} className="admin-button admin-button-outline rounded-full px-5 py-2 text-sm font-semibold transition disabled:opacity-60">
               {loading || leadsLoading ? 'Refreshing...' : 'Refresh'}
@@ -597,6 +633,11 @@ export default function AdminPage() {
             </button>
           </div>
         </div>
+
+        {view === 'analytics' ? <Dashboard /> : null}
+
+        {view === 'records' ? (
+        <>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {cards.map((c) => (
@@ -865,6 +906,8 @@ export default function AdminPage() {
         </div>
 
         <p className="admin-muted-soft pb-6 text-center text-xs">Self-hosted analytics. Data lives in DynamoDB; nothing is shared with third parties.</p>
+        </>
+        ) : null}
       </div>
     </main>
   );
