@@ -23,6 +23,7 @@ import {
 } from './ResultCharts';
 import { Markdown } from './Markdown';
 import AscentResults from './ascent/AscentResults';
+import ShareResult from './ShareResult';
 import type { AttemptComparison } from '@/lib/history';
 import { MethodologyDisclosure, RetakeInvite } from './ascent/modules';
 import {
@@ -294,6 +295,8 @@ export default function Results({
           <button className="btn btn-ghost" onClick={onRetake}>Take it again</button>
         </div>
       </div>
+
+      <ShareResult result={result} />
 
       <RetakeInvite hasHistory={!!comparison} />
 

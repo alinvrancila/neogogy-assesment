@@ -261,21 +261,35 @@ button, input, textarea, select {
   white-space: nowrap;
 }
 
+/* The index cell stacks a number over a short label; keep both inside the
+   column rather than letting the label push into the next one. */
+.admin-index-cell {
+  min-width: 0;
+}
+
+.admin-index-cell > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 @media (min-width: 768px) {
   .admin-leads-grid {
     display: grid;
     width: 100%;
-    min-width: 980px;
+    /* The index column carries a value and a label beneath it, and the actions
+       column now holds two buttons, so both were overrunning their neighbours. */
+    min-width: 1120px;
     grid-template-columns:
       64px
       minmax(118px, 0.82fr)
-      minmax(190px, 1fr)
-      minmax(144px, 0.78fr)
-      minmax(84px, 0.48fr)
-      minmax(118px, 0.72fr)
-      50px
-      minmax(126px, 0.72fr)
-      102px;
+      minmax(180px, 1fr)
+      minmax(140px, 0.74fr)
+      minmax(84px, 0.46fr)
+      minmax(112px, 0.66fr)
+      minmax(96px, 0.42fr)
+      minmax(120px, 0.62fr)
+      168px;
     column-gap: 0.5rem;
     align-items: center;
   }

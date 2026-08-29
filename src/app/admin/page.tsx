@@ -809,7 +809,7 @@ export default function AdminPage() {
                       <p className="admin-muted text-xs md:whitespace-nowrap">Stage {lead.stage}, {lead.stageName}</p>
                     ) : null}
                   </div>
-                  <div>
+                  <div className="admin-index-cell">
                     <span className="admin-mobile-label text-xs uppercase tracking-[0.14em] md:hidden">Index</span>
                     <p className="admin-accent font-semibold">{lead.overall}</p>
                     <p className="admin-muted text-xs md:whitespace-nowrap">

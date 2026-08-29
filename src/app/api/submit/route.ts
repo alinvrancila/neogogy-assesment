@@ -7,6 +7,7 @@ import { saveLead, logEvent, type LeadRecord, type SubmissionMeta } from '@/lib/
 import { generateCompassPdf } from '@/lib/reportPdfV2';
 import { sendReportEmail, isEmailEnabled } from '@/lib/email';
 import { buildComparison } from '@/lib/history';
+import { sharePosts, SHARE_URL } from '@/lib/share';
 
 export const runtime = 'nodejs';
 
@@ -198,6 +199,19 @@ export async function POST(request: NextRequest) {
           `These are assessment indices drawn from self reported answers, meant to support reflection rather than to measure you.`,
           ``,
           `Explore the framework at www.ican.ph.`,
+          ``,
+          `---`,
+          ``,
+          `If you would like to share where you landed, here is a post you can copy:`,
+          ``,
+          sharePosts(result)[0].text,
+          ``,
+          `Share links:`,
+          `  LinkedIn  https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(SHARE_URL)}`,
+          `  Facebook  https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SHARE_URL)}`,
+          `  X         https://twitter.com/intent/tweet?text=${encodeURIComponent(sharePosts(result)[2].text)}`,
+          ``,
+          `The link points at the assessment itself, so your scores are never published.`,
           ``,
           `Warmly,`,
           `The International Center for Applied Neogogy`,
