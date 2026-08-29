@@ -203,6 +203,7 @@ export default function AdminPage() {
   const [view, setView] = useState<'analytics' | 'records'>('analytics');
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
   const [bulkDownloading, setBulkDownloading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // User management
   const [users, setUsers] = useState<AdminUserRow[]>([]);
@@ -322,6 +323,46 @@ export default function AdminPage() {
     setLeadPage(1);
     setSelectedLead(null);
     setSelectedLeadIds([]);
+  };
+
+  /** Delete one submission. Other submissions by the same person are kept. */
+  const deleteLeadRecord = async (lead: LeadRow) => {
+    const who = lead.name || lead.email || lead.id;
+    if (!window.confirm(`Delete this submission by ${who}?\n\nIt is removed from the records and from every statistic. This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/leads?id=${encodeURIComponent(lead.id)}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setLeadError(data?.error || 'Could not delete that submission.');
+        return;
+      }
+      setSelectedLead(null);
+      setSelectedLeadIds((ids) => ids.filter((x) => x !== lead.id));
+      await fetchLeads();
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  /** Delete every selected submission, for clearing tests and spam in one pass. */
+  const deleteSelectedLeads = async () => {
+    if (!selectedLeadIds.length) return;
+    if (!window.confirm(`Delete ${selectedLeadIds.length} selected submission(s)?\n\nThey are removed from the records and from every statistic. This cannot be undone.`)) return;
+    setDeleting(true);
+    let removed = 0;
+    try {
+      for (const id of selectedLeadIds) {
+        const res = await fetch(`/api/admin/leads?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+        if (res.ok) removed++;
+      }
+      setSelectedLeadIds([]);
+      setSelectedLead(null);
+      await fetchLeads();
+      if (removed !== selectedLeadIds.length) setLeadError(`Deleted ${removed} of ${selectedLeadIds.length}.`);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const refreshDashboard = async () => {
@@ -695,6 +736,15 @@ export default function AdminPage() {
                 Unselect page
               </button>
               <button
+                onClick={deleteSelectedLeads}
+                disabled={!selectedLeadIds.length || deleting}
+                className="admin-button rounded-full px-4 py-2 text-xs font-semibold transition disabled:opacity-50"
+                style={{ background: '#CF796E', color: '#fff' }}
+                title="Permanently remove the selected submissions"
+              >
+                {deleting ? 'Deleting...' : `Delete selected${selectedLeadIds.length ? ` (${selectedLeadIds.length})` : ''}`}
+              </button>
+              <button
                 onClick={downloadSelectedPdfs}
                 disabled={!selectedLeadIds.length || bulkDownloading}
                 className="admin-button admin-button-primary rounded-full px-4 py-2 text-xs font-semibold transition disabled:opacity-50"
@@ -771,7 +821,16 @@ export default function AdminPage() {
                   <div className="admin-muted admin-submitted-cell hidden md:block" title={lead.createdAt}>
                     {formatDateTime(lead.createdAt)}
                   </div>
-                  <div className="flex justify-start md:justify-end">
+                  <div className="flex justify-start gap-2 md:justify-end">
+                    <button
+                      onClick={() => void deleteLeadRecord(lead)}
+                      disabled={deleting}
+                      title="Delete this submission"
+                      aria-label={`Delete the submission by ${lead.name || lead.email}`}
+                      className="admin-button admin-button-muted whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition disabled:opacity-50"
+                    >
+                      Delete
+                    </button>
                     <button onClick={() => setSelectedLead(lead)} className="admin-button admin-button-outline whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition">
                       View result
                     </button>

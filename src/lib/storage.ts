@@ -94,13 +94,35 @@ const readLocal = async <T>(file: string): Promise<T[]> => {
   }
 };
 
-const appendLocal = async <T>(file: string, record: T) => {
-  const fs = await import('fs/promises');
-  await fs.mkdir(localDir, { recursive: true });
-  const existing = await readLocal<T>(file);
-  existing.push(record);
-  await fs.writeFile(path.join(localDir, file), JSON.stringify(existing, null, 2), 'utf-8');
+/**
+ * Serialises local file writes.
+ *
+ * Appending is read, modify, write. Events fire in bursts (a start and a role
+ * choice land together), so two concurrent appends would both read the same
+ * array and the second write would discard the first. Worse, a read landing
+ * mid-write parses as invalid JSON and yields an empty array, which drops the
+ * entire log. Every local write now queues behind the previous one.
+ */
+let localWriteQueue: Promise<unknown> = Promise.resolve();
+const queueLocalWrite = <T>(fn: () => Promise<T>): Promise<T> => {
+  const next = localWriteQueue.then(fn, fn);
+  localWriteQueue = next.catch(() => undefined);
+  return next;
 };
+
+const appendLocal = async <T>(file: string, record: T) =>
+  queueLocalWrite(async () => {
+    const fs = await import('fs/promises');
+    await fs.mkdir(localDir, { recursive: true });
+    const existing = await readLocal<T>(file);
+    existing.push(record);
+    // Write to a temporary file and rename, so a concurrent reader never sees
+    // a half-written file.
+    const target = path.join(localDir, file);
+    const tmp = `${target}.tmp`;
+    await fs.writeFile(tmp, JSON.stringify(existing, null, 2), 'utf-8');
+    await fs.rename(tmp, target);
+  });
 
 // Public API -----------------------------------------------------------------
 
@@ -117,15 +139,19 @@ export const saveLead = async (lead: LeadRecord): Promise<void> => {
   await upsertLocalById('leads.json', lead);
 };
 
-const upsertLocalById = async (file: string, record: LeadRecord) => {
-  const fs = await import('fs/promises');
-  await fs.mkdir(localDir, { recursive: true });
-  const existing = await readLocal<LeadRecord>(file);
-  const at = existing.findIndex((r) => r.id === record.id);
-  if (at >= 0) existing[at] = record;
-  else existing.push(record);
-  await fs.writeFile(path.join(localDir, file), JSON.stringify(existing, null, 2), 'utf-8');
-};
+const upsertLocalById = async (file: string, record: LeadRecord) =>
+  queueLocalWrite(async () => {
+    const fs = await import('fs/promises');
+    await fs.mkdir(localDir, { recursive: true });
+    const existing = await readLocal<LeadRecord>(file);
+    const at = existing.findIndex((r) => r.id === record.id);
+    if (at >= 0) existing[at] = record;
+    else existing.push(record);
+    const target = path.join(localDir, file);
+    const tmp = `${target}.tmp`;
+    await fs.writeFile(tmp, JSON.stringify(existing, null, 2), 'utf-8');
+    await fs.rename(tmp, target);
+  });
 
 export const listLeads = async (): Promise<LeadRecord[]> => {
   let leads: LeadRecord[] = [];
@@ -259,8 +285,11 @@ export const getStats = async (): Promise<StatsSummary> => {
   const byZone: Record<string, number> = {};
   for (const e of events) {
     byEvent[e.event] = (byEvent[e.event] || 0) + 1;
-    if (e.role) byRole[e.role] = (byRole[e.role] || 0) + 1;
-    if (e.zone) byZone[e.zone] = (byZone[e.zone] || 0) + 1;
+    // Role is counted once per start, not on every event carrying a role, so
+    // choosing a role twice cannot inflate the funnel.
+    if (e.role && e.event === 'assessment_start') byRole[e.role] = (byRole[e.role] || 0) + 1;
+    // Zone is the archetype, which only exists once a result has been produced.
+    if (e.zone && e.event === 'email_submit') byZone[e.zone] = (byZone[e.zone] || 0) + 1;
   }
 
   const starts = byEvent['assessment_start'] || 0;
@@ -275,7 +304,10 @@ export const getStats = async (): Promise<StatsSummary> => {
     starts,
     completions,
     emailSubmits,
-    completionRate: starts ? Math.round((completions / starts) * 100) : 0,
-    emailConversionRate: completions ? Math.round((emailSubmits / completions) * 100) : 0
+    // Rates are clamped to 100. A ratio above that only arises from records
+    // that predate the tracking of the earlier step, and a 2900 percent
+    // conversion reads as a bug rather than as history.
+    completionRate: starts ? Math.min(100, Math.round((completions / starts) * 100)) : 0,
+    emailConversionRate: completions ? Math.min(100, Math.round((emailSubmits / completions) * 100)) : 0
   };
 };

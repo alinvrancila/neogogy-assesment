@@ -81,6 +81,20 @@ const COARSE_TOTAL = 34;
 
 const STORE_KEY = 'nfc2Progress';
 
+/** Best-effort funnel tracking. Never blocks or fails the assessment. */
+const track = (event: string, extra: Record<string, unknown> = {}) => {
+  try {
+    fetch('/api/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, ...extra }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    /* analytics must never interrupt a respondent */
+  }
+};
+
 type Saved = {
   screen: Screen;
   persona: Persona | null;
@@ -106,6 +120,8 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
   const [comparison, setComparison] = useState<AttemptComparison | null>(null);
   const [firstName, setFirstName] = useState('');
 
+  const sessionId = useRef<string>('');
+  const startedRef = useRef(false);
   const restored = useRef(false);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -124,6 +140,17 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
 
   /* ----------------------------------------------------------- persistence */
   useEffect(() => {
+    try {
+      let sid = window.localStorage.getItem('nfc2Session');
+      if (!sid) {
+        sid = (window.crypto?.randomUUID && window.crypto.randomUUID())
+          || `s_${Date.now()}_${Math.round(Math.random() * 1e9)}`;
+        window.localStorage.setItem('nfc2Session', sid);
+      }
+      sessionId.current = sid;
+    } catch {
+      /* a session id is a convenience, not a requirement */
+    }
     try {
       const raw = window.sessionStorage.getItem(STORE_KEY);
       if (raw) {
@@ -191,6 +218,9 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
       b2: b2 ?? undefined,
       answers: clean
     });
+    track('assessment_complete', {
+      sessionId: sessionId.current, role: persona, step: Object.keys(clean).length,
+    });
     setScreen('gate');
   }, [persona, usage, b1, b2, answers]);
 
@@ -246,7 +276,11 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
       const res = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...submission, ...data, name: `${data.firstName} ${data.lastName}`.trim() })
+        body: JSON.stringify({
+          ...submission, ...data,
+          name: `${data.firstName} ${data.lastName}`.trim(),
+          sessionId: sessionId.current,
+        })
       });
       const payload = await res.json().catch(() => null);
       if (!res.ok || !payload?.result) {
@@ -309,7 +343,14 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
         persona={persona}
         b1={b1}
         b2={b2}
-        onPersona={setPersona}
+        onPersona={(p) => {
+          setPersona(p);
+          if (!startedRef.current) {
+            startedRef.current = true;
+            track('assessment_start', { sessionId: sessionId.current, role: p });
+          }
+          track('role_selected', { sessionId: sessionId.current, role: p });
+        }}
         onB1={setB1}
         onB2={setB2}
         onBack={() => setScreen('hero')}
