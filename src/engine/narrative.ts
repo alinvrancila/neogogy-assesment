@@ -134,6 +134,65 @@ export function improvementPlan(r: CompassResult): { horizon: string; timeframe:
   ];
 }
 
+export interface DimensionDetail {
+  construct: ConstructId;
+  /** Name as reported, so dependencySafety reads as Dependency Risk. */
+  label: string;
+  /** The number shown to the respondent (risk-oriented for dependencySafety). */
+  shown: number;
+  /** The healthy-is-high reading, used for colour and banding. */
+  healthy: number;
+  /** Present only for dependencySafety. */
+  independentCapability?: number;
+  microState: "strong" | "developing" | "watch";
+  confidence: string;
+  confidenceLabel: string;
+  flaggedGap: boolean;
+  whatItMeasures: string;
+  whyItMatters: string;
+  reading: string;
+  research: { claim: string; source: string };
+  practices: string[];
+}
+
+/** Every dimension with its content, ready to render as a card. */
+export function dimensionDetails(r: CompassResult): DimensionDetail[] {
+  return (Object.keys(CONSTRUCTS) as ConstructId[]).map((c) => {
+    const d = r.dimensions[c];
+    const def = CONSTRUCTS[c];
+    const content = CONSTRUCT_CONTENT[c];
+    return {
+      construct: c,
+      label: def.reportedAsRisk ? "Dependency Risk" : def.name,
+      shown: def.reportedAsRisk ? d.reportedScore : d.score,
+      healthy: d.score,
+      independentCapability: def.reportedAsRisk ? d.score : undefined,
+      microState: d.microState,
+      confidence: d.confidence,
+      confidenceLabel: CONF_LABEL[d.confidence],
+      flaggedGap: !!d.consistencyGap?.flagged,
+      whatItMeasures: content.whatItMeasures,
+      whyItMatters: content.whyItMatters,
+      reading: bandReading(r, c),
+      research: content.research,
+      practices: content.practices,
+    };
+  });
+}
+
+/** The seven quick readings, split into label and level for meters. */
+export function fingerprintReadings(r: CompassResult): Array<{ level: string; label: string }> {
+  return r.fingerprint.map((f) => {
+    const parts = f.split(" ");
+    const level = parts.shift() ?? "";
+    const rest = parts.join(" ").toLowerCase();
+    return {
+      level: level.charAt(0) + level.slice(1).toLowerCase(),
+      label: (rest.charAt(0).toUpperCase() + rest.slice(1)).replace(/\bai\b/gi, "AI"),
+    };
+  });
+}
+
 /**
  * The report as keyed sections, in Part B10 order. Consumed by the results
  * screen, the PDF, and generateReport().

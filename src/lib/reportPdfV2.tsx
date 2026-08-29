@@ -14,8 +14,10 @@ import {
 import { renderToBuffer } from '@react-pdf/renderer';
 import {
   generateReportSections, reportHead, confidenceLabel, REPORT_DISCLAIMER,
-  type CompassResult, type ReportSection,
+  dimensionDetails, fingerprintReadings, improvementPlan,
+  type CompassResult, type ReportSection, type DimensionDetail,
 } from '@/engine';
+import type { AttemptComparison } from '@/lib/history';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
 import type { ConstructId } from '@/engine/types';
 
@@ -37,6 +39,10 @@ const T = {
   hairDark: 'rgba(247,241,228,0.26)',
   muteDark: 'rgba(247,241,228,0.72)',
 };
+
+/** One colour scale, matching the web exactly. */
+const bandColor = (healthy: number) =>
+  healthy >= 65 ? '#159E88' : healthy >= 40 ? '#E5AA45' : '#CF796E';
 
 /** The painted backdrop, shared with the web page. Decorative only. */
 const BACKDROP = path.join(process.cwd(), 'public', 'ascent-backdrop.jpg');
@@ -145,6 +151,18 @@ function Lines({ lines }: { lines: string[] }) {
   return <>{blocks}</>;
 }
 
+/** Lines before the first sub-heading. */
+function introOnly(lines: string[]): string[] {
+  const at = lines.findIndex((l) => l.startsWith('### '));
+  return at === -1 ? lines : lines.slice(0, at);
+}
+
+/** Lines up to a marker, where a chart replaces the prose below it. */
+function upTo(lines: string[], marker: string): string[] {
+  const at = lines.findIndex((l) => l.includes(marker));
+  return at === -1 ? lines : lines.slice(0, at);
+}
+
 function SectionBlock({ s }: { s: ReportSection }) {
   // The heading stays with the start of its prose (minPresenceAhead), but the
   // prose itself flows. Sections are long enough now that making the whole
@@ -152,8 +170,7 @@ function SectionBlock({ s }: { s: ReportSection }) {
   return (
     <View style={S.section}>
       <View wrap={false} minPresenceAhead={70}>
-        <Text style={S.eyebrow}>Section {s.n}</Text>
-        <Text style={S.h2}>{s.title}</Text>
+          <Text style={S.h2}>{s.title}</Text>
       </View>
       <Lines lines={s.lines} />
     </View>
@@ -230,6 +247,250 @@ function RadarSvg({ r }: { r: CompassResult }) {
       ))}
       <Polygon points={poly} fill={T.teal} fillOpacity={0.18} stroke={T.teal} strokeWidth={1.2} />
     </Svg>
+  );
+}
+
+/* --------------------------------------------- charts, mirroring the web */
+
+/** The full ten stage ladder, as on the results page. */
+function Ladder({ r }: { r: CompassResult }) {
+  const here = r.stage.stage;
+  const next = r.nextTarget.stage;
+  return (
+    <View style={{ borderRadius: 8, borderWidth: 1, borderColor: T.hair, backgroundColor: T.card, padding: 10 }}>
+      {[...STAGES].reverse().map((s) => {
+        const isHere = s.stage === here;
+        const isNext = s.stage === next && next !== here;
+        const reached = r.stage.rawIndex >= s.minIndex;
+        return (
+          <View key={s.stage} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4 }}>
+            <Text style={{ fontFamily: 'Plex', fontSize: 7, color: T.mute, width: 14, textAlign: 'right', marginRight: 6 }}>
+              {s.stage}
+            </Text>
+            <View style={{
+              width: isHere ? 9 : 6, height: isHere ? 9 : 6, borderRadius: 5, marginTop: 2, marginRight: 8,
+              backgroundColor: isHere ? T.teal : reached ? T.teal : T.hair,
+              opacity: isHere || reached ? 1 : 0.7,
+            }} />
+            <View style={{ flex: 1 }}>
+              <Text style={{
+                fontFamily: 'Spectral', fontSize: isHere ? 9.5 : 8.5,
+                fontWeight: isHere ? 700 : 400,
+                color: isHere ? T.oxblood : reached ? T.ink : T.mute,
+              }}>
+                {s.name}
+                {isHere ? '   YOU ARE HERE' : isNext ? '   NEXT LEDGE' : ''}
+              </Text>
+              {(isHere || isNext) ? (
+                <Text style={{ fontSize: 7.5, color: T.mute, marginTop: 1 }}>{s.short}</Text>
+              ) : null}
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+/** Sorted dimension bars with the shared colour key. */
+function Bars({ r }: { r: CompassResult }) {
+  const rows = (Object.keys(CONSTRUCTS) as ConstructId[])
+    .map((id) => ({ id, d: r.dimensions[id], def: CONSTRUCTS[id] }))
+    .sort((a, b) => b.d.score - a.d.score);
+  return (
+    <View>
+      {rows.map(({ id, d, def }) => {
+        const shown = def.reportedAsRisk ? d.reportedScore : d.score;
+        const col = bandColor(d.score);
+        return (
+          <View key={id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3.5 }}>
+            <Text style={{ fontSize: 8, width: 118, color: T.ink }}>
+              {def.reportedAsRisk ? 'Dependency Risk' : def.name}
+            </Text>
+            <View style={{ flex: 1, height: 7, borderRadius: 4, backgroundColor: '#EDE5D7' }}>
+              <View style={{ width: `${Math.max(2, shown)}%`, height: 7, borderRadius: 4, backgroundColor: col }} />
+            </View>
+            <Text style={{ fontFamily: 'Plex', fontSize: 8, width: 30, textAlign: 'right', color: col }}>{shown}</Text>
+          </View>
+        );
+      })}
+      <View style={{ flexDirection: 'row', marginTop: 6 }}>
+        {[['#159E88', 'strong 65+'], ['#E5AA45', 'developing 40 to 64'], ['#CF796E', 'watch below 40']].map(([c, l]) => (
+          <View key={l} style={{ flexDirection: 'row', alignItems: 'center', marginRight: 14 }}>
+            <View style={{ width: 7, height: 7, borderRadius: 2, backgroundColor: c, marginRight: 4 }} />
+            <Text style={{ fontFamily: 'Plex', fontSize: 6.5, color: T.mute }}>{l}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/** The six composite readings as cards. */
+function Composites({ r }: { r: CompassResult }) {
+  const c = r.composites;
+  const rows: Array<[string, number, number, string]> = [
+    ['Future readiness', c.futureReadiness, c.futureReadiness, 'Fluency, adaptability and transfer'],
+    ['Augmentation', c.augmentation, c.augmentation, 'Better thinking, not just faster output'],
+    ['Judgment', c.judgment, c.judgment, 'Verification, agency and responsible use'],
+    ['Capability transfer', c.capabilityTransfer, c.capabilityTransfer, 'Assisted work becoming your own'],
+    ['Dependency index', c.dependencyIndex, 100 - c.dependencyIndex, 'Higher means more depends on the tool'],
+    ['Underexposure', c.underexposure, 100 - c.underexposure, 'Higher means limited practice'],
+  ];
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+      {rows.map(([label, value, healthy, note]) => (
+        <View key={label} style={{
+          width: '31.5%', marginRight: '2.75%', marginBottom: 8,
+          borderWidth: 1, borderColor: T.hair, borderRadius: 8, padding: 8, backgroundColor: T.card,
+        }}>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 15, color: bandColor(healthy) }}>{value}</Text>
+          <Text style={{ fontSize: 8, fontWeight: 700, marginTop: 1 }}>{label}</Text>
+          <View style={{ height: 4, borderRadius: 2, backgroundColor: '#EDE5D7', marginTop: 4, marginBottom: 4 }}>
+            <View style={{ width: `${Math.max(2, value)}%`, height: 4, borderRadius: 2, backgroundColor: bandColor(healthy) }} />
+          </View>
+          <Text style={{ fontSize: 6.8, color: T.mute, lineHeight: 1.35 }}>{note}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** One dimension, drawn as the same card the web uses. */
+function DimCard({ d }: { d: DimensionDetail }) {
+  const col = bandColor(d.healthy);
+  const state = d.microState === 'strong' ? 'STRENGTH'
+    : d.microState === 'developing' ? 'DEVELOPING' : 'NEEDS ATTENTION';
+  return (
+    <View wrap={false} style={{
+      borderWidth: 1, borderColor: T.hair, borderLeftWidth: 3, borderLeftColor: col,
+      borderRadius: 8, padding: 10, marginBottom: 8, backgroundColor: T.card,
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+        <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 17, color: col, width: 42 }}>{d.shown}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 10.5 }}>{d.label}</Text>
+          <Text style={{ fontFamily: 'Plex', fontSize: 6.5, letterSpacing: 0.8, color: col, marginTop: 1 }}>
+            {state}{d.confidence !== 'high' ? `  ·  ${d.confidence.toUpperCase()}` : ''}
+          </Text>
+        </View>
+      </View>
+
+      {d.independentCapability !== undefined ? (
+        <Text style={{ fontSize: 7.5, color: T.mute, marginBottom: 4 }}>
+          Lower is healthier here. Independent capability {d.independentCapability}.
+        </Text>
+      ) : null}
+
+      {/* the same 45 and 65 scale as the web card */}
+      <View style={{ height: 6, borderRadius: 3, backgroundColor: '#EDE5D7', marginBottom: 2 }}>
+        <View style={{ width: `${Math.max(2, d.healthy)}%`, height: 6, borderRadius: 3, backgroundColor: col }} />
+      </View>
+      <Text style={{ fontFamily: 'Plex', fontSize: 6, color: T.mute, marginBottom: 5 }}>
+        45 needs attention below · 65 strength above
+      </Text>
+
+      <Text style={{ fontFamily: 'Plex', fontSize: 6, letterSpacing: 0.7, color: T.teal }}>WHAT IT MEASURES</Text>
+      <Text style={{ fontSize: 8, lineHeight: 1.45, marginBottom: 3 }}>{d.whatItMeasures}</Text>
+      <Text style={{ fontFamily: 'Plex', fontSize: 6, letterSpacing: 0.7, color: T.teal }}>YOUR READING</Text>
+      <Text style={{ fontSize: 8, lineHeight: 1.45, marginBottom: 3 }}>{d.reading}</Text>
+      <Text style={{ fontFamily: 'Plex', fontSize: 6, letterSpacing: 0.7, color: T.teal }}>WHAT MOVES IT</Text>
+      {d.practices.map((p, i) => (
+        <Text key={i} style={{ fontSize: 7.6, lineHeight: 1.4, color: T.ink }}>{'\u2022  '}{p}</Text>
+      ))}
+    </View>
+  );
+}
+
+/** The seven quick readings as meters. */
+function Fingerprint({ r }: { r: CompassResult }) {
+  const pos = (lvl: string) => {
+    const l = lvl.toLowerCase();
+    if (l === 'high' || l === 'strong') return 88;
+    if (l === 'moderate' || l === 'stable') return 58;
+    if (l === 'low-moderate') return 40;
+    if (l === 'elevated') return 78;
+    return 20;
+  };
+  return (
+    <View style={{ marginTop: 4 }}>
+      {fingerprintReadings(r).map((f) => {
+        const p = pos(f.level);
+        const healthy = /dependency/i.test(f.label) ? 100 - p : p;
+        return (
+          <View key={f.label} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3 }}>
+            <Text style={{ fontSize: 8, width: 120 }}>{f.label}</Text>
+            <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: '#EDE5D7' }}>
+              <View style={{ width: `${p}%`, height: 6, borderRadius: 3, backgroundColor: bandColor(healthy) }} />
+            </View>
+            <Text style={{ fontFamily: 'Plex', fontSize: 6.5, width: 52, textAlign: 'right', color: bandColor(healthy) }}>
+              {f.level.toUpperCase()}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+/** Movement since the previous attempt. */
+function Comparison({ c }: { c: AttemptComparison }) {
+  const up = c.indexDelta > 0;
+  const flat = c.indexDelta === 0;
+  const col = flat ? T.mute : up ? T.teal : '#CF796E';
+  const moved = c.dimensions.filter((d) => d.delta !== 0);
+  return (
+    <View style={S.section} wrap={false}>
+      <Text style={S.eyebrow}>Since your last ascent</Text>
+      <Text style={S.h2}>
+        {flat ? 'You are holding your position' : up ? 'You have climbed higher' : 'You have moved down the route'}
+      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+        <View style={{ borderWidth: 1, borderColor: col, borderRadius: 8, padding: 8, marginRight: 12 }}>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 20, color: col }}>
+            {up ? '+' : ''}{c.indexDelta}
+          </Text>
+          <Text style={{ fontFamily: 'Plex', fontSize: 6, letterSpacing: 0.8, color: T.mute }}>INDEX CHANGE</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={S.body}>
+            Attempt {c.attemptNumber}. Index {c.previousIndex} to {c.currentIndex}, stage{' '}
+            {c.previousStage}. {c.previousStageName} to {c.currentStage}. {c.currentStageName}.
+          </Text>
+        </View>
+      </View>
+      {moved.slice(0, 6).map((d) => (
+        <View key={d.construct} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 1.5 }}>
+          <Text style={{ fontSize: 8, fontWeight: 700 }}>{d.name}</Text>
+          <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: d.improved ? T.teal : '#CF796E' }}>
+            {d.previous} to {d.current}{d.reportedAsRisk ? '  (lower is healthier)' : ''}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** The three horizon plan. */
+function Plan({ r }: { r: CompassResult }) {
+  return (
+    <View>
+      {improvementPlan(r).map((b, i) => (
+        <View key={b.horizon} wrap={false} style={{
+          borderLeftWidth: 2, borderLeftColor: T.teal, paddingLeft: 10, marginBottom: 10,
+        }}>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 11, color: T.oxblood }}>
+            {i + 1}. {b.horizon}
+          </Text>
+          <Text style={{ fontFamily: 'Plex', fontSize: 6.5, letterSpacing: 0.8, color: T.mute, marginBottom: 3 }}>
+            {b.timeframe.toUpperCase()}
+          </Text>
+          {b.items.map((it, j) => (
+            <Text key={j} style={{ fontSize: 8, lineHeight: 1.45, marginBottom: 2 }}>{'\u2022  '}{it}</Text>
+          ))}
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -310,8 +571,9 @@ function Cover({ r, name, dateStr }: { r: CompassResult; name: string; dateStr: 
 export async function generateCompassPdf(args: {
   result: CompassResult;
   name?: string;
+  comparison?: AttemptComparison | null;
 }): Promise<Buffer> {
-  const { result: r, name = '' } = args;
+  const { result: r, name = '', comparison = null } = args;
   const sections = generateReportSections(r);
   const byKey = (k: string) => sections.find((s) => s.key === k)!;
   const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -327,28 +589,54 @@ export async function generateCompassPdf(args: {
         by fixed page assignments, which is what keeps pages full.
       */}
       <Page size="A4" style={S.light} wrap>
-        <SectionBlock s={byKey('profile')} />
-
         <View style={S.section}>
-          {/* the heading and its graphic stay welded; the prose after may flow */}
-          <View wrap={false}>
-            <Text style={S.eyebrow}>Section 2</Text>
-            <Text style={S.h2}>{byKey('continuum').title}</Text>
-            <View style={{ marginBottom: 10 }}><StripSvg r={r} /></View>
+          <View wrap={false} minPresenceAhead={70}>
+            <Text style={S.eyebrow}>Your profile</Text>
+            <Text style={S.h2}>{byKey('profile').title}</Text>
           </View>
-          <Lines lines={byKey('continuum').lines} />
+          <Lines lines={upTo(byKey('profile').lines, 'The short version')} />
+          <View wrap={false}>
+            <Text style={S.h3}>The short version</Text>
+            <Fingerprint r={r} />
+          </View>
         </View>
 
         <View style={S.section}>
           <View wrap={false}>
-            <Text style={S.eyebrow}>Section 3</Text>
+            <Text style={S.eyebrow}>Where you are</Text>
+            <Text style={S.h2}>{byKey('continuum').title}</Text>
+            <View style={{ marginBottom: 10 }}><StripSvg r={r} /></View>
+          </View>
+          <View wrap={false} style={{ marginBottom: 10 }}><Ladder r={r} /></View>
+          <Lines lines={byKey('continuum').lines} />
+        </View>
+
+        {comparison ? <Comparison c={comparison} /> : null}
+
+        <View style={S.section}>
+          <View wrap={false}>
+            <Text style={S.eyebrow}>The full picture</Text>
             <Text style={S.h2}>{byKey('signature').title}</Text>
-            <View style={{ alignItems: 'center', marginBottom: 8 }}><RadarSvg r={r} /></View>
-            <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: T.mute, textAlign: 'center', marginBottom: 10 }}>
+            <View style={{ marginBottom: 10 }}><Bars r={r} /></View>
+          </View>
+          <View wrap={false} style={{ alignItems: 'center', marginBottom: 6 }}>
+            <RadarSvg r={r} />
+            <Text style={{ fontFamily: 'Plex', fontSize: 7, color: T.mute, textAlign: 'center', marginBottom: 8 }}>
               Dependency Risk is plotted as risk, so lower is healthier on that spoke.
             </Text>
           </View>
-          <Lines lines={byKey('signature').lines} />
+          <View wrap={false} style={{ marginBottom: 8 }}><Composites r={r} /></View>
+          <Lines lines={upTo(byKey('signature').lines, 'Each dimension, unpacked')} />
+        </View>
+
+        {/* the ten dimensions as cards, replacing ten blocks of prose */}
+        <View style={S.section}>
+          <View wrap={false} minPresenceAhead={90}>
+            <Text style={S.eyebrow}>Each dimension, unpacked</Text>
+            <Text style={S.h2}>Your ten dimensions, worst first</Text>
+          </View>
+          {[...dimensionDetails(r)].sort((a, b) => a.healthy - b.healthy)
+            .map((d) => <DimCard key={d.construct} d={d} />)}
         </View>
 
         <SectionBlock s={byKey('helping')} />
@@ -376,10 +664,11 @@ export async function generateCompassPdf(args: {
 
         <View style={S.section}>
           <View wrap={false} minPresenceAhead={90}>
-            <Text style={S.eyebrow}>Section {byKey('plan').n}</Text>
+            <Text style={S.eyebrow}>What to do</Text>
             <Text style={S.h2}>{byKey('plan').title}</Text>
           </View>
-          <Lines lines={byKey('plan').lines} />
+          <Lines lines={introOnly(byKey('plan').lines)} />
+          <Plan r={r} />
         </View>
 
         <SectionBlock s={byKey('evidence')} />

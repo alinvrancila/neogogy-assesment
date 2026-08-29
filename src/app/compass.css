@@ -2423,3 +2423,305 @@
   .nfc .hero-cta { flex-direction: row; align-items: center; gap: 14px; }
   .nfc .hero-cta .btn { width: auto; }
 }
+
+/* ===========================================================================
+   SECOND-HALF CHARTS
+   Each of these replaces a block that was previously prose only.
+   =========================================================================== */
+
+/* ---- dimension cards ---- */
+.nfc .dimcards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.nfc .dimcard {
+  background: var(--asc-card);
+  border: 1px solid var(--asc-border);
+  border-left: 4px solid var(--asc-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.nfc .dimcard.state-strong { border-left-color: var(--asc-teal); }
+.nfc .dimcard.state-developing { border-left-color: var(--asc-gold); }
+.nfc .dimcard.state-watch { border-left-color: var(--asc-coral); }
+
+.nfc .dimcard-head { display: flex; gap: 14px; align-items: flex-start; }
+.nfc .dimcard .score-ring { flex: 0 0 auto; }
+.nfc .score-ring-n { font-family: var(--f-display); font-size: 19px; font-weight: 700; }
+
+.nfc .dimcard-title h4 {
+  font-family: var(--f-display);
+  font-size: 1.1rem;
+  font-weight: 640;
+  margin: 2px 0 6px;
+  color: var(--asc-ink);
+}
+
+.nfc .dimcard-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.nfc .chip-state, .nfc .chip-conf, .nfc .chip-gap {
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.nfc .chip-state.state-strong { background: var(--asc-teal-pale); color: #0d6d5d; }
+.nfc .chip-state.state-developing { background: #FBEBD2; color: #8a5f16; }
+.nfc .chip-state.state-watch { background: #FBE7E3; color: #a2483c; }
+.nfc .chip-conf { background: #EEE8DC; color: var(--asc-muted); }
+.nfc .chip-gap { background: #EFE3F0; color: #6b4a72; }
+
+.nfc .dimcard-inverse {
+  font-size: .82rem;
+  color: var(--asc-muted);
+  margin: 7px 0 0;
+}
+
+.nfc .dimcard-scale { margin: 14px 0 12px; }
+
+.nfc .sc-track {
+  position: relative;
+  display: block;
+  height: 9px;
+  border-radius: 999px;
+  background: #EDE5D7;
+}
+
+.nfc .sc-fill { display: block; height: 100%; border-radius: 999px; }
+
+.nfc .sc-mark {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 15px;
+  background: var(--asc-ink);
+  opacity: .38;
+}
+
+.nfc .sc-legend {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  color: var(--asc-muted);
+  margin-top: 6px;
+}
+
+.nfc .dimcard-body { margin: 0; }
+.nfc .dimcard-body > div { margin-bottom: 9px; }
+
+.nfc .dimcard-body dt {
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--asc-teal);
+  margin-bottom: 2px;
+}
+
+.nfc .dimcard-body dd {
+  margin: 0;
+  font-size: .89rem;
+  line-height: 1.5;
+  color: var(--asc-ink);
+}
+
+.nfc .dimcard-more { margin-top: 6px; }
+
+.nfc .dimcard-more summary {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--asc-muted);
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+.nfc .dimcard-more summary:focus-visible { outline: 2px solid var(--asc-teal); outline-offset: 3px; }
+.nfc .dimcard-more ul { margin: 4px 0 8px 16px; padding: 0; }
+.nfc .dimcard-more li { font-size: .87rem; line-height: 1.5; margin: 5px 0; color: var(--asc-ink); }
+.nfc .dimcard-res { font-size: .82rem; line-height: 1.5; color: var(--asc-muted); margin: 0; }
+
+/* ---- fingerprint meters ---- */
+.nfc .fingerprint { margin-top: 14px; }
+
+.nfc .fp-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 190px) 1fr 92px;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 0;
+}
+
+.nfc .fp-label { font-size: .9rem; }
+.nfc .fp-track { height: 8px; border-radius: 999px; background: #EDE5D7; overflow: hidden; }
+.nfc .fp-track span { display: block; height: 100%; border-radius: 999px; }
+.nfc .fp-level { font-family: var(--f-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; }
+
+@media (max-width: 560px) {
+  .nfc .fp-row { grid-template-columns: 1fr 78px; }
+  .nfc .fp-track { grid-column: 1 / -1; }
+}
+
+/* ---- bottleneck gate ---- */
+.nfc .gategap {
+  background: var(--asc-card);
+  border: 1px solid var(--asc-border);
+  border-radius: 12px;
+  padding: 15px 17px;
+  margin: 4px 0 16px;
+}
+
+.nfc .gg-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+.nfc .gg-name { font-family: var(--f-display); font-size: 1.05rem; font-weight: 640; }
+.nfc .gg-now { font-family: var(--f-display); font-size: 1.5rem; font-weight: 700; }
+
+.nfc .gg-track { position: relative; height: 11px; border-radius: 999px; background: #EDE5D7; }
+.nfc .gg-fill { display: block; height: 100%; border-radius: 999px; }
+.nfc .gg-req { position: absolute; top: -4px; width: 3px; height: 19px; background: var(--asc-ink); opacity: .6; border-radius: 2px; }
+
+.nfc .gg-labels {
+  display: flex; justify-content: space-between;
+  font-family: var(--f-mono); font-size: 10px; color: var(--asc-muted); margin-top: 7px;
+}
+
+.nfc .gg-note { font-size: .88rem; line-height: 1.55; color: var(--asc-muted); margin: 9px 0 0; }
+
+/* ---- threshold strip ---- */
+.nfc .tstrip { margin: 4px 0 16px; }
+
+.nfc .ts-scale {
+  display: grid;
+  grid-template-columns: 178px 1fr 46px;
+  gap: 12px;
+  font-family: var(--f-mono);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--asc-muted);
+  margin: 0 0 6px;
+}
+
+/* the three zones occupy the same column as the tracks, split at 45 and 65,
+   so the labels sit directly above their own tick lines */
+.nfc .ts-scale::before { content: ''; }
+
+.nfc .ts-zones {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: 45% 20% 35%;
+}
+
+.nfc .ts-zone { padding-left: 4px; border-left: 1px solid var(--asc-border); }
+.nfc .ts-zone:first-child { border-left: none; padding-left: 0; }
+
+.nfc .ts-row {
+  display: grid;
+  grid-template-columns: 178px 1fr 46px;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.nfc .ts-name { font-size: .88rem; }
+.nfc .ts-track { position: relative; height: 20px; }
+
+.nfc .ts-track::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 9px;
+  height: 2px; background: #EDE5D7; border-radius: 2px;
+}
+
+.nfc .ts-line { position: absolute; top: 2px; width: 1px; height: 16px; background: var(--asc-ink); opacity: .28; }
+.nfc .ts-l45 { left: 45%; }
+.nfc .ts-l65 { left: 65%; }
+
+.nfc .ts-dot {
+  position: absolute; top: 4px; width: 12px; height: 12px;
+  border-radius: 50%; transform: translateX(-6px); border: 2px solid var(--asc-card);
+}
+
+.nfc .ts-val { font-family: var(--f-mono); font-size: .85rem; text-align: right; font-weight: 600; }
+.nfc .ts-note { font-size: .82rem; line-height: 1.5; color: var(--asc-muted); margin: 10px 0 0; }
+
+@media (max-width: 700px) {
+  .nfc .ts-scale { display: none; }
+  .nfc .ts-row { grid-template-columns: 130px 1fr 42px; }
+}
+
+/* ---- calibration scale ---- */
+.nfc .calib { margin: 4px 0 16px; }
+
+.nfc .cal-track {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  height: 26px;
+  margin-top: 42px;
+}
+
+.nfc .cal-seg { background: #EDE5D7; border-radius: 4px; }
+
+.nfc .cal-pin {
+  position: absolute;
+  top: -38px;
+  transform: translateX(-50%);
+  font-family: var(--f-mono);
+  font-size: 9.5px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.nfc .cal-pin i {
+  display: block;
+  width: 2px; height: 30px;
+  margin: 4px auto 0;
+  background: currentColor;
+}
+
+.nfc .cal-felt { color: var(--asc-gold); }
+.nfc .cal-pred { color: #6b4a72; top: -62px; }
+.nfc .cal-pred i { height: 54px; }
+.nfc .cal-meas { color: var(--asc-oxblood); font-weight: 600; }
+
+.nfc .cal-ends {
+  display: flex; justify-content: space-between;
+  font-family: var(--f-mono); font-size: 9.5px; color: var(--asc-muted); margin-top: 6px;
+}
+
+.nfc .cal-note { font-size: .85rem; line-height: 1.5; color: var(--asc-muted); margin: 10px 0 0; }
+
+/* ---- pattern cards ---- */
+.nfc .patterns { display: grid; gap: 10px; margin-top: 12px; }
+
+.nfc .pattern {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: var(--asc-card);
+  border: 1px solid var(--asc-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.nfc .patterns.help .pattern { border-left: 4px solid var(--asc-teal); }
+.nfc .patterns.harm .pattern { border-left: 4px solid var(--asc-coral); }
+
+.nfc .pat-mark {
+  font-size: 1.1rem; line-height: 1; margin-top: 2px;
+  width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center; flex: 0 0 auto;
+}
+
+.nfc .patterns.help .pat-mark { background: var(--asc-teal-pale); color: #0d6d5d; }
+.nfc .patterns.harm .pat-mark { background: #FBE7E3; color: #a2483c; }
+
+.nfc .pattern h4 { font-family: var(--f-display); font-size: 1.02rem; font-weight: 640; margin: 0 0 4px; }
+.nfc .pattern p { font-size: .9rem; line-height: 1.55; color: var(--asc-muted); margin: 0; }

@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
 
   let emailSent = false;
   try {
-    const pdf = await generateCompassPdf({ result, name: fullName });
+    const pdf = await generateCompassPdf({ result, name: fullName, comparison });
     if (isEmailEnabled()) {
       const first = body.firstName || fullName;
       const sent = await sendReportEmail({

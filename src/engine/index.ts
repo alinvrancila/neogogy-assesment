@@ -14,7 +14,8 @@ import { buildRecommendations } from "./recommendations";
 
 export {
   generateReport, generateReportSections, reportHead, confidenceLabel, REPORT_DISCLAIMER,
-  type ReportSection, type ReportSectionKey, type ReportHead,
+  dimensionDetails, fingerprintReadings, improvementPlan,
+  type ReportSection, type ReportSectionKey, type ReportHead, type DimensionDetail,
 } from "./narrative";
 export { applicableItems, allItems } from "./scoring";
 export * from "./types";

@@ -17,7 +17,10 @@ import {
   generateReportSections, reportHead, confidenceLabel, REPORT_DISCLAIMER,
   type CompassResult, type ReportSection, type ReportSectionKey,
 } from '@/engine';
-import { improvementPlan } from '@/engine/narrative';
+import { improvementPlan, dimensionDetails, fingerprintReadings } from '@/engine/narrative';
+import {
+  DimensionCards, FingerprintMeters, GateGap, ThresholdStrip, CalibrationScale, PatternCards,
+} from './ResultCharts';
 import { Markdown } from './Markdown';
 import AscentResults from './ascent/AscentResults';
 import type { AttemptComparison } from '@/lib/history';
@@ -190,6 +193,15 @@ function introOnly(lines: string[]): string[] {
   return at === -1 ? lines : lines.slice(0, at);
 }
 
+/** Lines up to a marker line, used where a chart replaces the prose below it. */
+function upTo(lines: string[], marker: string): string[] {
+  const at = lines.findIndex((l) => l.includes(marker));
+  return at === -1 ? lines : lines.slice(0, at);
+}
+
+/** Drop bullet lines, used where the same items are drawn as a chart. */
+const withoutBullets = (lines: string[]) => lines.filter((l) => !l.trimStart().startsWith('- '));
+
 function SectionBlock(
   { section, result, lead }: { section: ReportSection; result: CompassResult; lead?: string }
 ) {
@@ -205,9 +217,17 @@ function SectionBlock(
           </div>
         </>
       )
+    : section.key === 'bottleneck' ? <GateGap result={result} />
+    : section.key === 'strengths' ? <ThresholdStrip result={result} />
+    : section.key === 'selfKnowledge' ? <CalibrationScale result={result} />
     : null;
+
   const visualAfter =
-    section.key === 'nextStage' ? <NextStagePanel result={result} />
+    section.key === 'profile' ? <FingerprintMeters readings={fingerprintReadings(result)} />
+    : section.key === 'signature' ? <DimensionCards details={dimensionDetails(result)} />
+    : section.key === 'helping' ? <PatternCards result={result} kind="help" />
+    : section.key === 'harming' ? <PatternCards result={result} kind="harm" />
+    : section.key === 'nextStage' ? <NextStagePanel result={result} />
     : section.key === 'plan' ? <PlanTimeline blocks={improvementPlan(result)} />
     : null;
 
@@ -219,7 +239,15 @@ function SectionBlock(
       {/* The plan is rendered as a timeline below, so on screen this section
           shows only its intro rather than repeating every item as prose. The
           PDF still renders the full markdown. */}
-      <Markdown lines={section.key === 'plan' ? introOnly(section.lines) : section.lines} />
+      <Markdown
+        lines={
+          section.key === 'plan' ? introOnly(section.lines)
+          : section.key === 'signature' ? upTo(section.lines, 'Each dimension, unpacked')
+          : section.key === 'profile' ? upTo(section.lines, 'The short version')
+          : section.key === 'helping' || section.key === 'harming' ? withoutBullets(section.lines)
+          : section.lines
+        }
+      />
       {visualAfter}
     </section>
   );
