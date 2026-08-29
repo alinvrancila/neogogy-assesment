@@ -348,20 +348,19 @@ function AscentMap({ r }: { r: CompassResult }) {
             strokeDasharray={`${Math.round(travelled * 1180)},1180`}
           />
 
-          {/* Camps. Every camp carries its number in the band above the
-              range; names are drawn for the ones that orient the reader, so
-              ten long labels never fight each other for the same strip. */}
+          {/* Camps. Every camp carries its number and its name in the band
+              above the range, on three staggered rows so that neighbouring
+              names never share a line and the long ones have room. */}
           {STAGES.map((st) => {
             const p = pointAtIndex(st.minIndex);
             const isHere = st.stage === r.stage.stage;
             const isNext = !atTop && st.stage === nextStage;
             const reached = r.stage.rawIndex >= st.minIndex;
-            const named = isHere || isNext || st.stage === 1 || st.stage === STAGES.length;
-            const band = st.stage % 2 === 1 ? 52 : 104;
+            const band = [46, 84, 122][st.stage % 3];
             const lx = Math.max(80, Math.min(MAP_VIEW.w - 130, p.x));
             // keep long names clear of the summit marker on the right edge
             const nw = st.name.length * 6.6;
-            const nx = Math.min(lx - Math.min(st.name.length * 3.4, 100), MAP_VIEW.w - 60 - nw);
+            const nx = Math.min(lx - Math.min(st.name.length * 3.4, 100), MAP_VIEW.w - 78 - nw);
             return (
               <React.Fragment key={st.stage}>
                 <Line x1={lx} y1={band + 8} x2={p.x} y2={p.y - 14}
@@ -370,12 +369,10 @@ function AscentMap({ r }: { r: CompassResult }) {
                   fill={isHere ? T.oxblood : isNext ? T.teal : T.mute}>
                   {String(st.stage)}
                 </SvgText>
-                {named ? (
-                  <SvgText x={nx} y={band + 20} style={{ fontFamily: 'Spectral', fontSize: 15 }}
-                    fill={isHere ? T.oxblood : isNext ? T.teal : T.ink}>
-                    {st.name}
-                  </SvgText>
-                ) : null}
+                <SvgText x={nx} y={band + 20} style={{ fontFamily: 'Spectral', fontSize: 15 }}
+                  fill={isHere ? T.oxblood : isNext ? T.teal : T.ink}>
+                  {st.name}
+                </SvgText>
                 <Circle cx={p.x} cy={p.y} r={isHere ? 11 : 7}
                   fill={reached ? T.teal : T.card}
                   stroke={isNext ? T.teal : '#C9BFAE'} strokeWidth={isNext ? 2.5 : 1.5} />
@@ -1242,7 +1239,7 @@ export async function generateCompassPdf(args: {
         {/* eslint-disable-next-line jsx-a11y/alt-text */}
         <Image src={BACKDROP} style={{ position: 'absolute', bottom: 0, left: 0, width: PAGE.w, height: PAGE.h * 0.42, opacity: 0.85 }} />
         <View style={{ position: 'absolute', top: 0, left: 0, width: PAGE.w, height: PAGE.h * 0.6, backgroundColor: T.paper, opacity: 0.5 }} />
-        <View style={{ flexGrow: 1, justifyContent: 'center' }}>
+        <View style={{ flexGrow: 1 }}>
           <Text style={{ fontFamily: 'Plex', fontSize: 8.5, letterSpacing: 1.4, textTransform: 'uppercase', color: T.teal, marginBottom: 10 }}>
             Section {byKey('experiment').n}
           </Text>
