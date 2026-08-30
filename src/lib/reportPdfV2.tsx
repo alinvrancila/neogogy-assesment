@@ -262,12 +262,14 @@ function AscentMap({ r }: { r: CompassResult }) {
   const W = CW;
   const H = Math.round((CW * MAP_VIEW.h) / MAP_VIEW.w);
   const sx = W / MAP_VIEW.w;
-  // Where the climber stands is the placed index, which a gate can hold below
-  // the raw score. Plotting the raw score here would put the marker past camps
-  // the report says have not been reached.
-  const placed = r.stage.index;
   const raw = r.stage.rawIndex;
   const gated = !!r.stage.gated;
+  // A held climber stands at their camp. The engine's gated index sits at the
+  // top of the band, a fraction below the next camp, which on a drawn route is
+  // indistinguishable from standing at that next camp: the complaint this
+  // placement answers. Ungated, the marker stays at the exact index.
+  const campIndex = STAGES.find((st) => st.stage === r.stage.stage)?.minIndex ?? 0;
+  const placed = gated ? campIndex : r.stage.index;
   const here = pointAtIndex(placed);
   const reach = pointAtIndex(raw);
   const nextStage = r.nextTarget.stage;
@@ -279,6 +281,10 @@ function AscentMap({ r }: { r: CompassResult }) {
   const pillW = Math.round(pillText.length * 8.4) + 36;
   const pillX = Math.max(12, Math.min(MAP_VIEW.w - pillW - 12, here.x - pillW / 2));
   const pillY = calloutBelow ? here.y + 40 : here.y - 104;
+  // The reach chip goes on the far side of its ring, so it can never sit over
+  // the marker however small the withheld stretch is.
+  const chipW = Math.round(`INDEX ${raw}`.length * 7.2) + 26;
+  const chipX = reach.x + 16 + chipW < MAP_VIEW.w ? reach.x + 16 : reach.x - 16 - chipW;
 
   return (
     <View style={{ width: W, height: H, position: 'relative' }}>
@@ -370,12 +376,11 @@ function AscentMap({ r }: { r: CompassResult }) {
               />
               <Circle cx={reach.x} cy={reach.y} r={8} fill={T.card} stroke={T.gold} strokeWidth={2.5} />
               <Rect
-                x={Math.max(8, Math.min(MAP_VIEW.w - 132, reach.x - 62))} y={reach.y + 16}
-                width={124} height={24} rx={12} fill="#F7F1E4" fillOpacity={0.92}
-                stroke={T.gold} strokeWidth={1}
+                x={chipX} y={reach.y - 12} width={chipW} height={24} rx={12}
+                fill="#F7F1E4" fillOpacity={0.94} stroke={T.gold} strokeWidth={1}
               />
               <SvgText
-                x={Math.max(8, Math.min(MAP_VIEW.w - 132, reach.x - 62)) + 14} y={reach.y + 32}
+                x={chipX + 13} y={reach.y + 4}
                 style={{ fontFamily: 'Plex', fontSize: 12 }} fill={T.ink}>
                 {`INDEX ${raw}`}
               </SvgText>
@@ -1089,13 +1094,12 @@ export async function generateCompassPdf(args: {
               ) : null}
             </View>
             <Text style={{ fontFamily: 'Plex', fontSize: 6.5, color: T.mute, marginBottom: 10 }}>
-              {'Altitude reflects the developmental index, 0 at basecamp to 100 at the summit. '}
-              {'The marker sits at your exact index rather than at the middle of a stage, and the '}
-              {'gold marks are the practice gates, where a stage asks for a minimum reading before '}
-              {'it opens. '}
+              {'Altitude reflects the developmental index, 0 at basecamp to 100 at the summit, and '}
+              {'the gold marks are the practice gates, where a stage asks for a minimum reading '}
+              {'before it opens. '}
               {r.stage.gated
-                ? `A gate is holding your stage at ${r.stage.stage} even though your index reads ${r.stage.rawIndex}, which the section below explains.`
-                : ''}
+                ? `You are drawn standing at camp ${r.stage.stage}, because a gate holds your stage there. The open ring ahead is where your index of ${r.stage.rawIndex} reaches, and the section below explains what closes the gap.`
+                : 'The marker sits at your exact index rather than at the middle of a stage.'}
             </Text>
           </View>
           <View wrap={false} style={{ marginBottom: 10 }}><Ladder r={r} /></View>

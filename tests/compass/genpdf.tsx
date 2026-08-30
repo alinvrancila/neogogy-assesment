@@ -19,6 +19,9 @@ const cases: Array<[string, Submission]> = [
   ["gated", build("teacher", 5, (it) => (it.construct === "verification" ? unhealthiest(it) : healthiest(it)))],
   ["insufficient", { persona: "student", usage: 3, b1: 3, b2: 3, answers: { student_agency_claim: 3 } }],
   ["mixed-parent", build("parent", 3, (it, i) => Math.min(maxV(it), ((i * 7) % 5) + 1))],
+  // held at stage 6 by responsible use, the shape a real respondent reported
+  ["gated-mid", build("teacher", 4, (it) =>
+    (it.construct === "responsibleUse" ? (it.type === "reverse" ? maxV(it) - 1 : 2) : healthiest(it)))],
 ];
 
 const dir = process.argv[2];

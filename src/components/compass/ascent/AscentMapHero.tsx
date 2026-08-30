@@ -24,11 +24,11 @@ const minIndexOf = (stage: number) => STAGES.find((s) => s.stage === stage)?.min
 export default function AscentMapHero(
   { result, comparison }: { result: CompassResult; comparison?: AttemptComparison | null }
 ) {
-  // The marker stands at the placed index, which a gate can hold below the raw
-  // score. Plotting the raw score puts the climber past camps the page says
-  // have not been reached, which is what a reader notices first.
-  const index = result.stage.index;
+  // A held climber stands at their camp. The engine's gated index sits a
+  // fraction below the next camp, which on a drawn route reads as standing at
+  // that next camp. Ungated, the marker stays at the exact index.
   const raw = result.stage.rawIndex;
+  const index = result.stage.gated ? minIndexOf(result.stage.stage) : result.stage.index;
   const here = pointAtIndex(index);
   const reach = pointAtIndex(raw);
   // The callout is clamped so it cannot run off the panel at either extreme.
@@ -294,6 +294,9 @@ export default function AscentMapHero(
         {result.stage.gated ? <span><i className="lg-held" /> Held by a gate</span> : null}
         <span className="asc-legend-note">
           Altitude reflects developmental index, 0 at basecamp to 100 at the summit.
+          {result.stage.gated
+            ? ` You are drawn standing at camp ${result.stage.stage}, because a gate holds your stage there. The open ring ahead is where your index of ${raw} reaches.`
+            : ''}
         </span>
       </div>
     </div>
