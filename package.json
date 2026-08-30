@@ -15,7 +15,8 @@
     "art:backdrop": "node scripts/art/render-backdrop.mjs",
     "art:cover": "node scripts/art/render-cover.mjs",
     "test:analytics": "tsx tests/compass/analytics.ts",
-    "test:context": "tsx tests/compass/context.ts"
+    "test:context": "tsx tests/compass/context.ts",
+    "test:gated": "tsx tests/compass/gated.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.620.0",

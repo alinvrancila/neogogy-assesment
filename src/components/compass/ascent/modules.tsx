@@ -120,7 +120,7 @@ export function RouteStages({ result }: { result: CompassResult }) {
         {STAGES.map((s) => {
           const isHere = s.stage === here;
           const isNext = s.stage === next && next !== here;
-          const reached = result.stage.rawIndex >= s.minIndex;
+          const reached = result.stage.index >= s.minIndex;
           return (
             <li
               key={s.stage}

@@ -201,54 +201,6 @@ function SectionBlock({ s }: { s: ReportSection }) {
 
 /* --------------------------------------------------------------- graphics */
 
-function StripSvg({ r }: { r: CompassResult }) {
-  const W = CW; const H = 78; const padX = 12; const y = 34;
-  const tw = W - padX * 2;
-  const xOf = (i: number) => padX + (Math.max(0, Math.min(100, i)) / 100) * tw;
-  const marker = xOf(r.stage.rawIndex);
-  const here = STAGES.find((st) => st.stage === r.stage.stage)!;
-  const next = STAGES.find((st) => st.stage === r.stage.stage + 1);
-  const bandX1 = xOf(here.minIndex);
-  const bandX2 = xOf(next ? next.minIndex : 100);
-
-  return (
-    <Svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
-      <Rect x={0} y={0} width={W} height={H} fill={T.card} rx={8} stroke={T.hair} strokeWidth={1} />
-
-      {/* the stage band actually occupied, so a gated marker is not misread */}
-      <Rect x={bandX1} y={y - 11} width={Math.max(4, bandX2 - bandX1)} height={22}
-        fill={T.teal} fillOpacity={0.16} rx={3} />
-
-      <Line x1={padX} y1={y} x2={W - padX} y2={y} stroke={T.hair} strokeWidth={1} />
-
-      {STAGES.map((st) => {
-        const x = xOf(st.minIndex);
-        const isHere = st.stage === r.stage.stage;
-        return (
-          <React.Fragment key={st.stage}>
-            <Line x1={x} y1={y - 6} x2={x} y2={y + 6}
-              stroke={isHere ? T.teal : T.hair} strokeWidth={1} />
-            <Text x={x - 2} y={y + 17} style={{ fontFamily: 'Plex', fontSize: 6.5 }}
-              fill={isHere ? T.teal : T.mute}>
-              {String(st.stage)}
-            </Text>
-          </React.Fragment>
-        );
-      })}
-
-      {/* index marker: hollow when gating means it overstates the placement */}
-      <Line x1={marker} y1={y - 13} x2={marker} y2={y + 8} stroke={T.teal} strokeWidth={1.3} />
-      <Circle cx={marker} cy={y} r={4}
-        fill={r.stage.gated ? T.card : T.teal} stroke={T.teal} strokeWidth={1.3} />
-
-      <Text x={padX} y={H - 6} style={{ fontFamily: 'Plex', fontSize: 7 }} fill={T.mute}>
-        {r.stage.gated
-          ? `Index ${r.stage.rawIndex} would reach stage ${r.stage.gated.cappedFrom}. Held at stage ${r.stage.stage}, see section 2.`
-          : `Shaded band is stage ${r.stage.stage}. Marker is your index, ${r.stage.rawIndex}.`}
-      </Text>
-    </Svg>
-  );
-}
 
 function RadarSvg({ r }: { r: CompassResult }) {
   const ids = Object.keys(CONSTRUCTS) as ConstructId[];
@@ -310,13 +262,22 @@ function AscentMap({ r }: { r: CompassResult }) {
   const W = CW;
   const H = Math.round((CW * MAP_VIEW.h) / MAP_VIEW.w);
   const sx = W / MAP_VIEW.w;
-  const here = pointAtIndex(r.stage.rawIndex);
+  // Where the climber stands is the placed index, which a gate can hold below
+  // the raw score. Plotting the raw score here would put the marker past camps
+  // the report says have not been reached.
+  const placed = r.stage.index;
+  const raw = r.stage.rawIndex;
+  const gated = !!r.stage.gated;
+  const here = pointAtIndex(placed);
+  const reach = pointAtIndex(raw);
   const nextStage = r.nextTarget.stage;
   const atTop = nextStage === r.stage.stage;
-  const travelled = r.stage.rawIndex / 100;
+  const travelled = placed / 100;
   // Near the summit the callout would land in the label band, so it flips down.
   const calloutBelow = here.y < 250;
-  const pillX = Math.max(12, Math.min(MAP_VIEW.w - 200, here.x - 94));
+  const pillText = gated ? `YOU ARE HERE  STAGE ${r.stage.stage}` : `YOU ARE HERE  ${raw}`;
+  const pillW = Math.round(pillText.length * 8.4) + 36;
+  const pillX = Math.max(12, Math.min(MAP_VIEW.w - pillW - 12, here.x - pillW / 2));
   const pillY = calloutBelow ? here.y + 40 : here.y - 104;
 
   return (
@@ -355,7 +316,7 @@ function AscentMap({ r }: { r: CompassResult }) {
             const p = pointAtIndex(st.minIndex);
             const isHere = st.stage === r.stage.stage;
             const isNext = !atTop && st.stage === nextStage;
-            const reached = r.stage.rawIndex >= st.minIndex;
+            const reached = placed >= st.minIndex;
             const band = [46, 84, 122][st.stage % 3];
             const lx = Math.max(80, Math.min(MAP_VIEW.w - 130, p.x));
             // keep long names clear of the summit marker on the right edge
@@ -398,6 +359,29 @@ function AscentMap({ r }: { r: CompassResult }) {
             );
           })}
 
+          {/* When a gate holds the placement, the stretch the score reaches but
+              the gate withholds is drawn open, with a hollow marker at its end,
+              so the map agrees with the stage named below it. */}
+          {gated ? (
+            <React.Fragment>
+              <Path
+                d={routePath()} stroke={T.gold} strokeWidth={5} fill="none" strokeLinecap="butt"
+                strokeDasharray={`0,${Math.round(travelled * 1180)},${Math.round((raw / 100 - travelled) * 1180)},1180`}
+              />
+              <Circle cx={reach.x} cy={reach.y} r={8} fill={T.card} stroke={T.gold} strokeWidth={2.5} />
+              <Rect
+                x={Math.max(8, Math.min(MAP_VIEW.w - 132, reach.x - 62))} y={reach.y + 16}
+                width={124} height={24} rx={12} fill="#F7F1E4" fillOpacity={0.92}
+                stroke={T.gold} strokeWidth={1}
+              />
+              <SvgText
+                x={Math.max(8, Math.min(MAP_VIEW.w - 132, reach.x - 62)) + 14} y={reach.y + 32}
+                style={{ fontFamily: 'Plex', fontSize: 12 }} fill={T.ink}>
+                {`INDEX ${raw}`}
+              </SvgText>
+            </React.Fragment>
+          ) : null}
+
           {/* The climber, at the exact index. The callout sits above the marker
               unless that would run into the label band, in which case below. */}
           <Circle cx={here.x} cy={here.y} r={14} fill={T.card} stroke={T.oxblood} strokeWidth={3} />
@@ -407,9 +391,9 @@ function AscentMap({ r }: { r: CompassResult }) {
             x2={here.x} y2={here.y + (calloutBelow ? 40 : -40)}
             stroke={T.oxblood} strokeWidth={2}
           />
-          <Rect x={pillX} y={pillY} width={188} height={32} rx={16} fill={T.oxblood} />
-          <SvgText x={pillX + 22} y={pillY + 21} style={{ fontFamily: 'Plex', fontSize: 14 }} fill="#F7F1E4">
-            {`YOU ARE HERE  ${r.stage.rawIndex}`}
+          <Rect x={pillX} y={pillY} width={pillW} height={32} rx={16} fill={T.oxblood} />
+          <SvgText x={pillX + 18} y={pillY + 21} style={{ fontFamily: 'Plex', fontSize: 14 }} fill="#F7F1E4">
+            {pillText}
           </SvgText>
         </Svg>
       </View>
@@ -427,7 +411,7 @@ function Ladder({ r }: { r: CompassResult }) {
       {[...STAGES].reverse().map((s) => {
         const isHere = s.stage === here;
         const isNext = s.stage === next && next !== here;
-        const reached = r.stage.rawIndex >= s.minIndex;
+        const reached = r.stage.index >= s.minIndex;
         return (
           <View key={s.stage} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4 }}>
             <Text style={{ fontFamily: 'Plex', fontSize: 7, color: T.mute, width: 14, textAlign: 'right', marginRight: 6 }}>
@@ -1089,7 +1073,20 @@ export async function generateCompassPdf(args: {
                 width: 8, height: 8, borderRadius: 4, borderWidth: 2,
                 borderColor: T.oxblood, backgroundColor: T.card, marginRight: 5,
               }} />
-              <Text style={{ fontFamily: 'Plex', fontSize: 6.2, color: T.mute }}>You</Text>
+              <Text style={{
+                fontFamily: 'Plex', fontSize: 6.2, color: T.mute,
+                marginRight: r.stage.gated ? 12 : 0,
+              }}>
+                You
+              </Text>
+              {r.stage.gated ? (
+                <>
+                  <View style={{ width: 14, height: 3, borderRadius: 2, backgroundColor: T.gold, marginRight: 5 }} />
+                  <Text style={{ fontFamily: 'Plex', fontSize: 6.2, color: T.mute }}>
+                    Held by a gate
+                  </Text>
+                </>
+              ) : null}
             </View>
             <Text style={{ fontFamily: 'Plex', fontSize: 6.5, color: T.mute, marginBottom: 10 }}>
               {'Altitude reflects the developmental index, 0 at basecamp to 100 at the summit. '}

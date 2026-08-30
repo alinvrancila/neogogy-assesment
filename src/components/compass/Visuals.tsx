@@ -37,7 +37,8 @@ export function ContinuumStrip({ result }: { result: CompassResult }) {
 
   const xOf = (index: number) => padX + (Math.max(0, Math.min(100, index)) / 100) * trackW;
 
-  const marker = xOf(result.stage.rawIndex);
+  // the placed index, so a gated marker sits inside the stage it names
+  const marker = xOf(result.stage.index);
   const bl = result.stage.borderline;
   const gated = result.stage.gated;
 

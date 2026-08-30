@@ -24,10 +24,19 @@ const minIndexOf = (stage: number) => STAGES.find((s) => s.stage === stage)?.min
 export default function AscentMapHero(
   { result, comparison }: { result: CompassResult; comparison?: AttemptComparison | null }
 ) {
-  const index = result.stage.rawIndex;
+  // The marker stands at the placed index, which a gate can hold below the raw
+  // score. Plotting the raw score puts the climber past camps the page says
+  // have not been reached, which is what a reader notices first.
+  const index = result.stage.index;
+  const raw = result.stage.rawIndex;
   const here = pointAtIndex(index);
+  const reach = pointAtIndex(raw);
   // The callout is clamped so it cannot run off the panel at either extreme.
-  const calloutX = Math.max(104, Math.min(VIEW.w - 104, here.x));
+  const calloutLabel = result.stage.gated
+    ? `YOU ARE HERE \u00b7 STAGE ${result.stage.stage}`
+    : `YOU ARE HERE \u00b7 ${result.stage.rawIndex}`;
+  const calloutW = Math.round(calloutLabel.length * 8.6) + 36;
+  const calloutX = Math.max(calloutW / 2 + 8, Math.min(VIEW.w - calloutW / 2 - 8, here.x));
   const nextStage = result.nextTarget.stage;
   const nextAtTop = nextStage === result.stage.stage;
   const nextPt = pointAtIndex(minIndexOf(nextStage));
@@ -246,15 +255,28 @@ export default function AscentMapHero(
                   points={`${here.x},${here.y - 40} ${here.x + 30},${here.y - 33} ${here.x},${here.y - 26}`}
                   fill="var(--asc-oxblood)"
                 />
+                {result.stage.gated ? (
+                  <g aria-hidden="true">
+                    <path
+                      d={full} fill="none" stroke="var(--asc-gold)" strokeWidth={5}
+                      pathLength={1}
+                      strokeDasharray={`0 ${travelledLen} ${raw / 100 - travelledLen} 1`}
+                    />
+                    <circle cx={reach.x} cy={reach.y} r={8} fill="none" stroke="var(--asc-gold)" strokeWidth={2.5} />
+                    <text x={reach.x} y={reach.y + 34} textAnchor="middle" className="asc-anchor-label">
+                      INDEX {raw}
+                    </text>
+                  </g>
+                ) : null}
                 <circle cx={here.x} cy={here.y} r={14} fill="var(--asc-card)" stroke="var(--asc-oxblood)" strokeWidth={3} />
                 <circle cx={here.x} cy={here.y} r={6} fill="var(--asc-oxblood)" />
                 <g>
                   <rect
-                    x={calloutX - 92} y={here.y - 106} width={184} height={32} rx={16}
+                    x={calloutX - calloutW / 2} y={here.y - 106} width={calloutW} height={32} rx={16}
                     fill="var(--asc-oxblood)"
                   />
                   <text x={calloutX} y={here.y - 85} textAnchor="middle" className="asc-here-chip">
-                    YOU ARE HERE · {result.stage.rawIndex}
+                    {calloutLabel}
                   </text>
                 </g>
               </g>
@@ -269,6 +291,7 @@ export default function AscentMapHero(
         <span><i className="lg-ahead" /> Route ahead</span>
         <span><i className="lg-camp" /> Stage camp</span>
         <span><i className="lg-gate" /> Practice gate</span>
+        {result.stage.gated ? <span><i className="lg-held" /> Held by a gate</span> : null}
         <span className="asc-legend-note">
           Altitude reflects developmental index, 0 at basecamp to 100 at the summit.
         </span>

@@ -1378,6 +1378,7 @@
 .nfc .asc-legend .lg-ahead { background: var(--asc-muted); opacity: .5; }
 .nfc .asc-legend .lg-camp { width: 9px; height: 9px; border-radius: 50%; background: var(--asc-card); border: 1.5px solid var(--asc-border); }
 .nfc .asc-legend .lg-gate { width: 8px; height: 8px; border-radius: 1px; background: var(--asc-gold); transform: rotate(45deg); }
+.nfc .asc-legend .lg-held { width: 16px; height: 3px; border-radius: 2px; background: var(--asc-gold); }
 .nfc .asc-legend-note { flex-basis: 100%; opacity: .85; }
 
 /* ---- orientation card ---- */
