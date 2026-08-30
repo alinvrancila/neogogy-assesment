@@ -619,6 +619,10 @@ export interface ReachReport {
   /** Where the browser's timezone disagrees with the address, which is normal
    *  for travellers and expected for VPN users. */
   timezoneMismatch: number;
+  /** Records that carry device details but no place. A handful is ordinary,
+   *  since some addresses cannot be resolved. All of them means the lookup
+   *  itself is failing, which is worth seeing rather than guessing at. */
+  unresolvedAddresses: number;
 }
 
 export interface TechReport {
@@ -733,6 +737,7 @@ export function buildReachReport(latest: Attempt[]): ReachReport {
       }))
       .sort((a, b) => b.count - a.count),
     timezoneMismatch: shareOfPublic(mismatched, n),
+    unresolvedAddresses: withMeta.filter((a) => a.meta?.device && !a.meta?.country).length,
   };
 }
 

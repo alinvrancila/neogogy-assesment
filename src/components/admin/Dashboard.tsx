@@ -538,6 +538,15 @@ export default function Dashboard() {
               tone={data.reach.datacenterShare > 15 ? 'bad' : undefined} />
           </div>
 
+          {data.reach.unresolvedAddresses && data.reach.known
+            && data.reach.unresolvedAddresses === data.reach.known ? (
+            <div className="admin-error-box rounded-xl px-4 py-3 text-sm">
+              Every record carries device details but no place. That is the signature of the
+              location lookup being blocked rather than of unusual visitors, so the server may not
+              be able to reach the geolocation provider.
+            </div>
+          ) : null}
+
           <div className="grid gap-4 lg:grid-cols-2">
             <Card title="Countries" hint="From the address the submission came from, not from anything they typed.">
               {data.reach.countries.length
