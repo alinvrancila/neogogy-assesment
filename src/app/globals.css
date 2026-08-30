@@ -297,6 +297,14 @@ button, input, textarea, select {
   .admin-leads-grid > * {
     min-width: 0;
   }
+
+  /* A long persona or stage name ran under its neighbour rather than stopping.
+     Cells that do not wrap are cut with an ellipsis instead, and the full text
+     stays available in the title. */
+  .admin-leads-grid p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 @media (min-width: 1180px) {

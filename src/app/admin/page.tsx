@@ -314,6 +314,7 @@ export default function AdminPage() {
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null);
   const [view, setView] = useState<'analytics' | 'records'>('analytics');
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]);
+  const [csvDownloading, setCsvDownloading] = useState(false);
   const [bulkDownloading, setBulkDownloading] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -481,14 +482,43 @@ export default function AdminPage() {
     await Promise.all([fetchStats(), fetchLeads()]);
   };
 
-  const downloadCsv = () => {
-    window.location.href = '/api/admin/leads?format=csv';
-  };
+  const downloadCsv = () => { void downloadCsvFor([]); };
 
   const toggleLeadSelection = (id: string) => {
     setSelectedLeadIds((current) =>
       current.includes(id) ? current.filter((item) => item !== id) : current.concat(id)
     );
+  };
+
+  /** CSV for whatever is selected, or for every record when nothing is. */
+  const downloadCsvFor = async (ids: string[]) => {
+    setCsvDownloading(true);
+    setLeadError(null);
+    try {
+      const res = await fetch('/api/admin/leads/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ ids }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || 'Could not build the CSV.');
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `neogogy-records-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setLeadError(error instanceof Error ? error.message : 'Could not build the CSV.');
+    } finally {
+      setCsvDownloading(false);
+    }
   };
 
   const downloadSelectedPdfs = async () => {
@@ -750,6 +780,12 @@ export default function AdminPage() {
   const unselectVisibleLeads = () => {
     setSelectedLeadIds((current) => current.filter((id) => !visibleLeadIds.includes(id)));
   };
+  // "All" means every record the search matches, across pages, not this page
+  const filteredLeadIds = filteredLeads.map((lead) => lead.id);
+  const allFilteredSelected =
+    filteredLeadIds.length > 0 && filteredLeadIds.every((id) => selectedLeadIds.includes(id));
+  const selectAllLeads = () => { setSelectedLeadIds(filteredLeadIds); };
+  const clearSelection = () => { setSelectedLeadIds([]); };
 
   return (
     <main className="admin-shell min-h-screen px-4 py-6 sm:px-6 lg:px-8" data-theme={theme}>
@@ -824,7 +860,7 @@ export default function AdminPage() {
                 className="admin-input w-full rounded-xl px-4 py-3 text-sm outline-none sm:w-72"
               />
               <button onClick={downloadCsv} className="admin-button admin-button-primary rounded-full px-5 py-3 text-sm font-semibold transition">
-                Download CSV
+                {csvDownloading ? 'Building CSV...' : 'Download CSV (all)'}
               </button>
             </div>
           </div>
@@ -836,18 +872,19 @@ export default function AdminPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <button
+                onClick={allFilteredSelected ? clearSelection : selectAllLeads}
+                disabled={!filteredLeadIds.length}
+                className="admin-button admin-button-outline rounded-full px-4 py-2 text-xs font-semibold transition disabled:opacity-50"
+                title="Select every record the current search matches, across all pages"
+              >
+                {allFilteredSelected ? 'Clear selection' : `Select all (${filteredLeadIds.length})`}
+              </button>
+              <button
                 onClick={allVisibleSelected ? unselectVisibleLeads : selectVisibleLeads}
                 disabled={!visibleLeadIds.length}
                 className="admin-button admin-button-muted rounded-full px-4 py-2 text-xs font-semibold transition disabled:opacity-50"
               >
                 {allVisibleSelected ? 'Unselect page' : 'Select page'}
-              </button>
-              <button
-                onClick={unselectVisibleLeads}
-                disabled={!selectedVisibleCount}
-                className="admin-button admin-button-muted rounded-full px-4 py-2 text-xs font-semibold transition disabled:opacity-50"
-              >
-                Unselect page
               </button>
               <button
                 onClick={deleteSelectedLeads}
@@ -857,6 +894,16 @@ export default function AdminPage() {
                 title="Permanently remove the selected submissions"
               >
                 {deleting ? 'Deleting...' : `Delete selected${selectedLeadIds.length ? ` (${selectedLeadIds.length})` : ''}`}
+              </button>
+              <button
+                onClick={() => void downloadCsvFor(selectedLeadIds)}
+                disabled={!selectedLeadIds.length || csvDownloading}
+                className="admin-button admin-button-primary rounded-full px-4 py-2 text-xs font-semibold transition disabled:opacity-50"
+                title="Everything held about the selected people, one row each"
+              >
+                {csvDownloading
+                  ? 'Building CSV...'
+                  : `Download CSV${selectedLeadIds.length ? ` (${selectedLeadIds.length})` : ''}`}
               </button>
               <button
                 onClick={downloadSelectedPdfs}
@@ -872,7 +919,19 @@ export default function AdminPage() {
 
           <div className="admin-table mt-5 rounded-xl">
             <div className="admin-leads-grid admin-table-head hidden px-3 py-3 text-xs uppercase tracking-[0.11em] md:grid">
-              <span>Select</span>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  className="admin-checkbox"
+                  checked={allFilteredSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = selectedLeadIds.length > 0 && !allFilteredSelected;
+                  }}
+                  onChange={() => (allFilteredSelected ? clearSelection() : selectAllLeads())}
+                  aria-label="Select every record the current search matches"
+                />
+                <span>All</span>
+              </label>
               <span>Taker</span>
               <span>Email</span>
               <span>Mobile</span>
@@ -918,9 +977,15 @@ export default function AdminPage() {
                   </div>
                   <div>
                     <span className="admin-mobile-label text-xs uppercase tracking-[0.14em] md:hidden">Persona</span>
-                    <p className="admin-strong font-medium md:whitespace-nowrap">{lead.personaName || idLabel(lead.persona) || '-'}</p>
+                    <p className="admin-strong font-medium md:whitespace-nowrap"
+                      title={lead.personaName || idLabel(lead.persona) || '-'}>
+                      {lead.personaName || idLabel(lead.persona) || '-'}
+                    </p>
                     {lead.engineVersion === 2 && lead.stage ? (
-                      <p className="admin-muted text-xs md:whitespace-nowrap">Stage {lead.stage}, {lead.stageName}</p>
+                      <p className="admin-muted text-xs md:whitespace-nowrap"
+                        title={`Stage ${lead.stage}, ${lead.stageName}`}>
+                        Stage {lead.stage}, {lead.stageName}
+                      </p>
                     ) : null}
                   </div>
                   <div className="admin-index-cell">
