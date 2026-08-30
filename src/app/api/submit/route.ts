@@ -8,6 +8,8 @@ import { generateCompassPdf } from '@/lib/reportPdfV2';
 import { sendReportEmail, isEmailEnabled } from '@/lib/email';
 import { buildComparison } from '@/lib/history';
 import { sharePosts, SHARE_URL } from '@/lib/share';
+import { requestContext } from '@/lib/requestContext';
+import { lookupIp } from '@/lib/geoip';
 
 export const runtime = 'nodejs';
 
@@ -34,26 +36,106 @@ type Body = {
 function cleanMeta(raw: unknown): SubmissionMeta | undefined {
   if (!raw || typeof raw !== 'object') return undefined;
   const m = raw as Record<string, unknown>;
+
   const int = (v: unknown, min: number, max: number) => {
     const n = Number(v);
     return Number.isFinite(n) && n >= min && n <= max ? Math.round(n) : undefined;
   };
+  const num = (v: unknown, min: number, max: number, dp = 2) => {
+    const n = Number(v);
+    if (!Number.isFinite(n) || n < min || n > max) return undefined;
+    const f = 10 ** dp;
+    return Math.round(n * f) / f;
+  };
   const str = (v: unknown, max = 80) =>
     (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : undefined);
+  const bool = (v: unknown) => (typeof v === 'boolean' ? v : undefined);
+  const list = (v: unknown, max = 5, len = 24) =>
+    (Array.isArray(v) ? v.filter((x) => typeof x === 'string').slice(0, max).map((x) => String(x).slice(0, len)) : undefined);
+  const oneOf = (v: unknown, allowed: string[]) =>
+    (allowed.includes(String(v)) ? String(v) : undefined);
+
+  const HOUR = 60 * 60 * 1000;
   const out: SubmissionMeta = {
-    // capped at four hours: anything longer is a tab left open, not a sitting
-    durationMs: int(m.durationMs, 0, 4 * 60 * 60 * 1000),
+    // the sitting. Four hours is the cap: longer is a tab left open, not a sitting
+    durationMs: int(m.durationMs, 0, 4 * HOUR),
     revisions: int(m.revisions, 0, 500),
+    awayMs: int(m.awayMs, 0, 24 * HOUR),
+    awayCount: int(m.awayCount, 0, 500),
+    answers: int(m.answers, 0, 200),
+    medianAnswerMs: int(m.medianAnswerMs, 0, HOUR),
+    fastestAnswerMs: int(m.fastestAnswerMs, 0, HOUR),
+    slowestAnswerMs: int(m.slowestAnswerMs, 0, HOUR),
+    rushedAnswers: int(m.rushedAnswers, 0, 200),
+    resumed: bool(m.resumed),
+
+    // the device
+    device: oneOf(m.device, ['phone', 'tablet', 'desktop']),
     viewportWidth: int(m.viewportWidth, 0, 10000),
-    device: ['phone', 'tablet', 'desktop'].includes(String(m.device)) ? String(m.device) : undefined,
+    viewportHeight: int(m.viewportHeight, 0, 10000),
+    screenWidth: int(m.screenWidth, 0, 20000),
+    screenHeight: int(m.screenHeight, 0, 20000),
+    pixelRatio: num(m.pixelRatio, 0, 10),
+    colorDepth: int(m.colorDepth, 0, 64),
+    orientation: oneOf(m.orientation, ['portrait', 'landscape']),
+    platform: str(m.platform, 40),
+    uaMobile: bool(m.uaMobile),
+    uaBrands: list(m.uaBrands, 4, 40),
+    cores: int(m.cores, 0, 256),
+    memoryGb: num(m.memoryGb, 0, 1024),
+    touchPoints: int(m.touchPoints, 0, 64),
+    connectionType: str(m.connectionType, 20),
+    downlinkMbps: num(m.downlinkMbps, 0, 10000),
+    rttMs: int(m.rttMs, 0, 600000),
+    saveData: bool(m.saveData),
+    prefersDark: bool(m.prefersDark),
+    prefersReducedMotion: bool(m.prefersReducedMotion),
+    cookiesEnabled: bool(m.cookiesEnabled),
+    doNotTrack: bool(m.doNotTrack),
+
+    // who and where they are
+    localHour: int(m.localHour, 0, 23),
+    weekday: int(m.weekday, 0, 6),
+    timezone: str(m.timezone, 60),
+    utcOffsetMinutes: int(m.utcOffsetMinutes, -900, 900),
+    language: str(m.language, 24),
+    languages: list(m.languages),
+
+    // where the visit came from
     referrerHost: str(m.referrerHost, 120),
+    referrerPath: str(m.referrerPath, 120),
+    landingPath: str(m.landingPath, 120),
     utmSource: str(m.utmSource),
     utmMedium: str(m.utmMedium),
     utmCampaign: str(m.utmCampaign),
-    localHour: int(m.localHour, 0, 23),
-    weekday: int(m.weekday, 0, 6),
+    utmTerm: str(m.utmTerm),
+    utmContent: str(m.utmContent),
+    clickId: str(m.clickId, 24),
   };
   return Object.values(out).some((v) => v !== undefined) ? out : undefined;
+}
+
+/**
+ * What the request itself disclosed: the address it came from, the browser and
+ * operating system behind it, and the place that address belongs to. Server
+ * side only, so none of it can be spoofed by editing the page.
+ */
+async function serverMeta(request: NextRequest): Promise<SubmissionMeta> {
+  const ctx = requestContext(request.headers);
+  const geo = ctx.ip ? await lookupIp(ctx.ip) : undefined;
+  return {
+    ip: ctx.ip,
+    userAgent: ctx.userAgent,
+    browser: ctx.browser,
+    browserVersion: ctx.browserVersion,
+    os: ctx.os,
+    osVersion: ctx.osVersion,
+    deviceClass: ctx.deviceClass,
+    vendor: ctx.vendor,
+    bot: ctx.bot,
+    acceptLanguages: ctx.languages,
+    ...(geo || {}),
+  };
 }
 
 /** Validate the Submission against the engine's own item model. */
@@ -159,7 +241,7 @@ export async function POST(request: NextRequest) {
     archetypeId: result.archetype.id,
     archetypeName: result.archetype.name,
     confidence: result.overallConfidence,
-    meta: cleanMeta(body.meta),
+    meta: { ...cleanMeta(body.meta), ...(await serverMeta(request)) },
   };
 
   try {
@@ -174,6 +256,14 @@ export async function POST(request: NextRequest) {
     sessionId: body.sessionId,
     role: lead.role,
     zone: result.archetype.id,
+    device: lead.meta?.device,
+    country: lead.meta?.country,
+    countryCode: lead.meta?.countryCode,
+    browser: lead.meta?.browser,
+    os: lead.meta?.os,
+    bot: lead.meta?.bot,
+    referrerHost: lead.meta?.referrerHost,
+    utmSource: lead.meta?.utmSource,
   });
 
   let emailSent = false;

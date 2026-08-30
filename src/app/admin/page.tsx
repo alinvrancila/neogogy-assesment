@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { SubmissionMeta } from '@/lib/storage';
 import Dashboard from '@/components/admin/Dashboard';
 
 type Stats = {
@@ -97,6 +98,7 @@ type LeadRow = {
   baseline?: { b1: number; b2: number } | null;
   usageVal?: number | null;
   createdAt: string;
+  meta?: SubmissionMeta;
 };
 
 const formatDateTime = (value?: string) => {
@@ -145,8 +147,106 @@ function ThemeToggleButton({ theme, onClick }: { theme: AdminTheme; onClick: () 
   );
 }
 
+/** Where and on what, in one line, for the records list. */
+function contextLine(meta?: SubmissionMeta): string {
+  if (!meta) return '';
+  const place = [meta.city, meta.region, meta.country].filter(Boolean).join(', ');
+  const kit = [meta.device || meta.deviceClass, meta.browser, meta.os].filter(Boolean).join(' / ');
+  return [place, kit].filter(Boolean).join(' \u00b7 ');
+}
+
+const ms = (v?: number) => (typeof v === 'number' ? `${Math.round(v / 1000)}s` : '');
+
+/** Everything the request and the browser disclosed, as a plain table. */
+function ContextPanel({ meta }: { meta?: SubmissionMeta }) {
+  if (!meta) {
+    return (
+      <p className="admin-muted text-xs">
+        No context recorded. Submissions taken before this was added carry nothing here.
+      </p>
+    );
+  }
+  const groups: Array<[string, Array<[string, unknown]>]> = [
+    ['Place', [
+      ['Country', meta.country], ['Region', meta.region], ['City', meta.city],
+      ['Postal', meta.postal], ['Coordinates', meta.latitude != null ? `${meta.latitude}, ${meta.longitude}` : ''],
+      ['In the EU', meta.isEu === undefined ? '' : meta.isEu ? 'Yes' : 'No'],
+    ]],
+    ['Network', [
+      ['Address', meta.ip], ['Provider', meta.isp], ['Organisation', meta.org],
+      ['ASN', meta.asn], ['Network domain', meta.networkDomain],
+      ['Datacentre or VPN', meta.datacenter === undefined ? '' : meta.datacenter ? 'Likely' : 'No'],
+    ]],
+    ['Device', [
+      ['Type', meta.device || meta.deviceClass], ['Make', meta.vendor],
+      ['Browser', [meta.browser, meta.browserVersion].filter(Boolean).join(' ')],
+      ['System', [meta.os, meta.osVersion].filter(Boolean).join(' ')],
+      ['Platform', meta.platform],
+      ['Screen', meta.screenWidth ? `${meta.screenWidth} by ${meta.screenHeight}` : ''],
+      ['Window', meta.viewportWidth ? `${meta.viewportWidth} by ${meta.viewportHeight}` : ''],
+      ['Pixel ratio', meta.pixelRatio], ['Orientation', meta.orientation],
+      ['Cores', meta.cores], ['Memory', meta.memoryGb ? `${meta.memoryGb} GB` : ''],
+      ['Touch points', meta.touchPoints],
+      ['Connection', meta.connectionType],
+      ['Downlink', meta.downlinkMbps ? `${meta.downlinkMbps} Mbps` : ''],
+      ['Round trip', meta.rttMs ? `${meta.rttMs} ms` : ''],
+    ]],
+    ['Preferences', [
+      ['Language', meta.language], ['Accepted languages', (meta.languages || meta.acceptLanguages || []).join(', ')],
+      ['Timezone', meta.timezone], ['Address timezone', meta.ipTimezone],
+      ['Dark mode', meta.prefersDark === undefined ? '' : meta.prefersDark ? 'Yes' : 'No'],
+      ['Reduced motion', meta.prefersReducedMotion === undefined ? '' : meta.prefersReducedMotion ? 'Yes' : 'No'],
+      ['Do not track', meta.doNotTrack === undefined ? '' : meta.doNotTrack ? 'Set' : 'Not set'],
+      ['Cookies', meta.cookiesEnabled === undefined ? '' : meta.cookiesEnabled ? 'Enabled' : 'Blocked'],
+    ]],
+    ['Source', [
+      ['Referrer', meta.referrerHost ? `${meta.referrerHost}${meta.referrerPath || ''}` : ''],
+      ['Landing page', meta.landingPath],
+      ['Campaign source', meta.utmSource], ['Medium', meta.utmMedium],
+      ['Campaign', meta.utmCampaign], ['Term', meta.utmTerm], ['Content', meta.utmContent],
+      ['Ad click id', meta.clickId],
+    ]],
+    ['The sitting', [
+      ['Time taken', meta.durationMs ? `${Math.round(meta.durationMs / 60000)} min` : ''],
+      ['Away from the tab', meta.awayMs ? `${Math.round(meta.awayMs / 60000)} min in ${meta.awayCount} spells` : ''],
+      ['Answers', meta.answers],
+      ['Median per answer', ms(meta.medianAnswerMs)],
+      ['Fastest answer', ms(meta.fastestAnswerMs)],
+      ['Slowest answer', ms(meta.slowestAnswerMs)],
+      ['Answers under 1.2s', meta.rushedAnswers],
+      ['Changed answers', meta.revisions],
+      ['Resumed a draft', meta.resumed === undefined ? '' : meta.resumed ? 'Yes' : 'No'],
+      ['Finished at', meta.localHour != null ? `${String(meta.localHour).padStart(2, '0')}:00 local` : ''],
+      ['Automated client', meta.bot ? 'Looks automated' : ''],
+    ]],
+  ];
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {groups.map(([title, rows]) => {
+        const filled = rows.filter(([, v]) => v !== undefined && v !== null && v !== '');
+        if (!filled.length) return null;
+        return (
+          <div key={title} className="admin-subcard rounded-2xl p-4">
+            <p className="admin-eyebrow">{title}</p>
+            <dl className="mt-2 space-y-1">
+              {filled.map(([k, v]) => (
+                <div key={k} className="flex justify-between gap-3 text-xs">
+                  <dt className="admin-muted whitespace-nowrap">{k}</dt>
+                  <dd className="admin-strong break-all text-right">{String(v)}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function LeadDetailPanel({ lead, onClose }: { lead: LeadRow; onClose: () => void }) {
   const pdfUrl = `/api/admin/leads/report?id=${encodeURIComponent(lead.id)}`;
+  const [pane, setPane] = useState<'report' | 'context'>('report');
 
   return (
     <div className="admin-modal-backdrop fixed inset-0 z-50 p-2 backdrop-blur-sm sm:p-5">
@@ -163,6 +263,12 @@ function LeadDetailPanel({ lead, onClose }: { lead: LeadRow; onClose: () => void
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setPane(pane === 'report' ? 'context' : 'report')}
+              className="admin-button admin-button-muted rounded-full px-4 py-2 text-xs font-semibold transition"
+            >
+              {pane === 'report' ? 'Context' : 'Report'}
+            </button>
             <a
               href={pdfUrl}
               target="_blank"
@@ -176,11 +282,17 @@ function LeadDetailPanel({ lead, onClose }: { lead: LeadRow; onClose: () => void
             </button>
           </div>
         </div>
-        <iframe
-          title={`${lead.name || 'Participant'} PDF report`}
-          src={pdfUrl}
-          className="min-h-0 flex-1 bg-[#2b2724]"
-        />
+        {pane === 'report' ? (
+          <iframe
+            title={`${lead.name || 'Participant'} PDF report`}
+            src={pdfUrl}
+            className="min-h-0 flex-1 bg-[#2b2724]"
+          />
+        ) : (
+          <div className="min-h-0 flex-1 overflow-auto p-4">
+            <ContextPanel meta={lead.meta} />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -617,7 +729,9 @@ export default function AdminPage() {
   const filteredLeads = leads.filter((lead) => {
     const query = leadQuery.trim().toLowerCase();
     if (!query) return true;
-    return [lead.name, lead.email, lead.mobilePhone, lead.role, lead.modality, lead.personaName, lead.heardFrom, lead.stageName]
+    return [lead.name, lead.email, lead.mobilePhone, lead.role, lead.modality, lead.personaName,
+      lead.heardFrom, lead.stageName, lead.meta?.country, lead.meta?.city, lead.meta?.ip,
+      lead.meta?.device, lead.meta?.browser, lead.meta?.os, lead.meta?.isp, lead.meta?.utmSource]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(query));
   });
@@ -820,6 +934,9 @@ export default function AdminPage() {
                   </div>
                   <div className="admin-muted admin-submitted-cell hidden md:block" title={lead.createdAt}>
                     {formatDateTime(lead.createdAt)}
+                    {contextLine(lead.meta)
+                      ? <p className="admin-muted-soft mt-1 text-[11px] leading-tight">{contextLine(lead.meta)}</p>
+                      : null}
                   </div>
                   <div className="flex justify-start gap-2 md:justify-end">
                     <button

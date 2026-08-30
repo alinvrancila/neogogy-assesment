@@ -11,7 +11,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CONSTRUCTS } from '@/engine/config';
-import type { CohortReport, OrgReport, AudienceReport, QualityReport, ItemStat } from '@/lib/analytics';
+import type {
+  CohortReport, OrgReport, AudienceReport, QualityReport, ItemStat,
+  ReachReport, TechReport, EngagementReport,
+} from '@/lib/analytics';
 import { Card, Kpi, BarList, SpreadChart, Heatmap, Sparkline, bandColor } from './charts';
 
 type PersonRow = {
@@ -21,12 +24,17 @@ type PersonRow = {
   confidence: string; usage: number; dependencyIndex: number;
   underexposed: boolean; gated: boolean;
   indexDelta?: number; stageDelta?: number; direction: string; latestId: string;
+  country?: string; countryCode?: string; city?: string;
+  device?: string; browser?: string; os?: string; datacenter?: boolean;
 };
 
 type Payload = {
   cohort: CohortReport;
   audience: AudienceReport;
   quality: QualityReport;
+  reach: ReachReport;
+  tech: TechReport;
+  engagement: EngagementReport;
   items: ItemStat[];
   organisations: OrgReport[];
   people: PersonRow[];
@@ -56,7 +64,8 @@ const fmtDate = (iso: string) => {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-type Tab = 'overview' | 'dimensions' | 'people' | 'organisations' | 'segments' | 'audience' | 'quality';
+type Tab = 'overview' | 'dimensions' | 'people' | 'organisations' | 'segments'
+  | 'audience' | 'reach' | 'quality';
 
 export default function Dashboard() {
   const [tab, setTab] = useState<Tab>('overview');
@@ -128,7 +137,8 @@ export default function Dashboard() {
   const TABS: Array<[Tab, string]> = [
     ['overview', 'Overview'], ['dimensions', 'Dimensions'], ['people', 'People'],
     ['organisations', 'Organisations'], ['segments', 'Segments'],
-    ['audience', 'Audience'], ['quality', 'Quality and items'],
+    ['audience', 'Audience'], ['reach', 'Reach and devices'],
+    ['quality', 'Quality and items'],
   ];
 
   return (
@@ -509,6 +519,115 @@ export default function Dashboard() {
               <BarList total={0} rows={data.audience.hours.map((h) => ({ label: `${String(h.hour).padStart(2, '0')}:00`, count: h.count }))} />
             </Card>
           ) : null}
+        </div>
+      ) : null}
+
+      {/* --------------------------------------------- reach and devices */}
+      {tab === 'reach' ? (
+        <div className="space-y-5">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Kpi label="Countries reached" value={data.reach.countries.length}
+              sub={data.reach.countries[0] ? `Most from ${data.reach.countries[0].label}` : 'No location recorded yet'} />
+            <Kpi label="Context recorded" value={`${data.reach.known} of ${data.reach.total}`}
+              sub="Location and device are on submissions taken since this was added" />
+            <Kpi label="Inside the EU" value={`${data.reach.euShare}%`}
+              sub="GDPR applies to these records, so erasure requests are more likely"
+              tone={data.reach.euShare > 0 ? 'watch' : undefined} />
+            <Kpi label="Datacentre networks" value={`${data.reach.datacenterShare}%`}
+              sub="VPN, proxy or automation rather than a home or office connection"
+              tone={data.reach.datacenterShare > 15 ? 'bad' : undefined} />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="Countries" hint="From the address the submission came from, not from anything they typed.">
+              {data.reach.countries.length
+                ? <BarList total={data.reach.known} rows={data.reach.countries.map((r) => ({ label: r.label, count: r.count }))} />
+                : <p className="admin-muted text-sm">No location recorded yet.</p>}
+            </Card>
+            <Card title="Cities" hint="City level only. An address places a network, never a street.">
+              {data.reach.cities.length
+                ? <BarList total={data.reach.known} rows={data.reach.cities.slice(0, 12)} />
+                : <p className="admin-muted text-sm">No location recorded yet.</p>}
+            </Card>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="Devices" hint="Phone, tablet or desktop, from the viewport at submission.">
+              {data.tech.devices.length
+                ? <BarList total={data.tech.known} rows={data.tech.devices} />
+                : <p className="admin-muted text-sm">No device recorded yet.</p>}
+            </Card>
+            <Card title="Screen widths" hint="What the results page actually had to fit into.">
+              {data.tech.screens.length
+                ? <BarList total={data.tech.known} rows={data.tech.screens} />
+                : <p className="admin-muted text-sm">No screen size recorded yet.</p>}
+            </Card>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="Browsers" hint="Name and major version, so support decisions rest on real traffic.">
+              {data.tech.browsers.length
+                ? <BarList total={data.tech.known} rows={data.tech.browsers.slice(0, 10)} />
+                : <p className="admin-muted text-sm">No browser recorded yet.</p>}
+            </Card>
+            <Card title="Operating systems">
+              {data.tech.operatingSystems.length
+                ? <BarList total={data.tech.known} rows={data.tech.operatingSystems.slice(0, 10)} />
+                : <p className="admin-muted text-sm">No system recorded yet.</p>}
+            </Card>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="Languages and timezones"
+              hint="The browser's own settings, which describe a person better than an address does.">
+              {data.reach.languages.length ? (
+                <div className="mb-4">
+                  <p className="admin-muted mb-1 text-[11px] uppercase tracking-[0.12em]">Languages</p>
+                  <BarList total={0} rows={data.reach.languages.slice(0, 8)} />
+                </div>
+              ) : null}
+              {data.reach.timezones.length
+                ? <BarList total={0} rows={data.reach.timezones.slice(0, 8)} />
+                : <p className="admin-muted text-sm">Nothing recorded yet.</p>}
+            </Card>
+            <Card title="Networks"
+              hint="The internet provider behind each submission. A university or a company name here is a lead in itself.">
+              {data.reach.networks.length
+                ? <BarList total={0} rows={data.reach.networks.slice(0, 10)} />
+                : <p className="admin-muted text-sm">No network recorded yet.</p>}
+            </Card>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Kpi label="Median time" value={data.engagement.minutes.n ? `${data.engagement.minutes.median} min` : 'n/a'}
+              sub={data.engagement.minutes.n ? `Middle half ${data.engagement.minutes.p25} to ${data.engagement.minutes.p75}` : 'Not recorded yet'} />
+            <Kpi label="Seconds per answer"
+              value={data.engagement.secondsPerAnswer.n ? `${data.engagement.secondsPerAnswer.median}s` : 'n/a'}
+              sub="Median pace. Very fast is worth a second look" />
+            <Kpi label="Left the tab" value={`${data.engagement.leftTabShare}%`}
+              sub="Switched away at least once while answering" />
+            <Kpi label="Rushed" value={`${data.engagement.rushedShare}%`}
+              sub="Three or more answers faster than a question can be read"
+              tone={data.engagement.rushedShare > 10 ? 'watch' : undefined} />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card title="How the page was read"
+              hint="Stated browser preferences. These decide whether the dark results panels and the animations were ever seen as designed.">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Kpi label="Dark mode" value={`${data.tech.darkShare}%`} sub="Prefer a dark interface" />
+                <Kpi label="Reduced motion" value={`${data.tech.reducedMotionShare}%`} sub="Ask for less animation" />
+                <Kpi label="Touch screen" value={`${data.tech.touchShare}%`} sub="Answered by tapping" />
+              </div>
+            </Card>
+            <Card title="Shared addresses"
+              hint="One address used by more than one person: a household, a shared office, or a class taking it together. Worth knowing before reading them as independent responses.">
+              {data.reach.sharedNetworks.length
+                ? <BarList total={0} rows={data.reach.sharedNetworks.map((r) => ({
+                    label: `${r.label} (${r.people} people)`, count: r.count }))} />
+                : <p className="admin-muted text-sm">Every submission so far came from its own address.</p>}
+            </Card>
+          </div>
         </div>
       ) : null}
 

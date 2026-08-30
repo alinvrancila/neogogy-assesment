@@ -14,7 +14,8 @@
     "test:ascent": "tsx tests/compass/ascent.ts",
     "art:backdrop": "node scripts/art/render-backdrop.mjs",
     "art:cover": "node scripts/art/render-cover.mjs",
-    "test:analytics": "tsx tests/compass/analytics.ts"
+    "test:analytics": "tsx tests/compass/analytics.ts",
+    "test:context": "tsx tests/compass/context.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.620.0",

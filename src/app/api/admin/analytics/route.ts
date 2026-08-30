@@ -5,6 +5,7 @@ import { listLeads } from '@/lib/storage';
 import {
   toAttempts, toPeople, buildCohortReport, buildOrgReports,
   buildAudienceReport, buildQualityReport, buildItemStats,
+  buildReachReport, buildTechReport, buildEngagementReport,
 } from '@/lib/analytics';
 import { allItems } from '@/engine';
 import type { Persona } from '@/engine/types';
@@ -43,6 +44,9 @@ export async function GET(request: NextRequest) {
   const latest = people.map((p) => p.latest);
   const audience = buildAudienceReport(latest);
   const quality = buildQualityReport(latest);
+  const reach = buildReachReport(latest);
+  const tech = buildTechReport(latest);
+  const engagement = buildEngagementReport(latest);
 
   // Item review needs the item definitions for whichever personas appear.
   const personaSet = new Set(latest.map((a) => a.persona));
@@ -76,12 +80,23 @@ export async function GET(request: NextRequest) {
     stageDelta: p.stageDelta,
     direction: p.direction,
     latestId: p.latest.id,
+    // where and on what, so the people table can be read without opening rows
+    country: p.latest.meta?.country,
+    countryCode: p.latest.meta?.countryCode,
+    city: p.latest.meta?.city,
+    device: p.latest.meta?.device || p.latest.meta?.deviceClass,
+    browser: p.latest.meta?.browser,
+    os: p.latest.meta?.os,
+    datacenter: p.latest.meta?.datacenter,
   }));
 
   return NextResponse.json({
     cohort,
     audience,
     quality,
+    reach,
+    tech,
+    engagement,
     items,
     organisations,
     people: rows,

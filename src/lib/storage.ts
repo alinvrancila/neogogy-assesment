@@ -54,29 +54,106 @@ export type LeadRecord = {
   /**
    * v2 only: context about how the assessment was taken.
    *
-   * Deliberately coarse. No IP address, no fingerprinting, nothing that
-   * identifies a person beyond the details they typed themselves. These exist
-   * to judge data quality and to tell where respondents come from.
+   * Two kinds of thing live here: what the respondent's browser reports about
+   * the sitting, and what the request itself disclosed (address, network,
+   * place). It exists to judge data quality, to know who the assessment is
+   * reaching, and to see which channels bring people. The gate discloses it
+   * before anything is stored, and none of it is sold or shared.
    */
   meta?: SubmissionMeta;
 };
 
 export type SubmissionMeta = {
+  /* --- the sitting ------------------------------------------------------ */
   /** Milliseconds between starting the questions and submitting. */
   durationMs?: number;
   /** How many times an answer was changed before submitting. */
   revisions?: number;
+  /** Time with the tab in the background, and how often they left it. */
+  awayMs?: number;
+  awayCount?: number;
+  /** Pace of answering, which is how considered responses are judged. */
+  answers?: number;
+  medianAnswerMs?: number;
+  fastestAnswerMs?: number;
+  slowestAnswerMs?: number;
+  rushedAnswers?: number;
+  /** True when the assessment was resumed from a saved draft. */
+  resumed?: boolean;
+
+  /* --- the device ------------------------------------------------------- */
   /** phone, tablet or desktop, from viewport width at submission. */
   device?: string;
   viewportWidth?: number;
-  /** Where the visit came from, when the browser discloses it. */
-  referrerHost?: string;
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
+  viewportHeight?: number;
+  screenWidth?: number;
+  screenHeight?: number;
+  pixelRatio?: number;
+  colorDepth?: number;
+  orientation?: string;
+  platform?: string;
+  uaMobile?: boolean;
+  uaBrands?: string[];
+  cores?: number;
+  memoryGb?: number;
+  touchPoints?: number;
+  connectionType?: string;
+  downlinkMbps?: number;
+  rttMs?: number;
+  saveData?: boolean;
+  prefersDark?: boolean;
+  prefersReducedMotion?: boolean;
+  cookiesEnabled?: boolean;
+  doNotTrack?: boolean;
+
+  /* --- who and where they are ------------------------------------------- */
   /** Local hour and weekday, useful for scheduling reminders. */
   localHour?: number;
   weekday?: number;
+  timezone?: string;
+  utcOffsetMinutes?: number;
+  language?: string;
+  languages?: string[];
+
+  /* --- where the visit came from ---------------------------------------- */
+  referrerHost?: string;
+  referrerPath?: string;
+  landingPath?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
+  /** Which ad platform's click identifier was on the landing URL. */
+  clickId?: string;
+
+  /* --- what the request disclosed, filled in on the server --------------- */
+  ip?: string;
+  userAgent?: string;
+  browser?: string;
+  browserVersion?: string;
+  os?: string;
+  osVersion?: string;
+  deviceClass?: string;
+  vendor?: string;
+  bot?: boolean;
+  acceptLanguages?: string[];
+  country?: string;
+  countryCode?: string;
+  region?: string;
+  city?: string;
+  postal?: string;
+  continent?: string;
+  latitude?: number;
+  longitude?: number;
+  isEu?: boolean;
+  isp?: string;
+  org?: string;
+  asn?: number;
+  networkDomain?: string;
+  ipTimezone?: string;
+  utcOffset?: string;
+  datacenter?: boolean;
 };
 
 export type EventRecord = {
@@ -89,6 +166,16 @@ export type EventRecord = {
   zone?: string;
   day: string;
   createdAt: string;
+  /** Coarse context, so the funnel reads by device and country rather than
+   *  only in total. Set from the request, never from the posted body. */
+  device?: string;
+  country?: string;
+  countryCode?: string;
+  browser?: string;
+  os?: string;
+  bot?: boolean;
+  referrerHost?: string;
+  utmSource?: string;
 };
 
 let docClientPromise: Promise<any> | null = null;

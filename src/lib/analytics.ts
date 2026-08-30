@@ -595,3 +595,194 @@ export function buildItemStats(latest: Attempt[], itemMeta: Array<{ id: string; 
   }
   return out.sort((a, b) => Math.abs(a.discrimination) - Math.abs(b.discrimination));
 }
+
+/* ------------------------------------------------------------------ reach */
+
+export interface ReachReport {
+  /** How many of these records carry request context at all. */
+  known: number;
+  total: number;
+  countries: Array<{ label: string; code?: string; count: number }>;
+  regions: Array<{ label: string; count: number }>;
+  cities: Array<{ label: string; count: number }>;
+  timezones: Array<{ label: string; count: number }>;
+  languages: Array<{ label: string; count: number }>;
+  networks: Array<{ label: string; count: number }>;
+  /** Places on a map, one point per city with a count. */
+  points: Array<{ lat: number; lon: number; city: string; country: string; count: number }>;
+  /** Share of records from an address inside the EU, where GDPR applies. */
+  euShare: number;
+  /** Records whose network looks like a datacentre, so a VPN or automation. */
+  datacenterShare: number;
+  /** Addresses seen more than once, which is a household, an office or a repeat. */
+  sharedNetworks: Array<{ label: string; count: number; people: number }>;
+  /** Where the browser's timezone disagrees with the address, which is normal
+   *  for travellers and expected for VPN users. */
+  timezoneMismatch: number;
+}
+
+export interface TechReport {
+  devices: Array<{ label: string; count: number }>;
+  browsers: Array<{ label: string; count: number }>;
+  operatingSystems: Array<{ label: string; count: number }>;
+  vendors: Array<{ label: string; count: number }>;
+  screens: Array<{ label: string; count: number }>;
+  connections: Array<{ label: string; count: number }>;
+  orientations: Array<{ label: string; count: number }>;
+  /** Reader preferences, which say how the results page was actually seen. */
+  darkShare: number;
+  reducedMotionShare: number;
+  touchShare: number;
+  /** Median device capability, useful when judging slow completions. */
+  medianCores?: number;
+  medianMemoryGb?: number;
+  known: number;
+}
+
+export interface EngagementReport {
+  /** Minutes spent, and how much of that was with the tab in front. */
+  minutes: Spread;
+  awayMinutes: Spread;
+  /** Median seconds per answer across the cohort. */
+  secondsPerAnswer: Spread;
+  /** Share who left the tab at least once during the assessment. */
+  leftTabShare: number;
+  /** Share who resumed a saved draft rather than finishing in one sitting. */
+  resumedShare: number;
+  /** Share with at least three answers faster than a question can be read. */
+  rushedShare: number;
+  known: number;
+}
+
+/** A record counts as having context only when something was actually recorded. */
+const hasContext = (a: Attempt) => !!a.meta && Object.keys(a.meta).length > 0;
+
+const median = (values: number[]): number | undefined => {
+  if (!values.length) return undefined;
+  const s = [...values].sort((a, b) => a - b);
+  return s[Math.floor(s.length / 2)];
+};
+
+/** Screen size bands, so a list of exact pixel sizes becomes readable. */
+const screenBand = (w?: number): string | undefined => {
+  if (!w) return undefined;
+  if (w < 400) return 'Under 400px';
+  if (w < 768) return '400 to 767px';
+  if (w < 1024) return '768 to 1023px';
+  if (w < 1440) return '1024 to 1439px';
+  if (w < 1920) return '1440 to 1919px';
+  return '1920px and wider';
+};
+
+export function buildReachReport(latest: Attempt[]): ReachReport {
+  const withMeta = latest.filter(hasContext);
+  const countryCounts = new Map<string, { code?: string; count: number }>();
+  for (const a of withMeta) {
+    const label = a.meta?.country;
+    if (!label) continue;
+    const prev = countryCounts.get(label);
+    countryCounts.set(label, { code: a.meta?.countryCode || prev?.code, count: (prev?.count ?? 0) + 1 });
+  }
+
+  const pointMap = new Map<string, { lat: number; lon: number; city: string; country: string; count: number }>();
+  for (const a of withMeta) {
+    const { latitude, longitude, city, country } = a.meta || {};
+    if (typeof latitude !== 'number' || typeof longitude !== 'number') continue;
+    const key = `${city || ''}|${country || ''}`;
+    const prev = pointMap.get(key);
+    if (prev) prev.count += 1;
+    else pointMap.set(key, { lat: latitude, lon: longitude, city: city || 'Unknown', country: country || '', count: 1 });
+  }
+
+  // an address seen more than once is a household, an office or one person returning
+  const ipPeople = new Map<string, Set<string>>();
+  for (const a of withMeta) {
+    const ip = a.meta?.ip;
+    if (!ip) continue;
+    if (!ipPeople.has(ip)) ipPeople.set(ip, new Set());
+    ipPeople.get(ip)!.add(a.email.toLowerCase());
+  }
+
+  const mismatched = withMeta.filter((a) => {
+    const browser = a.meta?.timezone;
+    const address = a.meta?.ipTimezone;
+    return browser && address && browser !== address;
+  }).length;
+
+  const n = withMeta.length;
+  return {
+    known: n,
+    total: latest.length,
+    countries: [...countryCounts.entries()]
+      .map(([label, v]) => ({ label, code: v.code, count: v.count }))
+      .sort((a, b) => b.count - a.count),
+    regions: tally(withMeta.map((a) => a.meta?.region || '').filter(Boolean)),
+    cities: tally(withMeta.map((a) => (a.meta?.city ? `${a.meta.city}, ${a.meta.countryCode || a.meta.country || ''}`.trim() : '')).filter(Boolean)),
+    timezones: tally(withMeta.map((a) => a.meta?.timezone || a.meta?.ipTimezone || '').filter(Boolean)),
+    languages: tally(withMeta.map((a) => a.meta?.language || (a.meta?.acceptLanguages || [])[0] || '').filter(Boolean)),
+    networks: tally(withMeta.map((a) => a.meta?.isp || a.meta?.org || '').filter(Boolean)),
+    points: [...pointMap.values()].sort((a, b) => b.count - a.count),
+    euShare: shareOfPublic(withMeta.filter((a) => a.meta?.isEu).length, n),
+    datacenterShare: shareOfPublic(withMeta.filter((a) => a.meta?.datacenter).length, n),
+    sharedNetworks: [...ipPeople.entries()]
+      .filter(([, people]) => people.size > 1)
+      .map(([label, people]) => ({
+        label,
+        people: people.size,
+        count: withMeta.filter((a) => a.meta?.ip === label).length,
+      }))
+      .sort((a, b) => b.count - a.count),
+    timezoneMismatch: shareOfPublic(mismatched, n),
+  };
+}
+
+export function buildTechReport(latest: Attempt[]): TechReport {
+  const withMeta = latest.filter(hasContext);
+  const n = withMeta.length;
+  const version = (name?: string, v?: string) => (name ? (v ? `${name} ${v}` : name) : '');
+  const cores = withMeta.map((a) => a.meta?.cores).filter((v): v is number => typeof v === 'number');
+  const memory = withMeta.map((a) => a.meta?.memoryGb).filter((v): v is number => typeof v === 'number');
+
+  return {
+    devices: tally(withMeta.map((a) => a.meta?.device || a.meta?.deviceClass || '').filter(Boolean)),
+    browsers: tally(withMeta.map((a) => version(a.meta?.browser, a.meta?.browserVersion)).filter(Boolean)),
+    operatingSystems: tally(withMeta.map((a) => version(a.meta?.os, a.meta?.osVersion)).filter(Boolean)),
+    vendors: tally(withMeta.map((a) => a.meta?.vendor || '').filter(Boolean)),
+    screens: tally(withMeta.map((a) => screenBand(a.meta?.screenWidth || a.meta?.viewportWidth) || '').filter(Boolean)),
+    connections: tally(withMeta.map((a) => a.meta?.connectionType || '').filter(Boolean)),
+    orientations: tally(withMeta.map((a) => a.meta?.orientation || '').filter(Boolean)),
+    darkShare: shareOfPublic(withMeta.filter((a) => a.meta?.prefersDark).length, n),
+    reducedMotionShare: shareOfPublic(withMeta.filter((a) => a.meta?.prefersReducedMotion).length, n),
+    touchShare: shareOfPublic(withMeta.filter((a) => (a.meta?.touchPoints ?? 0) > 0).length, n),
+    medianCores: median(cores),
+    medianMemoryGb: median(memory),
+    known: n,
+  };
+}
+
+export function buildEngagementReport(latest: Attempt[]): EngagementReport {
+  const withMeta = latest.filter(hasContext);
+  const n = withMeta.length;
+  const minutes = withMeta
+    .map((a) => a.meta?.durationMs)
+    .filter((v): v is number => typeof v === 'number' && v > 0)
+    .map((ms) => round1(ms / 60000));
+  const away = withMeta
+    .map((a) => a.meta?.awayMs)
+    .filter((v): v is number => typeof v === 'number')
+    .map((ms) => round1(ms / 60000));
+  const perAnswer = withMeta
+    .map((a) => a.meta?.medianAnswerMs)
+    .filter((v): v is number => typeof v === 'number' && v > 0)
+    .map((ms) => round1(ms / 1000));
+
+  return {
+    minutes: spread(minutes),
+    awayMinutes: spread(away),
+    secondsPerAnswer: spread(perAnswer),
+    leftTabShare: shareOfPublic(withMeta.filter((a) => (a.meta?.awayCount ?? 0) > 0).length, n),
+    resumedShare: shareOfPublic(withMeta.filter((a) => a.meta?.resumed).length, n),
+    rushedShare: shareOfPublic(withMeta.filter((a) => (a.meta?.rushedAnswers ?? 0) >= 3).length, n),
+    known: n,
+  };
+}

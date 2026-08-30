@@ -118,8 +118,11 @@ export function GateForm({
             {gate.submitting ? 'Scoring your answers' : 'Show my results'} <span className="arrow">&rarr;</span>
           </button>
           <p className="gate-fine">
-            We honor the Philippines Data Privacy Act and GDPR basics: deletion on request, and we
-            never sell your data.
+            Along with what you typed, we record the technical details every website receives: your
+            internet address and the city it maps to, your device, browser and language, and how
+            long the assessment took. We use it to understand who this reaches and to spot answers
+            that were not seriously given. We honor the Philippines Data Privacy Act and GDPR
+            basics: tell us and we delete your record, and we never sell your data.
           </p>
         </form>
         <div className="qnav" style={{ marginTop: 18 }}>

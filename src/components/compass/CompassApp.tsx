@@ -13,6 +13,9 @@
 
 import '@/app/compass.css';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  collectAttribution, collectEnvironment, pacing, SittingWatcher,
+} from '@/lib/clientSignals';
 import { applicableItems } from '@/engine';
 import type { Item, Persona, Submission } from '@/engine/types';
 import { USAGE_ITEM } from '@/items/shared';
@@ -84,31 +87,18 @@ const STORE_KEY = 'nfc2Progress';
 const ATTRIB_KEY = 'nfc2Attrib';
 
 /**
- * Capture where the visit came from, once, on first load. Kept coarse on
- * purpose: the referring host and any UTM tags, nothing that identifies a
- * person. Stored locally so it survives the walk through the questions.
+ * Capture where the visit came from, once, on first load: the referring host
+ * and path, any campaign tags, and which ad platform's click identifier was on
+ * the URL. Stored locally so it survives the walk through the questions.
  */
 function captureAttribution() {
   try {
     if (window.localStorage.getItem(ATTRIB_KEY)) return;
-    const q = new URLSearchParams(window.location.search);
-    let referrerHost = '';
-    try {
-      if (document.referrer) {
-        const u = new URL(document.referrer);
-        if (u.host !== window.location.host) referrerHost = u.host;
-      }
-    } catch { /* an unparseable referrer is simply unknown */ }
-    window.localStorage.setItem(ATTRIB_KEY, JSON.stringify({
-      referrerHost,
-      utmSource: q.get('utm_source') || '',
-      utmMedium: q.get('utm_medium') || '',
-      utmCampaign: q.get('utm_campaign') || '',
-    }));
+    window.localStorage.setItem(ATTRIB_KEY, JSON.stringify(collectAttribution()));
   } catch { /* attribution is a convenience */ }
 }
 
-function readAttribution(): Record<string, string> {
+function readAttribution(): Record<string, unknown> {
   try { return JSON.parse(window.localStorage.getItem(ATTRIB_KEY) || '{}'); }
   catch { return {}; }
 }
@@ -156,6 +146,10 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
   const startedRef = useRef(false);
   const startedAt = useRef<number | null>(null);
   const revisions = useRef(0);
+  /** When each answer landed, so pace can be reported without storing order. */
+  const answerStamps = useRef<number[]>([]);
+  const watcher = useRef<SittingWatcher | null>(null);
+  const resumedDraft = useRef(false);
   const restored = useRef(false);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -196,6 +190,7 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
         const resumable = s.screen === 'setup' || s.screen === 'quiz';
         const usable = resumable && (s.screen === 'setup' || (s.persona != null && s.usage != null));
         if (usable) {
+          resumedDraft.current = s.screen === 'quiz';
           setScreen(s.screen);
           setPersona(s.persona ?? null);
           setUsage(s.usage ?? null);
@@ -211,6 +206,10 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
       /* a corrupt draft simply starts the assessment over */
     }
     restored.current = true;
+    const w = new SittingWatcher();
+    w.start();
+    watcher.current = w;
+    return () => w.stop();
   }, []);
 
   useEffect(() => {
@@ -299,6 +298,7 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
       // A different value for a question already answered is a revision, which
       // is a useful signal about how considered the responses are.
       if (a[id] !== undefined && a[id] !== v) revisions.current += 1;
+      answerStamps.current.push(Date.now());
       return { ...a, [id]: v };
     });
     advanceSoon();
@@ -323,10 +323,12 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
           meta: {
             durationMs: startedAt.current ? Date.now() - startedAt.current : undefined,
             revisions: revisions.current,
-            viewportWidth: window.innerWidth,
-            device: window.innerWidth < 640 ? 'phone' : window.innerWidth < 1024 ? 'tablet' : 'desktop',
+            resumed: resumedDraft.current,
             localHour: new Date().getHours(),
             weekday: new Date().getDay(),
+            ...pacing(answerStamps.current),
+            ...(watcher.current ? watcher.current.read() : {}),
+            ...collectEnvironment(),
             ...readAttribution(),
           },
         })
