@@ -328,15 +328,27 @@ export function PastorResources({ result }: { result: CompassResult }) {
 
 /** 11. A closing word, chosen to fit the reading rather than repeated for all. */
 const CLOSINGS: Record<string, { ref: string; text: string }> = {
-  strategic_integrator: { ref: '2 Timothy 4:2, NLT', text: 'Preach the word of God. Be prepared, whether the time is favorable or not.' },
-  augmented_thinker: { ref: 'Psalm 1:2, NLT', text: 'But they delight in the law of the Lord, meditating on it day and night.' },
-  grounded_selectivist: { ref: 'Micah 6:8, NLT', text: 'to do what is right, to love mercy, and to walk humbly with your God.' },
-  capable_but_unexposed: { ref: 'Proverbs 4:7, NLT', text: 'Getting wisdom is the wisest thing you can do!' },
+  strategic_integrator: { ref: '1 Peter 5:2, NLT', text: 'Care for the flock that God has entrusted to you.' },
+  augmented_thinker: {
+    ref: 'Romans 12:2, NLT',
+    text: 'Don\u2019t copy the behavior and customs of this world, but let God transform you into a new person by changing the way you think. Then you will learn to know God\u2019s will for you, which is good and pleasing and perfect.',
+  },
+  grounded_selectivist: {
+    ref: 'Genesis 1:27, NLT',
+    text: 'So God created human beings in his own image. In the image of God he created them; male and female he created them.',
+  },
+  capable_but_unexposed: {
+    ref: 'Jeremiah 29:11, NLT',
+    text: '\u201cFor I know the plans I have for you,\u201d says the Lord. \u201cThey are plans for good and not for disaster, to give you a future and a hope.\u201d',
+  },
   dependent_operator: { ref: '2 Corinthians 12:9, NLT', text: 'My grace is all you need. My power works best in weakness.' },
-  uncritical_consumer: { ref: '1 Thessalonians 5:21, NLT', text: 'but test everything that is said. Hold on to what is good.' },
-  curious_explorer: { ref: 'James 1:19, NLT', text: 'You must all be quick to listen, slow to speak, and slow to get angry.' },
-  hesitant_starter: { ref: 'Joshua 1:9, NLT', text: 'Be strong and courageous! Do not be afraid or discouraged.' },
-  forming_practitioner: { ref: 'Philippians 1:6, NLT', text: 'God, who began the good work within you, will continue his work until it is finally finished.' },
+  uncritical_consumer: { ref: '1 Thessalonians 5:21, NLT', text: 'Test everything that is said. Hold on to what is good.' },
+  curious_explorer: { ref: 'Proverbs 18:13, NLT', text: 'Spouting off before listening to the facts is both shameful and foolish.' },
+  hesitant_starter: {
+    ref: 'Matthew 18:20, NLT',
+    text: 'For where two or three gather together as my followers, I am there among them.',
+  },
+  forming_practitioner: { ref: 'Luke 6:40, NLT', text: 'The student who is fully trained will become like the teacher.' },
 };
 
 export function PastorClosing({ result, submission, onRetake }: {

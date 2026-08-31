@@ -521,7 +521,7 @@ const PASTOR_CONTENT: Partial<Record<ConstructId, Partial<ConstructContent>>> = 
     atStrong: "Your responses are consistent with craft that keeps developing. Time the tool saves goes somewhere that grows you.",
     atDeveloping: "Your responses suggest craft holding steady, with its development left largely to chance.",
     atWatch: "Your answers suggest parts of the craft have gone quiet from disuse. Naming which ones is how they come back.",
-    research: { claim: "The virtues we get by first exercising them.", source: "Aristotle, in the epigraph selection for In the Image of Code" },
+    research: { claim: "Procedural knowing asks how a person's skills, or lack of them, shape what is presented.", source: "Spencer, “The Quad”" },
     practices: [
       "Name two parts of the craft you will keep doing by hand, and keep them.",
       "Build one outline a month with paper and the text alone.",

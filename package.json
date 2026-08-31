@@ -19,7 +19,8 @@
     "test:gated": "tsx tests/compass/gated.ts",
     "test:export": "tsx tests/compass/export.ts",
     "test:business": "tsx tests/compass/business.ts",
-    "test:pastor": "tsx tests/compass/pastor.ts"
+    "test:pastor": "tsx tests/compass/pastor.ts",
+    "test:quotes": "tsx tests/compass/quotes.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.620.0",

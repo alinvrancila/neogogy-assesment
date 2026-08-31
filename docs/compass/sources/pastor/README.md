@@ -15,13 +15,22 @@ directory:
   Living"
 - Vrancila and Spencer, *In the Image of Code*, as quoted within those documents
 
-**Until the files are here, the instrument quotes only the passages supplied in
-the persona brief itself.** Every other pointer names a title, a section, and
-what it offers, without quoting words that could not be checked. That is a
-deliberate constraint: a preacher is told in this report never to preach an
-unverified quotation, and the report cannot hold itself to a lower standard than
-it asks of its reader.
+**The documents are in place.** `originals/` holds them, and a plain text copy of
+each sits beside this file for checking against. Both are git-ignored, so the
+manuscripts stay on the machine rather than in the repository or on the server.
 
-When the documents are added, the quotable set can widen. The places to look are
-`src/items/pastor.ts` (the `deeper` pointers) and `src/engine/display.ts`
-(`PASTOR_CONTENT`).
+`npm run test:quotes` checks every quotation in the persona against these files:
+the pointers under each question, the research lines in the dimension content,
+the archetype narratives, and the closing Scripture. It fails on anything it
+cannot find, and reports that it could not run if the documents are missing
+rather than passing quietly.
+
+`scripture-nlt.txt` records the New Living Translation passages used and where
+each came from: some were supplied in the persona brief, others are quoted inside
+the documents here. References cited without quoting their words are listed at
+the end of that file, and they are cited that way because their wording could not
+be checked against a source held here.
+
+To add or re-convert documents: put them in `originals/` and run
+`bash scripts/ingest-sources.sh`. PowerPoint files are skipped; export the text
+if something in them needs quoting.

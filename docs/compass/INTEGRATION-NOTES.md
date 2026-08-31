@@ -775,12 +775,31 @@ forwarded to an accountant or a board and has to look like a business paper.
 
 # The Pastor and Preacher persona
 
-## The constraint I could not satisfy, and what I did instead
+## The quotation constraint, and how it was resolved
 
 The brief says every quotation must be verified against source documents placed
-in `docs/compass/sources/pastor/`. **Those documents are not in the project.** I
-searched the repository and the obvious places on this machine and found
-nothing matching them.
+in `docs/compass/sources/pastor/`. They were not present when the persona was
+first built, so it quoted only the passages supplied in the brief itself and
+named every other source without quoting it.
+
+**The documents are now in place**, and every quotation has been checked against
+them. `npm run test:quotes` does that check on every run: item pointers,
+dimension content, archetype narratives, and the closing Scripture. Two pointers
+did not survive it and were replaced with the documents' own words: an Aristotle
+line and a line from Good Will Hunting, both from an epigraph list that is not
+among the files. Several other pointers were widened from naming a source to
+quoting it, now that the words could be seen.
+
+Scripture provenance is written down in `sources/pastor/scripture-nlt.txt`: which
+verses came from the brief, which are quoted inside the documents, and which
+references are cited without quoting because their wording could not be checked
+against anything held here. The closing verse for each archetype now comes from
+one of the first two groups.
+
+One quotation is trimmed rather than altered. Spencer sets a clause between em
+dashes, which this persona's copy rules do not use, so the quoted run stops
+before the dash and the rest is described. Altering the punctuation inside
+quotation marks would have been the wrong fix.
 
 So the persona quotes only the passages supplied verbatim in the brief itself,
 attributed exactly as the brief attributes them. Every other pointer names a

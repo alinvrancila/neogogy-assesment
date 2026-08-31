@@ -37,7 +37,7 @@ export const PASTOR_ITEMS: Item[] = [
     "When I stand to preach, I can explain in my own words why every major point is in the message, and how prayer and the text brought me to it.",
     "agreement", {
       why: "This is not about how much AI you used; it is about who authored the message. A preacher who can trace each point back to the text, to prayer, and to their own conviction has kept authorship, whatever tools helped along the way.",
-      deeper: "James Spencer, “Theological Dispositions in a Digital World”: God as the one “to whom we must always respond”.",
+      deeper: "James Spencer, “Theological Dispositions in a Digital World”: the fear of the Lord “recognizes God as infinitely more relevant than any other actor or factor we may encounter”.",
       dependenceTags: { 4: ["prayer_present"], 5: ["prayer_present"] },
     }),
   reverse(P, "agency",
@@ -112,7 +112,7 @@ export const PASTOR_ITEMS: Item[] = [
     "If I lost access to every AI tool this week, I could still prepare and preach a faithful message from the text, with my Bible, my study, and prayer.",
     "confidence", {
       why: "This is the outage test, and it is about muscle, not morality. A preacher whose study muscles are strong can use any tool freely; a preacher whose muscles have thinned depends on the tool whether they mean to or not.",
-      deeper: "Faith at Work, on cognitive debt and “the deliberate recovery of friction”.",
+      deeper: "Faith at Work: “I would not let AI replace prayer, spiritual discernment, writing my entire preaching sermon, counseling, or presence with suffering people.”",
       dependenceTags: { 4: ["prayer_present"], 5: ["prayer_present"] },
     }),
   reverse(P, "dependencySafety",
@@ -159,7 +159,7 @@ export const PASTOR_ITEMS: Item[] = [
     "I use AI wherever it seems to help, and I have not really thought through which ministry tasks it should stay out of.",
     "agreement", "tool_as_oracle", {
       why: "This is how most people start, and it is not a failure. It is the point at which a line has not yet been drawn, and this check is a good place to draw it.",
-      deeper: "James Spencer, “Human Capacity and Technology”: technology as object, knowledge, activity, and volition.",
+      deeper: "James Spencer, “Human Capacity and Technology”: “dependence on God maximized human capacity by living into the order God had established”.",
     }),
   scenario(P, "fluency",
     "A ministry software vendor offers an AI feature that will draft your pastoral emails, follow-up texts to visitors, and condolence notes automatically from your calendar.", [
@@ -170,7 +170,7 @@ export const PASTOR_ITEMS: Item[] = [
       "Do that, and tell the team why: some inconveniences are part of the pastoral office, and a note you wrote yourself is part of caring for someone.",
     ], "pastoral_care_outsourcing", {
       why: "Spencer chose not to let AI write his emails, because he did not want to dishonor people by denying them his time and attention. That is a considered position rather than a rule for everyone; this question asks where your own line sits.",
-      deeper: "James Spencer, “Introduction: Discernment in the Digital Age”, on preserving human-to-human interaction.",
+      deeper: "James Spencer, “Introduction: Discernment in the Digital Age”, who treats preserving “human-to-human interaction” as a rule of thumb, even where it is mediated.",
       effects: { 1: { responsibleUse: -6 } },
       optionSignals: { 1: ["pastoral_care_outsourcing"] },
     }),
@@ -260,7 +260,7 @@ export const PASTOR_ITEMS: Item[] = [
     "I am a better preacher than I was a year ago in exegesis, structure, illustration, and delivery, not only a faster one.",
     "agreement", {
       why: "Craft grows through practice, feedback, and difficulty. This asks whether AI has fed your growth as a preacher or quietly replaced the practice that produces it.",
-      deeper: "Aristotle, in the epigraph selection for In the Image of Code: “the virtues we get by first exercising them”.",
+      deeper: "James Spencer, “The Quad”, on procedural knowing: the second of its four questions asks how a person's skills shape what they present.",
     }),
   reverse(P, "skillGrowth",
     "Some parts of sermon craft I used to do myself (finding illustrations, building an outline, writing transitions) I could no longer do well by hand.",
@@ -296,7 +296,7 @@ export const PASTOR_ITEMS: Item[] = [
     "I regularly review how I am using AI in ministry, adjust what is not serving me or my people, and I have someone who knows my practice and can ask me about it.",
     "agreement", {
       why: "Habits drift. A practice that is reviewed, ideally with another person in the room, can be corrected before it hardens.",
-      deeper: "James Spencer, “Uncoordinated”, on discipleship as the church's coordinating work: we are not meant to discern alone.",
+      deeper: "James Spencer, “Uncoordinated”: when coordination breaks down, “Christians may still agree on doctrine while disagreeing about how a given doctrine should be understood and worked out in practice”.",
     }),
   reverse(P, "adaptability",
     "Once I found an AI workflow that works for sermon preparation, I have not really revisited it. It just runs.",
@@ -373,7 +373,7 @@ export const PASTOR_ITEMS: Item[] = [
     "Most of my illustrations and applications now come from AI suggestions rather than from my own life, my reading, and my people.",
     "agreement", "voice_loss", {
       why: "Illustrations from your own life and your people's lives are the part of a sermon no tool can supply. When they thin out, the sermon starts to sound like everyone's.",
-      deeper: "Sean Maguire in Good Will Hunting, in the epigraph selection for In the Image of Code: “You couldn't tell me what it smells like in the Sistine Chapel.”",
+      deeper: "Alin Vrancila, “Navigating the Agathokakological Age”: “AI and digital platforms promise connection, but it is often a disembodied, low-effort simulation.”",
     }),
   scenario(P, "creativity",
     "After a service, a longtime member says gently, “Pastor, that didn't sound like you.”", [
