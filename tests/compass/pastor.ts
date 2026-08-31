@@ -267,6 +267,8 @@ head("Anonymity");
     path.join(process.cwd(), "src", "app", "api", "report", "route.ts"), "utf-8");
   ok("the PDF route touches no storage",
     !/saveLead|logEvent|listLeads|appendLocal/.test(routeSource));
+  // the anonymous path depends on this route accepting the persona at all
+  ok("the PDF route accepts this persona", /'pastor'/.test(routeSource), "not in the allow list");
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

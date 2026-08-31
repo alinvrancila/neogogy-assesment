@@ -5,7 +5,10 @@ import { generateCompassPdf } from '@/lib/reportPdfV2';
 
 export const runtime = 'nodejs';
 
-const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business'];
+// Every persona may build a file here. This route computes and returns; it
+// touches no storage, which is what makes it the right path for the anonymous
+// Pastor and Preacher check.
+const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business', 'pastor'];
 
 const bad = (error: string, status = 400) =>
   new Response(JSON.stringify({ error }), { status, headers: { 'Content-Type': 'application/json' } });
