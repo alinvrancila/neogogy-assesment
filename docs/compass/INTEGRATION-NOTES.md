@@ -899,3 +899,21 @@ motif is ministerial without being denominational.
 The bands the type sits on are part of the artwork rather than panels laid over
 it, because react-pdf cannot draw a gradient on a view and a flat panel leaves a
 hard edge across the page.
+
+## Both covers now carry a drawn motif
+
+The business cover was a flat navy field with type on it, which read as one tone.
+It now opens on a crimson dial: a sweep of arc with measuring rules around it,
+cropped by the page so it frames the type rather than sitting behind it as a
+picture. A teal marker at the end of the sweep and a faint skyline at the foot
+carry the second accent. Drawn by `scripts/art/business-cover.svg.mjs`,
+rasterised by `npm run art:business`.
+
+The crimson is `#C4384A` lit against `#8E2433`, which sits close to the report's
+oxblood without going muddy on a navy ground. It stays out of the headline type:
+crimson on navy measures about 3.3 to 1, which is fine for a rule and not for
+words at that size.
+
+Both covers bake their type bands into the artwork for the same reason: react-pdf
+cannot draw a gradient on a view, so a flat panel would leave a hard edge across
+the page.

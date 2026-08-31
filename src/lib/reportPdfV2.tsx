@@ -63,6 +63,8 @@ const BACKDROP = path.join(process.cwd(), 'public', 'ascent-backdrop.jpg');
 const COVER_ART = path.join(process.cwd(), 'public', 'ascent-cover.jpg');
 /** The chapel window, drawn procedurally by scripts/art/render-pastor-cover.mjs. */
 const MINISTER_ART = path.join(process.cwd(), 'public', 'minister-cover.jpg');
+/** The crimson dial, drawn by scripts/art/render-business-cover.mjs. */
+const BUSINESS_ART = path.join(process.cwd(), 'public', 'business-cover.jpg');
 
 const fontPath = (f: string) => path.join(process.cwd(), 'src', 'fonts', f);
 Font.register({
@@ -1338,6 +1340,7 @@ function BusinessCover({ r, name, dateStr, company, industry }: {
 }) {
   const NAVY = '#1B2A4A';
   const TEAL = '#00D4AA';
+  const CRIMSON = '#C4384A';
   const PAPER = '#F4F6F9';
   const SOFT = 'rgba(244,246,249,0.72)';
   const FAINT = 'rgba(244,246,249,0.48)';
@@ -1346,7 +1349,13 @@ function BusinessCover({ r, name, dateStr, company, industry }: {
 
   return (
     <Page size="A4" style={{ backgroundColor: NAVY, color: PAPER, fontFamily: 'Spectral' }}>
-      {/* a single rule, top left, doing the work a photograph would do */}
+      {/* the dial: a crimson sweep on a navy field, cropped by the page so it
+          frames the type rather than sitting behind it as a picture */}
+      <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text */}
+        <Image src={BUSINESS_ART} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </View>
+
       <View style={{ position: 'absolute', top: 0, left: M, width: 64, height: 5, backgroundColor: TEAL }} />
 
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: M, paddingTop: 62 }}>
@@ -1368,9 +1377,12 @@ function BusinessCover({ r, name, dateStr, company, industry }: {
 
         <View style={{ height: 1, backgroundColor: 'rgba(244,246,249,0.18)', marginTop: 34, marginBottom: 34 }} />
 
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.8, color: FAINT }}>
-          WHERE THIS BUSINESS STANDS
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ width: 22, height: 2, backgroundColor: CRIMSON, marginRight: 8 }} />
+          <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.8, color: FAINT }}>
+            WHERE THIS BUSINESS STANDS
+          </Text>
+        </View>
         <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: archSize, color: PAPER, marginTop: 12, lineHeight: 1.06 }}>
           {arch}
         </Text>
