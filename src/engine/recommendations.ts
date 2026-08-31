@@ -271,15 +271,222 @@ const BUSINESS_MAINTAIN = R("maintain", "advanced",
   "The arrangement survives a vendor change and a busy quarter, and someone else can run the review.",
   "Letting a good pattern go unexamined precisely because it is good.");
 
+/**
+ * The Pastor and Preacher library.
+ *
+ * Every practice fits inside a normal ministry week and carries one pointer to
+ * a resource. The tone is offered, never prescribed: this instrument does not
+ * grade a minister's faithfulness.
+ */
+const PR = (tag: string, priority: Recommendation["priority"], capability: string,
+  behaviorChange: string, practice: string, evidenceOfProgress: string, riskToMonitor: string,
+  resource: string): Recommendation & { resource: string } =>
+  ({ tag, priority, capability, behaviorChange, practice, evidenceOfProgress, riskToMonitor, resource });
+
+const PASTOR_LIBRARY: Record<string, Recommendation & { resource?: string }> = {
+  sermon_outsourcing: PR("sermon_outsourcing", "immediate",
+    "Read first, think first, write first",
+    "Let the text and prayer shape the message before any tool sees it.",
+    "For the next month, open the passage, pray, and write your own outline and first draft before opening a tool at all. Bring it in afterwards for feedback, questions, and clarity.",
+    "You can say what the message is about before the tool has said anything, and the sermon still sounds like the one you would have preached.",
+    "The order quietly reversing in a heavy week, which is when it matters most.",
+    "Faith at Work: “I read first, think first, write first, and then use AI for feedback or clarification.”"),
+  prayerless_preparation: PR("prayerless_preparation", "immediate",
+    "Prayer before the desk",
+    "Put prayer at the front of preparation rather than at the end of it.",
+    "Begin each week's preparation with the passage open and the tools closed, praying through the text before any study aid, including AI, is opened.",
+    "You can name what you asked God for in the passage this week, before you can name what any tool told you.",
+    "Prayer becoming the frame around the work rather than part of it.",
+    "Faith at Work, on keeping limits that protect prayer."),
+  unverified_exegesis: PR("unverified_exegesis", "immediate",
+    "Check what will be preached",
+    "Verify any exegetical claim before it reaches the pulpit.",
+    "Take every word study, historical claim, and interpretive move the tool supplied and confirm it in a lexicon, a commentary, or the text itself. Where you cannot confirm it in time, preach without it.",
+    "You catch at least one wrong or unsupported claim a month, because you are actually looking.",
+    "Checking only the claims that already felt doubtful.",
+    "1 Thessalonians 5:21, NLT: test everything that is said."),
+  fabricated_citation_risk: PR("fabricated_citation_risk", "immediate",
+    "The verified quotation rule",
+    "Never preach a quotation you have not seen in its source.",
+    "Keep one rule with no exceptions: if you cannot find the quotation in the book, the article, or the sermon it is attributed to, it does not go in. Ten minutes of searching is the whole cost.",
+    "Nothing goes out under another person's name that you have not read in their own work.",
+    "Accepting a second-hand repetition online as a source.",
+    "James Spencer, “The Quad”, on asking what skill and what sources stand behind a claim."),
+  study_atrophy: PR("study_atrophy", "immediate",
+    "A monthly tool-free message",
+    "Keep the study muscles in use on purpose.",
+    "Prepare and preach one message a month with the text, your books, and prayer, and no AI anywhere in the process. Put it in the calendar rather than waiting for a light week.",
+    "The tool-free message costs less each time, and you can feel the difference in the others.",
+    "Choosing the easiest text for the tool-free week.",
+    "Faith at Work, on the deliberate recovery of friction."),
+  formation_bypass: PR("formation_bypass", "important",
+    "Let the text work on you first",
+    "Close every significant study with reconstruction in your own words.",
+    "Before the manuscript is finished, close every tool and every file and say the passage's argument aloud from memory. Reopen only to check what you could not reconstruct.",
+    "You can still teach last month's passage weeks later without the file.",
+    "Reconstructing by re-reading rather than by recall.",
+    "James Spencer, “The Quad”, on Deuteronomy 17: the king wrote out his own copy of the law."),
+  voice_loss: PR("voice_loss", "important",
+    "Finish in your own voice",
+    "Let the tool draft if it helps, and always finish the sermon yourself.",
+    "Review the last month of sermons for where your voice, your people, and your city went missing. Put one thing in each coming message that only your congregation would understand.",
+    "A longtime member could recognize your sermon with your name removed.",
+    "The standard lapsing in the weeks that are already hard.",
+    "Andy Crouch, The Life We're Looking For, on being known in the flesh."),
+  pastoral_care_outsourcing: PR("pastoral_care_outsourcing", "immediate",
+    "Care stays in your own hand",
+    "Keep any message that touches a person's life in your own words.",
+    "Draw the line with your team: scheduling and logistics may be drafted by a tool, and anything touching a person's grief, illness, or crisis is written by you. Say why, once, so it is understood rather than assumed.",
+    "Every condolence and every hard conversation this month came from you.",
+    "The line quietly moving when the week is full.",
+    "James Spencer, “Introduction: Discernment in the Digital Age”, on preserving human-to-human interaction."),
+  congregant_privacy_risk: PR("congregant_privacy_risk", "immediate",
+    "Confidences never enter a tool",
+    "Take hard pastoral situations to a person, not a system.",
+    "Keep one rule with no exceptions: nothing a congregant told you in confidence goes into any tool, in any form. When you need help thinking, call a trusted elder, a counselor, or a fellow pastor.",
+    "You can name who you would call, and you have called them at least once.",
+    "Anonymizing a story just enough to feel comfortable pasting it in.",
+    "James Spencer's retelling of the Good Samaritan: being a neighbor requires closing the distance."),
+  undisclosed_use: PR("undisclosed_use", "important",
+    "A practice that can bear the light",
+    "Make your use something your leaders already know about.",
+    "Write down in one paragraph where AI helps you and where it does not, and give it to your elders. You are not announcing it from the pulpit; you are making sure nobody learns it by accident.",
+    "You would be at ease if any leader asked how a sermon came together.",
+    "A written line that nobody has actually read.",
+    "Ephesians 4:15, NLT: speaking the truth in love."),
+  craft_stagnation: PR("craft_stagnation", "important",
+    "Keep the craft in your hands",
+    "Name the parts of the craft you will keep doing yourself.",
+    "Choose two, perhaps outlining and illustration, and do them by hand every week for a season. If you mentor a younger preacher, work through the same two with them.",
+    "The parts you named feel like yours again, on evidence rather than intention.",
+    "Letting the list shrink quietly as the weeks get heavier.",
+    "Luke 6:40, NLT: the student who is fully trained will become like the teacher."),
+  tool_as_oracle: PR("tool_as_oracle", "important",
+    "Draw the line on purpose",
+    "Decide where the tool belongs before the next busy week decides for you.",
+    "Write one paragraph naming what AI may touch in your ministry and what it may not. Keep it to a paragraph, and put it where you will see it.",
+    "You can state the line without thinking, and so can your elders.",
+    "A line drawn once and never revisited as the tools change.",
+    "James Spencer, “Human Capacity and Technology”, on technology as object, knowledge, activity, and volition."),
+
+  /* the shared tags, in a preacher's terms */
+  dependency_starting_tasks: PR("dependency_starting_tasks", "important",
+    "Begin in the text",
+    "Start each week's work in the passage rather than in a tool.",
+    "Give the first thirty minutes of preparation to the text and prayer alone, with nothing else open. Then bring in your usual helps.",
+    "The week starts without the reflex to open a tool first.",
+    "Turning the thirty minutes into a ritual you wait out rather than work through.",
+    "Psalm 1:2, NLT: meditating on the law of the Lord day and night."),
+  independent_capability_low: PR("independent_capability_low", "immediate",
+    "Keep the capacity you may need",
+    "Practise preparing without the tools before a week forces it.",
+    "Once a month, prepare a full message with the text, prayer, and your own books. Note honestly what was hard, because that list is the real reading.",
+    "The gap between assisted and unaided preparation narrows over a season.",
+    "Choosing a familiar passage every time.",
+    "Faith at Work, on the deliberate recovery of friction."),
+  verification_low: PR("verification_low", "immediate",
+    "Confirm before the pulpit",
+    "Check anything that will carry weight on Sunday.",
+    "Adopt a two-source habit for consequential claims: confirm anything material somewhere the tool did not supply, before it reaches your people.",
+    "You find at least one thing a month that would not have survived checking.",
+    "Checking only what already felt doubtful.",
+    "1 Thessalonians 5:21, NLT: test everything that is said."),
+  uncritical_acceptance: PR("uncritical_acceptance", "immediate",
+    "Calibrated trust",
+    "Separate sounds right from is right, deliberately.",
+    "For one month, before accepting any substantive answer from a tool, write one sentence: what would have to be true for this to be wrong. Then check that one thing.",
+    "Your acceptance rate falls and your correction rate rises.",
+    "Letting it lapse once the tool feels reliable again.",
+    "James Spencer, “The Quad”, on testing a claim calmly and theologically."),
+  transfer_low: PR("transfer_low", "important",
+    "Study that stays",
+    "Close each study by putting the passage in your own words.",
+    "Before the manuscript is done, close everything and write the argument of the passage from memory, in a few lines, in your own notes.",
+    "You can teach the passage a month later without opening the file.",
+    "Writing the summary from the draft rather than from memory.",
+    "James Spencer, “The Quad”, on Deuteronomy 17."),
+  skill_erosion: PR("skill_erosion", "important",
+    "Protect the skills you intend to keep",
+    "Name them, and practise them on purpose.",
+    "List three parts of your preaching craft you refuse to lose. For each, keep one regular repetition done entirely by you, with the tool allowed only afterwards.",
+    "The named skills hold when you test them unaided.",
+    "Letting the list go stale as your use expands.",
+    "Aristotle, in the epigraph selection for In the Image of Code: the virtues we get by first exercising them."),
+  underexposure_fluency: PR("underexposure_fluency", "developmental",
+    "A bounded look, on your terms",
+    "Replace an opinion about these tools with a small amount of your own evidence.",
+    "Pick two tasks that are clearly not preaching, perhaps a first draft of an announcement and a translation for a visitor, and try them once. Decide afterwards whether they earned a place.",
+    "You can say from experience where a tool helps you and where it does not.",
+    "Trying it on the sermon first, which is the one place this check would not start.",
+    "Todd Korpi, AI Goes to Church, written for pastors at exactly this point."),
+  authority_transfer: PR("authority_transfer", "immediate",
+    "Keep the decision yours",
+    "Let the tool inform the message and never decide it.",
+    "Before any sermon is finished, say each major point aloud in your own words and name where it came from in the text. Anything you cannot do that with comes out.",
+    "Every point in the message can be defended in your own words.",
+    "A point surviving because it is well written rather than because it is right.",
+    "James Spencer, “Theological Dispositions in a Digital World”, on responding to God."),
+  shallow_use: PR("shallow_use", "developmental",
+    "Ask it to argue with you",
+    "Use the tool to deepen the study rather than to speed it.",
+    "Once a week, ask it to make the strongest case against your reading of the passage, then take its best objection to the commentaries and the text.",
+    "At least one sermon this season changed because an objection was right.",
+    "Asking for challenge and then not letting it change anything.",
+    "Todd Korpi: AI deals in knowledge, humans deal in wisdom."),
+  ai_native_gap: PR("ai_native_gap", "developmental",
+    "Review the practice",
+    "Put your use of these tools on a rhythm of examination.",
+    "Once a quarter, sit with one other person and look at what your practice has become: what it is doing to your study, your prayer, and your presence. Change one thing.",
+    "Your practice this season differs from last season for reasons you can state.",
+    "A review that never changes anything.",
+    "James Spencer, “Uncoordinated”, on discipleship as the church's coordinating work."),
+  privacy_boundary: PR("privacy_boundary", "immediate",
+    "What never enters a tool",
+    "Draw the line around people's lives, in writing.",
+    "Write the list: confidences, counseling details, personal circumstances, anything told to you as a pastor. Keep it where you will see it when you are tired.",
+    "A look back over a month of use finds nothing about a person in any tool.",
+    "Exceptions creeping in when the tool is convenient and the stakes feel low.",
+    "James Spencer, “Introduction: Discernment in the Digital Age”."),
+  disclosure_avoidance: PR("disclosure_avoidance", "important",
+    "Be able to say it plainly",
+    "Settle how you would answer if someone asked.",
+    "Write one paragraph you would be content for any member to read about how AI is and is not part of your preparation. Give it to your elders.",
+    "The question could be answered the same way by you and by any leader.",
+    "A paragraph written once and never revisited.",
+    "Faith at Work, on remaining responsible for whether a message is faithful."),
+  overtrust_pattern: PR("overtrust_pattern", "immediate",
+    "Trust in proportion",
+    "Match the checking to what a mistake would cost.",
+    "Sort what the tool touches into three groups by what being wrong would cost: an announcement, a study note, a claim from the pulpit. Give the last group your full checking, every time.",
+    "The most consequential material is the most checked, which is not usually where people start.",
+    "Sorting by volume rather than by consequence.",
+    "Faith at Work: “If I use AI to write something, I remain responsible for whether it is true.”"),
+};
+
+const PASTOR_MAINTAIN = PR("maintain", "advanced",
+  "Keep the rhythm, and give it away",
+  "Your exposure is drift rather than collapse. Keep what is working visible and shared.",
+  "Keep the tool-free rhythm you already have, keep your line where your elders can see it, and walk one younger preacher through the same discipline this season.",
+  "The practice survives a heavy season, and one other preacher has it because of you.",
+  "A good practice going unexamined precisely because it is good.",
+  "Faith at Work, on keeping good limits on purpose.");
+
 export function buildRecommendations(
   signals: RiskSignal[], bottleneck: Bottleneck, up: UsageProfile, persona?: Persona
 ): Recommendation[] {
-  const LIB = persona === "business" ? BUSINESS_LIBRARY : LIBRARY;
+  const LIB = persona === "business" ? BUSINESS_LIBRARY : persona === "pastor" ? PASTOR_LIBRARY : LIBRARY;
   const chosen = new Map<string, Recommendation>();
   // 1. The bottleneck's recommendation leads, unless the profile is saturated.
+  //    One exception: a preacher who has decided on purpose where these tools
+  //    belong is not answered with advice to use them more. A settled position
+  //    is a formed one, and the check says so rather than arguing with it.
+  const skipExposureLead = persona === "pastor" && up.intentionalSelectiveUse;
   if (!bottleneck.saturated) {
     const btag = BOTTLENECK_TAG[bottleneck.construct];
-    if (LIB[btag]) chosen.set(btag, { ...LIB[btag], priority: "immediate" });
+    const isExposure = btag === "underexposure_fluency";
+    if (LIB[btag] && !(skipExposureLead && isExposure)) {
+      chosen.set(btag, { ...LIB[btag], priority: "immediate" });
+    }
   }
   // 2. High/elevated risk signals, in severity order.
   const order = { high: 0, elevated: 1, watch: 2 } as const;
@@ -292,12 +499,15 @@ export function buildRecommendations(
     if (LIB[s.tag] && !chosen.has(s.tag)) chosen.set(s.tag, LIB[s.tag]);
   }
   // 3. Underexposed low-users always get the fluency entry (§50), framed as exposure not volume.
-  if (up.underexposed && !chosen.has("underexposure_fluency")) {
+  if (up.underexposed && !skipExposureLead && !chosen.has("underexposure_fluency")) {
     chosen.set("underexposure_fluency", { ...LIB.underexposure_fluency, priority: "immediate" });
   }
   // 4. If nothing fired, the profile is genuinely healthy: give maintenance work, not manufactured alarm.
   if (chosen.size === 0 && persona === "business") {
     chosen.set("maintain", BUSINESS_MAINTAIN);
+  }
+  if (chosen.size === 0 && persona === "pastor") {
+    chosen.set("maintain", PASTOR_MAINTAIN);
   }
   if (chosen.size === 0) {
     chosen.set("maintain", R("maintain", "advanced",

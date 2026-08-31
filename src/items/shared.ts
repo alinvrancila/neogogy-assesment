@@ -65,6 +65,7 @@ export function scenario(persona: Persona, construct: ConstructId, prompt: strin
   } = {}): Item {
   const options: ItemOption[] = labels.map((label, i) => ({
     value: i + 1, label, effects: opts.effects?.[i + 1], signals: opts.optionSignals?.[i + 1],
+    dependence: opts.dependenceTags?.[i + 1],
   }));
   const { effects, optionSignals, ...rest } = opts;
   const id = `${persona}_${construct}_s`;
@@ -226,4 +227,101 @@ export const BUSINESS_HIGH_USE_PROBES: Item[] = [
     prompt: "AI output reaches a customer, a contract, or our books without a human check.",
     context: "Answer for how it actually goes in a busy week.",
     scale: "frequency", version: 2 },
+];
+
+
+// ---------------------------------------------------------------------------
+// Pastor and Preacher overrides
+// ---------------------------------------------------------------------------
+/**
+ * The shared items, asked about a ministry. Same ids, so an answer means the
+ * same thing wherever it is read.
+ */
+
+export const PASTOR_USAGE_ITEM: Item = {
+  id: "usage", persona: "shared", type: "branch",
+  prompt: "How present is AI in your ministry today?",
+  context: "Any AI tool counts, in any part of the work. This answer is never scored up or down; it only decides which follow-up questions you see.",
+  options: [
+    { value: 1, label: "Not at all" },
+    { value: 2, label: "Occasional individual use" },
+    { value: 3, label: "Regular use in a few tasks" },
+    { value: 4, label: "Built into most of my weekly preparation" },
+    { value: 5, label: "Central to how I prepare and communicate" },
+  ],
+  version: 2,
+};
+
+export const PASTOR_BASELINE_ITEMS: Item[] = [
+  { id: "b1", persona: "shared", type: "baseline",
+    prompt: "Before any questions: how healthy does your relationship with AI in ministry feel to you right now?",
+    scale: "agreement", version: 2 },
+  { id: "b2", persona: "shared", type: "baseline",
+    prompt: "Prediction: where do you expect this check to place you?",
+    scale: "agreement", version: 2 },
+];
+
+export const PASTOR_LOW_USE_REASON: Item = {
+  id: "lowuse_reason", persona: "shared", type: "branch",
+  adaptiveTrigger: { when: "usageLow" },
+  prompt: "Which best describes why AI is not much present in your ministry?",
+  context: "Choose the closest fit. Low use is not treated as a problem here; this only tells us the reason.",
+  why: "A settled conviction and a lack of time are different situations, and this check reads them differently. Neither is treated as a failing.",
+  deeper: "James Spencer, “Theological Dispositions in a Digital World”, on responding to God rather than to the tool.",
+  options: [
+    { value: 1, label: "A considered decision about where it belongs, and it does not belong here." },
+    { value: 2, label: "Lack of time or access." },
+    { value: 3, label: "A conviction, or my tradition's guidance, against it in this work." },
+    { value: 4, label: "I do not know where to start." },
+    { value: 5, label: "I tried it and found it unhelpful." },
+  ],
+  version: 2,
+};
+
+export const PASTOR_HIGH_USE_PROBES: Item[] = [
+  { id: "highuse_outage", persona: "shared", type: "scenario", construct: "dependencySafety",
+    adaptiveTrigger: { when: "usageHigh" }, riskSignal: "study_atrophy",
+    prompt: "Every AI tool is down for the week before Easter.",
+    context: "Answer for what would realistically happen, not for the week you would want to have.",
+    why: "Holy Week is when preparation is heaviest and time is shortest. What would actually carry you through that week is a fair reading of what your practice rests on.",
+    deeper: "Faith at Work, on the deliberate recovery of friction.",
+    options: [
+      { value: 1, label: "The week would not hold. So much runs through the tools now.", signals: ["study_atrophy"], dependence: ["tool_first"] },
+      { value: 2, label: "You would get through it, but the preaching would be noticeably thinner." },
+      { value: 3, label: "You would work longer hours and preach at roughly your usual level." },
+      { value: 4, label: "You would prepare much as you always have, and barely feel the difference.", dependence: ["text_first"] },
+      { value: 5, label: "You would hardly notice, because you already prepare this way regularly on purpose.", dependence: ["text_first", "prayer_present"] },
+    ], version: 2 },
+  { id: "highuse_unchecked", persona: "shared", type: "reverse", construct: "verification",
+    adaptiveTrigger: { when: "usageHigh" }, riskSignal: "unverified_exegesis",
+    prompt: "AI-generated material reaches my pulpit or my people without my own study and checking.",
+    context: "Answer for how it actually goes in a heavy week.",
+    why: "Unchecked material tends to arrive in the weeks that are already hard. Naming the frequency is more useful than naming the intention.",
+    deeper: "1 Thessalonians 5:21, NLT: test everything that is said.",
+    scale: "frequency", version: 2 },
+];
+
+/** Not scored, not stored. They feed the Dependence Check display only. */
+export const PASTOR_REFLECTION_PROMPTS: Item[] = [
+  { id: "reflect_prayer", persona: "shared", type: "branch",
+    prompt: "Where does prayer sit in your preparation?",
+    context: "This one is not scored and is not stored anywhere. It shapes only the Dependence Check you are about to read.",
+    options: [
+      { value: 1, label: "Rarely anywhere in it, if I am honest." },
+      { value: 2, label: "After the work, mostly for the delivery." },
+      { value: 3, label: "Alongside the work, when I remember." },
+      { value: 4, label: "Before the tool, and through the study." },
+    ],
+    version: 2 },
+  { id: "reflect_unaided", persona: "shared", type: "branch",
+    prompt: "When did you last prepare a message with no AI anywhere in the process?",
+    context: "Also not scored and not stored. There is no right answer here.",
+    options: [
+      { value: 1, label: "I cannot remember." },
+      { value: 2, label: "Over a year ago." },
+      { value: 3, label: "In the last few months." },
+      { value: 4, label: "In the last month." },
+      { value: 5, label: "That is still my regular practice." },
+    ],
+    version: 2 },
 ];

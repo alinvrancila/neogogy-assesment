@@ -1145,6 +1145,175 @@ const Footer = ({ title = 'Neogogy Formation Compass' }: { title?: string }) => 
  * space, because this document gets forwarded to an accountant or a board and
  * has to look like a business paper rather than a personal report.
  */
+/**
+ * The Pastor and Preacher cover.
+ *
+ * Ink-light, one accent, a great deal of white space, and no name field: this
+ * check is anonymous and the file should look like it belongs to the person
+ * holding it rather than to a system that recorded them.
+ */
+function PastorCover({ r, dateStr }: { r: CompassResult; dateStr: string }) {
+  const ACCENT = '#2E6E63';
+  const arch = r.archetype.name;
+  const archSize = arch.length > 24 ? 30 : arch.length > 18 ? 34 : 40;
+  return (
+    <Page size="A4" style={{ backgroundColor: '#FAF7F1', color: T.ink, fontFamily: 'Spectral' }}>
+      <View style={{ position: 'absolute', top: 0, left: M, width: 54, height: 4, backgroundColor: ACCENT }} />
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: M, paddingTop: 74 }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 8, letterSpacing: 2.4, color: ACCENT }}>
+          PREACHING FORMATION CHECK
+        </Text>
+        <Text style={{ fontFamily: 'Spectral', fontSize: 12.5, color: T.mute, marginTop: 44, lineHeight: 1.6, maxWidth: 330 }}>
+          A private reading of how AI is shaping your preparation, your preaching, your care of
+          people, and your own formation.
+        </Text>
+
+        <View style={{ height: 1, backgroundColor: T.hair, marginTop: 40, marginBottom: 40 }} />
+
+        <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: archSize, color: T.oxblood, lineHeight: 1.08 }}>
+          {arch}
+        </Text>
+        <Text style={{ fontFamily: 'Spectral', fontSize: 12.5, color: T.mute, marginTop: 14, lineHeight: 1.55, maxWidth: 350 }}>
+          {r.archetype.tagline}
+        </Text>
+      </View>
+
+      <View style={{ position: 'absolute', left: M, right: M, bottom: 150, flexDirection: 'row', alignItems: 'flex-end' }}>
+        <View>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 66, color: ACCENT, lineHeight: 1 }}>
+            {r.stage.rawIndex}
+          </Text>
+          <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.2, color: T.mute, marginTop: 6 }}>
+            FORMATION HEALTH SCORE, OUT OF 100
+          </Text>
+        </View>
+        <View style={{ flex: 1, alignItems: 'flex-end' }}>
+          <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.2, color: T.mute }}>
+            {`STAGE ${r.stage.stage} OF 10`}
+          </Text>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 18, marginTop: 5 }}>
+            {r.stage.stageName}
+          </Text>
+        </View>
+      </View>
+
+      <View style={{
+        position: 'absolute', left: M, right: M, bottom: 62,
+        borderTopWidth: 1, borderTopColor: T.hair, paddingTop: 14,
+      }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: T.mute, lineHeight: 1.6 }}>
+          A private self-reflection index drawn from your own answers. Not a spiritual assessment of
+          your calling, your faithfulness, or your ministry. Nothing about this reading was stored.
+        </Text>
+      </View>
+
+      <View style={{ position: 'absolute', left: M, right: M, bottom: 30, flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: T.mute }}>{dateStr}</Text>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: T.mute }}>assessment.neogogy.ai</Text>
+      </View>
+    </Page>
+  );
+}
+
+/** Pastor: the Dependence Check, the outage reading, and the roadmap. */
+function PastorBlocksPdf({ r }: { r: CompassResult }) {
+  const ACCENT = '#2E6E63';
+  const d = r.dependenceCheck;
+  const capacity = r.dimensions.dependencySafety.score;
+  const retained = r.dimensions.transfer.score;
+  const outage = capacity >= 65 && retained >= 55
+    ? 'Your answers are consistent with a preacher who would still have a word for Sunday. The week would be longer and the preparation would hold.'
+    : capacity >= 45
+      ? 'Your answers suggest you would get there, with a longer week and a thinner message than you would want.'
+      : 'Your answers suggest the week would be hard, because much of the preparation now runs through the tools. That is recoverable, and the practices below are built for it.';
+  return (
+    <>
+      {d ? (
+        <View wrap={false} style={{
+          borderWidth: 1, borderColor: T.hair, borderLeftWidth: 3, borderLeftColor: ACCENT,
+          borderRadius: 8, padding: 11, marginBottom: 10, backgroundColor: T.card,
+        }}>
+          <Text style={S.eyebrow}>The Dependence Check</Text>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 11.5, marginBottom: 4 }}>
+            {d.heading}
+          </Text>
+          <Text style={{ fontSize: 8.6, lineHeight: 1.55 }}>{d.narrative}</Text>
+          {d.practice ? (
+            <Text style={{ fontSize: 8.6, lineHeight: 1.55, marginTop: 5 }}>
+              <Text style={{ fontWeight: 700 }}>One practice. </Text>{d.practice}
+            </Text>
+          ) : null}
+          {d.resource ? (
+            <Text style={{ fontSize: 7.6, color: T.mute, marginTop: 4 }}>{d.resource}</Text>
+          ) : null}
+          <Text style={{ fontSize: 7.4, color: T.mute, marginTop: 6 }}>
+            A mirror rather than a measure. It does not affect your score or your stage, and the two
+            questions behind it were not stored.
+          </Text>
+        </View>
+      ) : null}
+
+      <View wrap={false} style={{
+        borderWidth: 1, borderColor: T.hair, borderLeftWidth: 3, borderLeftColor: ACCENT,
+        borderRadius: 8, padding: 11, marginBottom: 10, backgroundColor: T.card,
+      }}>
+        <Text style={S.eyebrow}>The outage reading</Text>
+        <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 11.5, marginBottom: 4 }}>
+          If every tool vanished this week
+        </Text>
+        <Text style={{ fontSize: 8.6, lineHeight: 1.55 }}>{outage}</Text>
+        <Text style={{ fontSize: 7.6, color: T.mute, marginTop: 4 }}>
+          {`Read from unaided preaching capacity (${capacity}) and formation retained (${retained}).`}
+        </Text>
+      </View>
+    </>
+  );
+}
+
+/** Pastor: this week, this month, this season, on its own page. */
+function FormationRoadmapPdf({ r }: { r: CompassResult }) {
+  return (
+    <Page size="A4" style={S.light} wrap>
+      <View wrap={false}>
+        <Text style={S.eyebrow}>A way forward</Text>
+        <Text style={S.h2}>This week, this month, this season</Text>
+        <Text style={S.body}>
+          One thing to start with, a rhythm to build, and the slower work of a season. Each carries
+          what it would look like for it to be happening, so you can tell rather than guess. These
+          are offered, not prescribed.
+        </Text>
+      </View>
+      {(r.formationRoadmap ?? []).map((phase) => (
+        <View key={phase.window} wrap={false} style={{
+          borderWidth: 1, borderColor: T.hair, borderLeftWidth: 3, borderLeftColor: '#2E6E63',
+          borderRadius: 8, padding: 11, marginBottom: 9, backgroundColor: T.card,
+        }}>
+          <Text style={{ fontFamily: 'Plex', fontSize: 6.4, letterSpacing: 0.9, color: T.mute }}>
+            {phase.window}
+          </Text>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 11, color: T.oxblood, marginTop: 2 }}>
+            {phase.title}
+          </Text>
+          <Text style={{ fontSize: 7.8, color: T.mute, marginTop: 2, marginBottom: 4 }}>{phase.note}</Text>
+          {phase.actions.map((a) => (
+            <View key={a.capability} style={{ marginTop: 6, borderTopWidth: 1, borderTopColor: T.hair, paddingTop: 6 }}>
+              <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 9.5 }}>{a.capability}</Text>
+              <Text style={{ fontSize: 8.4, lineHeight: 1.5, marginTop: 2 }}>{a.practice}</Text>
+              <Text style={{ fontSize: 7.6, color: T.mute, marginTop: 3 }}>
+                <Text style={{ fontWeight: 700 }}>What it looks like. </Text>{a.checkpoint}
+              </Text>
+              {a.resource ? (
+                <Text style={{ fontSize: 7.4, color: T.mute, marginTop: 2 }}>{a.resource}</Text>
+              ) : null}
+            </View>
+          ))}
+        </View>
+      ))}
+      <Footer title={reportTitle(r.persona)} />
+    </Page>
+  );
+}
+
 function BusinessCover({ r, name, dateStr, company, industry }: {
   r: CompassResult; name: string; dateStr: string; company?: string; industry?: string;
 }) {
@@ -1403,15 +1572,18 @@ export async function generateCompassPdf(args: {
 }): Promise<Buffer> {
   const { result: r, name = '', comparison = null, company, industry } = args;
   const isBusiness = r.persona === 'business';
+  const isPastor = r.persona === 'pastor';
   const sections = generateReportSections(r);
   const byKey = (k: string) => sections.find((s) => s.key === k)!;
   const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const doc = (
     <Document title={reportTitle(r.persona)} author="International Center for Applied Neogogy">
-      {isBusiness
-        ? <BusinessCover r={r} name={name} dateStr={dateStr} company={company} industry={industry} />
-        : <Cover r={r} name={name} dateStr={dateStr} company={company} industry={industry} />}
+      {isPastor
+        ? <PastorCover r={r} dateStr={dateStr} />
+        : isBusiness
+          ? <BusinessCover r={r} name={name} dateStr={dateStr} company={company} industry={industry} />
+          : <Cover r={r} name={name} dateStr={dateStr} company={company} industry={industry} />}
 
       {/*
         One flowing light page. react-pdf paginates it, and every content block
@@ -1470,6 +1642,7 @@ export async function generateCompassPdf(args: {
           </View>
           <View wrap={false} style={{ marginBottom: 10 }}><Ladder r={r} /></View>
           {isBusiness ? <ContinuityPdf r={r} /> : null}
+          {isPastor ? <PastorBlocksPdf r={r} /> : null}
           <Lines lines={byKey('continuum').lines} />
           <View style={S.gap} />
         </>
@@ -1613,6 +1786,7 @@ export async function generateCompassPdf(args: {
           whose rows never split across a break. */}
       {isBusiness ? <RiskRegisterPdf r={r} /> : null}
       {isBusiness && r.ninetyDayPlan.length ? <NinetyDayPdf r={r} /> : null}
+      {isPastor && (r.formationRoadmap?.length ?? 0) > 0 ? <FormationRoadmapPdf r={r} /> : null}
 
       {/* Closing */}
       <Page size="A4" style={S.closing}>

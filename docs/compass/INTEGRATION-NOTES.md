@@ -770,3 +770,57 @@ before an owner has read anything else.
 photograph. Deep navy, one teal rule, the score set large, the two level
 averages beside each other, and a lot of white space, because this document gets
 forwarded to an accountant or a board and has to look like a business paper.
+
+---
+
+# The Pastor and Preacher persona
+
+## The constraint I could not satisfy, and what I did instead
+
+The brief says every quotation must be verified against source documents placed
+in `docs/compass/sources/pastor/`. **Those documents are not in the project.** I
+searched the repository and the obvious places on this machine and found
+nothing matching them.
+
+So the persona quotes only the passages supplied verbatim in the brief itself,
+attributed exactly as the brief attributes them. Every other pointer names a
+title, a section, and what it offers, without quoting words I could not check.
+Scripture is quoted only where the brief supplied the New Living Translation
+wording; elsewhere the reference is cited with a short description of what it
+speaks to.
+
+That constraint is deliberate rather than a shortfall to be tidied later. This
+report tells a preacher never to preach a quotation they have not seen in its
+source. It cannot hold itself to a lower standard than it asks of its reader.
+
+`docs/compass/sources/pastor/README.md` lists the documents and names the two
+files to widen once they are in place: `src/items/pastor.ts` (the `deeper`
+pointers) and `src/engine/display.ts` (`PASTOR_CONTENT`).
+
+## Judgment calls
+
+**Pastor stage names.** Not specified. The ten map onto the existing stages and
+describe a preacher's practice: Set Apart, Watching, Trying, Practising, Working,
+Integrated, Discerning, Anchored, Renewing, Rooted and Fruitful.
+
+**A formed position is never answered with "use it more".** The brief asks that a
+settled conviction reach the same stages as any other position. It also lists,
+for the Deliberate Minimalist, that no exposure-first advice appear. The engine
+previously led with the bottleneck's recommendation, which for a low-fluency
+profile is the exposure entry. It is now suppressed when a pastor is
+intentionally selective. Scoped to this persona so nothing else moves.
+
+**The three generic outcome items are withheld,** as they are for the business
+persona: they ask about a person's learning, and the ten formation items ask
+about a ministry.
+
+**The reflection prompts arrive with the submission and leave with it.** They are
+answered after the last scored item, they feed only the Dependence Check, and
+because this persona stores nothing at all they are never written anywhere.
+
+**Anonymity is enforced in three places, not one.** The browser scores and
+renders without a network call. The PDF route computes and returns a file and
+imports nothing from the storage layer. The submit route refuses this persona
+outright. The test suite asserts the refusal, asserts the stored records are
+byte-identical afterwards, and asserts the PDF route's source contains no
+storage call at all.

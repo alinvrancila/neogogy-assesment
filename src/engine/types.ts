@@ -13,7 +13,7 @@
 // Personas
 // ---------------------------------------------------------------------------
 
-export type Persona = "student" | "teacher" | "parent" | "administrator" | "business";
+export type Persona = "student" | "teacher" | "parent" | "administrator" | "business" | "pastor";
 
 // ---------------------------------------------------------------------------
 // Constructs (measured dimensions)
@@ -66,6 +66,8 @@ export interface ItemOption {
   /** Extra risk tags raised by choosing this option, beyond the item's own.
    *  A single answer can expose more than one thing at once. */
   signals?: string[];
+  /** Pastor persona: dependence tags raised by this option. They never score. */
+  dependence?: string[];
 }
 
 export interface SecondaryEffect {
@@ -88,6 +90,12 @@ export interface Item {
   weight?: number;                // default 1.0; scenarios default 1.5 (behavior > claim)
   riskSignal?: string;            // signal tag emitted when answer is unhealthy
   recommendationTags?: string[];
+  /** Pastor persona: why this question is asked, shown under the prompt. */
+  why?: string;
+  /** Pastor persona: one pointer to a source or a passage, shown as a link line. */
+  deeper?: string;
+  /** Pastor persona: tags read by the Dependence Check. They never score. */
+  dependenceTags?: Partial<Record<number, string[]>>;
   pairId?: string;                // links claim <-> scenario for the consistency gap
   adaptiveTrigger?: { when: "usageLow" | "usageHigh" };
   version: number;
@@ -163,6 +171,8 @@ export interface Bottleneck {
 
 export interface Recommendation {
   tag: string;
+  /** Pastor persona: one pointer to a source or a passage. */
+  resource?: string;
   priority: "immediate" | "important" | "developmental" | "advanced";
   capability: string;
   behaviorChange: string;
@@ -196,6 +206,23 @@ export interface RiskRegisterEntry {
   evidence: string;
   action?: string;
   actionTag?: string;
+}
+
+/** Pastor persona only: a mirror, never a measure. */
+export interface DependenceCheck {
+  level: "led" | "present" | "trailing";
+  heading: string;
+  narrative: string;
+  practice?: string;
+  resource?: string;
+}
+
+/** Pastor persona only: one block of the formation roadmap. */
+export interface FormationPhase {
+  title: string;
+  window: string;
+  note: string;
+  actions: Array<{ capability: string; change: string; practice: string; checkpoint: string; resource?: string }>;
 }
 
 /** Business Owner only: one block of the ninety day plan. */
@@ -234,4 +261,7 @@ export interface CompassResult {
   /** Business Owner only. Empty for every other persona. */
   riskRegister: RiskRegisterEntry[];
   ninetyDayPlan: NinetyDayPhase[];
+  /** Pastor persona only. Undefined for every other persona. */
+  dependenceCheck?: DependenceCheck;
+  formationRoadmap?: FormationPhase[];
 }

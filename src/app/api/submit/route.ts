@@ -13,7 +13,15 @@ import { lookupIp } from '@/lib/geoip';
 
 export const runtime = 'nodejs';
 
-const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business'];
+const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business', 'pastor'];
+
+/**
+ * The Pastor and Preacher check is anonymous by design and never reaches this
+ * route: the browser scores it and shows the result without sending anything.
+ * If a request for that persona arrives anyway, from an old tab or a script, it
+ * is refused rather than stored. A count is not worth a trace.
+ */
+const ANONYMOUS_PERSONAS: Persona[] = ['pastor'];
 
 type Body = {
   persona?: string;
@@ -203,6 +211,13 @@ export async function POST(request: NextRequest) {
     body = (await request.json()) as Body;
   } catch {
     return NextResponse.json({ error: 'Malformed request.' }, { status: 400 });
+  }
+
+  // Refused rather than stored: this persona keeps no records at all.
+  if (ANONYMOUS_PERSONAS.includes(body.persona as Persona)) {
+    return NextResponse.json({
+      error: 'This check is anonymous and is not stored. Your result is shown on your own screen.',
+    }, { status: 400 });
   }
 
   const fullName = (body.name || `${body.firstName || ''} ${body.lastName || ''}`).trim();

@@ -3011,3 +3011,111 @@
 .nfc .biz-scope-notes { border-top: 1px solid var(--asc-border); padding-top: .8rem; }
 .nfc .biz-scope-notes p { margin: 0 0 .5rem; }
 .nfc .biz-bar-note { font-size: .82rem; margin: .2rem 0 .9rem; }
+
+/* Pastor and Preacher: the explanation under each question, and the opening. */
+.nfc .qwhy {
+  margin: .6rem 0 .2rem;
+  border-left: 2px solid var(--asc-border);
+  padding-left: .85rem;
+}
+.nfc .qwhy summary {
+  cursor: pointer;
+  font-family: var(--f-mono);
+  font-size: .72rem;
+  letter-spacing: .06em;
+  color: var(--asc-muted);
+  list-style: none;
+}
+.nfc .qwhy summary::-webkit-details-marker { display: none; }
+.nfc .qwhy summary::before { content: '\203A  '; }
+.nfc .qwhy[open] summary::before { content: '\2304  '; }
+.nfc .qwhy p { margin: .5rem 0 0; font-size: .92rem; line-height: 1.6; color: var(--asc-ink); max-width: 64ch; }
+.nfc .qdeeper { font-size: .84rem !important; color: var(--asc-muted) !important; }
+.nfc .pastor-quote {
+  margin: 1.1rem 0 1.3rem;
+  padding: 1rem 1.2rem;
+  border-left: 3px solid var(--asc-teal);
+  background: var(--asc-card);
+  border-radius: 0 12px 12px 0;
+  font-family: var(--f-serif);
+  font-size: 1.05rem;
+  line-height: 1.65;
+  max-width: 64ch;
+}
+.nfc .pastor-quote cite {
+  display: block;
+  margin-top: .6rem;
+  font-family: var(--f-mono);
+  font-size: .72rem;
+  font-style: normal;
+  color: var(--asc-muted);
+}
+@media (min-width: 760px) {
+  .nfc .qwhy summary { font-size: .74rem; }
+}
+
+/* Pastor and Preacher results: ink-light, one accent, generous whitespace. */
+.nfc .results.pastor { --pastor-accent: #2E6E63; }
+.nfc .pastor-open {
+  border: 1px solid var(--asc-border);
+  border-radius: 18px;
+  background: var(--asc-card);
+  padding: 1.8rem 1.6rem;
+  margin-bottom: 1.4rem;
+}
+.nfc .pastor-h1 { font-family: var(--f-serif); font-size: clamp(1.8rem, 3.6vw, 2.6rem); color: var(--asc-oxblood); margin: .3rem 0 .4rem; }
+.nfc .pastor-h3 { font-family: var(--f-serif); font-size: 1.3rem; color: var(--asc-oxblood); margin: 0 0 .6rem; }
+.nfc .pastor-h4 { font-family: var(--f-serif); font-size: 1.05rem; margin: .1rem 0 .35rem; }
+.nfc .pastor-tagline { font-size: 1.05rem; margin: 0 0 .8rem; max-width: 64ch; }
+.nfc .pastor-narrative { max-width: 68ch; margin: 0 0 1rem; }
+.nfc .pastor-score { display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.nfc .pastor-score-n { font-family: var(--f-serif); font-size: 2.8rem; color: var(--pastor-accent, #2E6E63); }
+.nfc .pastor-score-l { font-family: var(--f-mono); font-size: .76rem; color: var(--asc-muted); }
+.nfc .pastor-disclaimer { font-size: .88rem; color: var(--asc-muted); max-width: 68ch; margin: 0; }
+.nfc .pastor-block, .nfc .pastor-callout, .nfc .pastor-dependence, .nfc .pastor-closing {
+  border: 1px solid var(--asc-border);
+  border-radius: 16px;
+  background: var(--asc-card);
+  padding: 1.4rem;
+  margin-bottom: 1.25rem;
+}
+.nfc .pastor-callout, .nfc .pastor-dependence { border-left: 4px solid #2E6E63; }
+.nfc .pastor-block-watch { border-left: 4px solid #B0685E; }
+.nfc .pastor-dependence-trailing { border-left-color: #B0685E; }
+.nfc .pastor-dependence-present { border-left-color: #C08A2E; }
+.nfc .pastor-list { margin: 0; padding-left: 1.1rem; }
+.nfc .pastor-list li { margin-bottom: .7rem; max-width: 70ch; }
+.nfc .pastor-fineprint { font-size: .82rem; margin-top: .8rem; }
+.nfc .pastor-pair { display: flex; flex-wrap: wrap; gap: 1.6rem; margin: .8rem 0 1rem; }
+.nfc .pastor-metric { margin: 0; font-family: var(--f-mono); font-size: .72rem; color: var(--asc-muted); }
+.nfc .pastor-metric span { display: block; font-family: var(--f-serif); font-size: 2rem; color: var(--asc-ink); }
+.nfc .pastor-dims { margin-top: 1rem; }
+.nfc .pastor-dim { padding: .8rem 0; border-top: 1px solid var(--asc-border); }
+.nfc .pastor-dim-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.nfc .pastor-dim-name { font-family: var(--f-serif); font-size: 1.02rem; }
+.nfc .pastor-dim-val { font-family: var(--f-mono); font-size: 1rem; }
+.nfc .pastor-t-strong { color: #2E6E63; }
+.nfc .pastor-t-developing { color: #9A6B12; }
+.nfc .pastor-t-watch { color: #B0685E; }
+.nfc .pastor-dim-track { position: relative; display: block; height: 10px; border-radius: 5px; background: #EDE5D7; margin: .5rem 0 .5rem; overflow: hidden; }
+.nfc .pastor-dim-fill { position: absolute; inset: 0 auto 0 0; display: block; border-radius: 5px; }
+.nfc .pastor-f-strong { background: #2E6E63; }
+.nfc .pastor-f-developing { background: #DBA53C; }
+.nfc .pastor-f-watch { background: #CF796E; }
+.nfc .pastor-tick { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(31,28,24,.26); z-index: 2; }
+.nfc .pastor-tick-45 { left: 45%; }
+.nfc .pastor-tick-65 { left: 65%; }
+.nfc .pastor-marker { margin: 0; font-size: .9rem; color: var(--asc-ink); max-width: 70ch; }
+.nfc .pastor-conf { margin: .3rem 0 0; font-family: var(--f-mono); font-size: .7rem; color: var(--asc-muted); }
+.nfc .pastor-plan { display: grid; gap: 1rem; grid-template-columns: 1fr; margin-top: 1rem; }
+@media (min-width: 900px) { .nfc .pastor-plan { grid-template-columns: repeat(3, 1fr); } }
+.nfc .pastor-phase { border: 1px solid var(--asc-border); border-radius: 14px; padding: 1rem; }
+.nfc .pastor-action { border-top: 1px solid var(--asc-border); margin-top: .7rem; padding-top: .7rem; }
+.nfc .pastor-action-h { font-weight: 700; margin: 0 0 .25rem; }
+.nfc .pastor-check { font-size: .88rem; margin-top: .4rem; }
+.nfc .pastor-res { font-size: .82rem; margin-top: .3rem; }
+.nfc .pastor-reading { list-style: none; margin: 1rem 0 0; padding: 0; }
+.nfc .pastor-reading li { border-top: 1px solid var(--asc-border); padding: .8rem 0; }
+.nfc .pastor-cite { display: block; font-family: var(--f-serif); }
+.nfc .pastor-offers { display: block; font-size: .88rem; color: var(--asc-muted); margin-top: .25rem; }
+.nfc .pastor-closing { text-align: left; }

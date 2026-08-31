@@ -32,7 +32,7 @@ export default async function DevResultsPage(
 ) {
   if (process.env.NODE_ENV === 'production') notFound();
   const sp = await searchParams;
-  const persona = (['student', 'teacher', 'parent', 'administrator', 'business'].includes(sp.persona || '')
+  const persona = (['student', 'teacher', 'parent', 'administrator', 'business', 'pastor'].includes(sp.persona || '')
     ? sp.persona : 'student') as Persona;
 
   const variant = sp.p || 'mixed';

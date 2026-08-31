@@ -21,9 +21,11 @@ import { TEACHER_ITEMS } from "../items/teacher";
 import { PARENT_ITEMS } from "../items/parent";
 import { ADMINISTRATOR_ITEMS } from "../items/administrator";
 import { BUSINESS_ITEMS } from "../items/business";
+import { PASTOR_ITEMS } from "../items/pastor";
 import {
   OUTCOME_ITEMS, LOW_USE_REASON, HIGH_USE_PROBES, USAGE_ITEM, BASELINE_ITEMS,
   BUSINESS_USAGE_ITEM, BUSINESS_BASELINE_ITEMS, BUSINESS_LOW_USE_REASON, BUSINESS_HIGH_USE_PROBES,
+  PASTOR_USAGE_ITEM, PASTOR_BASELINE_ITEMS, PASTOR_LOW_USE_REASON, PASTOR_HIGH_USE_PROBES,
 } from "../items/shared";
 
 // ---------------------------------------------------------------------------
@@ -36,6 +38,7 @@ const PERSONA_BANKS: Record<Persona, Item[]> = {
   parent: PARENT_ITEMS,
   administrator: ADMINISTRATOR_ITEMS,
   business: BUSINESS_ITEMS,
+  pastor: PASTOR_ITEMS,
 };
 
 /**
@@ -43,7 +46,12 @@ const PERSONA_BANKS: Record<Persona, Item[]> = {
  * business rather than a person, and carries its own ten impact items, so the
  * three generic outcome items about the respondent's own learning do not apply.
  */
-const SHARED_FOR = (persona: Persona) => (persona === "business"
+const SHARED_FOR = (persona: Persona) => (persona === "pastor"
+  ? {
+    usage: PASTOR_USAGE_ITEM, baselines: PASTOR_BASELINE_ITEMS,
+    outcomes: [] as Item[], lowUse: PASTOR_LOW_USE_REASON, highUse: PASTOR_HIGH_USE_PROBES,
+  }
+  : persona === "business"
   ? {
     usage: BUSINESS_USAGE_ITEM, baselines: BUSINESS_BASELINE_ITEMS,
     outcomes: [] as Item[], lowUse: BUSINESS_LOW_USE_REASON, highUse: BUSINESS_HIGH_USE_PROBES,
@@ -162,14 +170,26 @@ const LOW_USE_REASON_LABELS: Record<number, string> = {
   4: "not knowing how or where AI would help", 5: "tried it and found it unhelpful",
 };
 
+const PASTOR_LOW_USE_LABELS: Record<number, string> = {
+  1: "a considered decision about where it belongs", 2: "lack of time or access",
+  3: "a conviction, or a tradition's guidance, against it in this work",
+  4: "not knowing where to start", 5: "tried it and found it unhelpful",
+};
+
 export function usageProfile(sub: Submission, dims: Record<ConstructId, DimensionResult>): UsageProfile {
   const usage = sub.usage;
   const category = usage <= 1 ? "minimal" : usage <= 2 ? "light" : usage <= 3 ? "regular" : "heavy";
   const reasonRaw = sub.answers[LOW_USE_REASON.id];
-  const lowUseReason = usage <= USAGE.lowUseMax && reasonRaw ? LOW_USE_REASON_LABELS[reasonRaw] : undefined;
+  const labels = sub.persona === "pastor" ? PASTOR_LOW_USE_LABELS : LOW_USE_REASON_LABELS;
+  const lowUseReason = usage <= USAGE.lowUseMax && reasonRaw ? labels[reasonRaw] : undefined;
   const judgmentOk = dims.verification.score >= USAGE.intentionalJudgmentFloor
     && dims.agency.score >= USAGE.intentionalJudgmentFloor;
-  const intentional = usage <= USAGE.lowUseMax && reasonRaw === 1 && judgmentOk;
+  // A settled conviction against AI in preaching is a formed position, not a
+  // gap. For this persona reason 3 counts alongside reason 1.
+  const consideredReason = sub.persona === "pastor"
+    ? (reasonRaw === 1 || reasonRaw === 3)
+    : reasonRaw === 1;
+  const intentional = usage <= USAGE.lowUseMax && consideredReason && judgmentOk;
   const underexposed = usage <= USAGE.lowUseMax && !intentional
     && (dims.fluency.score < 55 || reasonRaw === 4 || reasonRaw === 5);
   return { usage, category, lowUseReason, intentionalSelectiveUse: intentional, underexposed };

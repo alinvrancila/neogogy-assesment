@@ -13,6 +13,8 @@ import { classify, fingerprint } from "./archetypes";
 import { buildRecommendations } from "./recommendations";
 import { archetypeDisplay, stageName } from "./display";
 import { buildRiskRegister, buildNinetyDayPlan } from "./business";
+import { dependenceTags, buildDependenceCheck, buildFormationRoadmap } from "./pastor";
+import { applicableItems } from "./scoring";
 
 export {
   generateReport, generateReportSections, reportHead, confidenceLabel, REPORT_DISCLAIMER,
@@ -48,6 +50,13 @@ export function compute(sub: Submission): CompassResult {
     .map(d => ({ construct: d.construct, score: d.score }));
 
   const isBusiness = sub.persona === "business";
+  const isPastor = sub.persona === "pastor";
+  // The Dependence Check reads tags and two unscored prompts. It never touches
+  // a score, a stage, or an archetype: it is a mirror, not a measure.
+  const dependenceCheck = isPastor
+    ? buildDependenceCheck(dependenceTags(applicableItems(sub.persona, sub.usage), sub), sub)
+    : undefined;
+  const formationRoadmap = isPastor ? buildFormationRoadmap(recs, up) : undefined;
   const riskRegister = isBusiness ? buildRiskRegister(signals, patterns, recs, dims, sub.persona) : [];
   const ninetyDayPlan = isBusiness ? buildNinetyDayPlan(recs, riskRegister, up) : [];
 
@@ -71,6 +80,8 @@ export function compute(sub: Submission): CompassResult {
     confidenceNotes: conf.notes,
     riskRegister,
     ninetyDayPlan,
+    dependenceCheck,
+    formationRoadmap,
   };
 }
 

@@ -36,6 +36,11 @@ const cases: Array<[string, Submission]> = [
   ["biz-deliberate", { ...build("business", 2, bizLevels({ ...ALLB(4), agency: 5, verification: 5, fluency: 3 })),
     answers: { ...build("business", 2, bizLevels({ ...ALLB(4), agency: 5, verification: 5, fluency: 3 })).answers, lowuse_reason: 1 } }],
   ["biz-advantaged", build("business", 4, bizLevels(ALLB(5)))],
+  ["pastor-overextended", build("pastor", 5, bizLevels({ ...ALLB(4), agency: 1, dependencySafety: 1 }))],
+  ["pastor-quick", build("pastor", 4, bizLevels({ ...ALLB(4), verification: 1 }))],
+  ["pastor-minimalist", { ...build("pastor", 1, bizLevels({ ...ALLB(4), agency: 5, verification: 5, fluency: 3 })),
+    answers: { ...build("pastor", 1, bizLevels({ ...ALLB(4), agency: 5, verification: 5, fluency: 3 })).answers, lowuse_reason: 3 } }],
+  ["pastor-anchored", build("pastor", 3, bizLevels(ALLB(5)))],
   ["gated-mid", build("teacher", 4, (it) =>
     (it.construct === "responsibleUse" ? (it.type === "reverse" ? maxV(it) - 1 : 2) : healthiest(it)))],
 ];

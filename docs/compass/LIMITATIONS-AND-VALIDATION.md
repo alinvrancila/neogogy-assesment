@@ -50,3 +50,30 @@ regulator involved, and the disclaimer on every business report says so.
 **What the persona deliberately does not claim.** It does not price exposure, it
 does not estimate probability, and it does not benchmark one business against
 another. Severity in the register reflects how the answers landed, nothing more.
+
+---
+
+## The Pastor and Preacher persona
+
+**It sees habits, not hearts.** Every reading here is drawn from what one person
+said about their own week. It cannot see prayer, faithfulness, or the work of the
+Spirit in a preacher, and it does not try to. The disclaimer says this at the top
+of the report rather than at the bottom.
+
+**No denominational norm is assumed.** A settled conviction against using these
+tools in preaching is treated as a formed position that reaches the same stages
+as any other. The instrument never treats more use as more mature.
+
+**The Dependence Check is a reflection aid.** It reads tags carried by answers and
+two unscored prompts, and returns one of three readings in plain words. It is not
+a score, it does not enter the index, and its inputs are not stored.
+
+**The context is context.** Barna's numbers are cited to locate a reader among
+peers, never as a standard to reach. Most pastors describe themselves as
+cautious, and this instrument treats that caution as wisdom worth equipping.
+
+**Quotation discipline.** Every quotation comes from the documents named in the
+persona brief or from Scripture in the New Living Translation. Where a source is
+named without a quotation, that is deliberate rather than an omission: this
+report tells a preacher never to preach an unverified quotation, and it holds
+itself to the same rule.

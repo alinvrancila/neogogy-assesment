@@ -27,8 +27,13 @@ import {
   HealthHeadline, HelpingHarming, RiskRegister, ContinuityTest, TrustAndGovernance,
   DecisionIntegrity, NinetyDayPlan, OwnersExperiment, ScopedDimensions,
 } from './BusinessModules';
+import {
+  PastorOpeningBlock, ServingAndStandingIn, DependenceCheckBlock, OutageReading,
+  FaithfulnessAndIntegrity, PastorSignature, FormationRoadmap, PastorResources, PastorClosing,
+} from './PastorModules';
 import ShareResult from './ShareResult';
 import type { AttemptComparison } from '@/lib/history';
+import type { Submission } from '@/engine/types';
 import { MethodologyDisclosure, RetakeInvite } from './ascent/modules';
 import {
   DimensionRadar, NextStagePanel, StageLadder, DimensionBars, CompositesPanel, PlanTimeline,
@@ -262,17 +267,54 @@ function SectionBlock(
 }
 
 export default function Results({
-  result, firstName, emailed, onRetake, comparison
+  result, firstName, emailed, onRetake, comparison, submission
 }: {
   result: CompassResult;
   firstName?: string;
   emailed: boolean;
   onRetake: () => void;
   comparison?: AttemptComparison | null;
+  /** Pastor persona only: kept in memory so a PDF can be built without storing anything. */
+  submission?: Submission | null;
 }) {
   const head = reportHead(result);
   const sections = generateReportSections(result);
   const isBusiness = result.persona === 'business';
+  const isPastor = result.persona === 'pastor';
+
+  // The pastor check is its own document: a letter rather than a report card,
+  // and anonymous, so it carries no email confirmation and no sharing.
+  if (isPastor) {
+    return (
+      <div className="wrap results pastor">
+        <PastorOpeningBlock result={result} />
+        <AscentResults result={result} comparison={null} />
+        <ServingAndStandingIn result={result} />
+        <DependenceCheckBlock result={result} />
+        <OutageReading result={result} />
+        <FaithfulnessAndIntegrity result={result} />
+        <PastorSignature result={result} />
+
+        {orderedForScreen(sections)
+          .filter(({ section }) => ['bottleneck'].includes(section.key))
+          .map(({ section }) => (
+            <SectionBlock key={section.key} section={section} result={result} />
+          ))}
+
+        <FormationRoadmap result={result} />
+        <PastorResources result={result} />
+        <PastorClosing result={result} submission={submission ?? null} onRetake={onRetake} />
+
+        <div className="foot">
+          <div className="footmark">International Center for Applied Neogogy <span className="wm-ican">(ICAN)</span></div>
+          <div className="fl" style={{ marginTop: 8, color: 'var(--ink-soft)' }}>
+            {REPORT_DISCLAIMER} This is a private self-reflection index drawn from your own answers,
+            not a spiritual assessment of your calling, your faithfulness, or your ministry.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="wrap results">

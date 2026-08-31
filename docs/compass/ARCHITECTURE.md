@@ -124,3 +124,41 @@ line as a checkpoint. Empty for every other persona.
 **Both new fields are on `CompassResult`** (`riskRegister`, `ninetyDayPlan`) and
 are empty arrays for the other four personas, so no consumer has to branch to
 read them.
+
+---
+
+## The Pastor and Preacher persona
+
+The sixth persona, and the first that is anonymous by construction.
+
+**Items.** `src/items/pastor.ts`: forty items, ten dimensions by four, each
+carrying `why` (what the question listens for) and `deeper` (one pointer to a
+source or a passage). The `Item` type gained both fields plus `dependenceTags`;
+other personas leave them empty. Shared items have preaching wordings, and two
+unscored reflection prompts are asked after the last scored item.
+
+**Dependence tags.** Recorded per answer, from the item and from the chosen
+option, and never scored. `dependenceTags()` collects them; the test suite proves
+scores are identical with and without them.
+
+**Selectivity.** For this persona a settled conviction against AI in preaching
+(low-use reason 3) counts alongside a considered decision (reason 1), and a
+preacher with a formed position is never given exposure-first advice.
+
+**Signals and patterns.** Twelve new tags. Five pastor-only patterns:
+outsourced_pulpit, unverified_authority, presence_displacement, thinning_voice,
+and the help pattern fed_shepherd.
+
+**Dependence Check** (`src/engine/pastor.ts`). Three readings, built from the
+dependence tags and the two reflection prompts, with a narrative for each and a
+practice and a resource for the two that call for one. It is a mirror, not a
+measure: it never touches stage, archetype, or score, and `CompassResult` carries
+it as `dependenceCheck`.
+
+**Formation Roadmap.** This week, this month, this season, each action carrying
+its checkpoint and one resource pointer. Carried as `formationRoadmap`.
+
+**Anonymity.** The browser computes the result and renders it. The PDF route
+computes and returns a file and touches no storage. The submit route refuses this
+persona outright rather than storing it. The admin carries a written note
+explaining why, so the design is not improved away later.

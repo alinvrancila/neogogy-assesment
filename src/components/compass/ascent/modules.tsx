@@ -24,7 +24,17 @@ export function ResultHeader({ result }: { result: CompassResult }) {
     <header className="asc-header">
       <div className="asc-header-main">
         <p className="asc-eyebrow">Neogogy · AI relationship assessment</p>
-        {result.persona === 'business' ? (
+        {result.persona === 'pastor' ? (
+          <>
+            <h1 className="asc-title">Where you are in your preparation</h1>
+            <p className="asc-sub">
+              This is a reading of how AI is currently shaping your preparation, your preaching, your
+              care of people, and your own formation. It is a mirror rather than a verdict. Below you
+              will find where your practice sits, where the tool is serving the work, where it may be
+              standing in for it, and one way forward.
+            </p>
+          </>
+        ) : result.persona === 'business' ? (
           <>
             <h1 className="asc-title">Where your business stands with AI</h1>
             <p className="asc-sub">

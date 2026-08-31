@@ -16,9 +16,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   collectAttribution, collectEnvironment, pacing, SittingWatcher,
 } from '@/lib/clientSignals';
-import { BASELINE_ITEMS, BUSINESS_BASELINE_ITEMS } from '@/items/shared';
+import { BASELINE_ITEMS, BUSINESS_BASELINE_ITEMS, PASTOR_BASELINE_ITEMS, PASTOR_REFLECTION_PROMPTS } from '@/items/shared';
 import { dimensionScope } from '@/engine/display';
-import { applicableItems } from '@/engine';
+import { applicableItems, compute } from '@/engine';
 import type { Item, Persona, Submission } from '@/engine/types';
 import { USAGE_ITEM } from '@/items/shared';
 import type { CompassResult } from '@/engine';
@@ -30,7 +30,7 @@ import { IcanLogo, DimensionBars, DimensionRadar } from './Visuals';
 import { STAGES } from '@/engine/config';
 import Results, { GateForm, type GateData, type GateState } from './Results';
 
-type Screen = 'hero' | 'setup' | 'context' | 'quiz' | 'gate' | 'results';
+type Screen = 'hero' | 'setup' | 'context' | 'opening' | 'quiz' | 'reflect' | 'gate' | 'results';
 
 const PERSONAS: Array<{
   id: Persona; name: string; who: string; blurb: string; expect: string[];
@@ -86,6 +86,20 @@ const PERSONAS: Array<{
       'Analysis, budgets and board-ready work',
       'Vendor claims, dashboards and personnel decisions',
       'Policy, disclosure and confidential information',
+    ],
+  },
+  {
+    id: 'pastor',
+    name: 'Pastor and Preacher',
+    isNew: true,
+    who: 'You prepare and preach to a congregation',
+    blurb: 'A private self-check about your preparation and your ministry.',
+    explain: 'A private self-check for those who prepare and preach the Word. It asks where AI is serving your calling and where it may be standing in for the work God does in you through prayer, study, dependence, and presence with your people.',
+    note: 'Anonymous. Nothing you answer is stored with your name, email, or church; results appear on your screen and can be saved to your own device.',
+    expect: [
+      'Preparation, prayer and what reaches the pulpit',
+      'Checking quotations, word studies and citations',
+      'Pastoral care, confidences and your own voice',
     ],
   },
   {
@@ -272,18 +286,37 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
       }
     }
 
-    setSubmission({
+    const sub = {
       persona,
       usage,
       b1: b1 ?? undefined,
       b2: b2 ?? undefined,
-      answers: clean
-    });
+      answers: clean,
+    };
+    setSubmission(sub);
     track('assessment_complete', {
       sessionId: sessionId.current, role: persona, step: Object.keys(clean).length,
     });
+    // The pastor check is anonymous: no gate, no email, no record. The two
+    // unscored reflection prompts come next, then the result appears here in
+    // the browser without anything being sent anywhere.
+    if (persona === 'pastor') { setScreen('reflect'); return; }
     setScreen('gate');
   }, [persona, usage, b1, b2, answers]);
+
+  /** Scores in the browser and shows the result. Nothing leaves the device. */
+  const finishAnonymously = useCallback((reflections: Record<string, number>) => {
+    if (!submission) return;
+    const withReflections = {
+      ...submission,
+      answers: { ...submission.answers, ...reflections },
+    };
+    setResult(compute(withReflections));
+    setComparison(null);
+    setEmailed(false);
+    clearDraft();
+    setScreen('results');
+  }, [submission, clearDraft]);
 
   /* ------------------------------------------------------------ navigation */
   const advance = useCallback(() => {
@@ -434,6 +467,7 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
         onB2={setB2}
         onBack={() => setScreen('hero')}
         onStart={() => {
+          if (persona === 'pastor') { setScreen('opening'); return; }
           if (persona === 'business') { setScreen('context'); return; }
           startedAt.current = Date.now();
           setPos(0);
@@ -456,6 +490,18 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
         }}
       />
     );
+  }
+
+  if (screen === 'opening') {
+    return shell(<PastorOpening onBack={() => setScreen('setup')} onNext={() => {
+      startedAt.current = Date.now();
+      setPos(0);
+      setScreen('quiz');
+    }} />);
+  }
+
+  if (screen === 'reflect') {
+    return shell(<PastorReflection onDone={finishAnonymously} />);
   }
 
   if (screen === 'quiz' && currentItem) {
@@ -498,7 +544,7 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
   if (screen === 'results' && result) {
     return shell(
       <Results result={result} firstName={firstName} emailed={emailed}
-        onRetake={restart} comparison={comparison} />
+        onRetake={restart} comparison={comparison} submission={submission} />
     );
   }
 
@@ -518,6 +564,104 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
 }
 
 /* ============================== SUB SCREENS ============================== */
+
+/**
+ * The opening word for the pastor check, before any question.
+ *
+ * It sets the frame: this is private, it is about a week as it actually goes,
+ * and the standard being held up is preaching itself rather than a tool.
+ */
+function PastorOpening({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+  return (
+    <section className="screen">
+      <div className="wrap setup">
+        <span className="eyebrow">Before we begin</span>
+        <h2 className="section-title mt-s">Preaching Formation Check</h2>
+
+        <blockquote className="pastor-quote">
+          Preaching opens &ldquo;the inspired text with such faithfulness and sensitivity that
+          God&rsquo;s voice is heard and God&rsquo;s people obey him.&rdquo;
+          <cite>John Stott, quoted in Faith at Work</cite>
+        </blockquote>
+
+        <p className="lede" style={{ maxWidth: '62ch' }}>
+          Answer as your week actually goes, not as you wish it went. No one else will see this.
+        </p>
+
+        <div className="lp-howto">
+          <h3 className="lp-h3">How this works</h3>
+          <ul className="lp-howto-list">
+            <li>
+              <strong>It is anonymous by design.</strong> There is no email step and no name. Nothing
+              you answer is stored against you, and the result appears here on your screen when you
+              finish. You can save it to your own device.
+            </li>
+            <li>
+              <strong>Every question explains itself.</strong> Under each one you will find why it is
+              asked and where to read further. None of it hints at an answer.
+            </li>
+            <li>
+              <strong>It is a mirror, not a verdict.</strong> This is a self-reflection index drawn
+              from your own answers. It is not an assessment of your calling or your faithfulness,
+              and the practices at the end are offered rather than prescribed.
+            </li>
+            <li>
+              <strong>Some questions are worded in the negative.</strong> Those are marked, and the
+              scoring accounts for the wording.
+            </li>
+          </ul>
+          <p className="lp-howto-time">
+            Around twelve minutes, 40 to 42 questions depending on your answers.
+          </p>
+        </div>
+
+        <div className="qnav mt-m">
+          <button className="back" type="button" onClick={onBack}><span>&larr;</span> Back</button>
+          <button className="btn btn-primary" type="button" onClick={onNext}>
+            Begin <span className="arrow">&rarr;</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Two questions that are not scored and not stored. */
+function PastorReflection({ onDone }: { onDone: (answers: Record<string, number>) => void }) {
+  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const items = PASTOR_REFLECTION_PROMPTS;
+  const ready = items.every((i) => answers[i.id] !== undefined);
+  return (
+    <section className="screen">
+      <div className="wrap setup">
+        <span className="eyebrow">Two last questions</span>
+        <h2 className="section-title mt-s">Not scored, and not stored</h2>
+        <p className="lede" style={{ maxWidth: '62ch' }}>
+          These two do not affect your result at all. They shape one part of what you are about to
+          read, the Dependence Check, and then they are gone.
+        </p>
+        {items.map((item) => (
+          <div key={item.id} className="baseline" style={{ marginTop: 22 }}>
+            <div className="q">{item.prompt}</div>
+            {item.context ? <p className="qcontext">{item.context}</p> : null}
+            <OptionCards
+              choices={(item.options ?? []).map((o) => ({ value: o.value, label: o.label }))}
+              selected={answers[item.id] ?? null}
+              onPick={(v) => setAnswers((a) => ({ ...a, [item.id]: v }))}
+            />
+          </div>
+        ))}
+        <div className="qnav mt-m">
+          <span />
+          <button className="btn btn-primary" type="button" disabled={!ready}
+            onClick={() => onDone(answers)}>
+            See my reading <span className="arrow">&rarr;</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export type BusinessContext = { company: string; industry: string; teamSize: string; tools: string };
 
@@ -807,7 +951,8 @@ function Setup({
   // the two unscored questions come from the item bank, so the screen and the
   // stored item can never drift apart
   const isBusiness = persona === 'business';
-  const baselinePrompts = (isBusiness ? BUSINESS_BASELINE_ITEMS : BASELINE_ITEMS).map((i) => i.prompt);
+  const baselinePrompts = (persona === 'pastor' ? PASTOR_BASELINE_ITEMS
+    : isBusiness ? BUSINESS_BASELINE_ITEMS : BASELINE_ITEMS).map((i) => i.prompt);
 
   return (
     <section className="screen">

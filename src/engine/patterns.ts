@@ -117,6 +117,44 @@ export const PATTERN_RULES: PatternRule[] = [
     narrative: () => "Decision quality, checking, and review are holding together at volume. Your responses are consistent with AI compounding the quality of decisions on a governed base, which is the arrangement that produces a durable advantage rather than a temporary speed gain.",
     evidence: () => ["agency", "verification", "amplification", "adaptability"],
   },
+
+  /* --------------------------------------------- Pastor and Preacher only */
+  {
+    id: "outsourced_pulpit", label: "The message is increasingly the tool's", kind: "harm",
+    personas: ["pastor"],
+    test: (d, u) => u.usage >= 4 && s(d, "agency") <= 45 && s(d, "dependencySafety") <= 45,
+    narrative: () => "Heavy use alongside thinning authorship and capacity. Your answers are consistent with the tool carrying more of the message than you would choose if you were choosing it fresh. This is a common place to arrive under load rather than a verdict on your ministry, and the way back is small and repeatable.",
+    evidence: () => ["agency", "dependencySafety"],
+  },
+  {
+    id: "unverified_authority", label: "Confident errors may be reaching the pulpit", kind: "harm",
+    personas: ["pastor"],
+    test: (d, u) => u.usage >= 3 && s(d, "verification") <= 45,
+    narrative: () => "Regular use with the checking loosened. Your responses suggest material may be reaching your people that has not been confirmed. The errors that survive are the plausible ones, which is why one habit, never preaching an unverified quotation, catches most of them.",
+    evidence: () => ["verification"],
+  },
+  {
+    id: "presence_displacement", label: "Presence receding", kind: "harm",
+    personas: ["pastor"],
+    test: (d, u) => u.usage >= 3 && s(d, "responsibleUse") <= 45,
+    narrative: () => "Your answers suggest parts of pastoral care that used to happen in your own presence and your own words are moving toward the tool. The right use of it gives a pastor more time with people, and this reading points the other way.",
+    evidence: () => ["responsibleUse"],
+  },
+  {
+    id: "thinning_voice", label: "Fluent, and less like you", kind: "harm",
+    personas: ["pastor"],
+    test: (d) => s(d, "creativity") <= 45 && s(d, "fluency") >= 55,
+    narrative: () => "Skilled use alongside a thinning voice. Your responses are consistent with sermons that are competent and could be preached unchanged somewhere else. Your congregation usually feels this before anyone can name it.",
+    evidence: () => ["creativity", "fluency"],
+  },
+  {
+    id: "fed_shepherd", label: "The tool deepens the study, and the preacher stays fed", kind: "help",
+    personas: ["pastor"],
+    test: (d, u) => u.usage >= 3 && s(d, "agency") >= 65 && s(d, "transfer") >= 65
+      && s(d, "amplification") >= 65 && s(d, "dependencySafety") >= 65,
+    narrative: () => "Authorship, retained formation, deeper study, and unaided capacity are holding together at real usage. Your responses are consistent with the arrangement this check hopes to find: the tool goes further into the text with you, and what you learn stays in you.",
+    evidence: () => ["agency", "transfer", "amplification", "dependencySafety"],
+  },
 ];
 
 export function detectPatterns(dims: Dims, up: UsageProfile, persona?: Persona): PatternHit[] {

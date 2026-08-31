@@ -158,6 +158,13 @@ export function ItemScreen({
       </div>
       <div className="qstem">{item.prompt}</div>
       {item.context ? <p className="qcontext">{item.context}</p> : null}
+      {item.why ? (
+        <details className="qwhy">
+          <summary>Why we ask this</summary>
+          <p>{item.why}</p>
+          {item.deeper ? <p className="qdeeper">Go deeper: {item.deeper}</p> : null}
+        </details>
+      ) : null}
       {note ? <div className="qnote">{note}</div> : (item.context ? null : <div style={{ height: 14 }} />)}
       {cards
         ? <OptionCards choices={choices} selected={selected} onPick={onPick} />

@@ -317,6 +317,258 @@ export const SCOPE_BLURB: Record<Scope, string> = {
   business: "These seven read how the business runs without you in the room: what it checks, what it keeps, what it would survive, and what it exposes.",
 };
 
+
+/* ----------------------------------------------------------------- pastor */
+
+const PASTOR_NAMES: Record<ConstructId, string> = {
+  agency: "Authorship Before God",
+  verification: "Faithfulness to the Text",
+  dependencySafety: "Unaided Preaching Capacity",
+  fluency: "Ministry AI Fluency",
+  transfer: "Formation of the Preacher",
+  amplification: "Deeper Study",
+  skillGrowth: "Craft of Preaching",
+  adaptability: "Discerning Practice",
+  responsibleUse: "Integrity and Care",
+  creativity: "Voice and Witness",
+};
+
+/** The goal each dimension points toward, stated plainly. */
+export const PASTOR_MARKERS: Record<ConstructId, string> = {
+  agency: "You can stand behind every claim in your own words, and prayer and the text shaped the message before any tool did.",
+  verification: "Nothing is preached that you have not confirmed to be true and faithful to the text.",
+  dependencySafety: "If every tool vanished this week, you would still have a word from the Lord for Sunday.",
+  fluency: "The tool sits in its right place, doing the work you have assigned it and no more.",
+  transfer: "What you learned in preparation is still in you weeks later, and shapes how you live.",
+  amplification: "Your study goes further with the tool than it could have without it, and you can say how.",
+  skillGrowth: "You are a better preacher than a year ago, and not only a faster one.",
+  adaptability: "Your practice is reviewed, not merely repeated.",
+  responsibleUse: "Your people could learn exactly how you use AI and trust you more, not less.",
+  creativity: "Your congregation could recognize your sermon with your name removed.",
+};
+
+const PASTOR_PRINCIPLES: Record<ConstructId, string> = {
+  agency: "The message is received from God through prayer and study, and owned by the preacher.",
+  verification: "What reaches the pulpit has been checked against Scripture and real sources.",
+  dependencySafety: "The muscles of study, meditation, prayer, and craft stay strong enough to preach without any tool.",
+  fluency: "The tool is used skillfully inside limits you have set on purpose.",
+  transfer: "Study forms the preacher first, and stays.",
+  amplification: "The tool deepens the exegesis rather than merely speeding the output.",
+  skillGrowth: "Craft keeps growing, in you and in those you train.",
+  adaptability: "The practice is examined, adjusted, and rested from.",
+  responsibleUse: "Honesty about the tool, care never outsourced, confidences never pasted in.",
+  creativity: "The sermon carries your voice, your people, and your own testimony.",
+};
+
+const PASTOR_STAGE_NAMES: Record<number, string> = {
+  1: "Set Apart", 2: "Watching", 3: "Trying", 4: "Practising", 5: "Working",
+  6: "Integrated", 7: "Discerning", 8: "Anchored", 9: "Renewing", 10: "Rooted and Fruitful",
+};
+
+const PASTOR_STAGE_DETAIL: Record<number, { looksLike: string; trap: string }> = {
+  1: { looksLike: "AI plays no part in your preparation, and your views about it are not yet formed by your own use.",
+       trap: "Deciding about a tool from a distance, when a considered position is worth more than a default one." },
+  2: { looksLike: "You follow the conversation and have views, with little of your own experience underneath them.",
+       trap: "Mistaking familiarity with the discussion for a settled position." },
+  3: { looksLike: "Occasional trials, with no settled habit. The results vary and you cannot yet predict what will help.",
+       trap: "Drawing a firm conclusion from a handful of unstructured attempts." },
+  4: { looksLike: "Regular use in several parts of the work, with the line around it still forming.",
+       trap: "Use growing faster than the discernment around it." },
+  5: { looksLike: "The tool does real work in your week. Study, prayer, and voice are holding, and they need watching.",
+       trap: "Reading a smoother sermon as a deeper one." },
+  6: { looksLike: "AI is part of your preparation with your own study first and your checking intact.",
+       trap: "Integration becoming automatic, so the checking quietly loosens as trust builds." },
+  7: { looksLike: "You know where the tool belongs and where it does not, and you could explain both to your elders.",
+       trap: "Refining the work you already do, rather than asking what the work is for." },
+  8: { looksLike: "The tool deepens your study while prayer, memory, and presence stay strong.",
+       trap: "Assuming the preachers around you have the same practice, when this one is uncommon." },
+  9: { looksLike: "Your practice is reviewed with others, rested from on purpose, and adjusted from what you find.",
+       trap: "Reviewing the workflow while leaving the deeper rhythms unexamined." },
+  10: { looksLike: "A settled practice that feeds the preacher, protects the people, and keeps the pulpit truthful.",
+        trap: "Complacency. The risk here is not collapse, it is a good practice going unexamined." },
+};
+
+const PASTOR_ARCHETYPES: Record<string, { name: string; tagline?: string; narrative?: string }> = {
+  strategic_integrator: {
+    name: "The Anchored Shepherd",
+    tagline: "The tool deepens the study, and the preacher stays fed.",
+    narrative: "Your answers describe a practice where prayer and the text lead, the tool serves, and what you check you actually check. The work of keeping this is mostly the work of not drifting. There is room here to give it away: teach one younger preacher the same discipline. Faith at Work has language for the limits you are already keeping.",
+  },
+  grounded_selectivist: {
+    name: "The Deliberate Minimalist",
+    tagline: "Little use of the tool, and a considered reason for it.",
+    narrative: "You have kept AI at a distance on purpose, and your answers on authorship and checking back that up. This is a formed position rather than an absence of one, and the check treats it that way. The one thing worth watching is that a position stays current: a small, bounded look at what these tools now do would keep your conviction informed rather than inherited. Spencer's “Human Capacity and Technology” is a fair place to look.",
+  },
+  augmented_thinker: {
+    name: "The Deepened Student",
+    tagline: "Your study goes further with the tool than it would without it.",
+    narrative: "Your answers describe the tool working as a sparring partner: it argues with you, surfaces what you missed, and sends you back to the text. That is the best thing it can do for a preacher. Keep the checking and the unaided rhythm in place as your use grows, and this holds. Spencer's “The Quad” gives a shape for testing what it hands you.",
+  },
+  capable_but_unexposed: {
+    name: "Rooted and Unexposed",
+    tagline: "A strong practice that has not yet met these tools.",
+    narrative: "Nothing here suggests the tool is harming your preaching, because it is barely present. Your study and your authorship read as solid. If there is an exposure it runs the other way: your people are already meeting AI, and a pastor who has never used it is answering their questions from the outside. A bounded look, on your terms, would cost little. Korpi's AI Goes to Church is written for exactly this moment.",
+  },
+  dependent_operator: {
+    name: "The Overextended Preparer",
+    tagline: "Fluent and fast, with the study muscles thinning underneath.",
+    narrative: "Your answers describe someone carrying a real load, with the tool holding more of the preparation than it once did. That is a common place to arrive and not a verdict on your ministry. The way back is small and repeatable: one message a month prepared with the text, prayer, and no tool at all. Faith at Work calls this the deliberate recovery of friction.",
+  },
+  uncritical_consumer: {
+    name: "Quick to Trust",
+    tagline: "The tool is trusted at about the level a good commentary would be.",
+    narrative: "Your answers suggest what the tool gives you is often taken as it arrives. The tools are good enough now that this feels reasonable, which is exactly why it is worth naming. One habit changes most of it: never preach a quotation you have not seen in the source. Faith at Work is direct about what these systems can invent.",
+  },
+  curious_explorer: {
+    name: "The Careful Explorer",
+    tagline: "Real trying, with the line around it still forming.",
+    narrative: "You are genuinely working out what this is for, which is the right posture at this point. What is not yet settled is the frame: where the tool is welcome, what always gets checked, and what stays entirely yours. Writing that line down, and telling one other person, turns exploration into practice. Spencer's “Uncoordinated” is about why that other person matters.",
+  },
+  hesitant_starter: {
+    name: "At the Threshold",
+    tagline: "Standing at the edge, with the first step still ahead.",
+    narrative: "Your answers describe someone who has kept their distance so far. That is a defensible place to stand, and it costs nothing visible this Sunday. What it does cost is a say in how these tools enter your church, since they are arriving whether or not you use them. One small, bounded trial would give your position its own evidence. Korpi's AI Goes to Church is a gentle place to begin.",
+  },
+  forming_practitioner: {
+    name: "Still Forming",
+    tagline: "A mixed picture, with the pattern not yet settled.",
+    narrative: "Nothing here is collapsing and nothing is yet a signature strength, which is a real position rather than a failure. The dimension readings below will tell you more than any label: your next step is specific to the weakest of them. Take one, give it a season, and run this check again. Faith at Work has the practice most preachers start with: read first, think first, write first, then use AI.",
+  },
+};
+
+const PASTOR_CONTENT: Partial<Record<ConstructId, Partial<ConstructContent>>> = {
+  agency: {
+    whatItMeasures: "Whether the message is received from God through prayer and study and owned by you: whether you can trace each major point back to the text and to your own conviction, whatever tools helped along the way.",
+    whyItMatters: "A preacher who cannot say why a point is in the message cannot defend it, cannot be corrected in it, and cannot be formed by it. Authorship is where a sermon stops being content and becomes a word from a shepherd.",
+    atStrong: "Your responses are consistent with authorship kept. The tool contributes material, and prayer and the text decide what your people hear.",
+    atDeveloping: "Your responses suggest you usually keep the message yours, with weeks where a good outline is accepted more or less as it arrives.",
+    atWatch: "Your answers suggest the tool has begun deciding what the congregation hears. This is quiet from the inside, because the sermons are usually fine.",
+    research: { claim: "Preaching from the ongoing experience of the Holy Spirit is the part no system can supply.", source: "Vrancila, “Navigating the Agathokakological Age”" },
+    practices: [
+      "Read first, think first, write first, then bring the tool in for feedback.",
+      "Before the manuscript is finished, say each major point aloud in your own words without notes.",
+      "Keep a line in your notes between what you received in study and what the tool suggested.",
+    ],
+  },
+  verification: {
+    whatItMeasures: "Whether AI-supplied exegesis, word studies, quotations, citations, and illustrations are checked against Scripture and real sources before they reach the pulpit.",
+    whyItMatters: "The pulpit carries authority. A fabricated quotation preached with conviction does damage that a correction cannot fully undo, and these tools invent sources fluently.",
+    atStrong: "Your responses describe checking as part of preparation rather than a reaction to suspicion.",
+    atDeveloping: "Your responses suggest you check when something feels off, which catches the obvious errors and misses the plausible ones.",
+    atWatch: "Your answers are consistent with material reaching your people that has not been confirmed. The errors that survive are the ones that sound right.",
+    research: { claim: "AI can invent sources, distort meaning, and repeat falsehoods.", source: "Faith at Work" },
+    practices: [
+      "Adopt one rule: never preach a quotation you have not seen in the source.",
+      "Check word studies against a lexicon rather than a summary, especially when the meaning carries the point.",
+      "When you cannot verify something in time, preach without it.",
+    ],
+  },
+  dependencySafety: {
+    whatItMeasures: "What remains if the tools are gone: whether study, meditation, prayer, and craft are strong enough to prepare and preach without them.",
+    whyItMatters: "A preacher whose muscles are strong can use any tool freely. A preacher whose muscles have thinned depends on it whether they intend to or not, and the thinning is invisible until a week when the tool is not there.",
+    atStrong: "Your responses are consistent with capacity kept. The tools are additions to a practice that stands on its own.",
+    atDeveloping: "Your responses suggest you would manage without them, more slowly and with visible strain.",
+    atWatch: "Your answers suggest the preparation now runs through the tools. That is a common place to arrive under load, and it is recoverable.",
+    research: { claim: "The deliberate recovery of friction is what keeps the work forming the worker.", source: "Faith at Work" },
+    practices: [
+      "Prepare one message a month with the text, prayer, and no tool at all.",
+      "Keep one series a year entirely tool-free, and tell someone you are doing it.",
+      "Notice the reach for the tool before any attempt of your own. That reach is the habit worth interrupting.",
+    ],
+  },
+  fluency: {
+    whatItMeasures: "Whether you know what AI is good for in ministry (administration, editing, research prompts, translation, accessibility) and what it is not for, and use it skillfully inside those limits.",
+    whyItMatters: "Fluency here is not prompting skill. It is a line drawn on purpose, which is what lets a pastor use the tool heavily in one place and not at all in another without contradiction.",
+    atStrong: "Your responses describe a line you could explain to your elders, and a tool doing the work you assigned it.",
+    atDeveloping: "Your responses suggest real working skill, with the boundary still being drawn as you go.",
+    atWatch: "Your answers are consistent with the tool being used wherever it helps, with the question of where it should stay out not yet settled.",
+    research: { claim: "AI may serve administration, scheduling, editing, and communication, and there are parts of ministry it should not touch.", source: "Faith at Work" },
+    practices: [
+      "Write your line down in one paragraph: what the tool may touch, and what stays entirely yours.",
+      "Share it with your elders, so it is a practice rather than a private intention.",
+      "Revisit it once a year, because the tools change and the line may need to move.",
+    ],
+  },
+  transfer: {
+    whatItMeasures: "Whether AI-assisted study becomes your own understanding, memory, and maturity, or arrives and leaves with the closed tab.",
+    whyItMatters: "Preparation is meant to form the preacher first. If nothing stays, the sermon was delivered and the preacher was not fed, and that cost compounds quietly over years.",
+    atStrong: "Your responses describe study that stays with you: you could teach the passage weeks later without the file.",
+    atDeveloping: "Your responses suggest partial retention, with the shape of the study remembered and the substance needing the notes.",
+    atWatch: "Your answers are consistent with material passing through the sermon without passing through you.",
+    research: { claim: "The king was to write out his own copy of the law, so that its words shaped him.", source: "Spencer, “The Quad”, on Deuteronomy 17" },
+    practices: [
+      "Close the tools and reconstruct the passage in your own words before the manuscript is finished.",
+      "Keep your own notes, in your own hand or your own file, separate from anything a tool produced.",
+      "Teach the passage to one person during the week. Teaching exposes what did not stay.",
+    ],
+  },
+  amplification: {
+    whatItMeasures: "Whether the tool sharpens the exegesis, exposes weak arguments, and raises better questions, or mainly produces the same message faster.",
+    whyItMatters: "Speed is the shallowest thing the tool can offer a preacher. The deeper gain is an argument you cannot yet defend being found on Thursday rather than from the pulpit on Sunday.",
+    atStrong: "Your responses describe the tool used as a sparring partner: it argues with you and sends you back to the text.",
+    atDeveloping: "Your responses suggest occasional real depth, usually when you deliberately ask for challenge rather than assistance.",
+    atWatch: "Your answers are consistent with the tool saving time without changing how deeply you see the passage.",
+    research: { claim: "AI deals in knowledge, humans deal in wisdom.", source: "Todd Korpi, quoted in “Navigating the Agathokakological Age”" },
+    practices: [
+      "Ask the tool to argue as strongly as it can against your reading, then take its best objection to the commentaries.",
+      "Ask what your draft fails to consider before you ask it to improve the draft.",
+      "State your own reading first, so the tool has something to push against.",
+    ],
+  },
+  skillGrowth: {
+    whatItMeasures: "Whether exegesis, structure, illustration, and delivery keep growing, in you and in the preachers you are training.",
+    whyItMatters: "Craft grows through practice and difficulty. A preacher who cannot build an outline by hand cannot judge the one the tool produced, and the loss shows first in the preachers coming up behind.",
+    atStrong: "Your responses are consistent with craft that keeps developing. Time the tool saves goes somewhere that grows you.",
+    atDeveloping: "Your responses suggest craft holding steady, with its development left largely to chance.",
+    atWatch: "Your answers suggest parts of the craft have gone quiet from disuse. Naming which ones is how they come back.",
+    research: { claim: "The virtues we get by first exercising them.", source: "Aristotle, in the epigraph selection for In the Image of Code" },
+    practices: [
+      "Name two parts of the craft you will keep doing by hand, and keep them.",
+      "Build one outline a month with paper and the text alone.",
+      "Work through the craft week by week with any preacher you are training.",
+    ],
+  },
+  adaptability: {
+    whatItMeasures: "Whether you examine your own AI habits, adjust them, keep Sabbaths from the tool, and stay accountable to another person about it.",
+    whyItMatters: "Habits drift, and the ones that drift furthest are the ones nobody looks at. A practice reviewed with someone else in the room can be corrected before it hardens.",
+    atStrong: "Your responses describe a practice that is reviewed, rested from, and adjusted from what you find.",
+    atDeveloping: "Your responses suggest you adjust when a problem becomes obvious, which works and runs a step behind.",
+    atWatch: "Your answers are consistent with a workflow that simply runs. Those are the ones that shape us without our noticing.",
+    research: { claim: "Discipleship is the church's coordinating work: we are not meant to discern alone.", source: "Spencer, “Uncoordinated”" },
+    practices: [
+      "Put a review of your AI practice in the calendar, and hold it with one other person.",
+      "Keep a regular rest from the tool: one message a month, or one series a year.",
+      "When you change a habit, write down what you noticed that prompted it.",
+    ],
+  },
+  responsibleUse: {
+    whatItMeasures: "Whether your use is honest where honesty matters, whether pastoral care stays in your own presence, and whether confidences stay out of tools.",
+    whyItMatters: "A confidence shared with a pastor was not shared with a company's servers. And a congregation that discovers the tool's role by accident learns something about trust that no sermon can undo.",
+    atStrong: "Your responses describe a practice that could bear the light: your people could learn how you use AI and trust you more, not less.",
+    atDeveloping: "Your responses suggest care is mostly kept in your own hands, with the line around disclosure not yet settled.",
+    atWatch: "Your answers suggest use you would not want examined, or care that has begun moving into the tool. Both are worth attending to early.",
+    research: { claim: "Being a neighbor requires effort, contact, a closing of the distance.", source: "Spencer's retelling of the Good Samaritan" },
+    practices: [
+      "Keep confidences out of every tool, and take hard situations to a trusted elder or counselor instead.",
+      "Decide your disclosure position before someone asks, and tell your elders what it is.",
+      "Keep any message that touches a person's life in your own hand.",
+    ],
+  },
+  creativity: {
+    whatItMeasures: "Whether the sermon carries your voice, your context, your people's lives, and your own testimony, rather than a message any church could receive unchanged.",
+    whyItMatters: "The illustrations from your own life and your people's lives are the part no tool can supply. When they thin out, the sermon starts to sound like everyone's, and a congregation feels it before it can name it.",
+    atStrong: "Your responses describe sermons that could only be yours: your voice, your city, your story of grace.",
+    atDeveloping: "Your responses suggest a real voice that sometimes gets flattened by whatever the tool offers first.",
+    atWatch: "Your answers are consistent with a message that could be preached unchanged in another church. That is the shape voice loss takes.",
+    research: { claim: "Our role is not to out-compute AI, but to out-human it.", source: "Vrancila, “Navigating the Agathokakological Age”" },
+    practices: [
+      "Let the tool draft if you wish, and always finish in your own voice.",
+      "Put one thing in every sermon that only your congregation would understand.",
+      "Keep your own file of illustrations from your life, your reading, and your people.",
+    ],
+  },
+};
+
 export const PERSONA_DISPLAY: Partial<Record<Persona, PersonaDisplay>> = {
   business: {
     reportTitle: "Business AI Health Check",
@@ -342,6 +594,32 @@ export const PERSONA_DISPLAY: Partial<Record<Persona, PersonaDisplay>> = {
       "Knowledge capture", "Strategic amplification", "Market readiness",
     ],
     disclaimerExtra: "This is not legal, financial, or compliance advice.",
+  },
+
+  pastor: {
+    reportTitle: "Preaching Formation Check",
+    indexName: "Formation Health Score",
+    subject: "person",
+    constructNames: PASTOR_NAMES,
+    constructPrinciples: PASTOR_PRINCIPLES,
+    riskName: "Dependence Risk",
+    composites: {
+      futureReadiness: "Ministry Readiness",
+      augmentation: "Study Depth",
+      judgment: "Pulpit Integrity",
+      capabilityTransfer: "Retained Formation",
+      dependencyIndex: "Dependence Exposure",
+      underexposure: "Exposure Gap",
+    },
+    stageNames: PASTOR_STAGE_NAMES,
+    stageDetail: PASTOR_STAGE_DETAIL,
+    archetypes: PASTOR_ARCHETYPES,
+    content: PASTOR_CONTENT,
+    fingerprintLabels: [
+      "Authorship", "Faithfulness to the text", "Unaided capacity", "Formation retained",
+      "Voice", "Integrity and care", "Ministry readiness",
+    ],
+    disclaimerExtra: "This is a private self-reflection index drawn from your own answers, not a spiritual assessment of your calling, your faithfulness, or your ministry. The practices and resources are offered, not prescribed.",
   },
 };
 
@@ -407,6 +685,11 @@ export function archetypeDisplay(
     tagline: over.tagline ?? archetype.tagline,
     narrative: over.narrative ?? archetype.narrative,
   };
+}
+
+/** The goal a dimension points toward, where the persona states one. */
+export function healthyMarker(persona: Persona | undefined, id: ConstructId): string | undefined {
+  return persona === "pastor" ? PASTOR_MARKERS[id] : undefined;
 }
 
 export function fingerprintLabels(persona: Persona | undefined): string[] | undefined {

@@ -40,6 +40,7 @@ const ROLE_LABEL: Record<string, string> = {
   administrator: 'Leader or administrator',
   leader: 'Leader',
   business: 'Business Owner',
+  pastor: 'Pastor and Preacher',
   curious: 'Curious'
 };
 
@@ -53,7 +54,22 @@ const PERSONA_EXPLAIN: Record<string, string> = {
   parent: 'Assesses the individual: their own use and the decisions they make at home.',
   administrator: 'Assesses the individual: their own leadership work and their own decisions.',
   business: 'Assesses the business, not the individual: its decisions, continuity, customer trust, knowledge and people.',
+  pastor: 'A private, anonymous self-check for preachers. No individual results are stored, by design.',
 };
+
+/**
+ * Why the pastor persona keeps no records, written down so it does not get
+ * quietly improved away.
+ *
+ * A minister answering honestly about prayer, dependence, and whether their
+ * preaching is still their own is telling us something that could cost them
+ * their position if it were ever attached to their name. There is no version of
+ * that record we could hold responsibly, and no analytics value that would be
+ * worth the risk to one pastor. So the check writes nothing: no answers, no
+ * scores, no address, no identifier, not even a timestamp finer than the month.
+ * A count is not worth a trace.
+ */
+const PASTOR_ANONYMITY_NOTE = 'Pastor and Preacher: anonymous self-check. No individual results are stored by design. A minister answering honestly about prayer and dependence is telling us something that could cost them their position if it were ever attached to their name, and no analytics value is worth that. Please do not add record keeping to this persona.';
 
 const LEADS_PAGE_SIZE = 10;
 
@@ -341,6 +357,9 @@ function LeadDetailPanel({ lead, onClose }: { lead: LeadRow; onClose: () => void
           />
         ) : (
           <div className="min-h-0 flex-1 overflow-auto p-4">
+            {lead.role === 'pastor' ? (
+              <p className="admin-error-box mb-3 rounded-xl px-4 py-3 text-xs">{PASTOR_ANONYMITY_NOTE}</p>
+            ) : null}
             {lead.role === 'business' ? (
               <div className="mb-4"><BusinessContextPanel lead={lead} /></div>
             ) : null}

@@ -88,6 +88,17 @@ export function fingerprint(
 ): string[] {
   const level = (n: number) => n >= 70 ? "HIGH" : n >= 50 ? "MODERATE" : n >= 35 ? "LOW-MODERATE" : "LOW";
   // The readings are the same seven; only what they are called changes.
+  if (persona === "pastor") {
+    return [
+      `${dims.agency.score >= 70 ? "STRONG" : dims.agency.score >= 50 ? "STABLE" : "THIN"} AUTHORSHIP`,
+      `${level(dims.verification.score)} FAITHFULNESS TO THE TEXT`,
+      `${level(dims.dependencySafety.score)} UNAIDED CAPACITY`,
+      `${level(dims.transfer.score)} FORMATION RETAINED`,
+      `${level(dims.creativity.score)} VOICE`,
+      `${level(dims.responsibleUse.score)} INTEGRITY AND CARE`,
+      `${level(comp.futureReadiness)} MINISTRY READINESS`,
+    ];
+  }
   if (persona === "business") {
     return [
       `${dims.agency.score >= 70 ? "STRONG" : dims.agency.score >= 50 ? "STABLE" : "WEAK"} DECISION OWNERSHIP`,
