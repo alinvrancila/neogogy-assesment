@@ -51,3 +51,8 @@ _og*.png
 _ogr.png
 coverage/
 .vercel
+
+# Source manuscripts for the pastor persona. Read locally, never committed.
+docs/compass/sources/pastor/originals/*
+!docs/compass/sources/pastor/originals/PUT-THE-FILES-HERE.md
+docs/compass/sources/pastor/*.txt
