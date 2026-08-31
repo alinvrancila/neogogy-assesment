@@ -16,11 +16,47 @@ type Stats = {
   emailConversionRate: number;
 };
 
-const PERSONA_COLORS: Record<string, string> = {
-  guide: '#2F6F62',
-  anchor: '#85714E',
-  sprinter: '#9E1D20',
-  wanderer: '#7a6b5c'
+/** One colour per persona, so the same persona is the same colour everywhere. */
+const ROLE_COLORS: Record<string, string> = {
+  student: '#2F6F62',
+  teacher: '#D69A2D',
+  parent: '#8A6BA8',
+  administrator: '#3F6EA8',
+  business: '#9E1D20',
+  pastor: '#7B8F3E',
+};
+
+/**
+ * Version 1 recorded different role names. They mean the same people, so they
+ * are folded in rather than shown as separate slices no one recognises.
+ */
+const LEGACY_ROLE: Record<string, string> = {
+  educator: 'teacher',
+  leader: 'administrator',
+  curious: 'student',
+};
+
+/** A stable colour for any archetype, so the wheel does not reshuffle on reload. */
+const ARCHETYPE_PALETTE = [
+  '#2F6F62', '#D69A2D', '#9E1D20', '#3F6EA8', '#8A6BA8',
+  '#7B8F3E', '#C4703A', '#5B8C85', '#8C6D4F', '#6B6F7A',
+];
+/**
+ * A stable colour per archetype, with collisions walked forward so two slices
+ * of the same wheel are never the same colour.
+ */
+const archetypeColors = (names: string[]): string[] => {
+  const used = new Set<number>();
+  return names.map((name) => {
+    let h = 0;
+    for (let i = 0; i < name.length; i += 1) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+    let idx = h % ARCHETYPE_PALETTE.length;
+    for (let step = 0; step < ARCHETYPE_PALETTE.length && used.has(idx); step += 1) {
+      idx = (idx + 1) % ARCHETYPE_PALETTE.length;
+    }
+    used.add(idx);
+    return ARCHETYPE_PALETTE[idx];
+  });
 };
 
 /** Turn a stored persona or archetype id into a readable label. Works for both
@@ -120,6 +156,7 @@ type LeadRow = {
   engineVersion?: number;
   stage?: number;
   stageName?: string;
+  archetypeName?: string;
   confidence?: string;
   rescoredFrom?: string;
   dimensions?: Record<string, number>;
@@ -713,26 +750,46 @@ export default function AdminPage() {
         });
       }
 
-      // Role distribution (pie)
+      // Who took it, counted from the records rather than from the event log,
+      // so the wheel matches the table underneath it.
       if (roleRef.current) {
-        const rows = Object.entries(stats.byRole).map(([k, v]) => [ROLE_LABEL[k] || k, v]);
+        const counts = new Map<string, number>();
+        for (const lead of leads) {
+          const role = LEGACY_ROLE[lead.role] ?? lead.role;
+          if (!role) continue;
+          counts.set(role, (counts.get(role) ?? 0) + 1);
+        }
+        const present = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+        const rows = present.map(([role, n]) => [ROLE_LABEL[role] || idLabel(role), n]);
         const data = g.arrayToDataTable([['Role', 'Count'], ...(rows.length ? rows : [['No data', 1]])]);
         new g.PieChart(roleRef.current).draw(data, {
           ...baseOptions,
-          colors: ['#D69A2D', '#2E7D4F', '#D9711F', '#7c93b8', '#9a6cc0'],
+          colors: present.length ? present.map(([role]) => ROLE_COLORS[role] ?? '#6B6F7A') : ['#3a352f'],
           pieHole: 0.4
         });
       }
 
-      // Persona distribution (pie with persona colors)
+      // The patterns people land in. Read from the records, so it names the
+      // archetypes this engine actually produces rather than version 1's four.
       if (zoneRef.current) {
-        const order = ['guide', 'anchor', 'sprinter', 'wanderer'];
-        const present = order.filter((z) => stats.byZone[z]);
-        const rows = present.map((z) => [idLabel(z) || z, stats.byZone[z]]);
-        const data = g.arrayToDataTable([['Persona', 'Count'], ...(rows.length ? rows : [['No data', 1]])]);
+        const counts = new Map<string, number>();
+        for (const lead of leads) {
+          const name = lead.archetypeName || lead.personaName || idLabel(lead.persona);
+          if (!name) continue;
+          counts.set(name, (counts.get(name) ?? 0) + 1);
+        }
+        // a long tail of one-offs makes an unreadable wheel, so it is gathered
+        const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+        const head = sorted.slice(0, 8);
+        const tail = sorted.slice(8).reduce((a, [, n]) => a + n, 0);
+        const present = tail > 0 ? [...head, ['Other patterns', tail] as [string, number]] : head;
+        const rows = present.map(([name, n]) => [name, n]);
+        const data = g.arrayToDataTable([['Pattern', 'Count'], ...(rows.length ? rows : [['No data', 1]])]);
         new g.PieChart(zoneRef.current).draw(data, {
           ...baseOptions,
-          colors: present.length ? present.map((z) => PERSONA_COLORS[z]) : ['#3a352f'],
+          colors: present.length
+            ? archetypeColors(present.map(([name]) => String(name)))
+            : ['#3a352f'],
           pieHole: 0.4
         });
       }
@@ -753,7 +810,7 @@ export default function AdminPage() {
     return () => {
       cancelled = true;
     };
-  }, [stats, authed, theme]);
+  }, [stats, authed, theme, leads, view]);
 
   if (authed === null) {
     return (
@@ -1132,11 +1189,11 @@ export default function AdminPage() {
 
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="admin-card rounded-3xl p-6">
-            <h2 className="admin-title font-serif text-xl">By role</h2>
+            <h2 className="admin-title font-serif text-xl">Who took it</h2>
             <div ref={roleRef} className="mt-4 h-72 w-full" />
           </div>
           <div className="admin-card rounded-3xl p-6">
-            <h2 className="admin-title font-serif text-xl">By persona</h2>
+            <h2 className="admin-title font-serif text-xl">Patterns they landed in</h2>
             <div ref={zoneRef} className="mt-4 h-72 w-full" />
           </div>
         </div>

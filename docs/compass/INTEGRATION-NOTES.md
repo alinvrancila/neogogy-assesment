@@ -917,3 +917,29 @@ words at that size.
 Both covers bake their type bands into the artwork for the same reason: react-pdf
 cannot draw a gradient on a view, so a flat panel would leave a hard edge across
 the page.
+
+## The records wheels, and the minister cover, again
+
+**The wheels under Records were reading version 1.** The persona wheel had the
+four v1 personas hardcoded (guide, anchor, sprinter, wanderer) and the role wheel
+counted event rows, which still carry v1 role names. Both now count the records
+themselves, which is what the section is about, with legacy role names folded
+into the ones they became. Archetype colours are hashed with collisions walked
+forward, so no two slices of one wheel share a colour, and a long tail is
+gathered into one slice rather than shredding the wheel.
+
+They were also blank half the time. The chart containers only exist on the
+Records view, and the drawing effect did not depend on which view was showing, so
+the wheels drew only when something else happened to re-run it. The view is now a
+dependency.
+
+**The minister cover was literal and thin.** A chapel window is the first image
+anyone reaches for, and it told the reader nothing. The cover is now abstract:
+overlapping fields of colour through indigo, plum, rose and amber, with light
+threads radiating from above, drawn by `scripts/art/minister-cover.svg.mjs`. No
+building, no book, no dove.
+
+It also now carries what a cover is for. The minister's name is set large under
+"prepared for", and the result is there at a glance: archetype, tagline, score,
+stage, three readings drawn as bars (authorship, faithfulness to the text,
+unaided capacity), and the Dependence Check in one line.

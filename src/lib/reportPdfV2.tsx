@@ -1156,81 +1156,133 @@ const Footer = ({ title = 'Neogogy Formation Compass' }: { title?: string }) => 
  * check is anonymous and the file should look like it belongs to the person
  * holding it rather than to a system that recorded them.
  */
-function PastorCover({ r, dateStr }: { r: CompassResult; dateStr: string }) {
-  const ACCENT = '#2E6E63';
-  const INK = '#2A2620';
-  const MUTE = 'rgba(42,38,32,0.62)';
+function PastorCover({ r, dateStr, name }: { r: CompassResult; dateStr: string; name?: string }) {
+  const PAPER = '#F6EFE4';
+  const SOFT = 'rgba(246,239,228,0.74)';
+  const FAINT = 'rgba(246,239,228,0.5)';
+  const GOLD = '#F0C15C';
+  const JADE = '#5FCBAE';
   const arch = r.archetype.name;
-  const archSize = arch.length > 24 ? 28 : arch.length > 18 ? 32 : 38;
+  const archSize = arch.length > 24 ? 27 : arch.length > 18 ? 31 : 36;
+
+  // three readings that answer the first question an owner of this report has:
+  // is the message still mine, is it true, and could I do this without the tool
+  const glance: Array<[string, number]> = [
+    ['Authorship', r.dimensions.agency.score],
+    ['Faithfulness to the text', r.dimensions.verification.score],
+    ['Unaided capacity', r.dimensions.dependencySafety.score],
+  ];
+  const depend = r.dependenceCheck?.level;
+  const dependLabel = depend === 'led'
+    ? 'Prayer and the text lead'
+    : depend === 'present'
+      ? 'Present, and the tool often leads'
+      : depend === 'trailing'
+        ? 'The tool leads'
+        : '';
+
   return (
-    <Page size="A4" style={{ backgroundColor: '#EDE6D8', color: INK, fontFamily: 'Spectral' }}>
-      {/* the scene: an arched window with morning light through it */}
+    <Page size="A4" style={{ backgroundColor: '#160F2B', color: PAPER, fontFamily: 'Spectral' }}>
       <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
         {/* eslint-disable-next-line jsx-a11y/alt-text */}
         <Image src={MINISTER_ART} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </View>
 
+      <View style={{ position: 'absolute', top: 0, left: M, width: 52, height: 3, backgroundColor: GOLD }} />
+
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: M, paddingTop: 52 }}>
-        <View style={{ width: 46, height: 3, backgroundColor: ACCENT, marginBottom: 12 }} />
-        <Text style={{ fontFamily: 'Plex', fontSize: 8, letterSpacing: 2.4, color: ACCENT }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 8, letterSpacing: 2.4, color: GOLD }}>
           PREACHING FORMATION CHECK
         </Text>
-        <Text style={{ fontFamily: 'Spectral', fontSize: 12, color: MUTE, marginTop: 14, lineHeight: 1.6, maxWidth: 330 }}>
-          A private reading of how AI is shaping your preparation, your preaching, your care of
-          people, and your own formation.
+
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.8, color: FAINT, marginTop: 44 }}>
+          PREPARED FOR
+        </Text>
+        <Text style={{
+          fontFamily: 'Spectral', fontWeight: 700, fontSize: 32, color: PAPER,
+          marginTop: 7, lineHeight: 1.12,
+        }}>
+          {name || 'A minister of the Word'}
+        </Text>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: SOFT, marginTop: 10 }}>
+          {dateStr}
         </Text>
       </View>
 
-      <View style={{ position: 'absolute', left: M, right: M, bottom: 176 }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.4, color: MUTE }}>
+      {/* the reading, at a glance, in the middle where the light is */}
+      <View style={{ position: 'absolute', left: M, right: M, top: 300 }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.6, color: FAINT }}>
           WHERE YOUR PRACTICE STANDS
         </Text>
         <Text style={{
-          fontFamily: 'Spectral', fontWeight: 800, fontSize: archSize, color: '#7B2B32',
-          marginTop: 8, lineHeight: 1.1,
+          fontFamily: 'Spectral', fontWeight: 800, fontSize: archSize, color: PAPER,
+          marginTop: 9, lineHeight: 1.1,
         }}>
           {arch}
         </Text>
-        <Text style={{ fontFamily: 'Spectral', fontSize: 11.5, color: MUTE, marginTop: 9, lineHeight: 1.55, maxWidth: 340 }}>
+        <Text style={{ fontFamily: 'Spectral', fontSize: 11.5, color: SOFT, marginTop: 9, lineHeight: 1.55, maxWidth: 330 }}>
           {r.archetype.tagline}
         </Text>
       </View>
 
-      <View style={{
-        position: 'absolute', left: M, right: M, bottom: 104,
-        flexDirection: 'row', alignItems: 'flex-end',
-      }}>
+      <View style={{ position: 'absolute', left: M, right: M, top: 470, flexDirection: 'row', alignItems: 'flex-end' }}>
         <View>
-          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 52, color: ACCENT, lineHeight: 1 }}>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 56, color: GOLD, lineHeight: 1 }}>
             {r.stage.rawIndex}
           </Text>
-          <Text style={{ fontFamily: 'Plex', fontSize: 6.6, letterSpacing: 1.1, color: MUTE, marginTop: 5 }}>
+          <Text style={{ fontFamily: 'Plex', fontSize: 6.4, letterSpacing: 1.1, color: SOFT, marginTop: 5 }}>
             FORMATION HEALTH SCORE, OUT OF 100
           </Text>
         </View>
         <View style={{ flex: 1, alignItems: 'flex-end' }}>
-          <Text style={{ fontFamily: 'Plex', fontSize: 6.6, letterSpacing: 1.1, color: MUTE }}>
+          <Text style={{ fontFamily: 'Plex', fontSize: 6.4, letterSpacing: 1.1, color: FAINT }}>
             {`STAGE ${r.stage.stage} OF 10`}
           </Text>
-          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 16, marginTop: 4 }}>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 17, color: PAPER, marginTop: 4 }}>
             {r.stage.stageName}
           </Text>
         </View>
       </View>
 
+      {/* three readings, drawn rather than listed */}
+      <View style={{ position: 'absolute', left: M, right: M, bottom: 168 }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 6.4, letterSpacing: 1.1, color: FAINT, marginBottom: 9 }}>
+          AT A GLANCE
+        </Text>
+        {glance.map(([label, value]) => (
+          <View key={label} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 7 }}>
+            <Text style={{ fontSize: 8.5, width: 132, color: SOFT }}>{label}</Text>
+            <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: 'rgba(246,239,228,0.16)' }}>
+              <View style={{
+                width: `${Math.max(2, value)}%`, height: 6, borderRadius: 3,
+                backgroundColor: value >= 65 ? JADE : value >= 45 ? GOLD : '#E0808F',
+              }} />
+            </View>
+            <Text style={{ fontFamily: 'Plex', fontSize: 8.5, width: 34, textAlign: 'right', color: PAPER }}>
+              {value}
+            </Text>
+          </View>
+        ))}
+        {dependLabel ? (
+          <Text style={{ fontFamily: 'Plex', fontSize: 7, color: SOFT, marginTop: 6 }}>
+            {`Dependence Check: ${dependLabel}`}
+          </Text>
+        ) : null}
+      </View>
+
       <View style={{
         position: 'absolute', left: M, right: M, bottom: 56,
-        borderTopWidth: 1, borderTopColor: 'rgba(42,38,32,0.16)', paddingTop: 11,
+        borderTopWidth: 1, borderTopColor: 'rgba(246,239,228,0.2)', paddingTop: 11,
       }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7, color: MUTE, lineHeight: 1.6 }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7, color: SOFT, lineHeight: 1.6 }}>
           A private self-reflection index drawn from your own answers. Not a spiritual assessment of
           your calling, your faithfulness, or your ministry.
         </Text>
       </View>
 
       <View style={{ position: 'absolute', left: M, right: M, bottom: 28, flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7, color: MUTE }}>{dateStr}</Text>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7, color: MUTE }}>assessment.neogogy.ai</Text>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7, color: FAINT }}>Neogogy</Text>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7, color: FAINT }}>assessment.neogogy.ai</Text>
       </View>
     </Page>
   );
@@ -1611,7 +1663,7 @@ export async function generateCompassPdf(args: {
   const doc = (
     <Document title={reportTitle(r.persona)} author="International Center for Applied Neogogy">
       {isPastor
-        ? <PastorCover r={r} dateStr={dateStr} />
+        ? <PastorCover r={r} dateStr={dateStr} name={name} />
         : isBusiness
           ? <BusinessCover r={r} name={name} dateStr={dateStr} company={company} industry={industry} />
           : <Cover r={r} name={name} dateStr={dateStr} company={company} industry={industry} />}
