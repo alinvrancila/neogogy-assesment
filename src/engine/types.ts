@@ -13,7 +13,7 @@
 // Personas
 // ---------------------------------------------------------------------------
 
-export type Persona = "student" | "teacher" | "parent" | "administrator";
+export type Persona = "student" | "teacher" | "parent" | "administrator" | "business";
 
 // ---------------------------------------------------------------------------
 // Constructs (measured dimensions)
@@ -63,6 +63,9 @@ export interface ItemOption {
   label: string;
   /** Optional per-option overrides of secondary construct effects. */
   effects?: Partial<Record<ConstructId, number>>; // additive nudges in 0..100 space
+  /** Extra risk tags raised by choosing this option, beyond the item's own.
+   *  A single answer can expose more than one thing at once. */
+  signals?: string[];
 }
 
 export interface SecondaryEffect {
@@ -182,6 +185,27 @@ export interface UsageProfile {
   underexposed: boolean;
 }
 
+export type RiskCategory = "financial" | "legal" | "reputational" | "operational" | "strategic";
+
+/** Business Owner only: one exposure, its evidence, and the action chosen for it. */
+export interface RiskRegisterEntry {
+  title: string;
+  category: RiskCategory;
+  severity: "high" | "elevated" | "watch";
+  description: string;
+  evidence: string;
+  action?: string;
+  actionTag?: string;
+}
+
+/** Business Owner only: one block of the ninety day plan. */
+export interface NinetyDayPhase {
+  title: string;
+  window: string;
+  note: string;
+  actions: Array<{ capability: string; change: string; practice: string; checkpoint: string }>;
+}
+
 export interface CompassResult {
   persona: Persona;
   usageProfile: UsageProfile;
@@ -207,4 +231,7 @@ export interface CompassResult {
   calibration: CalibrationResult;
   overallConfidence: ConfidenceLevel;
   confidenceNotes: string[];
+  /** Business Owner only. Empty for every other persona. */
+  riskRegister: RiskRegisterEntry[];
+  ninetyDayPlan: NinetyDayPhase[];
 }

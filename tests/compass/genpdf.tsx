@@ -13,6 +13,17 @@ const build = (p: Persona, u: number, pick: (it: It, i: number) => number): Subm
   return { persona: p, usage: u, b1: 4, b2: 3, answers };
 };
 
+/** Four business owners, shaped to the archetypes the report has to handle. */
+const bizLevels = (levels: Record<string, number>, base = 3) => (it: It) => {
+  const lvl = (it.construct ? levels[it.construct] : undefined) ?? base;
+  const top = maxV(it);
+  const healthy = Math.max(1, Math.min(top, Math.round(((lvl - 1) / 4) * (top - 1)) + 1));
+  return it.type === "reverse" ? top + 1 - healthy : healthy;
+};
+const ALLB = (v: number) => Object.fromEntries(
+  ["agency", "verification", "dependencySafety", "fluency", "transfer", "amplification",
+    "skillGrowth", "adaptability", "responsibleUse", "creativity"].map((c) => [c, v]));
+
 const cases: Array<[string, Submission]> = [
   ["all-highest", build("administrator", 5, healthiest)],
   ["all-lowest", build("student", 3, unhealthiest)],
@@ -20,6 +31,11 @@ const cases: Array<[string, Submission]> = [
   ["insufficient", { persona: "student", usage: 3, b1: 3, b2: 3, answers: { student_agency_claim: 3 } }],
   ["mixed-parent", build("parent", 3, (it, i) => Math.min(maxV(it), ((i * 7) % 5) + 1))],
   // held at stage 6 by responsible use, the shape a real respondent reported
+  ["biz-fragile", build("business", 5, bizLevels({ ...ALLB(4), dependencySafety: 1, transfer: 1 }))],
+  ["biz-exposed", build("business", 4, bizLevels({ ...ALLB(3), verification: 1, responsibleUse: 1, creativity: 2 }))],
+  ["biz-deliberate", { ...build("business", 2, bizLevels({ ...ALLB(4), agency: 5, verification: 5, fluency: 3 })),
+    answers: { ...build("business", 2, bizLevels({ ...ALLB(4), agency: 5, verification: 5, fluency: 3 })).answers, lowuse_reason: 1 } }],
+  ["biz-advantaged", build("business", 4, bizLevels(ALLB(5)))],
   ["gated-mid", build("teacher", 4, (it) =>
     (it.construct === "responsibleUse" ? (it.type === "reverse" ? maxV(it) - 1 : 2) : healthiest(it)))],
 ];

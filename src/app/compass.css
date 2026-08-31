@@ -2243,6 +2243,29 @@
   color: var(--asc-oxblood);
 }
 
+.nfc .lp-persona-new {
+  display: inline-block;
+  margin-left: .5rem;
+  padding: .1rem .4rem;
+  border-radius: 999px;
+  background: var(--asc-teal);
+  color: #06251f;
+  font-family: var(--f-mono);
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  vertical-align: middle;
+}
+
+.nfc .lp-persona-note {
+  display: block;
+  margin-top: .5rem;
+  font-family: var(--f-mono);
+  font-size: .72rem;
+  line-height: 1.5;
+  color: var(--asc-muted);
+}
+
 .nfc .lp-persona-check {
   width: 24px; height: 24px; border-radius: 50%;
   border: 1.5px solid var(--asc-border);
@@ -2873,3 +2896,67 @@
 }
 
 .nfc .share-url { font-family: var(--f-mono); font-size: .82rem; }
+
+/* ------------------------------------------------------- business results */
+/* The Business AI Health Check adds modules the other personas do not have.
+   They use the same tokens as the ascent, so the two read as one document. */
+.nfc .biz-headline {
+  border: 1px solid var(--asc-border);
+  border-radius: 18px;
+  background: var(--asc-card);
+  padding: 1.6rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.nfc .biz-h1 { font-family: var(--f-serif); font-size: clamp(1.7rem, 3.6vw, 2.5rem); color: var(--asc-oxblood); margin: .35rem 0 .5rem; }
+.nfc .biz-h3 { font-family: var(--f-serif); font-size: 1.25rem; color: var(--asc-oxblood); margin: 0 0 .5rem; }
+.nfc .biz-h4 { font-family: var(--f-serif); font-size: 1.05rem; margin: .1rem 0 .35rem; }
+.nfc .biz-verdict { margin: 0 0 .5rem; max-width: 68ch; }
+.nfc .biz-score { display: flex; align-items: baseline; gap: .7rem; margin-top: 1rem; flex-wrap: wrap; }
+.nfc .biz-score-n { font-family: var(--f-serif); font-size: 2.6rem; font-weight: 700; color: var(--asc-teal); }
+.nfc .biz-score-l { font-family: var(--f-mono); font-size: .78rem; color: var(--asc-muted); }
+.nfc .biz-hh { display: grid; gap: 1rem; grid-template-columns: 1fr; margin-bottom: 1.25rem; }
+@media (min-width: 820px) { .nfc .biz-hh { grid-template-columns: 1fr 1fr; } }
+.nfc .biz-hh-col, .nfc .biz-block, .nfc .biz-callout {
+  border: 1px solid var(--asc-border);
+  border-radius: 16px;
+  background: var(--asc-card);
+  padding: 1.25rem;
+}
+.nfc .biz-block, .nfc .biz-callout { margin-bottom: 1.25rem; }
+.nfc .biz-callout { border-left: 4px solid var(--asc-teal); }
+.nfc .biz-list { margin: 0; padding-left: 1.1rem; }
+.nfc .biz-list li { margin-bottom: .6rem; }
+.nfc .biz-list-harm li::marker { color: #CF796E; }
+.nfc .biz-table-wrap { overflow-x: auto; margin-top: .8rem; }
+.nfc .biz-table { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 640px; }
+.nfc .biz-table th {
+  text-align: left; font-family: var(--f-mono); font-size: .68rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--asc-muted); border-bottom: 1px solid var(--asc-border);
+  padding: .5rem .6rem;
+}
+.nfc .biz-table td { padding: .7rem .6rem; border-bottom: 1px solid var(--asc-border); vertical-align: top; }
+.nfc .biz-desc { display: block; color: var(--asc-muted); font-size: .82rem; margin-top: .2rem; }
+.nfc .biz-evidence { font-family: var(--f-mono); font-size: .74rem; color: var(--asc-muted); }
+.nfc .biz-cat {
+  display: inline-block; padding: .12rem .5rem; border-radius: 999px;
+  font-family: var(--f-mono); font-size: .64rem; letter-spacing: .06em; white-space: nowrap;
+  border: 1px solid var(--asc-border);
+}
+.nfc .biz-cat-legal { background: #F6E3E0; color: #7C2D26; }
+.nfc .biz-cat-financial { background: #F7EBD6; color: #7A5312; }
+.nfc .biz-cat-operational { background: #E4EFEC; color: #14584C; }
+.nfc .biz-cat-reputational { background: #F1E7F2; color: #5A3660; }
+.nfc .biz-cat-strategic { background: #E7EAF2; color: #2A3757; }
+.nfc .biz-pair { display: flex; flex-wrap: wrap; gap: 1.4rem; margin: .6rem 0 1rem; }
+.nfc .biz-metric { margin: 0; font-family: var(--f-mono); font-size: .74rem; color: var(--asc-muted); }
+.nfc .biz-metric span { display: block; font-family: var(--f-serif); font-size: 1.9rem; color: var(--asc-ink); }
+.nfc .biz-band { margin: 0; font-family: var(--f-mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
+.nfc .biz-band-strong { color: var(--asc-teal); }
+.nfc .biz-band-developing { color: #9A6B12; }
+.nfc .biz-band-watch { color: #B0685E; }
+.nfc .biz-plan { display: grid; gap: 1rem; grid-template-columns: 1fr; margin-top: .8rem; }
+@media (min-width: 900px) { .nfc .biz-plan { grid-template-columns: repeat(3, 1fr); } }
+.nfc .biz-phase { border: 1px solid var(--asc-border); border-radius: 14px; padding: 1rem; }
+.nfc .biz-action { border-top: 1px solid var(--asc-border); margin-top: .7rem; padding-top: .7rem; }
+.nfc .biz-action-h { font-weight: 700; margin: 0 0 .25rem; }
+.nfc .biz-check { font-size: .84rem; color: var(--asc-muted); margin-top: .35rem; }

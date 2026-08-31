@@ -5,7 +5,7 @@ import { generateCompassPdf } from '@/lib/reportPdfV2';
 
 export const runtime = 'nodejs';
 
-const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator'];
+const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business'];
 
 const bad = (error: string, status = 400) =>
   new Response(JSON.stringify({ error }), { status, headers: { 'Content-Type': 'application/json' } });

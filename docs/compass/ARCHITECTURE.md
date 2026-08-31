@@ -60,3 +60,67 @@ Signal tag to recommendation mapping in `recommendations.ts` (13 entries plus a 
 ## L. Cross-dimensional pattern logic
 
 Ten rules in `patterns.ts` implementing spec §19 (sophisticated augmentation, dependency, intentional selectivity, underexposure vulnerability, efficiency without learning, overconfidence, cautious-underleveraged, creativity without ownership, genuine amplification, erosion under success), each with a test predicate, hedged narrative, and evidence list.
+
+---
+
+## The Business Owner persona
+
+Added as the fifth persona. It shares the engine completely: same construct ids,
+same weights, same gates, same developmental index, same confidence and
+calibration mechanics. What differs is the language, the item bank, and two
+outputs no other persona produces.
+
+**Items.** `src/items/business.ts` holds forty items, ten dimensions by four:
+a claim, a true reverse, a scenario with five behaviourally anchored options, and
+a business impact item carrying a value 0 "not enough experience to say" option
+that is excluded from scoring. The three generic outcome items are withheld from
+this persona, because they ask about a person's learning; the ten impact items
+replace them. Shared items (usage, both baselines, the low-use reason, and the
+two high-use probes) have business wordings selected by `SHARED_FOR(persona)` in
+`scoring.ts`, keeping the same ids so a stored answer means the same thing.
+
+**Display.** `src/engine/display.ts` holds `PERSONA_DISPLAY`, a per-persona map
+of construct names and principles, construct content, stage names, stage detail,
+archetype names and narratives, composite names, fingerprint labels, and a
+disclaimer addition. Accessors (`constructName`, `constructContent`,
+`stageName`, `reportedConstructName`, `compositeName`, `indexName`,
+`archetypeDisplay`) fall back to the shared strings, which is why the four
+original personas are byte-identical after the change. Every consumer, the
+narrative, the results page, the PDF and the admin, reads through these
+accessors rather than from `CONSTRUCTS` directly.
+
+**Scoring changes, both persona-neutral.** `to100` now normalises by the item's
+own top value, so a four anchor impact item scores out of its own scale rather
+than out of five. `ItemOption` gained an optional `signals` array, so one
+scenario option can expose more than one thing at once.
+
+**Signals.** Twelve business tags in addition to the existing thirteen:
+decision_abdication, customer_facing_unverified, single_point_of_failure,
+vendor_lockin, shadow_ai_blindspot, data_leakage_risk, disclosure_gap,
+pilot_without_metric, team_deskilling, brand_homogenization,
+knowledge_not_captured, wrong_process_automation.
+
+**Patterns.** The ten existing rules apply unchanged. Five business-only rules
+are gated by a `personas` field on the rule: fragile_automation,
+shadow_ai_blindspot, trust_exposure, pilot_theater (harm) and
+advantaged_operator (help).
+
+**Recommendations.** A parallel `BUSINESS_LIBRARY` covers every signal tag plus
+maintain, selected when the persona is business. Same five field shape; the
+practices are written to be schedulable by an owner without a compliance
+department.
+
+**Risk Register** (`src/engine/business.ts`). Derived from fired signals and harm
+patterns: one entry per distinct exposure, each with an impact category
+(financial, legal, reputational, operational, strategic), a hedged description,
+the reading behind it, and the linked recommendation where one was chosen.
+Ordered by severity then category. Empty for every other persona.
+
+**Ninety day plan.** Sequences the chosen recommendations into three blocks, with
+anything linked to a legal or financial exposure placed in days 1 to 30
+regardless of its priority label. Each action carries its evidence-of-progress
+line as a checkpoint. Empty for every other persona.
+
+**Both new fields are on `CompassResult`** (`riskRegister`, `ninetyDayPlan`) and
+are empty arrays for the other four personas, so no consumer has to branch to
+read them.

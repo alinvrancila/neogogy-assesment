@@ -20,7 +20,11 @@ import { STUDENT_ITEMS } from "../items/student";
 import { TEACHER_ITEMS } from "../items/teacher";
 import { PARENT_ITEMS } from "../items/parent";
 import { ADMINISTRATOR_ITEMS } from "../items/administrator";
-import { OUTCOME_ITEMS, LOW_USE_REASON, HIGH_USE_PROBES, USAGE_ITEM, BASELINE_ITEMS } from "../items/shared";
+import { BUSINESS_ITEMS } from "../items/business";
+import {
+  OUTCOME_ITEMS, LOW_USE_REASON, HIGH_USE_PROBES, USAGE_ITEM, BASELINE_ITEMS,
+  BUSINESS_USAGE_ITEM, BUSINESS_BASELINE_ITEMS, BUSINESS_LOW_USE_REASON, BUSINESS_HIGH_USE_PROBES,
+} from "../items/shared";
 
 // ---------------------------------------------------------------------------
 // Registry
@@ -31,19 +35,37 @@ const PERSONA_BANKS: Record<Persona, Item[]> = {
   teacher: TEACHER_ITEMS,
   parent: PARENT_ITEMS,
   administrator: ADMINISTRATOR_ITEMS,
+  business: BUSINESS_ITEMS,
 };
+
+/**
+ * Shared items reworded for a persona. The Business Owner asks about a
+ * business rather than a person, and carries its own ten impact items, so the
+ * three generic outcome items about the respondent's own learning do not apply.
+ */
+const SHARED_FOR = (persona: Persona) => (persona === "business"
+  ? {
+    usage: BUSINESS_USAGE_ITEM, baselines: BUSINESS_BASELINE_ITEMS,
+    outcomes: [] as Item[], lowUse: BUSINESS_LOW_USE_REASON, highUse: BUSINESS_HIGH_USE_PROBES,
+  }
+  : {
+    usage: USAGE_ITEM, baselines: BASELINE_ITEMS,
+    outcomes: OUTCOME_ITEMS, lowUse: LOW_USE_REASON, highUse: HIGH_USE_PROBES,
+  });
 
 /** Items applicable to a submission, honoring adaptive triggers (§13). */
 export function applicableItems(persona: Persona, usage: number): Item[] {
-  const items = [...PERSONA_BANKS[persona], ...OUTCOME_ITEMS];
-  if (usage <= USAGE.lowUseMax) items.push(LOW_USE_REASON);
-  if (usage >= USAGE.highUseMin) items.push(...HIGH_USE_PROBES);
+  const shared = SHARED_FOR(persona);
+  const items = [...PERSONA_BANKS[persona], ...shared.outcomes];
+  if (usage <= USAGE.lowUseMax) items.push(shared.lowUse);
+  if (usage >= USAGE.highUseMin) items.push(...shared.highUse);
   return items;
 }
 
 export function allItems(persona: Persona): Item[] {
-  return [USAGE_ITEM, ...BASELINE_ITEMS, ...PERSONA_BANKS[persona], ...OUTCOME_ITEMS,
-    LOW_USE_REASON, ...HIGH_USE_PROBES];
+  const shared = SHARED_FOR(persona);
+  return [shared.usage, ...shared.baselines, ...PERSONA_BANKS[persona], ...shared.outcomes,
+    shared.lowUse, ...shared.highUse];
 }
 
 // ---------------------------------------------------------------------------
@@ -61,7 +83,20 @@ export function healthyValue(item: Item, raw: number | undefined): number | unde
   return raw; // claims, scenarios (options are directional), branches
 }
 
-const to100 = (v: number) => ((v - 1) / 4) * 100;
+/**
+ * A healthy value on to the 0..100 scale, normalised by the item's own top
+ * value. Every item on a five point scale is unaffected. Business impact items
+ * offer four substantive anchors plus "not enough experience to say", and
+ * without this their best available answer would score 75 rather than 100.
+ */
+const to100 = (v: number, top = 5) => ((v - 1) / Math.max(1, top - 1)) * 100;
+
+/** The highest scoring value an item actually offers. */
+const topValue = (item: Item): number => {
+  if (!item.options?.length) return 5;
+  const values = item.options.map((o) => o.value).filter((v) => v > 0);
+  return values.length ? Math.max(...values) : 5;
+};
 
 interface Contribution { construct: ConstructId; score100: number; weight: number; itemId: string; type: Item["type"]; }
 
@@ -72,11 +107,12 @@ function contributionsFor(item: Item, raw: number | undefined, claimDiscounted: 
   let w = (item.weight ?? 1.0) * typeW;
   if (item.type === "claim" && claimDiscounted.has(item.id)) w *= SCORING.claimDiscountOnGap;
 
-  const out: Contribution[] = [{ construct: item.construct, score100: to100(hv), weight: w, itemId: item.id, type: item.type }];
+  const top = topValue(item);
+  const out: Contribution[] = [{ construct: item.construct, score100: to100(hv, top), weight: w, itemId: item.id, type: item.type }];
 
   // §17: declared secondary construct effects (proportional to the same answer)
   for (const sec of item.secondary ?? []) {
-    out.push({ construct: sec.construct, score100: to100(hv), weight: w * Math.abs(sec.weight) * Math.sign(sec.weight),
+    out.push({ construct: sec.construct, score100: to100(hv, top), weight: w * Math.abs(sec.weight) * Math.sign(sec.weight),
       itemId: item.id, type: item.type });
   }
   // §17: per-option effect nudges on scenarios (additive in 0..100 space)
@@ -159,11 +195,17 @@ export function scoreDimensions(persona: Persona, sub: Submission): {
 
   const signals: RiskSignal[] = [];
   for (const it of items) {
-    if (!it.riskSignal) continue;
-    const hv = healthyValue(it, sub.answers[it.id]);
-    if (hv !== undefined && hv <= 2) {
+    const raw = sub.answers[it.id];
+    const hv = healthyValue(it, raw);
+    if (it.riskSignal && hv !== undefined && hv <= 2) {
       signals.push({ tag: it.riskSignal, construct: it.construct,
         severity: hv <= 1 ? "high" : "elevated", evidence: [it.id] });
+    }
+    // an option can expose more than one thing, so it may raise its own tags
+    const chosen = it.options?.find((o) => o.value === raw);
+    for (const tag of chosen?.signals ?? []) {
+      signals.push({ tag, construct: it.construct,
+        severity: (hv ?? 5) <= 1 ? "high" : "elevated", evidence: [it.id] });
     }
   }
   // merge duplicate tags, keep max severity

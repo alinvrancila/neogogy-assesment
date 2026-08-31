@@ -13,7 +13,7 @@ import { lookupIp } from '@/lib/geoip';
 
 export const runtime = 'nodejs';
 
-const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator'];
+const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business'];
 
 type Body = {
   persona?: string;
@@ -29,8 +29,24 @@ type Body = {
   heardFrom?: string;
   consent?: boolean;
   sessionId?: string;
+  business?: Record<string, unknown>;
   meta?: Record<string, unknown>;
 };
+
+/** The Business Owner's optional context. Volunteered, never scored. */
+function cleanBusiness(raw: unknown) {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const b = raw as Record<string, unknown>;
+  const str = (v: unknown, max: number) =>
+    (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : undefined);
+  const out = {
+    company: str(b.company, 120),
+    industry: str(b.industry, 80),
+    teamSize: str(b.teamSize, 40),
+    tools: str(b.tools, 200),
+  };
+  return Object.values(out).some((v) => v !== undefined) ? out : undefined;
+}
 
 /** Accept only known fields, in sane ranges. Untrusted client input. */
 function cleanMeta(raw: unknown): SubmissionMeta | undefined {
@@ -241,7 +257,10 @@ export async function POST(request: NextRequest) {
     archetypeId: result.archetype.id,
     archetypeName: result.archetype.name,
     confidence: result.overallConfidence,
-    meta: { ...cleanMeta(body.meta), ...(await serverMeta(request)) },
+    meta: {
+      ...cleanMeta(body.meta), ...(await serverMeta(request)),
+      business: cleanBusiness(body.business),
+    },
   };
 
   try {
@@ -268,7 +287,11 @@ export async function POST(request: NextRequest) {
 
   let emailSent = false;
   try {
-    const pdf = await generateCompassPdf({ result, name: fullName, comparison });
+    const pdf = await generateCompassPdf({
+      result, name: fullName, comparison,
+      company: lead.meta?.business?.company,
+      industry: lead.meta?.business?.industry,
+    });
     if (isEmailEnabled()) {
       const first = body.firstName || fullName;
       const sent = await sendReportEmail({

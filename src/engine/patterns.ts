@@ -3,12 +3,14 @@
  * All narratives use non-causal, evidence-hedged language ("your responses are
  * consistent with...") per §21.
  */
-import type { CompassResult, ConstructId, DimensionResult, PatternHit, UsageProfile } from "./types";
+import type { CompassResult, ConstructId, DimensionResult, PatternHit, Persona, UsageProfile } from "./types";
 
 type Dims = Record<ConstructId, DimensionResult>;
 
 interface PatternRule {
   id: string; label: string; kind: PatternHit["kind"];
+  /** When set, the rule only applies to these personas. */
+  personas?: Persona[];
   test: (d: Dims, u: UsageProfile) => boolean;
   narrative: (d: Dims, u: UsageProfile) => string;
   evidence: (d: Dims) => string[];
@@ -77,13 +79,54 @@ export const PATTERN_RULES: PatternRule[] = [
     narrative: () => "Skilled, productive use in front; thinning foundations behind. The work looks strong and probably is; the question your answers raise is whether you would still be this strong with the tools switched off.",
     evidence: () => ["fluency", "skillGrowth", "dependencySafety"],
   },
+
+  /* ------------------------------------------------ Business Owner only */
+  {
+    id: "fragile_automation", label: "Fragile automation", kind: "harm",
+    personas: ["business"],
+    test: (d, u) => u.usage >= 4 && s(d, "dependencySafety") <= 40 && s(d, "transfer") <= 45,
+    narrative: d => `Output is rising on a base that would not survive a vendor change. Your responses suggest core work now runs through AI (continuity measured at ${d.dependencySafety.score}) while little of it is documented outside those tools (knowledge capture at ${d.transfer.score}).`,
+    evidence: () => ["dependencySafety", "transfer"],
+  },
+  {
+    id: "shadow_ai_blindspot", label: "Governance blind spot", kind: "harm",
+    personas: ["business"],
+    test: (d, u) => u.usage >= 3 && s(d, "responsibleUse") <= 45,
+    narrative: () => "Regular use across the business without governance keeping pace. Your answers suggest exposure you would not currently be able to see, which is the ordinary shape of this problem rather than an unusual one: research through 2026 consistently finds owners overestimate their visibility into staff tool use.",
+    evidence: () => ["responsibleUse"],
+  },
+  {
+    id: "trust_exposure", label: "Customer trust exposure", kind: "harm",
+    personas: ["business"],
+    test: (d, u) => u.usage >= 3 && s(d, "verification") <= 45 && s(d, "creativity") <= 45,
+    narrative: () => "Unverified and undifferentiated content reaching customers together. Your responses are consistent with material going out that is neither checked nor distinctly yours, which is the combination customers notice first and discount fastest.",
+    evidence: () => ["verification", "creativity"],
+  },
+  {
+    id: "pilot_theater", label: "Activity without measurement", kind: "harm",
+    personas: ["business"],
+    test: (d, u) => u.usage >= 3 && s(d, "adaptability") <= 40 && s(d, "fluency") >= 55,
+    narrative: () => "Capable adoption without a measured result. Your responses suggest workflows running on the strength of how they feel rather than what they moved, which is the condition MIT's 2025 study associated with pilots that never reached the profit and loss account.",
+    evidence: () => ["adaptability", "fluency"],
+  },
+  {
+    id: "advantaged_operator", label: "Compounding operating advantage", kind: "help",
+    personas: ["business"],
+    test: (d, u) => u.usage >= 3 && s(d, "agency") >= 65 && s(d, "verification") >= 65
+      && s(d, "amplification") >= 65 && s(d, "adaptability") >= 65,
+    narrative: () => "Decision quality, checking, and review are holding together at volume. Your responses are consistent with AI compounding the quality of decisions on a governed base, which is the arrangement that produces a durable advantage rather than a temporary speed gain.",
+    evidence: () => ["agency", "verification", "amplification", "adaptability"],
+  },
 ];
 
-export function detectPatterns(dims: Dims, up: UsageProfile): PatternHit[] {
-  return PATTERN_RULES.filter(r => r.test(dims, up)).map(r => ({
-    id: r.id, label: r.label, kind: r.kind,
-    narrative: r.narrative(dims, up), evidence: r.evidence(dims),
-  }));
+export function detectPatterns(dims: Dims, up: UsageProfile, persona?: Persona): PatternHit[] {
+  return PATTERN_RULES
+    .filter(r => !r.personas || (persona ? r.personas.includes(persona) : false))
+    .filter(r => r.test(dims, up))
+    .map(r => ({
+      id: r.id, label: r.label, kind: r.kind,
+      narrative: r.narrative(dims, up), evidence: r.evidence(dims),
+    }));
 }
 
 /** §21: split detected evidence into help vs risk for the report. */

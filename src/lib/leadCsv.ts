@@ -128,6 +128,20 @@ export function buildLeadRows(leads: LeadRecord[]): Row[] {
       calibration_feel_gap: r?.calibration.desirabilityGap ?? '',
       calibration_prediction_gap: r?.calibration.calibrationGap ?? '',
 
+      /* the Business Owner's volunteered context, and its exposures */
+      business_company: m?.business?.company ?? '',
+      business_industry: m?.business?.industry ?? '',
+      business_team_size: m?.business?.teamSize ?? '',
+      business_tools: m?.business?.tools ?? '',
+      risk_register_total: r?.riskRegister.length ?? '',
+      risk_legal: r ? r.riskRegister.filter((e) => e.category === 'legal').length : '',
+      risk_financial: r ? r.riskRegister.filter((e) => e.category === 'financial').length : '',
+      risk_operational: r ? r.riskRegister.filter((e) => e.category === 'operational').length : '',
+      risk_reputational: r ? r.riskRegister.filter((e) => e.category === 'reputational').length : '',
+      risk_strategic: r ? r.riskRegister.filter((e) => e.category === 'strategic').length : '',
+      risk_register: r ? list(r.riskRegister.map((e) => `${e.category}: ${e.title}`)) : '',
+      ninety_day_plan: r ? list(r.ninetyDayPlan.flatMap((p) => p.actions.map((a) => `${p.window}: ${a.capability}`))) : '',
+
       /* their own history */
       attempt_number: position >= 0 ? position + 1 : 1,
       total_attempts: mine.length,

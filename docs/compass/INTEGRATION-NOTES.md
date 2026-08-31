@@ -653,3 +653,93 @@ shrinking ten stage names into illegibility.
 **Process note, twice now.** Running `npm run build` while `next dev` is serving replaces `.next`
 underneath it and the dev server starts returning 500s with MODULE_NOT_FOUND. It looked like the map
 component had broken. Restart the dev server after any build, or the probe results are meaningless.
+
+---
+
+# The Business Owner persona
+
+## What the code looked like before this change
+
+Recorded before touching anything, because the persona had to fit the existing
+shape rather than the shape being bent around it.
+
+- **Persona union** is declared once in `src/engine/types.ts` and enumerated by
+  hand in ten other places: the item registry (`scoring.ts`), the API validators
+  (`api/submit`, `api/report`), the assessment UI (`CompassApp`), the dev
+  fixture pages, `lib/leadResult.ts`, `items/shared.ts` (context lines),
+  `engine/legacyAdapter.ts`, `engine/narrative.ts` and the admin filters.
+- **Item banks** are one file per persona under `src/items/`, built through
+  three factories in `items/shared.ts` (`claim`, `reverse`, `scenario`). Shared
+  items (usage, two baselines, three outcome items, the low-use reason and two
+  high-use probes) are appended to every persona by `applicableItems`.
+- **Construct names and copy** were read straight from `CONSTRUCTS` in
+  `engine/config.ts` and `CONSTRUCT_CONTENT` in `engine/content.ts` by the
+  narrative, the results page, the PDF and the admin. Nothing was per-persona.
+- **Archetypes, patterns and recommendations** are flat arrays and one library
+  object, all persona-blind.
+- **Scoring** weights by item type (scenario 1.6, outcome 1.2, claim and reverse
+  1.0), fires a risk signal when a healthy value lands at 2 or below, and caps
+  confidence rather than penalising scores at low usage.
+
+## Judgment calls
+
+**The three generic outcome items are withheld from this persona.** They ask
+about beginning difficult tasks, explaining ideas, and persisting on hard
+problems: all about a person's learning. The business bank carries its own ten
+impact items instead, one per dimension, so `applicableItems("business", u)`
+returns forty items plus branches rather than forty-three. Every other persona
+is untouched.
+
+**Display, not data.** Construct ids, weights, gates, and the index calculation
+are identical for business. Only the words change, through one per-persona
+display map. This keeps a business result comparable with the rest of the
+instrument and means a single scoring change cannot drift between personas.
+
+**Reported inversion stays where it was.** `dependencySafety` remains the
+healthy reading internally and is reported inverted, as Continuity Risk rather
+than Dependency Risk. The engine did not need to know.
+
+## More judgment calls, recorded as they were made
+
+**Business stage names.** The brief asked for business stage names without
+listing them. The ten map one to one onto the existing stages and keep their
+meanings: AI Absent, AI Aware, AI Trialling, AI Adopting, AI Operational, AI
+Integrated, AI Deliberate, AI Advantaged, AI Adaptive, AI Compounding. They
+describe the business rather than a learner, which is the point of the persona.
+
+**Impact items score on their own scale.** The brief specifies four substantive
+anchors plus a way out. Scored on the five point mapping, the best available
+answer would have been worth 75 rather than 100, quietly penalising every
+business on every impact item. `to100` now normalises by the item's own top
+value. Nothing else changes: every existing item runs on a five point scale, and
+the regression dump is byte-identical.
+
+**One option can raise more than one signal.** The brief assigns two tags to some
+scenario options. Items previously carried a single tag, so `ItemOption` gained
+an optional `signals` array. Both mechanisms fire together.
+
+**The Deliberate Adopter fixture clears the stage 5 fluency gate.** Built with
+fluency at a low level, this owner is held at stage 4 by the gate, not by the
+index, however strong the judgment readings are. That is the gate doing exactly
+what it was designed to do, so the fixture uses a working fluency level. An
+owner who says "we know where these tools fit and they do not fit here yet" is
+claiming competence, not distance.
+
+**Business context lives in `meta`, not in new columns.** The lead record has no
+company or organisation field. `modality` exists and is unused, but it is
+surfaced in the admin and the export under its own name, so putting a company
+name there would mislabel it. `meta` is the record's existing free-form metadata
+field, so the four optional fields live at `meta.business` as a small object. No
+schema column was added.
+
+**Scenario options are shuffled per respondent.** Display order is seeded from
+the session id and the item id, so the same person always sees the same order and
+two people see different ones. Scoring reads the option value, so order cannot
+affect a result. Only scenarios shuffle: a scale or a branch keeps its written
+order, where sequence carries meaning.
+
+**Known cosmetic limitation.** A long flowing report can end its text pages with
+a short spill, a few lines on an otherwise empty page, before the register and
+plan pages begin. This is a property of flowing pagination rather than of the
+business persona (the existing personas do it too), and fixing it properly needs
+orphan control that react-pdf does not offer.

@@ -4,7 +4,7 @@
  * but unlike the v1 residual bucket it does not absorb two thirds of respondents: the rules above it
  * absorb the meaningfully distinct profiles first (verified in tests).
  */
-import type { CompassResult, ConstructId, DimensionResult, UsageProfile } from "./types";
+import type { CompassResult, ConstructId, DimensionResult, Persona, UsageProfile } from "./types";
 
 type Dims = Record<ConstructId, DimensionResult>;
 const s = (d: Dims, c: ConstructId) => d[c].score;
@@ -81,8 +81,24 @@ export function classify(dims: Dims, up: UsageProfile) {
 }
 
 /** §38: compact profile fingerprint. */
-export function fingerprint(dims: Dims, comp: { futureReadiness: number; dependencyIndex: number }): string[] {
+export function fingerprint(
+  dims: Dims,
+  comp: { futureReadiness: number; dependencyIndex: number },
+  persona?: Persona
+): string[] {
   const level = (n: number) => n >= 70 ? "HIGH" : n >= 50 ? "MODERATE" : n >= 35 ? "LOW-MODERATE" : "LOW";
+  // The readings are the same seven; only what they are called changes.
+  if (persona === "business") {
+    return [
+      `${dims.agency.score >= 70 ? "STRONG" : dims.agency.score >= 50 ? "STABLE" : "WEAK"} DECISION OWNERSHIP`,
+      `${level(dims.verification.score)} VERIFICATION DISCIPLINE`,
+      `${level(dims.dependencySafety.score)} CONTINUITY`,
+      `${level(dims.responsibleUse.score)} GOVERNANCE`,
+      `${level(dims.transfer.score)} KNOWLEDGE CAPTURE`,
+      `${level(dims.amplification.score)} STRATEGIC AMPLIFICATION`,
+      `${level(comp.futureReadiness)} MARKET READINESS`,
+    ];
+  }
   return [
     `${level(dims.fluency.score)} AI FLUENCY`,
     `${level(dims.dependencySafety.score)} INDEPENDENT FOUNDATION`,

@@ -11,6 +11,7 @@
 import type { CompassResult } from '@/engine';
 import type { AttemptComparison } from '@/lib/history';
 import { STAGES } from '@/engine/config';
+import { stageName } from '@/engine/display';
 import type { ConstructId } from '@/engine/types';
 import {
   VIEW, ROUTE_POINTS, pointAtIndex, routePath, contourPaths, routeRidge, GATE_DEFS,
@@ -173,7 +174,7 @@ export default function AscentMapHero(
                     </text>
                     <text x={lx} y={band + 6} textAnchor="middle"
                       className={`asc-camp-name${isHere ? ' is-here' : ''}${isNext ? ' is-next' : ''}`}>
-                      {s.name}
+                      {stageName(result.persona, s.stage)}
                     </text>
                     <circle
                       cx={p.x} cy={p.y} r={isHere ? 11 : 7}

@@ -10,6 +10,7 @@
  */
 
 import type { CompassResult, DimensionDetail } from '@/engine';
+import { constructName, reportedConstructName } from '@/engine/display';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
 import { bandColor, bandTextColor } from './Visuals';
 
@@ -146,7 +147,7 @@ export function GateGap({ result }: { result: CompassResult }) {
   return (
     <div className="gategap">
       <div className="gg-head">
-        <span className="gg-name">{CONSTRUCTS[c].name}</span>
+        <span className="gg-name">{constructName(result.persona, c)}</span>
         <span className="gg-now" style={{ color: bandTextColor(d.score) }}>{d.score}</span>
       </div>
       <div className="gg-track">
@@ -170,7 +171,7 @@ export function GateGap({ result }: { result: CompassResult }) {
 
 export function ThresholdStrip({ result }: { result: CompassResult }) {
   const rows = Object.values(result.dimensions).map((d) => ({
-    name: CONSTRUCTS[d.construct].reportedAsRisk ? 'Dependency Risk' : CONSTRUCTS[d.construct].name,
+    name: reportedConstructName(result.persona, d.construct),
     healthy: d.score,
     shown: CONSTRUCTS[d.construct].reportedAsRisk ? d.reportedScore : d.score,
   })).sort((a, b) => a.healthy - b.healthy);

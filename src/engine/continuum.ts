@@ -3,8 +3,9 @@
  * substages, gating for advanced stages (§36), borderline handling (§4.2 fix),
  * bottleneck detection (§34), and next-target logic (§32).
  */
-import type { Bottleneck, ConstructId, DimensionResult, StageResult, UsageProfile } from "./types";
+import type { Bottleneck, ConstructId, DimensionResult, StageResult, UsageProfile, Persona } from "./types";
 import { CONSTRUCTS, STAGES, CONTINUUM, type StageDef } from "./config";
+import { constructName, stageName, indexName } from "./display";
 import { round1 } from "./scoring";
 
 type Dims = Record<ConstructId, DimensionResult>;
@@ -23,23 +24,23 @@ function stageForIndex(index: number): StageDef {
 }
 
 /** The highest stage a profile's gates allow, regardless of index (§36). */
-function gateCap(dims: Dims): { cap: number; reasons: string[] } {
+function gateCap(dims: Dims, persona?: Persona): { cap: number; reasons: string[] } {
   let cap = STAGES.length;
   let reasons: string[] = [];
   for (const s of STAGES) {
     if (!s.gates) continue;
     const failed = Object.entries(s.gates)
       .filter(([c, min]) => dims[c as ConstructId].score < (min as number))
-      .map(([c, min]) => `${CONSTRUCTS[c as ConstructId].name} is ${dims[c as ConstructId].score}, and stage ${s.stage} (${s.name}) requires at least ${min}`);
+      .map(([c, min]) => `${constructName(persona, c as ConstructId)} is ${dims[c as ConstructId].score}, and stage ${s.stage} (${stageName(persona, s.stage)}) requires at least ${min}`);
     if (failed.length > 0) { cap = Math.min(cap, s.stage - 1); if (reasons.length === 0) reasons = failed; }
   }
   return { cap, reasons };
 }
 
-export function placeOnContinuum(dims: Dims): StageResult {
+export function placeOnContinuum(dims: Dims, persona?: Persona): StageResult {
   const rawIndex = developmentalIndex(dims);
   const byIndex = stageForIndex(rawIndex);
-  const { cap, reasons } = gateCap(dims);
+  const { cap, reasons } = gateCap(dims, persona);
 
   let stageDef = byIndex;
   let gated: StageResult["gated"];
@@ -91,13 +92,13 @@ export function nextTarget(stage: StageResult): { stage: number; stageName: stri
  * construct with the largest weighted deficit against the next stage's gates
  * (or against a healthy floor of 60 when the next stage has no gates).
  */
-export function findBottleneck(dims: Dims, stage: StageResult): Bottleneck {
+export function findBottleneck(dims: Dims, stage: StageResult, persona?: Persona): Bottleneck {
   if (stage.gated) {
     // first failed gate names the construct
     const firstReason = stage.gated.reasons[0];
     const construct = (Object.values(CONSTRUCTS).find(c => firstReason.startsWith(c.name))?.id ?? "verification") as ConstructId;
     return { construct, viaGate: true,
-      reason: `Your developmental index (${stage.rawIndex}) already supports a higher stage, but ${CONSTRUCTS[construct].name.toLowerCase()} is holding the classification down. ${firstReason}. Raising it unlocks the stage your other capabilities have earned.` };
+      reason: `Your ${indexName(persona)} (${stage.rawIndex}) already supports a higher stage, but ${constructName(persona, construct).toLowerCase()} is holding the classification down. ${firstReason}. Raising it unlocks the stage your other capabilities have earned.` };
   }
   const next = STAGES.find(s => s.stage === stage.stage + 1);
   const targets: Partial<Record<ConstructId, number>> = next?.gates ?? {};
@@ -113,5 +114,5 @@ export function findBottleneck(dims: Dims, stage: StageResult): Bottleneck {
       reason: "No single dimension is holding you back sharply; progression now comes from consolidating the whole pattern under changing tools and higher-stakes work." };
   }
   return { construct: c, viaGate: false,
-    reason: `The largest single constraint on your progression is ${CONSTRUCTS[c].name.toLowerCase()} (currently ${dims[c].score}). It is not necessarily your lowest number, but given how the next stage is defined, it is the capability whose growth would move you furthest.` };
+    reason: `The largest single constraint on your progression is ${constructName(persona, c).toLowerCase()} (currently ${dims[c].score}). It is not necessarily your lowest number, but given how the next stage is defined, it is the capability whose growth would move you furthest.` };
 }

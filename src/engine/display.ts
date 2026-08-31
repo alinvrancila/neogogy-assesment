@@ -1,0 +1,374 @@
+/**
+ * Per-persona display.
+ *
+ * The engine measures the same ten constructs for everyone, with the same
+ * weights, gates and index. Only the words change. Everything a respondent can
+ * read comes through this map, so a persona can speak its own language without
+ * a second scoring path existing anywhere.
+ *
+ * Personas with no entry here fall back to the shared strings, which is why the
+ * four original personas are byte-identical after this was introduced.
+ */
+
+import type { ConstructId, Persona, CompassResult } from "./types";
+import { CONSTRUCTS, STAGES } from "./config";
+import { CONSTRUCT_CONTENT, STAGE_DETAIL, type ConstructContent } from "./content";
+
+export interface PersonaDisplay {
+  /** What the whole thing is called on screen and in the file. */
+  reportTitle: string;
+  /** What the developmental index is called for this persona. */
+  indexName: string;
+  /** The subject of the assessment, for headings and the admin. */
+  subject: "person" | "business";
+  constructNames: Partial<Record<ConstructId, string>>;
+  constructPrinciples: Partial<Record<ConstructId, string>>;
+  /** How the inverted dimension is reported. */
+  riskName?: string;
+  composites: Partial<Record<
+    "futureReadiness" | "augmentation" | "judgment" | "capabilityTransfer" | "dependencyIndex" | "underexposure",
+    string>>;
+  stageNames?: Record<number, string>;
+  stageDetail?: Record<number, { looksLike: string; trap: string }>;
+  archetypes?: Record<string, { name: string; tagline?: string; narrative?: string }>;
+  content?: Partial<Record<ConstructId, Partial<ConstructContent>>>;
+  fingerprintLabels?: string[];
+  disclaimerExtra?: string;
+}
+
+/* --------------------------------------------------------------- business */
+
+const BUSINESS_CONSTRUCT_NAMES: Record<ConstructId, string> = {
+  agency: "Owner Decision Ownership",
+  verification: "Verification Before Consequence",
+  dependencySafety: "Operational Continuity",
+  fluency: "Business AI Fluency",
+  transfer: "Institutional Knowledge Capture",
+  amplification: "Strategic Amplification",
+  skillGrowth: "Team Capability Growth",
+  adaptability: "Business Adaptability",
+  responsibleUse: "Governance, Data, and Trust",
+  creativity: "Market Differentiation",
+};
+
+const BUSINESS_PRINCIPLES: Record<ConstructId, string> = {
+  agency: "AI advises. The owner and the team decide, and can explain the decision.",
+  verification: "Nothing AI-generated reaches a customer, a contract, or the books without a check proportional to the stakes.",
+  dependencySafety: "The business keeps running when a tool fails, changes price, or disappears.",
+  fluency: "The right tool on the right process, with a number to move and a person who owns the result.",
+  transfer: "AI-assisted work becomes documented process the business owns, not one person's prompts.",
+  amplification: "AI improves the quality of decisions, not only the speed of output.",
+  skillGrowth: "The team grows more capable alongside AI, and can still check what it ships.",
+  adaptability: "Workflows are reviewed against measured outcomes, and the ones that fail are stopped.",
+  responsibleUse: "A written policy that staff follow, data that stays where it should, and honest dealing with customers.",
+  creativity: "AI sharpens a distinct voice and offer rather than producing what every competitor's AI produces.",
+};
+
+const BUSINESS_STAGE_NAMES: Record<number, string> = {
+  1: "AI Absent", 2: "AI Aware", 3: "AI Trialling", 4: "AI Adopting", 5: "AI Operational",
+  6: "AI Integrated", 7: "AI Deliberate", 8: "AI Advantaged", 9: "AI Adaptive", 10: "AI Compounding",
+};
+
+const BUSINESS_STAGE_DETAIL: Record<number, { looksLike: string; trap: string }> = {
+  1: { looksLike: "AI plays no part in how the business runs. Views about it are not yet grounded in your own trading experience.",
+       trap: "Deciding about AI from a distance while competitors learn where it pays." },
+  2: { looksLike: "You follow the subject and have opinions, but almost nothing in the business has been tried with it.",
+       trap: "Mistaking familiarity with the discussion for knowing where it fits your operation." },
+  3: { looksLike: "Occasional trials, no settled habits. Results vary and you cannot yet predict which attempts will earn their place.",
+       trap: "Concluding it does not work from a handful of unstructured attempts." },
+  4: { looksLike: "Regular use across several functions, with boundaries and measurement still thin. Breadth is ahead of discipline.",
+       trap: "Volume growing faster than governance, which is where exposure usually begins quietly." },
+  5: { looksLike: "AI reliably completes real work in the business. Continuity, verification, and knowledge capture are developing.",
+       trap: "Reading tool competence as business capability, when the process now lives in the tool." },
+  6: { looksLike: "AI is built into workflows with checks in place and authorship retained. The pattern is deliberate rather than habitual.",
+       trap: "Integration becoming automatic, so verification loosens as trust builds." },
+  7: { looksLike: "You choose where AI belongs and where it does not, and you can explain the reasoning for both.",
+       trap: "Optimising the work you already do, rather than reconsidering which work is worth doing." },
+  8: { looksLike: "AI is improving decision quality, not only throughput, on a base that would survive losing a vendor.",
+       trap: "Assuming your competitors run the same discipline, when this pattern is uncommon." },
+  9: { looksLike: "The business reviews its own AI practice as the market and the tools move, and changes it on evidence.",
+       trap: "Reviewing the workflows while leaving the governance and the exit paths where they were." },
+  10: { looksLike: "A mature operating relationship with AI that also builds capability in the team, and holds under change.",
+        trap: "Complacency. At this point the risk is not collapse, it is a good pattern going unexamined." },
+};
+
+const BUSINESS_ARCHETYPES: Record<string, { name: string; tagline?: string; narrative?: string }> = {
+  strategic_integrator: {
+    name: "The AI-Advantaged Operator",
+    tagline: "Deliberate, governed use that is compounding into an advantage.",
+    narrative: "You choose where AI belongs and where it does not, you check what it produces before it carries commercial consequence, and the business would still trade if the tools were switched off. Your remaining work is structural: making this the standard rather than your personal habit.",
+  },
+  grounded_selectivist: {
+    name: "The Deliberate Adopter",
+    tagline: "Low use by choice, backed by real judgment about where it pays.",
+    narrative: "You have limited AI on purpose and your answers back that up: this is selectivity, not avoidance. The exposure runs the other way. Working out where these tools fit is becoming a competence in itself, and bounded experiments would keep your selectivity current rather than dated.",
+  },
+  augmented_thinker: {
+    name: "The Amplified Decision-Maker",
+    tagline: "AI is measurably improving the decisions, not just the output.",
+    narrative: "Your responses show AI functioning as a thinking partner in the business: it widens the options you consider and challenges assumptions before they cost you. Protect this by keeping verification and knowledge capture in the loop as your volume of use grows.",
+  },
+  capable_but_unexposed: {
+    name: "Solid but Unexposed",
+    tagline: "A well-run business that has not yet built the AI-shaped competencies.",
+    narrative: "Nothing suggests AI is harming this business. The risk runs the other way. Choosing the right tool for a process, governing its use, and integrating it into real workflows are becoming distinct commercial competencies, and your answers show limited practice in them. Your priority is bounded exposure, not restraint.",
+  },
+  dependent_operator: {
+    name: "The Fragile Automator",
+    tagline: "Fast and productive, on a base that would not survive a vendor change.",
+    narrative: "The business moves quickly with AI and the output is probably good. Your responses raise one commercial question: what happens if the tool changes price, changes terms, or goes away. This is the pattern this assessment exists to catch, because it looks like efficiency the whole time it is developing.",
+  },
+  uncritical_consumer: {
+    name: "The Exposed Adopter",
+    tagline: "Regular use with the checking switched off.",
+    narrative: "AI is in the routine of the business, and your responses show confident output being accepted largely as it arrives. Unverified output carries commercial, legal, and reputational cost the first time it is wrong in front of a customer or a regulator, and the errors that reach that far are usually the plausible ones.",
+  },
+  curious_explorer: {
+    name: "The Experimenting Owner",
+    tagline: "Real trials under way, with the frame around them still forming.",
+    narrative: "The business is genuinely in motion: trying tools, finding uses, building skill. What is not yet formed is the frame: where AI is allowed, what always gets checked, and how a working experiment becomes a documented process the business owns. Adding that frame turns experimentation into return.",
+  },
+  hesitant_starter: {
+    name: "The Waiting Owner",
+    tagline: "Watching from the edge, with the first bounded trial still ahead.",
+    narrative: "Your answers describe a business that has kept its distance so far. That is a defensible position and it is not costing you anything visible today. What it does cost is time to learn: the businesses that get value from these tools are mostly the ones that started small, measured, and kept what worked.",
+  },
+  forming_practitioner: {
+    name: "The Forming Operator",
+    tagline: "Moderate, broadly balanced use with the pattern still taking shape.",
+    narrative: "Your profile is genuinely mixed: nothing is collapsing and nothing is yet a signature strength. That is a real position rather than a failure. The dimension readings below matter more for you than any label, because your next move is specific to your weakest link.",
+  },
+};
+
+const BUSINESS_CONTENT: Partial<Record<ConstructId, Partial<ConstructContent>>> = {
+  agency: {
+    whatItMeasures: "Whether the significant calls stay with you and your team: pricing, hiring, customer commitments, strategy, and risk. AI can advise on all of them. The question is who decides, and whether the reasoning can be explained afterwards.",
+    whyItMatters: "A decision you cannot explain is a decision you cannot defend, to a customer, a lender, an insurer, or a court. It is also a decision you cannot learn from, because the reasoning was never yours to examine.",
+    atStrong: "Your responses are consistent with AI advising while you decide. Recommendations are treated as input rather than instruction, and you can say why you took or left them.",
+    atDeveloping: "Your responses suggest you usually make the call, with moments under time pressure where a confident recommendation is accepted more or less as it arrives.",
+    atWatch: "Your answers suggest your business is exposed to decision abdication: significant calls being made by the tool in practice, whatever the intention. This is the quietest of the exposures because the output usually looks fine.",
+    research: { claim: "Practitioner guidance for owner-led businesses converges on the same condition: a named human owner with authority to review, for every process AI touches.", source: "Owner-led AI practice guidance" },
+    practices: [
+      "Before any significant AI-assisted decision, write the two or three judgments the decision actually turns on, and make those yourself.",
+      "When you accept a recommendation, record one line on why it beat the alternative. If you cannot write the line, the decision is not yours yet.",
+      "Keep a visible boundary in your own documents between what the tool proposed and what you decided.",
+    ],
+  },
+  verification: {
+    whatItMeasures: "Whether anything AI-generated is checked by a competent person before it carries consequence: quotes, invoices, contracts, filings, customer replies, and anything published in your name.",
+    whyItMatters: "A small business has no legal department to absorb an AI mistake. The cost of a confident error lands on the owner, and it lands in front of the customer or the regulator rather than in a review meeting.",
+    atStrong: "Your responses describe checking as a built-in step rather than a reaction to suspicion, which is the form that actually protects a business.",
+    atDeveloping: "Your responses suggest checking happens when something feels off. That catches the obvious errors and misses the plausible ones, which are the expensive kind.",
+    atWatch: "Your answers are consistent with AI output reaching customers, contracts, or your books without a proportionate check. Every unchecked output that happens to be right trains the habit that will eventually pass along one that is not.",
+    research: { claim: "Owners in a 2026 survey of more than a thousand US small businesses named accuracy and data security as their leading barriers, ahead of cost.", source: "Simply Business, 2026" },
+    practices: [
+      "Put one approval gate in front of anything AI-generated that reaches a customer, a contract, or the books.",
+      "Ban AI-drafted legal or financial language outright, and keep reviewed standard wording that people can reach for instead.",
+      "Check one output a week that you expect to be correct. Checking only your doubts trains the wrong reflex.",
+    ],
+  },
+  dependencySafety: {
+    whatItMeasures: "What happens to trading if the tools stop: whether core processes are documented outside a chat history, whether data and configurations are exportable, and whether anyone besides one person can run them.",
+    whyItMatters: "Vendors change price, change terms, and disappear. A process that exists only inside a subscription is a liability that does not appear on any balance sheet until the month it is called in.",
+    atStrong: "Your responses are consistent with retained operational independence. AI is accelerating work the business could still perform, which is the healthy arrangement.",
+    atDeveloping: "Your responses suggest the business would keep trading through an outage, more slowly and with visible strain in places.",
+    atWatch: "Your answers suggest your business is exposed to a single point of failure: processes that exist mainly inside a tool, or inside one person's account.",
+    research: { claim: "Nearly half of AI users in a 2026 survey said at least one key business function would malfunction if their primary AI vendor went offline. BCG names the deeper version of this cognitive lock-in, where an external model becomes part of how the organisation thinks.", source: "Zapier, 2026; BCG, 2026" },
+    practices: [
+      "Run a vendor exit test once a quarter: export your data and prompts, and run one dependent process the manual way for a day.",
+      "Document every AI-dependent process to the point where a competent temp could run it from the page.",
+      "Name a tested alternative for each critical tool before you need one.",
+    ],
+  },
+  fluency: {
+    whatItMeasures: "Whether the right tool meets the right process: naming the process, the number you expect to move, and the person who owns the result, then designing the workflow with an approval gate and a known twelve-month cost.",
+    whyItMatters: "Most of the money lost on AI is not lost to bad models. It is lost to the wrong process automated well, to shelfware nobody adopted, and to costs that were never modelled past the trial.",
+    atStrong: "Your responses describe deliberate fit: you can say what a tool is for, what it should move, and when you would decline it.",
+    atDeveloping: "Your responses suggest real working skill with room to grow, most often in matching the tool to a bounded process rather than to a whole function.",
+    atWatch: "Your answers are consistent with tools being adopted on promise rather than fit. That is a spending and attention problem before it is a technology problem.",
+    research: { claim: "MIT's Project NANDA report found that about 95 percent of enterprise generative AI pilots produced no measurable profit and loss impact, attributing it to how tools and organisations integrate rather than to model quality, and noting that budgets concentrate in sales and marketing while back-office automation returns more.", source: "MIT Project NANDA, The GenAI Divide, 2025" },
+    practices: [
+      "Adopt a rule: no automation without a named process, a baseline number, and a person who owns the result.",
+      "Ask any vendor what a bad day looks like, then model twelve months of cost including the work you will still do by hand.",
+      "Start with draft-and-approve rather than full autonomy. It captures most of the value at a fraction of the exposure.",
+    ],
+  },
+  transfer: {
+    whatItMeasures: "Whether AI-assisted work turns into documented process, templates, and team capability the business owns, rather than staying in individual accounts and heads.",
+    whyItMatters: "Knowledge that lives in one person's prompts leaves with that person, or with the subscription. Captured knowledge is the part of AI work that survives staff turnover and vendor change, and it is the part that shows up in a valuation.",
+    atStrong: "Your responses describe capture as routine: what works gets written down, stored in the business's own systems, and taught to a second person.",
+    atDeveloping: "Your responses suggest partial capture. The shape of the method is known, and reproducing it still depends on the person who built it.",
+    atWatch: "Your answers are consistent with operating knowledge that the business does not actually hold. It works until the person or the subscription goes.",
+    research: { claim: "Practitioner guidance converges on process capture as the condition that separates AI spending from AI capability in owner-led firms.", source: "Owner-led AI practice guidance" },
+    practices: [
+      "Make process capture a standing condition for anyone who builds an AI workflow: a written procedure, stored prompts, and a trained second person.",
+      "Keep prompts and configurations in the business's own systems rather than in personal accounts.",
+      "Review captured procedures quarterly, and retire the ones that no longer match how the work runs.",
+    ],
+  },
+  amplification: {
+    whatItMeasures: "Whether AI improves the quality of thinking in the business (scenarios, stress tests, options, customer and market insight) or only the speed at which the same thinking is produced.",
+    whyItMatters: "Faster production of an unexamined plan is not an advantage. The durable gain from these tools is better questions and earlier sight of risk, which is available to any owner willing to be argued with.",
+    atStrong: "Your responses describe AI used to stress-test and widen: it argues against you, surfaces what you missed, and changes decisions rather than merely dressing them.",
+    atDeveloping: "Your responses suggest genuine amplification in places, usually when you deliberately ask for challenge rather than assistance.",
+    atWatch: "Your answers are consistent with production rather than amplification. The work arrives sooner and the thinking behind it is largely unchanged.",
+    research: { claim: "The same technology, designed deliberately, produced roughly double the learning gains of established practice. How a tool is used carries more of the effect than whether it is used.", source: "Kestin et al., Scientific Reports, 2025" },
+    practices: [
+      "Ask for the strongest case against your current plan before you ask for help making it.",
+      "On any significant decision, have AI build three scenarios and name the assumption each one rests on.",
+      "State your own position first, so the tool has something to push against rather than a blank to fill.",
+    ],
+  },
+  skillGrowth: {
+    whatItMeasures: "Whether your people are growing more capable alongside AI: juniors still learning the craft, seniors mentoring, roles redesigned rather than hollowed out.",
+    whyItMatters: "A team that cannot check what it ships is a quality problem waiting for a busy week. Deskilling is slow, invisible in the output, and expensive to reverse once the people who knew the craft have moved on.",
+    atStrong: "Your responses are consistent with capability that keeps growing. Time the tools save is going somewhere that develops the team.",
+    atDeveloping: "Your responses suggest the team is holding its ground, with the development of the underlying craft left largely to chance.",
+    atWatch: "Your answers suggest your business is exposed to deskilling: work being produced that the people responsible for it could not evaluate or reproduce.",
+    research: { claim: "Practice with an unrestricted assistant left learners around 17 percent worse on a later unaided exam than practising without it. Assistance raised output while lowering what was retained.", source: "Bastani et al., PNAS, 2025" },
+    practices: [
+      "Name the skills each role must keep, and check them unaided on a regular cycle.",
+      "Pair anyone learning a craft with someone who can teach it, and let AI use grow as competence grows.",
+      "Where a tool saves time on a task, spend some of it on the harder version of the same work.",
+    ],
+  },
+  adaptability: {
+    whatItMeasures: "Whether AI workflows are reviewed against measured outcomes, failing pilots are stopped, and the tools are re-evaluated as the market and customer expectations move.",
+    whyItMatters: "Activity is easy to mistake for progress. Without a baseline number and a review date, a workflow that stopped paying can run for a year while everyone reports that things feel faster.",
+    atStrong: "Your responses describe review on a cadence, with the authority to stop something that is not delivering.",
+    atDeveloping: "Your responses suggest you adapt once a problem becomes obvious, which works but runs a step behind.",
+    atWatch: "Your answers are consistent with pilot theatre: workflows running without a measured result, and no established point at which they are stopped.",
+    research: { claim: "MIT's Project NANDA attributes the failure of most enterprise pilots to organisational learning rather than model quality: the tools were adopted, the workflow around them was not revised.", source: "MIT Project NANDA, The GenAI Divide, 2025" },
+    practices: [
+      "Give every AI workflow a baseline number before it starts, and a monthly review with the authority to kill it.",
+      "Publish the review result to the team, so keeping and stopping are both normal outcomes.",
+      "Once a quarter, check what your customers and competitors now expect of you, not only what your tools now do.",
+    ],
+  },
+  responsibleUse: {
+    whatItMeasures: "Whether there is a written AI use policy that staff actually follow, whether customer and employee data is protected, whether unofficial tool use has been surfaced rather than assumed absent, and whether customers are dealt with honestly.",
+    whyItMatters: "This is where the legal and reputational exposure sits. Data pasted into a personal tool has left the business, and it does not come back because a policy was written afterwards.",
+    atStrong: "Your responses describe governance you could show someone: a policy people know, approved tools, and a real view of what is being used.",
+    atDeveloping: "Your responses suggest boundaries that exist mostly as understanding rather than as a written and known standard.",
+    atWatch: "Your answers suggest your business is exposed on data and governance. This reading should be treated as a lower bound, because owners consistently overestimate their visibility into staff tool use.",
+    research: { claim: "Shadow AI research through 2026 consistently reports that most organisations have employees using unsanctioned AI tools, that a meaningful share of pasted content is sensitive, that roughly four in ten companies have no AI use policy, and that executives overestimate their visibility into staff use by a wide margin.", source: "IBM, Gartner, Cyberhaven and Verizon DBIR, as compiled by industry trackers, 2026" },
+    practices: [
+      "Write a one-page AI use policy naming approved tools and the data that must never be pasted anywhere.",
+      "Survey the team without blame to find out what is actually being used, then approve a safe option for the real need.",
+      "Decide your disclosure position for customer-facing AI before a customer asks, rather than after.",
+    ],
+  },
+  creativity: {
+    whatItMeasures: "Whether AI sharpens a distinct voice, offer, and customer experience, or produces what every competitor's AI produces.",
+    whyItMatters: "Generic content is discounted by the people you most want to reach, and it is now recognised quickly. A distinctive voice is one of the few advantages a smaller business holds over a larger one.",
+    atStrong: "Your responses describe your own ideas leading, with AI used to stretch and pressure-test them rather than to supply them.",
+    atDeveloping: "Your responses suggest genuine distinctiveness that sometimes gets anchored by whatever the tool offers first.",
+    atWatch: "Your answers are consistent with brand homogenisation: customer-facing material that could belong to any business in your category.",
+    research: { claim: "Consumer research in 2026 reports that a substantial share of people prefer brands that do not use generative AI in customer-facing content, that the share who would trust a favourite brand less for heavy AI use roughly doubled year over year, and that customers detect AI by replies that arrive too fast or read too formulaically.", source: "Gartner, Fractl and Klaviyo, 2026" },
+    practices: [
+      "Set a voice standard: AI drafts, a person with your voice finishes, and nothing goes out that could be any competitor's.",
+      "Put specifics back in. Names, numbers, and things only your business would know are what generic content cannot fake.",
+      "Decide where a customer would reasonably expect a human, and either give them one or say plainly that you did not.",
+    ],
+  },
+};
+
+export const PERSONA_DISPLAY: Partial<Record<Persona, PersonaDisplay>> = {
+  business: {
+    reportTitle: "Business AI Health Check",
+    indexName: "Business AI Health Score",
+    subject: "business",
+    constructNames: BUSINESS_CONSTRUCT_NAMES,
+    constructPrinciples: BUSINESS_PRINCIPLES,
+    riskName: "Continuity Risk",
+    composites: {
+      futureReadiness: "Market Readiness",
+      augmentation: "Strategic Advantage",
+      judgment: "Decision Integrity",
+      capabilityTransfer: "Knowledge Retention",
+      dependencyIndex: "Continuity Exposure",
+      underexposure: "Adoption Gap",
+    },
+    stageNames: BUSINESS_STAGE_NAMES,
+    stageDetail: BUSINESS_STAGE_DETAIL,
+    archetypes: BUSINESS_ARCHETYPES,
+    content: BUSINESS_CONTENT,
+    fingerprintLabels: [
+      "Decision ownership", "Verification discipline", "Continuity", "Governance",
+      "Knowledge capture", "Strategic amplification", "Market readiness",
+    ],
+    disclaimerExtra: "This is not legal, financial, or compliance advice.",
+  },
+};
+
+/* ------------------------------------------------------------- accessors */
+
+const of = (persona?: Persona) => (persona ? PERSONA_DISPLAY[persona] : undefined);
+
+export const isBusiness = (persona?: Persona) => persona === "business";
+
+export function constructName(persona: Persona | undefined, id: ConstructId): string {
+  return of(persona)?.constructNames[id] ?? CONSTRUCTS[id].name;
+}
+
+/** The name to print when a dimension is reported as a risk rather than a strength. */
+export function reportedConstructName(persona: Persona | undefined, id: ConstructId): string {
+  if (!CONSTRUCTS[id].reportedAsRisk) return constructName(persona, id);
+  return of(persona)?.riskName ?? "Dependency Risk";
+}
+
+export function constructPrinciple(persona: Persona | undefined, id: ConstructId): string {
+  return of(persona)?.constructPrinciples[id] ?? CONSTRUCTS[id].principle;
+}
+
+export function constructContent(persona: Persona | undefined, id: ConstructId): ConstructContent {
+  const base = CONSTRUCT_CONTENT[id];
+  const over = of(persona)?.content?.[id];
+  return over ? { ...base, ...over } : base;
+}
+
+export function stageName(persona: Persona | undefined, stage: number): string {
+  return of(persona)?.stageNames?.[stage] ?? STAGES.find((s) => s.stage === stage)?.name ?? "";
+}
+
+export function stageDetail(persona: Persona | undefined, stage: number) {
+  return of(persona)?.stageDetail?.[stage] ?? STAGE_DETAIL[stage];
+}
+
+export function compositeName(
+  persona: Persona | undefined,
+  key: keyof PersonaDisplay["composites"],
+  fallback: string
+): string {
+  return of(persona)?.composites[key] ?? fallback;
+}
+
+export function indexName(persona: Persona | undefined): string {
+  return of(persona)?.indexName ?? "developmental index";
+}
+
+export function reportTitle(persona: Persona | undefined): string {
+  return of(persona)?.reportTitle ?? "The Neogogy Formation Compass";
+}
+
+export function archetypeDisplay(
+  persona: Persona | undefined,
+  archetype: CompassResult["archetype"]
+): CompassResult["archetype"] {
+  const over = of(persona)?.archetypes?.[archetype.id];
+  if (!over) return archetype;
+  return {
+    id: archetype.id,
+    name: over.name,
+    tagline: over.tagline ?? archetype.tagline,
+    narrative: over.narrative ?? archetype.narrative,
+  };
+}
+
+export function fingerprintLabels(persona: Persona | undefined): string[] | undefined {
+  return of(persona)?.fingerprintLabels;
+}
+
+export function disclaimerExtra(persona: Persona | undefined): string {
+  return of(persona)?.disclaimerExtra ?? "";
+}

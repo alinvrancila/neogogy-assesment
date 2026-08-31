@@ -19,3 +19,34 @@ Phase 3, criterion (requires partners such as LCI classes): compare student prof
 Phase 4, longitudinal: retest at 3 and 6 months; stage transitions should track the reported behavior changes from the roadmap, and the calibration gap should shrink on retest if the report is doing formative work.
 
 Every phase is cheap to act on because raw answers are stored: rescoring under revised weights, thresholds, or construct structure is a batch job, not a re-survey (see MIGRATION.md).
+
+---
+
+## The Business Owner persona
+
+Everything above applies, and three caveats are specific to this persona.
+
+**One person answers for a whole business.** Every other persona asks someone
+about their own practice, which they are in the best position to know. This one
+asks an owner about an organisation: what staff do, what data moves, what would
+happen during an outage. The answers are still self-report, but they are now
+self-report at one remove, and the gap between what an owner can see and what is
+happening is real.
+
+**Governance results should be read as a lower bound of exposure.** Research
+through 2026 consistently finds that executives overestimate their visibility
+into staff AI use by a wide margin, and that unsanctioned tool use is the norm
+rather than the exception. A business scoring well on Governance, Data, and Trust
+has answered that it has a policy and knows what is in use. It has not
+demonstrated that the policy is followed. The report says this in the dimension
+content rather than leaving it to be inferred.
+
+**Not legal, financial, or compliance advice.** The register names categories of
+exposure, including legal and compliance ones, because an owner needs to know
+which kind of problem they are looking at. Naming a category is not a legal
+opinion, the instrument has no view of the jurisdiction, the contracts, or the
+regulator involved, and the disclaimer on every business report says so.
+
+**What the persona deliberately does not claim.** It does not price exposure, it
+does not estimate probability, and it does not benchmark one business against
+another. Severity in the register reflects how the answers landed, nothing more.

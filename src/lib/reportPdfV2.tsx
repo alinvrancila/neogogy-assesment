@@ -21,6 +21,9 @@ import {
 import type { AttemptComparison } from '@/lib/history';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
 import {
+  constructName, reportedConstructName, stageName, indexName, reportTitle, disclaimerExtra,
+} from '@/engine/display';
+import {
   VIEW as MAP_VIEW, pointAtIndex, routePath, routeRidge,
   GATE_DEFS,
 } from '@/components/compass/ascent/route';
@@ -238,7 +241,7 @@ function RadarSvg({ r }: { r: CompassResult }) {
       })}
       {ids.map((id, i) => {
         const [lx, ly] = pt(i, R + 16);
-        const label = SHORT[id] ?? CONSTRUCTS[id].name;
+        const label = SHORT[id] ?? constructName(r.persona, id);
         // rough centring: the renderer has no text metrics inside Svg
         const x = Math.max(3, Math.min(W - label.length * 3.9 - 3, lx - label.length * 1.95));
         return (
@@ -326,8 +329,9 @@ function AscentMap({ r }: { r: CompassResult }) {
             const band = [46, 84, 122][st.stage % 3];
             const lx = Math.max(80, Math.min(MAP_VIEW.w - 130, p.x));
             // keep long names clear of the summit marker on the right edge
-            const nw = st.name.length * 6.6;
-            const nx = Math.min(lx - Math.min(st.name.length * 3.4, 100), MAP_VIEW.w - 78 - nw);
+            const label = stageName(r.persona, st.stage);
+            const nw = label.length * 6.6;
+            const nx = Math.min(lx - Math.min(label.length * 3.4, 100), MAP_VIEW.w - 78 - nw);
             return (
               <React.Fragment key={st.stage}>
                 <Line x1={lx} y1={band + 8} x2={p.x} y2={p.y - 14}
@@ -338,7 +342,7 @@ function AscentMap({ r }: { r: CompassResult }) {
                 </SvgText>
                 <SvgText x={nx} y={band + 20} style={{ fontFamily: 'Spectral', fontSize: 15 }}
                   fill={isHere ? T.oxblood : isNext ? T.teal : T.ink}>
-                  {st.name}
+                  {label}
                 </SvgText>
                 <Circle cx={p.x} cy={p.y} r={isHere ? 11 : 7}
                   fill={reached ? T.teal : T.card}
@@ -433,7 +437,7 @@ function Ladder({ r }: { r: CompassResult }) {
                 fontWeight: isHere ? 700 : 400,
                 color: isHere ? T.oxblood : reached ? T.ink : T.mute,
               }}>
-                {s.name}
+                {stageName(r.persona, s.stage)}
                 {isHere ? '   YOU ARE HERE' : isNext ? '   NEXT LEDGE' : ''}
               </Text>
               {(isHere || isNext) ? (
@@ -460,7 +464,7 @@ function Bars({ r }: { r: CompassResult }) {
         return (
           <View key={id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 3.5 }}>
             <Text style={{ fontSize: 8, width: 118, color: T.ink }}>
-              {def.reportedAsRisk ? 'Dependency Risk' : def.name}
+              {reportedConstructName(r.persona, id)}
             </Text>
             <View style={{ flex: 1, height: 7, borderRadius: 4, backgroundColor: '#EDE5D7' }}>
               <View style={{ width: `${Math.max(2, shown)}%`, height: 7, borderRadius: 4, backgroundColor: col }} />
@@ -669,7 +673,7 @@ function GateGap({ r }: { r: CompassResult }) {
       backgroundColor: T.card, marginBottom: 8,
     }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 10.5 }}>{CONSTRUCTS[c].name}</Text>
+        <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 10.5 }}>{constructName(r.persona, c)}</Text>
         <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 15, color: bandTextColor(d.score) }}>{d.score}</Text>
       </View>
       <View style={{ height: 9, borderRadius: 5, backgroundColor: '#EDE5D7', marginTop: 6, position: 'relative' }}>
@@ -694,7 +698,7 @@ function GateGap({ r }: { r: CompassResult }) {
 function ThresholdStrip({ r }: { r: CompassResult }) {
   const rows = (Object.keys(CONSTRUCTS) as ConstructId[])
     .map((id) => ({
-      name: CONSTRUCTS[id].reportedAsRisk ? 'Dependency Risk' : CONSTRUCTS[id].name,
+      name: reportedConstructName(r.persona, id),
       healthy: r.dimensions[id].score,
       shown: CONSTRUCTS[id].reportedAsRisk ? r.dimensions[id].reportedScore : r.dimensions[id].score,
     }))
@@ -735,8 +739,7 @@ function ThresholdStrip({ r }: { r: CompassResult }) {
         </View>
       ))}
       <Text style={{ fontFamily: 'Plex', fontSize: 6.2, color: T.mute, marginTop: 4 }}>
-        Plotted on the healthy reading, so Dependency Risk sits by its independent capability
-        rather than by the risk number. Below 45 is named a vulnerability, above 65 a strength.
+        {`Plotted on the healthy reading, so ${reportedConstructName(r.persona, 'dependencySafety')} sits by its independent capability rather than by the risk number. Below 45 is named a vulnerability, above 65 a strength.`}
       </Text>
     </View>
   );
@@ -912,6 +915,150 @@ function NextStagePanel({ r }: { r: CompassResult }) {
   );
 }
 
+const HEAD_CELL = {
+  fontFamily: 'Plex' as const, fontSize: 6, letterSpacing: 0.9, color: T.mute,
+};
+
+/** Business Owner: the register, on its own page, rows that never split. */
+function RiskRegisterPdf({ r }: { r: CompassResult }) {
+  const LABEL: Record<string, string> = {
+    legal: 'Legal and compliance', financial: 'Financial', operational: 'Operational',
+    reputational: 'Reputational', strategic: 'Strategic',
+  };
+  const TINT: Record<string, string> = {
+    legal: '#F6E3E0', financial: '#F7EBD6', operational: '#E4EFEC',
+    reputational: '#F1E7F2', strategic: '#E7EAF2',
+  };
+  const INK: Record<string, string> = {
+    legal: '#7C2D26', financial: '#7A5312', operational: '#14584C',
+    reputational: '#5A3660', strategic: '#2A3757',
+  };
+
+  return (
+    <Page size="A4" style={S.light} wrap>
+      <View wrap={false}>
+        <Text style={S.eyebrow}>The exposure</Text>
+        <Text style={S.h2}>Risk register</Text>
+      </View>
+      {r.riskRegister.length === 0 ? (
+        <Text style={S.body}>
+          Nothing in your answers crossed an exposure threshold, so this register is empty. That is a
+          real result rather than a blank, and it is worth running again as your use grows.
+        </Text>
+      ) : (
+        <>
+          <Text style={S.body}>
+            Each line is an exposure your answers point to, the category it falls in, and the action
+            chosen for it. Severity reflects how your answers landed, not a probability. The plan
+            that follows is capped at five actions, so anything beyond that is listed here rather
+            than hidden.
+          </Text>
+          <View wrap={false} style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: T.hair, paddingBottom: 4, marginTop: 8 }}>
+            <Text style={{ ...HEAD_CELL, flex: 3 }}>EXPOSURE</Text>
+            <Text style={{ ...HEAD_CELL, width: 92 }}>CATEGORY</Text>
+            <Text style={{ ...HEAD_CELL, width: 116 }}>EVIDENCE</Text>
+            <Text style={{ ...HEAD_CELL, width: 108 }}>ACTION</Text>
+          </View>
+          {r.riskRegister.map((e) => (
+            <View key={e.title} wrap={false} style={{
+              flexDirection: 'row', paddingVertical: 7,
+              borderBottomWidth: 1, borderBottomColor: T.hair,
+            }}>
+              <View style={{ flex: 3, paddingRight: 8 }}>
+                <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 8.5 }}>{e.title}</Text>
+                <Text style={{ fontSize: 7.5, color: T.mute, lineHeight: 1.4, marginTop: 1 }}>{e.description}</Text>
+              </View>
+              <View style={{ width: 92, paddingRight: 6 }}>
+                <Text style={{
+                  fontFamily: 'Plex', fontSize: 6, letterSpacing: 0.4,
+                  color: INK[e.category], backgroundColor: TINT[e.category],
+                  paddingVertical: 2, paddingHorizontal: 4, borderRadius: 8,
+                }}>
+                  {LABEL[e.category]}
+                </Text>
+              </View>
+              <Text style={{ width: 116, fontFamily: 'Plex', fontSize: 6.8, color: T.mute, paddingRight: 6 }}>
+                {e.evidence}
+              </Text>
+              <Text style={{ width: 108, fontSize: 7.5 }}>
+                {e.action ?? 'Listed, not scheduled'}
+              </Text>
+            </View>
+          ))}
+        </>
+      )}
+      <Footer />
+    </Page>
+  );
+}
+
+/** Business Owner: the ninety day plan, on its own page, three blocks. */
+function NinetyDayPdf({ r }: { r: CompassResult }) {
+  return (
+    <Page size="A4" style={S.light} wrap>
+      <View wrap={false}>
+        <Text style={S.eyebrow}>What to do</Text>
+        <Text style={S.h2}>Your next ninety days</Text>
+        <Text style={S.body}>
+          Sequenced so that anything legal or financial comes first, because that kind of exposure
+          keeps accumulating while other work is done. Each action carries the checkpoint that tells
+          you it has actually happened.
+        </Text>
+      </View>
+      {r.ninetyDayPlan.map((phase) => (
+        <View key={phase.window} wrap={false} style={{
+          borderWidth: 1, borderColor: T.hair, borderLeftWidth: 3, borderLeftColor: T.teal,
+          borderRadius: 8, padding: 10, marginBottom: 8, backgroundColor: T.card,
+        }}>
+          <Text style={{ fontFamily: 'Plex', fontSize: 6.4, letterSpacing: 0.9, color: T.mute }}>
+            {phase.window.toUpperCase()}
+          </Text>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 11, color: T.oxblood, marginTop: 2 }}>
+            {phase.title}
+          </Text>
+          <Text style={{ fontSize: 7.6, color: T.mute, marginTop: 2, marginBottom: 4 }}>{phase.note}</Text>
+          {phase.actions.map((a) => (
+            <View key={a.capability} style={{ marginTop: 5, borderTopWidth: 1, borderTopColor: T.hair, paddingTop: 5 }}>
+              <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 9 }}>{a.capability}</Text>
+              <Text style={{ fontSize: 8, lineHeight: 1.45, marginTop: 1 }}>{a.practice}</Text>
+              <Text style={{ fontSize: 7.4, color: T.mute, marginTop: 2 }}>
+                <Text style={{ fontWeight: 700 }}>Checkpoint. </Text>{a.checkpoint}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ))}
+      <Footer />
+    </Page>
+  );
+}
+
+/** Business Owner: what happens if the main tool disappears for a week. */
+function ContinuityPdf({ r }: { r: CompassResult }) {
+  const continuity = r.dimensions.dependencySafety.score;
+  const capture = r.dimensions.transfer.score;
+  const verdict = continuity >= 65 && capture >= 55
+    ? 'Your responses are consistent with a business that would keep trading. Work would slow in places, and customers would be unlikely to see it.'
+    : continuity >= 45
+      ? 'Your responses suggest the business would keep going with visible strain: slower turnaround, and quality depending on who is available.'
+      : 'Your answers suggest work would stop in the affected areas until the tool returned, because the process largely lives inside it.';
+  return (
+    <View wrap={false} style={{
+      borderWidth: 1, borderColor: T.hair, borderLeftWidth: 3, borderLeftColor: T.teal,
+      borderRadius: 8, padding: 10, marginBottom: 10, backgroundColor: T.card,
+    }}>
+      <Text style={S.eyebrow}>The continuity test</Text>
+      <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 11, marginBottom: 3 }}>
+        What happens if your main AI tool disappears for a week
+      </Text>
+      <Text style={{ fontSize: 8.5, lineHeight: 1.5 }}>{verdict}</Text>
+      <Text style={{ fontSize: 7.6, color: T.mute, marginTop: 4, lineHeight: 1.45 }}>
+        {`Read from operational continuity (${continuity}) and institutional knowledge capture (${capture}). Continuity exposure sits at ${r.composites.dependencyIndex} out of 100, where higher means more of what you produce would be hard to reproduce without the tools.`}
+      </Text>
+    </View>
+  );
+}
+
 /* ----------------------------------------------------------------- pages */
 
 const Footer = () => (
@@ -921,7 +1068,9 @@ const Footer = () => (
   </View>
 );
 
-function Cover({ r, name, dateStr }: { r: CompassResult; name: string; dateStr: string }) {
+function Cover({ r, name, dateStr, company, industry }: {
+  r: CompassResult; name: string; dateStr: string; company?: string; industry?: string;
+}) {
   const IVORY = '#F7F1E4';
   const SOFT = 'rgba(247,241,228,0.74)';
   const FAINT = 'rgba(247,241,228,0.55)';
@@ -941,7 +1090,9 @@ function Cover({ r, name, dateStr }: { r: CompassResult; name: string; dateStr: 
 
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: M, paddingTop: 54 }}>
         <Text style={{ fontFamily: 'Plex', fontSize: 8, letterSpacing: 2.4, color: '#4FD3B8' }}>
-          NEOGOGY  ·  THE FORMATION COMPASS
+          {r.persona === 'business'
+            ? 'NEOGOGY  ·  BUSINESS AI HEALTH CHECK'
+            : 'NEOGOGY  ·  THE FORMATION COMPASS'}
         </Text>
 
         {/* the reader's own name, given real presence */}
@@ -952,14 +1103,19 @@ function Cover({ r, name, dateStr }: { r: CompassResult; name: string; dateStr: 
           fontFamily: 'Spectral', fontWeight: 700, fontSize: 30, color: IVORY,
           marginTop: 6, lineHeight: 1.12,
         }}>
-          {name || 'Your report'}
+          {(r.persona === 'business' && company) || name || 'Your report'}
         </Text>
+        {r.persona === 'business' && (company || industry) ? (
+          <Text style={{ fontFamily: 'Plex', fontSize: 8.5, color: SOFT, marginTop: 8 }}>
+            {[company ? name : '', industry].filter(Boolean).join('  ·  ')}
+          </Text>
+        ) : null}
 
         <View style={{ height: 1, backgroundColor: 'rgba(247,241,228,0.28)', marginTop: 26, marginBottom: 26 }} />
 
         {/* the result, as the headline */}
         <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.8, color: FAINT }}>
-          YOUR ASCENT WITH AI
+          {r.persona === 'business' ? 'YOUR BUSINESS AND AI' : 'YOUR ASCENT WITH AI'}
         </Text>
         <Text style={{
           fontFamily: 'Spectral', fontWeight: 800, fontSize: archSize, color: IVORY,
@@ -997,7 +1153,7 @@ function Cover({ r, name, dateStr }: { r: CompassResult; name: string; dateStr: 
             {r.stage.rawIndex}
           </Text>
           <Text style={{ fontFamily: 'Plex', fontSize: 5.4, letterSpacing: 1.1, color: IVORY, marginTop: 3, opacity: 0.82 }}>
-            DEVELOPMENTAL INDEX
+            {r.persona === 'business' ? 'AI HEALTH SCORE' : 'DEVELOPMENTAL INDEX'}
           </Text>
         </View>
 
@@ -1037,15 +1193,19 @@ export async function generateCompassPdf(args: {
   result: CompassResult;
   name?: string;
   comparison?: AttemptComparison | null;
+  /** Business Owner only, volunteered by the respondent. */
+  company?: string;
+  industry?: string;
 }): Promise<Buffer> {
-  const { result: r, name = '', comparison = null } = args;
+  const { result: r, name = '', comparison = null, company, industry } = args;
+  const isBusiness = r.persona === 'business';
   const sections = generateReportSections(r);
   const byKey = (k: string) => sections.find((s) => s.key === k)!;
   const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const doc = (
-    <Document title="Neogogy Formation Compass" author="International Center for Applied Neogogy">
-      <Cover r={r} name={name} dateStr={dateStr} />
+    <Document title={reportTitle(r.persona)} author="International Center for Applied Neogogy">
+      <Cover r={r} name={name} dateStr={dateStr} company={company} industry={industry} />
 
       {/*
         One flowing light page. react-pdf paginates it, and every content block
@@ -1103,6 +1263,7 @@ export async function generateCompassPdf(args: {
             </Text>
           </View>
           <View wrap={false} style={{ marginBottom: 10 }}><Ladder r={r} /></View>
+          {isBusiness ? <ContinuityPdf r={r} /> : null}
           <Lines lines={byKey('continuum').lines} />
           <View style={S.gap} />
         </>
@@ -1235,6 +1396,11 @@ export async function generateCompassPdf(args: {
         <Footer />
       </Page>
 
+      {/* Business Owner: the two outputs that need a page each, with tables
+          whose rows never split across a break. */}
+      {isBusiness ? <RiskRegisterPdf r={r} /> : null}
+      {isBusiness && r.ninetyDayPlan.length ? <NinetyDayPdf r={r} /> : null}
+
       {/* Closing */}
       <Page size="A4" style={S.closing}>
         {/* eslint-disable-next-line jsx-a11y/alt-text */}
@@ -1254,7 +1420,9 @@ export async function generateCompassPdf(args: {
             The summit is a direction, not a finish line.
           </Text>
           <View style={{ height: 1, backgroundColor: T.hair, marginVertical: 20 }} />
-          <Text style={{ fontSize: 9, lineHeight: 1.55, color: T.mute, maxWidth: 400 }}>{REPORT_DISCLAIMER}</Text>
+          <Text style={{ fontSize: 9, lineHeight: 1.55, color: T.mute, maxWidth: 400 }}>
+            {REPORT_DISCLAIMER}{disclaimerExtra(r.persona) ? ` ${disclaimerExtra(r.persona)}` : ''}
+          </Text>
         </View>
         <Text style={{ fontFamily: 'Plex', fontSize: 8.5, color: T.mute }}>
           International Center for Applied Neogogy · www.ican.ph

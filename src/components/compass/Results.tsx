@@ -23,6 +23,10 @@ import {
 } from './ResultCharts';
 import { Markdown } from './Markdown';
 import AscentResults from './ascent/AscentResults';
+import {
+  HealthHeadline, HelpingHarming, RiskRegister, ContinuityTest, TrustAndGovernance,
+  DecisionIntegrity, NinetyDayPlan, OwnersExperiment,
+} from './BusinessModules';
 import ShareResult from './ShareResult';
 import type { AttemptComparison } from '@/lib/history';
 import { MethodologyDisclosure, RetakeInvite } from './ascent/modules';
@@ -268,10 +272,23 @@ export default function Results({
 }) {
   const head = reportHead(result);
   const sections = generateReportSections(result);
+  const isBusiness = result.persona === 'business';
 
   return (
     <div className="wrap results">
+      {isBusiness ? <HealthHeadline result={result} /> : null}
+
       <AscentResults result={result} comparison={comparison} />
+
+      {isBusiness ? (
+        <>
+          <HelpingHarming result={result} />
+          <RiskRegister result={result} />
+          <ContinuityTest result={result} />
+          <TrustAndGovernance result={result} />
+          <DecisionIntegrity result={result} />
+        </>
+      ) : null}
 
       <ConfidenceBanner result={result} />
 
@@ -281,9 +298,19 @@ export default function Results({
         </p>
       ) : null}
 
-      {orderedForScreen(sections).map(({ section, lead }) => (
-        <SectionBlock key={section.key} section={section} result={result} lead={lead} />
-      ))}
+      {orderedForScreen(sections)
+        // the business report answers these in its own modules above
+        .filter(({ section }) => !(isBusiness && ['helping', 'harming'].includes(section.key)))
+        .map(({ section, lead }) => (
+          <SectionBlock key={section.key} section={section} result={result} lead={lead} />
+        ))}
+
+      {isBusiness ? (
+        <>
+          <NinetyDayPlan result={result} />
+          <OwnersExperiment />
+        </>
+      ) : null}
 
       <div className="results-cta">
         <h3>Keep going</h3>

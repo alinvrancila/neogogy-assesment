@@ -127,6 +127,17 @@ export type SubmissionMeta = {
   /** Which ad platform's click identifier was on the landing URL. */
   clickId?: string;
 
+  /* --- the Business Owner's optional context ----------------------------- */
+  /** All optional, volunteered by the respondent, never used in scoring. It
+   *  lives inside meta rather than in new columns, because meta is the record's
+   *  existing free-form metadata field. */
+  business?: {
+    company?: string;
+    industry?: string;
+    teamSize?: string;
+    tools?: string;
+  };
+
   /* --- what the request disclosed, filled in on the server --------------- */
   ip?: string;
   userAgent?: string;

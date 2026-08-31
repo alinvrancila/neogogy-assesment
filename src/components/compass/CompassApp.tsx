@@ -28,13 +28,19 @@ import { IcanLogo, DimensionBars, DimensionRadar } from './Visuals';
 import { STAGES } from '@/engine/config';
 import Results, { GateForm, type GateData, type GateState } from './Results';
 
-type Screen = 'hero' | 'setup' | 'quiz' | 'gate' | 'results';
+type Screen = 'hero' | 'setup' | 'context' | 'quiz' | 'gate' | 'results';
 
 const PERSONAS: Array<{
   id: Persona; name: string; who: string; blurb: string; expect: string[];
+  /** Two sentences, shown on the card, explaining what this set assesses. */
+  explain: string;
+  /** A short line under the explanation: how long, and how to answer. */
+  note?: string;
+  isNew?: boolean;
 }> = [
   {
     id: 'student',
+    explain: 'Questions about your own learning and your own work. They ask what you actually do with AI on assignments, revision and exams, not what you know about it.',
     name: 'Student',
     who: 'You are studying, at any level',
     blurb: 'Questions about your own learning and your own work.',
@@ -46,6 +52,7 @@ const PERSONAS: Array<{
   },
   {
     id: 'teacher',
+    explain: 'Questions about your own practice, not about grading your students. They ask how AI shapes your planning, your materials and what reaches a class.',
     name: 'Teacher',
     who: 'You teach, train or lecture',
     blurb: 'Questions about your own practice, not about grading your students.',
@@ -57,6 +64,7 @@ const PERSONAS: Array<{
   },
   {
     id: 'parent',
+    explain: 'Questions about your own use and the decisions you make at home. They ask how AI shows up in homework, in school communication, and in what you share about your children.',
     name: 'Parent',
     who: 'You are raising a child of any age',
     blurb: 'Questions about your own use and your family decisions.',
@@ -68,6 +76,7 @@ const PERSONAS: Array<{
   },
   {
     id: 'administrator',
+    explain: 'Questions about your own leadership work and the calls you make. They ask how AI shapes your analysis, your decisions and what you do with confidential material.',
     name: 'Leader or administrator',
     who: 'You lead a team, school or organisation',
     blurb: 'Questions about your own leadership work and your decisions.',
@@ -75,6 +84,20 @@ const PERSONAS: Array<{
       'Analysis, budgets and board-ready work',
       'Vendor claims, dashboards and personnel decisions',
       'Policy, disclosure and confidential information',
+    ],
+  },
+  {
+    id: 'business',
+    name: 'Business Owner',
+    isNew: true,
+    who: 'You own, founded or run a business',
+    blurb: 'Questions about the business, not about you.',
+    explain: 'This one is different. It does not assess how you learn; it assesses your business: whether the way you and your team use AI is strengthening or weakening your decisions, your continuity, your customers\u2019 trust, your knowledge, and your people.',
+    note: 'About 10 minutes. Answer for the business as it actually runs today, not as you intend it to run.',
+    expect: [
+      'Decisions, pricing and what reaches a customer',
+      'What happens if your main AI tool disappears',
+      'Staff tool use, customer data and your policy',
     ],
   },
 ];
@@ -141,6 +164,8 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
   const [emailed, setEmailed] = useState(false);
   const [comparison, setComparison] = useState<AttemptComparison | null>(null);
   const [firstName, setFirstName] = useState('');
+  /** Business Owner only, every field optional, never scored. */
+  const [biz, setBiz] = useState<BusinessContext>({ company: '', industry: '', teamSize: '', tools: '' });
 
   const sessionId = useRef<string>('');
   const startedRef = useRef(false);
@@ -320,6 +345,7 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
           ...submission, ...data,
           name: `${data.firstName} ${data.lastName}`.trim(),
           sessionId: sessionId.current,
+          business: persona === 'business' ? biz : undefined,
           meta: {
             durationMs: startedAt.current ? Date.now() - startedAt.current : undefined,
             revisions: revisions.current,
@@ -348,13 +374,13 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
     } catch {
       setGate({ submitting: false, error: 'Network error. Please check your connection and try again.' });
     }
-  }, [submission, clearDraft]);
+  }, [submission, clearDraft, biz, persona]);
 
   /* -------------------------------------------------------------- keyboard */
   const atUsage = pos === 0;
   const currentItem: Item | null = atUsage ? USAGE_ITEM : (items[pos - 1] ?? null);
   const currentChoices: Choice[] = useMemo(
-    () => (currentItem ? optionsFor(currentItem) : []),
+    () => (currentItem ? optionsFor(currentItem, sessionId.current) : []),
     [currentItem]
   );
 
@@ -406,6 +432,22 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
         onB2={setB2}
         onBack={() => setScreen('hero')}
         onStart={() => {
+          if (persona === 'business') { setScreen('context'); return; }
+          startedAt.current = Date.now();
+          setPos(0);
+          setScreen('quiz');
+        }}
+      />
+    );
+  }
+
+  if (screen === 'context') {
+    return shell(
+      <BusinessContextScreen
+        value={biz}
+        onChange={setBiz}
+        onBack={() => setScreen('setup')}
+        onNext={() => {
           startedAt.current = Date.now();
           setPos(0);
           setScreen('quiz');
@@ -471,6 +513,90 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
 }
 
 /* ============================== SUB SCREENS ============================== */
+
+export type BusinessContext = { company: string; industry: string; teamSize: string; tools: string };
+
+const TEAM_SIZES = ['Just me', '2 to 9', '10 to 49', '50 to 249', '250 or more'];
+
+/**
+ * Business Owner only, and every field is optional. None of it is scored. It
+ * exists so the report can address the business by name and so results can be
+ * read by industry and size later.
+ */
+function BusinessContextScreen({
+  value, onChange, onBack, onNext,
+}: {
+  value: BusinessContext;
+  onChange: (v: BusinessContext) => void;
+  onBack: () => void;
+  onNext: () => void;
+}) {
+  const set = (k: keyof BusinessContext, v: string) => onChange({ ...value, [k]: v });
+  return (
+    <section className="screen">
+      <div className="wrap setup">
+        <span className="eyebrow">Step 2 of 2, optional</span>
+        <h2 className="section-title mt-s">A little about the business</h2>
+        <p className="lede" style={{ maxWidth: '62ch' }}>
+          All four are optional and none of them are scored. They let the report address your
+          business by name, and they help us understand which kinds of business this reaches. Skip
+          any of them and the assessment works exactly the same.
+        </p>
+
+        <div className="field mt-m">
+          <label htmlFor="biz-company">Company or trading name</label>
+          <input id="biz-company" type="text" value={value.company}
+            onChange={(e) => set('company', e.target.value)} placeholder="Optional" />
+        </div>
+        <div className="field">
+          <label htmlFor="biz-industry">Industry</label>
+          <input id="biz-industry" type="text" value={value.industry}
+            onChange={(e) => set('industry', e.target.value)}
+            placeholder="Optional, for example construction, accounting, retail" />
+        </div>
+        <div className="field">
+          <label htmlFor="biz-team">Team size</label>
+          <select id="biz-team" value={value.teamSize} onChange={(e) => set('teamSize', e.target.value)}>
+            <option value="">Prefer not to say</option>
+            {TEAM_SIZES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="biz-tools">Which AI tools are in use</label>
+          <input id="biz-tools" type="text" value={value.tools}
+            onChange={(e) => set('tools', e.target.value)}
+            placeholder="Optional, for example ChatGPT, Copilot, a scheduling agent" />
+        </div>
+
+        <div className="lp-howto">
+          <h3 className="lp-h3">Before you start</h3>
+          <ul className="lp-howto-list">
+            <li>
+              <strong>Answer for the business as it actually runs today.</strong> Several questions
+              ask what would really happen under pressure. Those answers carry more weight than the
+              ones where you describe the business, because habits show up in situations.
+            </li>
+            <li>
+              <strong>Nothing here is reported to anyone.</strong> There is no pass mark and no
+              inspection. An honest answer about a weak spot is what makes the result useful to you.
+            </li>
+            <li>
+              <strong>About ten minutes.</strong> Forty questions, plus a few that depend on how
+              embedded AI already is.
+            </li>
+          </ul>
+        </div>
+
+        <div className="qnav mt-m">
+          <button className="back" type="button" onClick={onBack}><span>&larr;</span> Back</button>
+          <button className="btn btn-primary" type="button" onClick={onNext}>
+            Start the health check <span className="arrow">&rarr;</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function QuizBar({ personaName, progress, exact }: { personaName: string; progress: number; exact: boolean }) {
   return (
@@ -674,10 +800,10 @@ function Setup({
         <span className="eyebrow">Step 1 of 2</span>
         <h2 className="section-title mt-s">Which of these is closest to you?</h2>
         <p className="lede" style={{ maxWidth: '62ch' }}>
-          There are four sets of questions. They ask about different situations, so pick the one that
-          matches the life you actually live day to day. If two fit, choose the one where you use AI
-          most. Every question is about <strong>you and your own practice</strong>, never about
-          judging anyone else.
+          There are five sets of questions. Four of them ask about you and your own practice. The
+          fifth, Business Owner, is different: it assesses a business rather than a person. Pick the
+          one that matches the life you actually live day to day, and if two fit, choose the one
+          where you use AI most.
         </p>
 
         <div className="field mt-m">
@@ -693,11 +819,15 @@ function Setup({
                   aria-pressed={sel}
                 >
                   <span className="lp-persona-head">
-                    <span className="lp-persona-name">{p.name}</span>
+                    <span className="lp-persona-name">
+                      {p.name}
+                      {p.isNew ? <span className="lp-persona-new">NEW</span> : null}
+                    </span>
                     <span className="lp-persona-check" aria-hidden="true">{sel ? '\u2713' : ''}</span>
                   </span>
                   <span className="lp-persona-who">{p.who}</span>
-                  <span className="lp-persona-blurb">{p.blurb}</span>
+                  <span className="lp-persona-blurb">{p.explain}</span>
+                  {p.note ? <span className="lp-persona-note">{p.note}</span> : null}
                   <span className="lp-persona-expect">
                     <span className="lp-persona-expect-h">You will be asked about</span>
                     <span>{p.expect.join(' · ')}</span>
@@ -710,8 +840,8 @@ function Setup({
 
         {chosen ? (
           <div className="lp-chosen" role="status">
-            <strong>{chosen.name} selected.</strong> {chosen.blurb} You can go back and change this
-            before you begin.
+            <strong>{chosen.name} selected.</strong> {chosen.explain} You can go back and change
+            this before you begin.
           </div>
         ) : null}
 

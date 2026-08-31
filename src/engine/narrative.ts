@@ -14,6 +14,10 @@
  */
 import type { CompassResult, ConstructId } from "./types";
 import { CONSTRUCTS, STAGES } from "./config";
+import {
+  constructName, reportedConstructName, constructContent, constructPrinciple, stageDetail as stageDetailFor,
+  compositeName, indexName, disclaimerExtra,
+} from "./display";
 import { CONSTRUCT_CONTENT, STAGE_DETAIL, EVIDENCE_BASE, FRAMEWORK_SOURCES } from "./content";
 import { helpHarm } from "./patterns";
 
@@ -60,7 +64,7 @@ export function confidenceLabel(level: string): string {
 }
 
 function bandReading(r: CompassResult, c: ConstructId): string {
-  const content = CONSTRUCT_CONTENT[c];
+  const content = constructContent(r.persona, c);
   const st = r.dimensions[c].microState;
   return st === "strong" ? content.atStrong : st === "developing" ? content.atDeveloping : content.atWatch;
 }
@@ -69,20 +73,20 @@ function dimLine(r: CompassResult, c: ConstructId): string {
   const d = r.dimensions[c];
   const def = CONSTRUCTS[c];
   const shown = def.reportedAsRisk
-    ? `Dependency Risk ${d.reportedScore} (independent capability ${d.score})`
-    : `${def.name} ${d.score}`;
+    ? `${reportedConstructName(r.persona, c)} ${d.reportedScore} (independent capability ${d.score})`
+    : `${constructName(r.persona, c)} ${d.score}`;
   const conf = d.confidence !== "high" ? ` · ${CONF_LABEL[d.confidence].toLowerCase()}` : "";
-  return `- **${shown}** (${d.microState})${conf}. ${def.principle}`;
+  return `- **${shown}** (${d.microState})${conf}. ${constructPrinciple(r.persona, c)}`;
 }
 
 /** The unpacked treatment: what it measures, how you read, and the evidence. */
 function dimBlock(r: CompassResult, c: ConstructId): string[] {
   const d = r.dimensions[c];
   const def = CONSTRUCTS[c];
-  const content = CONSTRUCT_CONTENT[c];
+  const content = constructContent(r.persona, c);
   const shown = def.reportedAsRisk
-    ? `Dependency Risk ${d.reportedScore}, independent capability ${d.score}`
-    : `${def.name} ${d.score}`;
+    ? `${reportedConstructName(r.persona, c)} ${d.reportedScore}, independent capability ${d.score}`
+    : `${constructName(r.persona, c)} ${d.score}`;
   const L: string[] = [];
   L.push(`### ${shown}`);
   L.push(`*What this measures.* ${content.whatItMeasures}`);
@@ -103,12 +107,12 @@ function dimBlock(r: CompassResult, c: ConstructId): string[] {
 /** Immediate, 30 day and 90 day horizons, assembled from detected behaviour. */
 export function improvementPlan(r: CompassResult): { horizon: string; timeframe: string; items: string[] }[] {
   const weakest = [...Object.values(r.dimensions)].sort((a, b) => a.score - b.score);
-  const bottleneckContent = CONSTRUCT_CONTENT[r.bottleneck.construct];
+  const bottleneckContent = constructContent(r.persona, r.bottleneck.construct);
   const secondary = weakest.find((d) => d.construct !== r.bottleneck.construct);
 
   const now: string[] = [];
   if (!r.bottleneck.saturated) {
-    now.push(`Start where the constraint is: ${CONSTRUCTS[r.bottleneck.construct].name}. ${bottleneckContent.practices[0]}`);
+    now.push(`Start where the constraint is: ${constructName(r.persona, r.bottleneck.construct)}. ${bottleneckContent.practices[0]}`);
   }
   const first = r.recommendations[0];
   if (first) now.push(`${first.capability}: ${first.practice}`);
@@ -117,7 +121,7 @@ export function improvementPlan(r: CompassResult): { horizon: string; timeframe:
   const thirty: string[] = [];
   for (const rec of r.recommendations.slice(1, 3)) thirty.push(`${rec.capability}: ${rec.practice}`);
   if (secondary) {
-    thirty.push(`${CONSTRUCTS[secondary.construct].name} is your next lowest reading. ${CONSTRUCT_CONTENT[secondary.construct].practices[0]}`);
+    thirty.push(`${constructName(r.persona, secondary.construct)} is your next lowest reading. ${constructContent(r.persona, secondary.construct).practices[0]}`);
   }
   if (!r.bottleneck.saturated) thirty.push(bottleneckContent.practices[1]);
   thirty.push(`Re-read your roadmap and mark which practices actually happened. A plan that is not reviewed becomes a document rather than a change.`);
@@ -160,10 +164,10 @@ export function dimensionDetails(r: CompassResult): DimensionDetail[] {
   return (Object.keys(CONSTRUCTS) as ConstructId[]).map((c) => {
     const d = r.dimensions[c];
     const def = CONSTRUCTS[c];
-    const content = CONSTRUCT_CONTENT[c];
+    const content = constructContent(r.persona, c);
     return {
       construct: c,
-      label: def.reportedAsRisk ? "Dependency Risk" : def.name,
+      label: reportedConstructName(r.persona, c),
       shown: def.reportedAsRisk ? d.reportedScore : d.score,
       healthy: d.score,
       independentCapability: def.reportedAsRisk ? d.score : undefined,
@@ -235,11 +239,11 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
       : r.stage.substage === "established"
         ? "you are settled in this stage"
         : "you are moving toward the next one";
-    L.push(`**Stage ${r.stage.stage} of 10: ${r.stage.stageName}.** Your developmental index is ${r.stage.rawIndex} out of 100. That number is simply how far along the route your answers place you, where 0 is no meaningful use of AI and 100 is a mature, self-renewing practice. Within this stage, ${subPlain}.`);
+    L.push(`**Stage ${r.stage.stage} of 10: ${r.stage.stageName}.** Your ${indexName(r.persona)} is ${r.stage.rawIndex} out of 100. That number is simply how far along the route your answers place you, where 0 is no meaningful use of AI and 100 is a mature, self-renewing practice. Within this stage, ${subPlain}.`);
     L.push(``);
     L.push(stageDef.short);
     L.push(``);
-    const det = STAGE_DETAIL[r.stage.stage];
+    const det = stageDetailFor(r.persona, r.stage.stage);
     if (det) {
       L.push(`*What this stage usually looks like.* ${det.looksLike}`);
       L.push(`*The trap at this stage.* ${det.trap}`);
@@ -262,18 +266,28 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
   // 3. Developmental signature
   {
     const L: string[] = [];
-    L.push(`Ten dimensions, each scored 0 to 100. Higher is healthier on every one except Dependency Risk, which is shown as a risk, so lower is healthier there. Each carries its own confidence level, because some dimensions rest on more of your evidence than others.`);
+    L.push(`Ten dimensions, each scored 0 to 100. Higher is healthier on every one except ${reportedConstructName(r.persona, "dependencySafety")}, which is shown as a risk, so lower is healthier there. Each carries its own confidence level, because some dimensions rest on more of your evidence than others.`);
     L.push(``);
     L.push(`**At a glance**`);
     for (const c of Object.keys(CONSTRUCTS) as ConstructId[]) L.push(dimLine(r, c));
     L.push(``);
-    L.push(`**Six bigger questions.** Each of these combines several dimensions to answer something you probably want to know. On the first four, higher is better. On the last two, lower is better, because they measure a risk rather than a strength.`);
-    L.push(`- **Are you ready for what is coming? ${r.composites.futureReadiness} out of 100.** How skilled and adaptable you are with these tools, reduced if you have had little real practice.`);
-    L.push(`- **Is AI making your thinking better, or just faster? ${r.composites.augmentation} out of 100.** Higher means it is changing what you think, not only how quickly you produce it.`);
-    L.push(`- **How sound is your judgment? ${r.composites.judgment} out of 100.** Checking, ownership of decisions, and clear boundaries, taken together.`);
-    L.push(`- **Is assisted work becoming your own? ${r.composites.capabilityTransfer} out of 100.** Higher means what you do with AI is turning into something you can do without it.`);
-    L.push(`- **How much depends on the tool? ${r.composites.dependencyIndex} out of 100.** Higher means more of what you produce would be hard to reproduce without AI.`);
-    L.push(`- **Are you practising enough to keep up? ${r.composites.underexposure} out of 100.** Higher means limited hands-on practice. This is a different risk from dependency, and it is not the same as being careful.`);
+    if (r.persona === "business") {
+      L.push(`**Six bigger questions.** Each combines several dimensions to answer something an owner usually wants to know. On the first four, higher is better. On the last two, lower is better, because they measure exposure rather than strength.`);
+      L.push(`- **${compositeName(r.persona, "futureReadiness", "Market readiness")}: ${r.composites.futureReadiness} out of 100.** How well the business can choose, adapt, and integrate these tools as the market moves.`);
+      L.push(`- **${compositeName(r.persona, "augmentation", "Strategic advantage")}: ${r.composites.augmentation} out of 100.** Higher means AI is improving the decisions, not only the throughput.`);
+      L.push(`- **${compositeName(r.persona, "judgment", "Decision integrity")}: ${r.composites.judgment} out of 100.** Checking, ownership of decisions, and boundaries that hold, taken together.`);
+      L.push(`- **${compositeName(r.persona, "capabilityTransfer", "Knowledge retention")}: ${r.composites.capabilityTransfer} out of 100.** Higher means AI-assisted work is becoming process the business owns.`);
+      L.push(`- **${compositeName(r.persona, "dependencyIndex", "Continuity exposure")}: ${r.composites.dependencyIndex} out of 100.** Higher means more of what the business produces would be hard to reproduce if the tools went away.`);
+      L.push(`- **${compositeName(r.persona, "underexposure", "Adoption gap")}: ${r.composites.underexposure} out of 100.** Higher means limited hands-on practice across the business. This is a different exposure from continuity, and it is not the same as being careful.`);
+    } else {
+      L.push(`**Six bigger questions.** Each of these combines several dimensions to answer something you probably want to know. On the first four, higher is better. On the last two, lower is better, because they measure a risk rather than a strength.`);
+      L.push(`- **Are you ready for what is coming? ${r.composites.futureReadiness} out of 100.** How skilled and adaptable you are with these tools, reduced if you have had little real practice.`);
+      L.push(`- **Is AI making your thinking better, or just faster? ${r.composites.augmentation} out of 100.** Higher means it is changing what you think, not only how quickly you produce it.`);
+      L.push(`- **How sound is your judgment? ${r.composites.judgment} out of 100.** Checking, ownership of decisions, and clear boundaries, taken together.`);
+      L.push(`- **Is assisted work becoming your own? ${r.composites.capabilityTransfer} out of 100.** Higher means what you do with AI is turning into something you can do without it.`);
+      L.push(`- **How much depends on the tool? ${r.composites.dependencyIndex} out of 100.** Higher means more of what you produce would be hard to reproduce without AI.`);
+      L.push(`- **Are you practising enough to keep up? ${r.composites.underexposure} out of 100.** Higher means limited hands-on practice. This is a different risk from dependency, and it is not the same as being careful.`);
+    }
     L.push(``);
     L.push(`**Each dimension, unpacked**`);
     for (const c of Object.keys(CONSTRUCTS) as ConstructId[]) L.push(...dimBlock(r, c));
@@ -294,7 +308,7 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     } else {
       const strongIso = r.strengths.filter(x => ["amplification", "fluency", "creativity"].includes(x.construct));
       if (strongIso.length) {
-        L.push(`Individual dimensions show real promise (${strongIso.map(x => CONSTRUCTS[x.construct].name).join(", ")}), but the corroborating pattern that would confirm genuine benefit, where amplification travels with transfer and independent capability, has not yet formed. The ingredients are present; the compound is not.`);
+        L.push(`Individual dimensions show real promise (${strongIso.map(x => constructName(r.persona, x.construct)).join(", ")}), but the corroborating pattern that would confirm genuine benefit, where amplification travels with transfer and independent capability, has not yet formed. The ingredients are present; the compound is not.`);
       } else {
         L.push(`Your responses show serviceable use, but no strong evidence yet that AI is deepening understanding, widening options, or building capability rather than output. That is the opportunity, not an accusation.`);
       }
@@ -331,10 +345,10 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     L.push(`These lists have a floor and a ceiling rather than a fixed length. A dimension is named a strength only at 65 or above, and a vulnerability only at 45 or below. Either list can be empty, and an empty list is a real result: this report does not fill a template with three strengths and three risks regardless of what you reported.`);
     L.push(``);
     if (r.strengths.length) {
-      L.push(`**Genuine strengths:** ${r.strengths.map(x => `${CONSTRUCTS[x.construct].name} (${x.score})`).join(", ")}.`);
+      L.push(`**Genuine strengths:** ${r.strengths.map(x => `${constructName(r.persona, x.construct)} (${x.score})`).join(", ")}.`);
       L.push(``);
       for (const x of r.strengths.slice(0, 3)) {
-        L.push(`- **${CONSTRUCTS[x.construct].name}.** ${CONSTRUCT_CONTENT[x.construct].atStrong}`);
+        L.push(`- **${constructName(r.persona, x.construct)}.** ${constructContent(r.persona, x.construct).atStrong}`);
       }
       L.push(``);
       L.push(`Strengths are worth naming because they are what you build the rest on, and because they are the thing most likely to be assumed rather than maintained.`);
@@ -343,11 +357,11 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     }
     L.push(``);
     if (r.vulnerabilities.length) {
-      L.push(`**Genuine vulnerabilities:** ${r.vulnerabilities.map(x => `${CONSTRUCTS[x.construct].name} (${x.score})`).join(", ")}.`);
+      L.push(`**Genuine vulnerabilities:** ${r.vulnerabilities.map(x => `${constructName(r.persona, x.construct)} (${x.score})`).join(", ")}.`);
       L.push(``);
       for (const x of r.vulnerabilities.slice(0, 3)) {
-        const c = CONSTRUCT_CONTENT[x.construct];
-        L.push(`- **${CONSTRUCTS[x.construct].name} (${x.score}).** ${c.atWatch} A first step: ${c.practices[0].charAt(0).toLowerCase()}${c.practices[0].slice(1)}`);
+        const c = constructContent(r.persona, x.construct);
+        L.push(`- **${constructName(r.persona, x.construct)} (${x.score}).** ${c.atWatch} A first step: ${c.practices[0].charAt(0).toLowerCase()}${c.practices[0].slice(1)}`);
       }
     } else {
       L.push(`No dimension falls below the vulnerability line, which is 45. That is worth reading as the genuine result it is, rather than as an invitation to look harder for something wrong.`);
@@ -375,7 +389,7 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     const L: string[] = [];
     L.push(r.bottleneck.reason);
     if (!r.bottleneck.saturated) {
-      const bc = CONSTRUCT_CONTENT[r.bottleneck.construct];
+      const bc = constructContent(r.persona, r.bottleneck.construct);
       L.push(``);
       L.push(`*Why this one and not your lowest score.* A bottleneck is the dimension doing most to hold your position, which is not always the weakest number. A low reading on a lightly weighted dimension can matter less than a middling reading on one that gates the stages above you.`);
       L.push(``);
@@ -394,7 +408,7 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     const L: string[] = [];
     const atTop = r.nextTarget.stage === r.stage.stage;
     L.push(`**Target: Stage ${r.nextTarget.stage}, ${r.nextTarget.stageName}.**`);
-    const nd = STAGE_DETAIL[r.nextTarget.stage];
+    const nd = stageDetailFor(r.persona, r.nextTarget.stage);
     if (nd) {
       L.push(``);
       L.push(atTop
@@ -481,6 +495,6 @@ export function generateReport(r: CompassResult): string {
   }
   sep();
   L.push(`---`);
-  L.push(`*${REPORT_DISCLAIMER}*`);
+  L.push(`*${REPORT_DISCLAIMER}${disclaimerExtra(r.persona) ? ` ${disclaimerExtra(r.persona)}` : ""}*`);
   return L.join("\n");
 }

@@ -11,6 +11,7 @@
 
 import type { CompassResult } from '@/engine';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
+import { constructName, constructContent, reportedConstructName, stageName, indexName } from '@/engine/display';
 import { CONSTRUCT_CONTENT } from '@/engine/content';
 import type { ConstructId } from '@/engine/types';
 import { GATE_DEFS } from './AscentMapHero';
@@ -23,12 +24,27 @@ export function ResultHeader({ result }: { result: CompassResult }) {
     <header className="asc-header">
       <div className="asc-header-main">
         <p className="asc-eyebrow">Neogogy · AI relationship assessment</p>
-        <h1 className="asc-title">Your ascent with AI</h1>
-        <p className="asc-sub">
-          This is a reading of how AI is currently shaping your judgment, your capability and your
-          own creative agency. It is a journey, not a verdict. Below you will find where you are on
-          the route, why you are there, what your ten dimensions look like, and what to do next.
-        </p>
+        {result.persona === 'business' ? (
+          <>
+            <h1 className="asc-title">Where your business stands with AI</h1>
+            <p className="asc-sub">
+              This is a reading of how AI is currently shaping your decisions, your continuity, your
+              customers&rsquo; trust, your knowledge and your people. It assesses the business rather
+              than you. Below you will find where the business sits on the route, why it is there,
+              where the exposure is, and what to do in the next ninety days.
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="asc-title">Your ascent with AI</h1>
+            <p className="asc-sub">
+              This is a reading of how AI is currently shaping your judgment, your capability and
+              your own creative agency. It is a journey, not a verdict. Below you will find where you
+              are on the route, why you are there, what your ten dimensions look like, and what to do
+              next.
+            </p>
+          </>
+        )}
       </div>
       <DevelopmentalIndex result={result} />
     </header>
@@ -40,7 +56,7 @@ export function DevelopmentalIndex({ result }: { result: CompassResult }) {
     <div className="asc-index" role="group" aria-label="Developmental index">
       <div className="asc-index-disc">
         <span className="asc-index-n">{result.stage.rawIndex}</span>
-        <span className="asc-index-label">developmental index</span>
+        <span className="asc-index-label">{indexName(result.persona)}</span>
       </div>
       <p className="asc-index-note">
         out of 100. How far along the route your answers place you.
@@ -131,7 +147,7 @@ export function RouteStages({ result }: { result: CompassResult }) {
               <span className="asc-stage-n" aria-hidden="true">{s.stage}</span>
               <span className="asc-stage-body">
                 <span className="asc-stage-name">
-                  {s.name}
+                  {stageName(result.persona, s.stage)}
                   {isHere ? <span className="asc-flag asc-flag-here">You are here</span> : null}
                   {isNext ? <span className="asc-flag asc-flag-next">Next ledge</span> : null}
                 </span>
@@ -172,14 +188,14 @@ export function PracticeGates({ result }: { result: CompassResult }) {
                 </span>
               </div>
               <div className="asc-gate-meta">
-                {CONSTRUCTS[g.construct].name} {d.score}
+                {constructName(result.persona, g.construct)} {d.score}
                 {required !== undefined ? ` · stage ${g.firstStage} needs ${required}` : ''}
               </div>
               <div className="asc-gate-track" aria-hidden="true">
                 <span style={{ width: `${Math.max(2, d.score)}%` }} className={open ? 'open' : 'pending'} />
                 {required !== undefined ? <b style={{ left: `${required}%` }} /> : null}
               </div>
-              <p className="asc-gate-note">{CONSTRUCT_CONTENT[g.construct].whatItMeasures}</p>
+              <p className="asc-gate-note">{constructContent(result.persona, g.construct).whatItMeasures}</p>
             </li>
           );
         })}
@@ -211,7 +227,7 @@ export function FootholdCard({ result }: { result: CompassResult }) {
           return (
             <li key={id} className={`asc-foot state-${state}`}>
               <div className="asc-foot-name">
-                {isRisk ? 'Dependency risk' : CONSTRUCTS[id].name}
+                {reportedConstructName(result.persona, id)}
               </div>
               <div className="asc-foot-score">
                 <span className="asc-foot-n">{shown}</span>

@@ -58,11 +58,15 @@ export function reverse(persona: Persona, construct: ConstructId, prompt: string
 
 export function scenario(persona: Persona, construct: ConstructId, prompt: string,
   labels: [string, string, string, string, string], riskSignal: string,
-  opts: Partial<Item> & { effects?: Partial<Record<number, Partial<Record<ConstructId, number>>>> } = {}): Item {
+  opts: Partial<Item> & {
+    effects?: Partial<Record<number, Partial<Record<ConstructId, number>>>>;
+    /** Extra risk tags a particular option raises, beyond the item's own. */
+    optionSignals?: Partial<Record<number, string[]>>;
+  } = {}): Item {
   const options: ItemOption[] = labels.map((label, i) => ({
-    value: i + 1, label, effects: opts.effects?.[i + 1],
+    value: i + 1, label, effects: opts.effects?.[i + 1], signals: opts.optionSignals?.[i + 1],
   }));
-  const { effects, ...rest } = opts;
+  const { effects, optionSignals, ...rest } = opts;
   const id = `${persona}_${construct}_s`;
   return { id, persona, type: "scenario", construct, prompt, options, riskSignal,
     context: ITEM_CONTEXT[id], pairId: `${persona}_${construct}`, version: 2, ...rest };
@@ -156,3 +160,70 @@ export const SCALE_LABELS: Record<string, string[]> = {
   confidence: ["Not confident", "Slightly confident", "Moderately confident", "Very confident", "Completely confident"],
   outcome: ["Significantly worse", "Somewhat worse", "Unchanged", "Somewhat better", "Significantly better"],
 };
+
+
+// ---------------------------------------------------------------------------
+// Business Owner overrides
+// ---------------------------------------------------------------------------
+/**
+ * The shared items ask an individual about their own habits. For the Business
+ * Owner they have to ask about the business, so this persona gets its own set.
+ * The ids are unchanged, so a stored answer means the same thing everywhere.
+ */
+
+export const BUSINESS_USAGE_ITEM: Item = {
+  id: "usage", persona: "shared", type: "branch",
+  prompt: "How embedded is AI in how your business runs today?",
+  context: "Answer for the business as it actually runs, including anything your team uses. This answer is never scored up or down; it only decides which follow-up questions you see.",
+  options: [
+    { value: 1, label: "Not at all" },
+    { value: 2, label: "Occasional individual use" },
+    { value: 3, label: "Regular use in a few functions" },
+    { value: 4, label: "Built into several core workflows" },
+    { value: 5, label: "Central to daily operations, including automations or agents" },
+  ],
+  version: 2,
+};
+
+export const BUSINESS_BASELINE_ITEMS: Item[] = [
+  { id: "b1", persona: "shared", type: "baseline",
+    prompt: "Before any questions: how healthy does your business's relationship with AI feel to you right now?",
+    scale: "agreement", version: 2 },
+  { id: "b2", persona: "shared", type: "baseline",
+    prompt: "Prediction: where do you expect this assessment to place your business?",
+    scale: "agreement", version: 2 },
+];
+
+export const BUSINESS_LOW_USE_REASON: Item = {
+  id: "lowuse_reason", persona: "shared", type: "branch",
+  adaptiveTrigger: { when: "usageLow" },
+  prompt: "Which best describes why AI is not yet embedded in the business?",
+  context: "Choose the closest fit. Low use is not treated as a problem here; this only tells us the reason.",
+  options: [
+    { value: 1, label: "We know where it fits and it is not here yet. The restraint is deliberate." },
+    { value: 2, label: "Cost or time. We have not been able to give it proper attention." },
+    { value: 3, label: "Compliance, regulatory, or client restrictions limit what we can use." },
+    { value: 4, label: "We do not know where to start." },
+    { value: 5, label: "We tried it and it did not pay off." },
+  ],
+  version: 2,
+};
+
+export const BUSINESS_HIGH_USE_PROBES: Item[] = [
+  { id: "highuse_outage", persona: "shared", type: "scenario", construct: "dependencySafety",
+    adaptiveTrigger: { when: "usageHigh" }, riskSignal: "single_point_of_failure",
+    prompt: "Your main AI tool goes down for three days during your busiest week.",
+    context: "Answer for what would realistically happen, not for the plan you intend to write.",
+    options: [
+      { value: 1, label: "Work stops in the affected areas until it comes back.", signals: ["single_point_of_failure"] },
+      { value: 2, label: "We keep going, badly. Quality and turnaround both slip where customers can see it." },
+      { value: 3, label: "We fall back to manual work, slower, at roughly our usual quality." },
+      { value: 4, label: "We switch to a documented alternative path with limited disruption." },
+      { value: 5, label: "Customers notice nothing, because every AI-dependent process has a tested manual or alternative route." },
+    ], version: 2 },
+  { id: "highuse_unchecked", persona: "shared", type: "reverse", construct: "verification",
+    adaptiveTrigger: { when: "usageHigh" }, riskSignal: "customer_facing_unverified",
+    prompt: "AI output reaches a customer, a contract, or our books without a human check.",
+    context: "Answer for how it actually goes in a busy week.",
+    scale: "frequency", version: 2 },
+];

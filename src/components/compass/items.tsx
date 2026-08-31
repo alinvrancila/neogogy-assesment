@@ -39,10 +39,41 @@ export const B1_CHOICES: Choice[] = [
   { value: 5, label: 'Very healthy' },
 ];
 
+/**
+ * A stable shuffle: the same respondent always sees the same order for an item,
+ * and two respondents see different orders. Scoring reads the value, so order
+ * never affects a result. It exists so that "the last option is the good one"
+ * does not become a pattern people answer to.
+ */
+function shuffled<T>(list: T[], seed: string): T[] {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i += 1) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const rand = () => {
+    h += 0x6D2B79F5;
+    let t = Math.imul(h ^ (h >>> 15), 1 | h);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rand() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 /** The choices a given item offers, in display order. */
-export function optionsFor(item: Item): Choice[] {
+export function optionsFor(item: Item, seed?: string): Choice[] {
   if (item.options && item.options.length) {
-    return item.options.map((o) => ({ value: o.value, label: o.label }));
+    const choices = item.options.map((o) => ({ value: o.value, label: o.label }));
+    // Scenarios are the only items whose options are behaviours rather than a
+    // scale, so they are the only ones where display order could be read as a
+    // ranking. A branch or an impact scale keeps its written order.
+    if (item.type === 'scenario' && seed) return shuffled(choices, `${seed}:${item.id}`);
+    return choices;
   }
   const labels = SCALE_LABELS[item.scale ?? 'agreement'] ?? SCALE_LABELS.agreement;
   const base = labels.map((label, i) => ({ value: i + 1, label }));

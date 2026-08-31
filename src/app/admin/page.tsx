@@ -34,10 +34,25 @@ const idLabel = (id: string): string =>
 
 const ROLE_LABEL: Record<string, string> = {
   student: 'Student',
+  teacher: 'Teacher',
   educator: 'Educator',
   parent: 'Parent',
+  administrator: 'Leader or administrator',
   leader: 'Leader',
+  business: 'Business Owner',
   curious: 'Curious'
+};
+
+/**
+ * What each set of questions assesses, for staff reading a result. The
+ * Business Owner entry matters most: those results are about a business.
+ */
+const PERSONA_EXPLAIN: Record<string, string> = {
+  student: 'Assesses the individual: their own learning, assignments and unaided capability.',
+  teacher: 'Assesses the individual: their own teaching practice, not their students.',
+  parent: 'Assesses the individual: their own use and the decisions they make at home.',
+  administrator: 'Assesses the individual: their own leadership work and their own decisions.',
+  business: 'Assesses the business, not the individual: its decisions, continuity, customer trust, knowledge and people.',
 };
 
 const LEADS_PAGE_SIZE = 10;
@@ -144,6 +159,42 @@ function ThemeToggleButton({ theme, onClick }: { theme: AdminTheme; onClick: () 
     >
       {theme === 'light' ? <MoonIcon /> : <SunIcon />}
     </button>
+  );
+}
+
+/** The Business Owner's volunteered context, when there is any. */
+function BusinessContextPanel({ lead }: { lead: LeadRow }) {
+  const b = lead.meta?.business;
+  const rows: Array<[string, string | undefined]> = [
+    ['Company or trading name', b?.company],
+    ['Industry', b?.industry],
+    ['Team size', b?.teamSize],
+    ['Tools in use', b?.tools],
+  ];
+  const filled = rows.filter(([, v]) => !!v);
+  return (
+    <div className="admin-subcard rounded-2xl p-4">
+      <p className="admin-eyebrow">Business AI Health Check</p>
+      <p className="admin-strong mt-1 text-sm font-semibold">
+        This assesses the business, not the individual.
+      </p>
+      <p className="admin-muted mt-1 text-xs">
+        Its dimensions, stages and archetype are business readings. The only personalisation is the
+        context the respondent volunteered below, and none of it was scored.
+      </p>
+      {filled.length ? (
+        <dl className="mt-3 space-y-1">
+          {filled.map(([k, v]) => (
+            <div key={k} className="flex justify-between gap-3 text-xs">
+              <dt className="admin-muted whitespace-nowrap">{k}</dt>
+              <dd className="admin-strong break-all text-right">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <p className="admin-muted mt-3 text-xs">No business context was volunteered. Every field was optional.</p>
+      )}
+    </div>
   );
 }
 
@@ -290,6 +341,10 @@ function LeadDetailPanel({ lead, onClose }: { lead: LeadRow; onClose: () => void
           />
         ) : (
           <div className="min-h-0 flex-1 overflow-auto p-4">
+            {lead.role === 'business' ? (
+              <div className="mb-4"><BusinessContextPanel lead={lead} /></div>
+            ) : null}
+            <p className="admin-muted mb-3 text-xs">{PERSONA_EXPLAIN[lead.role] ?? ''}</p>
             <ContextPanel meta={lead.meta} />
           </div>
         )}
