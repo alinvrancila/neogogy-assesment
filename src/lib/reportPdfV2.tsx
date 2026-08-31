@@ -61,6 +61,8 @@ const bandTextColor = (healthy: number) =>
 const BACKDROP = path.join(process.cwd(), 'public', 'ascent-backdrop.jpg');
 /** Dusk variant, used full bleed on the cover. Decorative only. */
 const COVER_ART = path.join(process.cwd(), 'public', 'ascent-cover.jpg');
+/** The chapel window, drawn procedurally by scripts/art/render-pastor-cover.mjs. */
+const MINISTER_ART = path.join(process.cwd(), 'public', 'minister-cover.jpg');
 
 const fontPath = (f: string) => path.join(process.cwd(), 'src', 'fonts', f);
 Font.register({
@@ -1154,62 +1156,79 @@ const Footer = ({ title = 'Neogogy Formation Compass' }: { title?: string }) => 
  */
 function PastorCover({ r, dateStr }: { r: CompassResult; dateStr: string }) {
   const ACCENT = '#2E6E63';
+  const INK = '#2A2620';
+  const MUTE = 'rgba(42,38,32,0.62)';
   const arch = r.archetype.name;
-  const archSize = arch.length > 24 ? 30 : arch.length > 18 ? 34 : 40;
+  const archSize = arch.length > 24 ? 28 : arch.length > 18 ? 32 : 38;
   return (
-    <Page size="A4" style={{ backgroundColor: '#FAF7F1', color: T.ink, fontFamily: 'Spectral' }}>
-      <View style={{ position: 'absolute', top: 0, left: M, width: 54, height: 4, backgroundColor: ACCENT }} />
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: M, paddingTop: 74 }}>
+    <Page size="A4" style={{ backgroundColor: '#EDE6D8', color: INK, fontFamily: 'Spectral' }}>
+      {/* the scene: an arched window with morning light through it */}
+      <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text */}
+        <Image src={MINISTER_ART} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </View>
+
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: M, paddingTop: 52 }}>
+        <View style={{ width: 46, height: 3, backgroundColor: ACCENT, marginBottom: 12 }} />
         <Text style={{ fontFamily: 'Plex', fontSize: 8, letterSpacing: 2.4, color: ACCENT }}>
           PREACHING FORMATION CHECK
         </Text>
-        <Text style={{ fontFamily: 'Spectral', fontSize: 12.5, color: T.mute, marginTop: 44, lineHeight: 1.6, maxWidth: 330 }}>
+        <Text style={{ fontFamily: 'Spectral', fontSize: 12, color: MUTE, marginTop: 14, lineHeight: 1.6, maxWidth: 330 }}>
           A private reading of how AI is shaping your preparation, your preaching, your care of
           people, and your own formation.
         </Text>
+      </View>
 
-        <View style={{ height: 1, backgroundColor: T.hair, marginTop: 40, marginBottom: 40 }} />
-
-        <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: archSize, color: T.oxblood, lineHeight: 1.08 }}>
+      <View style={{ position: 'absolute', left: M, right: M, bottom: 176 }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.4, color: MUTE }}>
+          WHERE YOUR PRACTICE STANDS
+        </Text>
+        <Text style={{
+          fontFamily: 'Spectral', fontWeight: 800, fontSize: archSize, color: '#7B2B32',
+          marginTop: 8, lineHeight: 1.1,
+        }}>
           {arch}
         </Text>
-        <Text style={{ fontFamily: 'Spectral', fontSize: 12.5, color: T.mute, marginTop: 14, lineHeight: 1.55, maxWidth: 350 }}>
+        <Text style={{ fontFamily: 'Spectral', fontSize: 11.5, color: MUTE, marginTop: 9, lineHeight: 1.55, maxWidth: 340 }}>
           {r.archetype.tagline}
         </Text>
       </View>
 
-      <View style={{ position: 'absolute', left: M, right: M, bottom: 150, flexDirection: 'row', alignItems: 'flex-end' }}>
+      <View style={{
+        position: 'absolute', left: M, right: M, bottom: 104,
+        flexDirection: 'row', alignItems: 'flex-end',
+      }}>
         <View>
-          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 66, color: ACCENT, lineHeight: 1 }}>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 52, color: ACCENT, lineHeight: 1 }}>
             {r.stage.rawIndex}
           </Text>
-          <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.2, color: T.mute, marginTop: 6 }}>
+          <Text style={{ fontFamily: 'Plex', fontSize: 6.6, letterSpacing: 1.1, color: MUTE, marginTop: 5 }}>
             FORMATION HEALTH SCORE, OUT OF 100
           </Text>
         </View>
         <View style={{ flex: 1, alignItems: 'flex-end' }}>
-          <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.2, color: T.mute }}>
+          <Text style={{ fontFamily: 'Plex', fontSize: 6.6, letterSpacing: 1.1, color: MUTE }}>
             {`STAGE ${r.stage.stage} OF 10`}
           </Text>
-          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 18, marginTop: 5 }}>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 16, marginTop: 4 }}>
             {r.stage.stageName}
           </Text>
         </View>
       </View>
 
       <View style={{
-        position: 'absolute', left: M, right: M, bottom: 62,
-        borderTopWidth: 1, borderTopColor: T.hair, paddingTop: 14,
+        position: 'absolute', left: M, right: M, bottom: 56,
+        borderTopWidth: 1, borderTopColor: 'rgba(42,38,32,0.16)', paddingTop: 11,
       }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: T.mute, lineHeight: 1.6 }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7, color: MUTE, lineHeight: 1.6 }}>
           A private self-reflection index drawn from your own answers. Not a spiritual assessment of
-          your calling, your faithfulness, or your ministry. Nothing about this reading was stored.
+          your calling, your faithfulness, or your ministry.
         </Text>
       </View>
 
-      <View style={{ position: 'absolute', left: M, right: M, bottom: 30, flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: T.mute }}>{dateStr}</Text>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: T.mute }}>assessment.neogogy.ai</Text>
+      <View style={{ position: 'absolute', left: M, right: M, bottom: 28, flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7, color: MUTE }}>{dateStr}</Text>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7, color: MUTE }}>assessment.neogogy.ai</Text>
       </View>
     </Page>
   );

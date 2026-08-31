@@ -3141,3 +3141,7 @@
   font-size: .72rem; color: var(--asc-muted);
 }
 .nfc .pastor-question { margin: .7rem 0 0; padding-left: 1rem; max-width: 66ch; }
+.nfc .pastor-dim-lens {
+  display: block; font-style: normal; font-family: var(--f-sans);
+  font-size: .82rem; color: var(--asc-muted); margin-top: .15rem; max-width: 62ch;
+}

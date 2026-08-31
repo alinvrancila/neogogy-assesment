@@ -10,7 +10,9 @@ import { compute, applicableItems, allItems, generateReport, generateReportSecti
 import type { ConstructId, Item, Persona, Submission } from "../../src/engine/types";
 import { CONSTRUCT_IDS } from "../../src/engine/types";
 import { STAGES } from "../../src/engine/config";
-import { PERSONA_DISPLAY, PASTOR_MARKERS, constructName } from "../../src/engine/display";
+import {
+  PERSONA_DISPLAY, PASTOR_MARKERS, PASTOR_LENS, constructName, constructContent,
+} from "../../src/engine/display";
 import { dependenceTags } from "../../src/engine/pastor";
 
 let pass = 0; let fail = 0;
@@ -77,9 +79,16 @@ ok("no pastor prompt appears elsewhere", core.every((i) => !others.has(i.prompt)
 ok("no other persona's prompt appears here", [...others].every((p) => !core.some((i) => i.prompt === p)));
 
 head("Display");
-ok("dimensions carry their preaching names",
-  constructName("pastor", "agency") === "Authorship Before God"
-  && constructName("pastor", "dependencySafety") === "Unaided Preaching Capacity");
+ok("the ten dimensions keep the names every other assessment uses",
+  constructName("pastor", "agency") === constructName("student", "agency")
+  && constructName("pastor", "dependencySafety") === constructName("student", "dependencySafety"),
+  [constructName("pastor", "agency"), constructName("pastor", "dependencySafety")]);
+ok("each one carries a ministerial lens",
+  CONSTRUCT_IDS.every((c) => !!PASTOR_LENS[c] && PASTOR_LENS[c].length > 30));
+ok("and the reading under it is ministerial", (() => {
+  const c = constructContent("pastor", "agency");
+  return /preach|sermon|pulpit|prayer/i.test(c.whatItMeasures + c.atStrong + c.atWatch);
+})());
 ok("every dimension states the goal it points toward",
   CONSTRUCT_IDS.every((c) => !!PASTOR_MARKERS[c] && PASTOR_MARKERS[c].length > 30));
 ok("every stage has a pastor name", STAGES.every((s) => !!PERSONA_DISPLAY.pastor!.stageNames?.[s.stage]));

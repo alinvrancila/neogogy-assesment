@@ -105,7 +105,7 @@ ok("dimensions carry their business names",
 ok("the other personas are untouched", constructName("student", "agency") === "Human Agency");
 ok("every dimension has a business name and principle", (() => {
   const d = PERSONA_DISPLAY.business!;
-  return CONSTRUCT_IDS.every((c) => !!d.constructNames[c] && !!d.constructPrinciples[c]);
+  return CONSTRUCT_IDS.every((c) => !!d.constructNames?.[c] && !!d.constructPrinciples[c]);
 })());
 
 /* --------------------------------------------------------- synthetic owners */

@@ -869,3 +869,33 @@ for responsible use, on the date it was taken, and says plainly on the page that
 this reads self-reported habits rather than certifying that any use of AI is
 safe. A claim the instrument cannot support would be worth less to the pastor
 making it than the one it can.
+
+## The dimensions stay shared, the reading is ministerial
+
+The persona originally renamed all ten dimensions (Authorship Before God,
+Faithfulness to the Text, and so on). That read as ten new dimensions rather than
+the same ten seen through a vocation, so the names have gone back to the ones
+every other assessment uses.
+
+What was ministerial is still ministerial. Each dimension now carries a one line
+lens under its name (`PASTOR_LENS` in `display.ts`), and everything downstream of
+the name (what it measures, the reading at each band, why it matters, the
+practices, the healthy marker, the patterns, the archetypes, the roadmap, the
+reflections) is written for preaching. The dimension block says so in as many
+words, so nobody reads a shared name as a generic reading.
+
+If the renamed dimensions are wanted back, restoring `constructNames` in
+`PERSONA_DISPLAY.pastor` is the single change; the accessor already falls back
+when it is absent.
+
+## The cover
+
+The minister cover had no motif: type on a plain ground. It now opens on an
+arched chapel window with morning light through it, drawn procedurally by
+`scripts/art/pastor-cover.svg.mjs` and rasterised by `npm run art:minister`. No
+photograph and no people, so the report belongs to whoever is holding it, and the
+motif is ministerial without being denominational.
+
+The bands the type sits on are part of the artwork rather than panels laid over
+it, because react-pdf cannot draw a gradient on a view and a flat panel leaves a
+hard edge across the page.

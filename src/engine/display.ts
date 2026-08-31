@@ -21,7 +21,7 @@ export interface PersonaDisplay {
   indexName: string;
   /** The subject of the assessment, for headings and the admin. */
   subject: "person" | "business";
-  constructNames: Partial<Record<ConstructId, string>>;
+  constructNames?: Partial<Record<ConstructId, string>>;
   constructPrinciples: Partial<Record<ConstructId, string>>;
   /** How the inverted dimension is reported. */
   riskName?: string;
@@ -320,17 +320,23 @@ export const SCOPE_BLURB: Record<Scope, string> = {
 
 /* ----------------------------------------------------------------- pastor */
 
-const PASTOR_NAMES: Record<ConstructId, string> = {
-  agency: "Authorship Before God",
-  verification: "Faithfulness to the Text",
-  dependencySafety: "Unaided Preaching Capacity",
-  fluency: "Ministry AI Fluency",
-  transfer: "Formation of the Preacher",
-  amplification: "Deeper Study",
-  skillGrowth: "Craft of Preaching",
-  adaptability: "Discerning Practice",
-  responsibleUse: "Integrity and Care",
-  creativity: "Voice and Witness",
+/**
+ * What each dimension means in this vocation. The ten dimensions themselves are
+ * the same ones every other assessment uses, and they keep their own names: a
+ * minister who compares notes with a teacher or an owner is looking at the same
+ * instrument. Only the reading is ministerial.
+ */
+export const PASTOR_LENS: Record<ConstructId, string> = {
+  agency: "Authorship before God: the message received through prayer and study, and owned by you",
+  verification: "Faithfulness to the text: nothing preached that has not been checked",
+  dependencySafety: "Unaided preaching capacity: what remains if every tool is gone",
+  fluency: "Ministry fluency: knowing what the tool is for, and what it is not for",
+  transfer: "Formation of the preacher: whether the study stays in you",
+  amplification: "Deeper study: whether the tool takes you further into the text",
+  skillGrowth: "Craft of preaching: exegesis, structure, illustration, delivery",
+  adaptability: "Discerning practice: examined, adjusted, and rested from",
+  responsibleUse: "Integrity and care: honesty, confidences, and presence",
+  creativity: "Voice and witness: your people, your city, your own story",
 };
 
 /** The goal each dimension points toward, stated plainly. */
@@ -600,9 +606,7 @@ export const PERSONA_DISPLAY: Partial<Record<Persona, PersonaDisplay>> = {
     reportTitle: "Preaching Formation Check",
     indexName: "Formation Health Score",
     subject: "person",
-    constructNames: PASTOR_NAMES,
     constructPrinciples: PASTOR_PRINCIPLES,
-    riskName: "Dependence Risk",
     composites: {
       futureReadiness: "Ministry Readiness",
       augmentation: "Study Depth",
@@ -630,7 +634,7 @@ const of = (persona?: Persona) => (persona ? PERSONA_DISPLAY[persona] : undefine
 export const isBusiness = (persona?: Persona) => persona === "business";
 
 export function constructName(persona: Persona | undefined, id: ConstructId): string {
-  return of(persona)?.constructNames[id] ?? CONSTRUCTS[id].name;
+  return of(persona)?.constructNames?.[id] ?? CONSTRUCTS[id].name;
 }
 
 /** The name to print when a dimension is reported as a risk rather than a strength. */

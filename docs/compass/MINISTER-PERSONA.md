@@ -68,18 +68,22 @@ caution most pastors already feel as wisdom worth equipping.
 
 ## The ten readings
 
-| Name | What it measures | The goal it points toward |
+The same ten dimensions every version of this assessment measures, under the
+same names, read here for the work of preaching. A minister comparing notes with
+a teacher or a business owner is looking at the same instrument.
+
+| Dimension | Read here as | The goal it points toward |
 |---|---|---|
-| Authorship Before God | Whether the message is received and owned rather than accepted | You can stand behind every claim in your own words |
-| Faithfulness to the Text | Whether AI-supplied material is checked before the pulpit | Nothing is preached that you have not confirmed |
-| Unaided Preaching Capacity | What remains if the tools are gone | You would still have a word from the Lord for Sunday |
-| Ministry AI Fluency | Knowing what the tool is for, and what it is not for | The tool sits in its right place |
-| Formation of the Preacher | Whether study stays in you | What you learned is still in you weeks later |
-| Deeper Study | Whether the tool deepens the exegesis | Your study goes further, and you can say how |
-| Craft of Preaching | Whether the craft is still growing | Better than a year ago, not only faster |
-| Discerning Practice | Whether the practice is examined and rested from | Reviewed, not merely repeated |
-| Integrity and Care | Honesty, confidences, presence | Your people could learn how you use AI and trust you more |
-| Voice and Witness | Whether the sermon is yours | Recognisable with your name removed |
+| Human Agency | Authorship before God | You can stand behind every claim in your own words |
+| Verification and Judgment | Faithfulness to the text | Nothing is preached that you have not confirmed |
+| Independent Capability | Unaided preaching capacity | You would still have a word from the Lord for Sunday |
+| AI Fluency | Ministry fluency | The tool sits in its right place |
+| Learning Transfer | Formation of the preacher | What you learned is still in you weeks later |
+| Cognitive Amplification | Deeper study | Your study goes further, and you can say how |
+| Skill Growth | Craft of preaching | Better than a year ago, not only faster |
+| Adaptive Growth | Discerning practice | Reviewed, not merely repeated |
+| Responsible Use | Integrity and care | Your people could learn how you use AI and trust you more |
+| Creative Leverage | Voice and witness | Recognisable with your name removed |
 
 Reported composites: Formation Health Score, Pulpit Integrity, Dependence
 Exposure, Retained Formation, Study Depth, Ministry Readiness, Exposure Gap.

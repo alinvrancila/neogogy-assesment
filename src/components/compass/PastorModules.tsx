@@ -12,7 +12,7 @@ import { useState } from 'react';
 import type { CompassResult } from '@/engine';
 import type { Submission } from '@/engine/types';
 import { helpHarm } from '@/engine/patterns';
-import { healthyMarker, constructName } from '@/engine/display';
+import { healthyMarker, constructName, PASTOR_LENS } from '@/engine/display';
 import { CONSTRUCTS } from '@/engine/config';
 import { pastorStanding } from '@/lib/share';
 import type { ConstructId } from '@/engine/types';
@@ -167,20 +167,25 @@ export function PastorSignature({ result }: { result: CompassResult }) {
       state: result.dimensions[id].microState,
       confidence: result.dimensions[id].confidence,
       marker: healthyMarker(result.persona, id),
+      lens: PASTOR_LENS[id],
     }))
     .sort((a, b) => a.healthy - b.healthy);
   return (
     <section className="pastor-block">
       <h3 className="pastor-h3">The ten readings</h3>
       <p className="muted">
-        Sorted with the one that would repay attention first at the top. Each carries the goal it
-        points toward, so a number never has to stand on its own.
+        These are the same ten dimensions every version of this assessment measures, read here for
+        the work of preaching. Sorted with the one that would repay attention first at the top, and
+        each carries the goal it points toward, so a number never has to stand on its own.
       </p>
       <div className="pastor-dims">
         {rows.map((r) => (
           <div key={r.id} className="pastor-dim">
             <div className="pastor-dim-head">
-              <span className="pastor-dim-name">{r.name}</span>
+              <span className="pastor-dim-name">
+                {r.name}
+                {r.lens ? <em className="pastor-dim-lens">{r.lens}</em> : null}
+              </span>
               <span className={`pastor-dim-val pastor-t-${r.state}`}>{r.shown}</span>
             </div>
             <span className="pastor-dim-track">
