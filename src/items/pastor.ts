@@ -1,5 +1,5 @@
 /**
- * The Pastor and Preacher bank: forty items, ten dimensions, four each.
+ * The Minister/Preacher bank: forty items, ten dimensions, four each.
  *
  * This persona educates as much as it assesses. Every item carries a `why`,
  * explaining in plain words what the question is listening for, and a `deeper`

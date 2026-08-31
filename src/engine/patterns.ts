@@ -118,7 +118,7 @@ export const PATTERN_RULES: PatternRule[] = [
     evidence: () => ["agency", "verification", "amplification", "adaptability"],
   },
 
-  /* --------------------------------------------- Pastor and Preacher only */
+  /* --------------------------------------------- Minister/Preacher only */
   {
     id: "outsourced_pulpit", label: "The message is increasingly the tool's", kind: "harm",
     personas: ["pastor"],

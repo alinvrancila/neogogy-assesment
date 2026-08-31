@@ -1,4 +1,4 @@
-# Source documents for the Pastor and Preacher persona
+# Source documents for the Minister/Preacher persona
 
 This persona quotes only from the documents listed in its brief, and from
 Scripture in the New Living Translation. Those documents belong in this

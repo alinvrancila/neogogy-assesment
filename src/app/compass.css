@@ -3012,7 +3012,7 @@
 .nfc .biz-scope-notes p { margin: 0 0 .5rem; }
 .nfc .biz-bar-note { font-size: .82rem; margin: .2rem 0 .9rem; }
 
-/* Pastor and Preacher: the explanation under each question, and the opening. */
+/* Minister/Preacher: the explanation under each question, and the opening. */
 .nfc .qwhy {
   margin: .6rem 0 .2rem;
   border-left: 2px solid var(--asc-border);
@@ -3054,7 +3054,7 @@
   .nfc .qwhy summary { font-size: .74rem; }
 }
 
-/* Pastor and Preacher results: ink-light, one accent, generous whitespace. */
+/* Minister/Preacher results: ink-light, one accent, generous whitespace. */
 .nfc .results.pastor { --pastor-accent: #2E6E63; }
 .nfc .pastor-open {
   border: 1px solid var(--asc-border);

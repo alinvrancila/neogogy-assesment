@@ -272,7 +272,7 @@ const BUSINESS_MAINTAIN = R("maintain", "advanced",
   "Letting a good pattern go unexamined precisely because it is good.");
 
 /**
- * The Pastor and Preacher library.
+ * The Minister/Preacher library.
  *
  * Every practice fits inside a normal ministry week and carries one pointer to
  * a resource. The tone is offered, never prescribed: this instrument does not

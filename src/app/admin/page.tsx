@@ -40,7 +40,7 @@ const ROLE_LABEL: Record<string, string> = {
   administrator: 'Leader or administrator',
   leader: 'Leader',
   business: 'Business Owner',
-  pastor: 'Pastor and Preacher',
+  pastor: 'Minister/Preacher',
   curious: 'Curious'
 };
 
@@ -67,7 +67,7 @@ const PERSONA_EXPLAIN: Record<string, string> = {
  * outside the team, no quoting a named pastor's answers, and no use in
  * marketing without that person's explicit agreement.
  */
-const PASTOR_CARE_NOTE = 'Pastor and Preacher: this person answered honestly about prayer, dependence, and whether their preaching is still their own. Treat this record with more care than the rest: do not forward it outside the team, do not quote a named pastor\u2019s answers, and do not use it in marketing without their explicit agreement.';
+const PASTOR_CARE_NOTE = 'Minister/Preacher: this person answered honestly about prayer, dependence, and whether their preaching is still their own. Treat this record with more care than the rest: do not forward it outside the team, do not quote a named pastor\u2019s answers, and do not use it in marketing without their explicit agreement.';
 
 const LEADS_PAGE_SIZE = 10;
 

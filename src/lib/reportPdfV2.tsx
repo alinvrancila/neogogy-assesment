@@ -1146,7 +1146,7 @@ const Footer = ({ title = 'Neogogy Formation Compass' }: { title?: string }) => 
  * has to look like a business paper rather than a personal report.
  */
 /**
- * The Pastor and Preacher cover.
+ * The Minister/Preacher cover.
  *
  * Ink-light, one accent, a great deal of white space, and no name field: this
  * check is anonymous and the file should look like it belongs to the person

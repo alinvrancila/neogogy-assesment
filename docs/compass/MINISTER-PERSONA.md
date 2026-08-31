@@ -1,4 +1,4 @@
-# The Pastor and Preacher persona
+# The Minister/Preacher persona
 
 ## What it is
 

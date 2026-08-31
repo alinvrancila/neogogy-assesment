@@ -1,5 +1,5 @@
 /**
- * The Pastor and Preacher persona.
+ * The Minister/Preacher persona.
  *
  * Synthetic preachers with deliberately shaped answers, plus the structural
  * checks that matter most for this persona: that the explanations never hint at

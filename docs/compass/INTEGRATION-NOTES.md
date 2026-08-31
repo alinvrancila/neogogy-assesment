@@ -773,7 +773,7 @@ forwarded to an accountant or a board and has to look like a business paper.
 
 ---
 
-# The Pastor and Preacher persona
+# The Minister/Preacher persona
 
 ## The quotation constraint, and how it was resolved
 

@@ -1,5 +1,5 @@
 /**
- * Pastor and Preacher outputs that no other persona produces.
+ * Minister/Preacher outputs that no other persona produces.
  *
  * The Dependence Check is a mirror, not a measure: it reads the dependence tags
  * carried by answers and the two unscored reflection prompts, and says in plain

@@ -127,7 +127,7 @@ read them.
 
 ---
 
-## The Pastor and Preacher persona
+## The Minister/Preacher persona
 
 The sixth persona, and the first that is anonymous by construction.
 

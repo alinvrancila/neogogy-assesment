@@ -53,7 +53,7 @@ another. Severity in the register reflects how the answers landed, nothing more.
 
 ---
 
-## The Pastor and Preacher persona
+## The Minister/Preacher persona
 
 **It sees habits, not hearts.** Every reading here is drawn from what one person
 said about their own week. It cannot see prayer, faithfulness, or the work of the

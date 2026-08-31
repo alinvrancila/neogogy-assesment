@@ -231,7 +231,7 @@ export const BUSINESS_HIGH_USE_PROBES: Item[] = [
 
 
 // ---------------------------------------------------------------------------
-// Pastor and Preacher overrides
+// Minister/Preacher overrides
 // ---------------------------------------------------------------------------
 /**
  * The shared items, asked about a ministry. Same ids, so an answer means the

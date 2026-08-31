@@ -1,5 +1,5 @@
 /**
- * Every quotation in the Pastor and Preacher persona, checked against the
+ * Every quotation in the Minister/Preacher persona, checked against the
  * source documents on disk.
  *
  * This report tells a preacher never to preach a quotation they have not seen

@@ -90,7 +90,7 @@ const PERSONAS: Array<{
   },
   {
     id: 'pastor',
-    name: 'Pastor and Preacher',
+    name: 'Minister/Preacher',
     isNew: true,
     who: 'You prepare and preach to a congregation',
     blurb: 'A private self-check about your preparation and your ministry.',

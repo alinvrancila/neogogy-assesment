@@ -49,7 +49,7 @@ function captionPost(r: CompassResult): string {
 }
 
 /**
- * The Pastor and Preacher posts.
+ * The Minister/Preacher posts.
  *
  * These say that the check was completed and, where the answers support it,
  * that the practice met the standard the check looks for. They never carry a
