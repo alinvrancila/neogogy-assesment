@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { randomUUID } from 'crypto';
 import { compute, applicableItems } from '@/engine';
+import { PASTOR_REFLECTION_PROMPTS } from '@/items/shared';
 import type { Persona, Submission } from '@/engine/types';
 import { saveLead, logEvent, type LeadRecord, type SubmissionMeta } from '@/lib/storage';
 import { generateCompassPdf } from '@/lib/reportPdfV2';
@@ -161,6 +162,17 @@ async function serverMeta(request: NextRequest): Promise<SubmissionMeta> {
   };
 }
 
+/**
+ * Questions that travel with a submission without belonging to the item bank.
+ * They are validated so a submission is not rejected, computed so they can do
+ * their one job, and stripped before anything is written down.
+ */
+const UNSCORED_EXTRAS = PASTOR_REFLECTION_PROMPTS.map((item) => ({
+  persona: 'pastor' as Persona, id: item.id, item,
+}));
+
+const UNSCORED_IDS = new Set(UNSCORED_EXTRAS.map((x) => x.id));
+
 /** Validate the Submission against the engine's own item model. */
 function validate(body: Body): { ok: true; submission: Submission } | { ok: false; error: string } {
   const persona = body.persona as Persona | undefined;
@@ -174,6 +186,13 @@ function validate(body: Body): { ok: true; submission: Submission } | { ok: fals
 
   const items = applicableItems(persona, usage);
   const byId = new Map(items.map((i) => [i.id, i]));
+  // The Minister/Preacher check asks two unscored questions after the last
+  // scored item. They are not in the bank, because they are never scored and
+  // never stored, but they do travel with the submission so the Dependence
+  // Check can be computed from them.
+  for (const extra of UNSCORED_EXTRAS) {
+    if (extra.persona === persona) byId.set(extra.id, extra.item);
+  }
 
   for (const [id, raw] of Object.entries(answers)) {
     const item = byId.get(id);
@@ -258,7 +277,12 @@ export async function POST(request: NextRequest) {
     personaName: result.archetype.name,
     overall: result.stage.rawIndex,
     dimensions: dimensionScores,
-    answers: checked.submission.answers as Record<string, number>,
+    // the two unscored questions are computed from and then dropped: the screen
+    // that asks them says they are not stored, and that stays true
+    answers: Object.fromEntries(
+      Object.entries(checked.submission.answers as Record<string, number>)
+        .filter(([id]) => !UNSCORED_IDS.has(id))
+    ),
     baseline: (checked.submission.b1 !== undefined || checked.submission.b2 !== undefined)
       ? { b1: checked.submission.b1 ?? 0, b2: checked.submission.b2 ?? 0 }
       : null,

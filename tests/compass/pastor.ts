@@ -239,6 +239,40 @@ head("The record, and what may leave it");
   const fs = await import("fs/promises");
   const path = await import("path");
 
+  // the two unscored questions travel with the submission, are computed from,
+  // and are dropped before anything is written down
+  const { PASTOR_REFLECTION_PROMPTS } = await import("../../src/items/shared");
+  const leadsPath = path.join(process.cwd(), "data", "leads.json");
+  const before = await fs.readFile(leadsPath, "utf-8").catch(() => "");
+  const sub = preacher(3, ALL(4), { extra: { reflect_prayer: 4, reflect_unaided: 5 } });
+  const { POST } = await import("../../src/app/api/submit/route");
+  const res = await POST(new Request("http://localhost/api/submit", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      ...sub, name: "Reflection Probe", email: "reflection.probe@example.org",
+    }),
+  }) as never);
+  ok("a submission carrying the two unscored answers is accepted", res.status === 200, res.status);
+
+  const after = JSON.parse(await fs.readFile(leadsPath, "utf-8").catch(() => "[]"));
+  const saved = after.find((l: { email?: string }) => l.email === "reflection.probe@example.org");
+  ok("the record was written", !!saved);
+  ok("the two unscored answers are not in it", !!saved
+    && PASTOR_REFLECTION_PROMPTS.every((i) => saved.answers?.[i.id] === undefined),
+    saved ? Object.keys(saved.answers ?? {}).filter((k) => k.startsWith("reflect_")) : "no record");
+
+  // and they still do their one job. A neutral profile is used, because a
+  // strong or weak one is already decided by the tags the answers carry.
+  const led = compute(preacher(3, ALL(3), { extra: { reflect_prayer: 4, reflect_unaided: 5 } }));
+  const trailing = compute(preacher(3, ALL(3), { extra: { reflect_prayer: 1, reflect_unaided: 1 } }));
+  ok("they still move the Dependence Check",
+    led.dependenceCheck?.level !== trailing.dependenceCheck?.level,
+    [led.dependenceCheck?.level, trailing.dependenceCheck?.level]);
+  ok("and they move nothing else", led.stage.rawIndex === trailing.stage.rawIndex);
+
+  // leave the local store as it was found
+  await fs.writeFile(leadsPath, before);
+
   // this persona now goes through the same gate as the rest
   const routeSource = await fs.readFile(
     path.join(process.cwd(), "src", "app", "api", "submit", "route.ts"), "utf-8");
