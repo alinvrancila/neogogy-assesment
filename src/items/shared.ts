@@ -190,7 +190,7 @@ export const BUSINESS_BASELINE_ITEMS: Item[] = [
     prompt: "Before any questions: how healthy does your business's relationship with AI feel to you right now?",
     scale: "agreement", version: 2 },
   { id: "b2", persona: "shared", type: "baseline",
-    prompt: "Prediction: where do you expect this assessment to place your business?",
+    prompt: "Prediction: where do you expect this assessment to place your business on a ten stage route?",
     scale: "agreement", version: 2 },
 ];
 

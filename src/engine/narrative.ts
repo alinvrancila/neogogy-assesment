@@ -372,9 +372,13 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
   // 7. Self-knowledge
   {
     const L: string[] = [];
-    L.push(`Before answering anything, you told us two things: how healthy your relationship with AI feels, and where you expected this result to land. Neither was scored. They are compared with your measured result here, because they measure two different things and both are useful.`);
+    L.push(r.persona === "business"
+      ? `Before answering anything, you told us two things: how healthy your business's relationship with AI feels to you, and where you expected this assessment to place it. Neither was scored. They are compared with the measured result here, because they measure two different things and both are useful to an owner.`
+      : `Before answering anything, you told us two things: how healthy your relationship with AI feels, and where you expected this result to land. Neither was scored. They are compared with your measured result here, because they measure two different things and both are useful.`);
     L.push(``);
-    L.push(`**The first is about feel.** It is the gap between how good something feels and how it measures. It is the most documented effect in this field: assistance improves the visible output, the improved output feels like improved capability, and the feeling persists even as the underlying capability moves the other way (Bastani et al., PNAS, 2025). **The second is about aim.** It is simply how close your prediction came, which is worth knowing on its own, because people who can predict their own performance tend to manage it better.`);
+    L.push(r.persona === "business"
+      ? `**The first is about feel.** It is the gap between how good the arrangement feels and how it measures. It is the most documented effect in this field: assistance improves the visible output, the improved output feels like improved capability, and the feeling persists even as the underlying capability moves the other way (Bastani et al., PNAS, 2025). In a business it is amplified, because the owner usually sees the output and rarely sees the process behind it. **The second is about aim.** It is how close your prediction came, which is worth knowing on its own: owners who can predict their own position tend to manage it better.`
+      : `**The first is about feel.** It is the gap between how good something feels and how it measures. It is the most documented effect in this field: assistance improves the visible output, the improved output feels like improved capability, and the feeling persists even as the underlying capability moves the other way (Bastani et al., PNAS, 2025). **The second is about aim.** It is simply how close your prediction came, which is worth knowing on its own, because people who can predict their own performance tend to manage it better.`);
     L.push(``);
     L.push(r.calibration.note);
     if (r.calibration.calibrationGap !== undefined && Math.abs(r.calibration.calibrationGap) >= 2) {

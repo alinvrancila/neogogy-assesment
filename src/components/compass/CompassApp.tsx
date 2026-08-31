@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   collectAttribution, collectEnvironment, pacing, SittingWatcher,
 } from '@/lib/clientSignals';
+import { BASELINE_ITEMS, BUSINESS_BASELINE_ITEMS } from '@/items/shared';
 import { applicableItems } from '@/engine';
 import type { Item, Persona, Submission } from '@/engine/types';
 import { USAGE_ITEM } from '@/items/shared';
@@ -793,6 +794,10 @@ function Setup({
 }) {
   const ready = !!persona;
   const chosen = PERSONAS.find((p) => p.id === persona);
+  // the two unscored questions come from the item bank, so the screen and the
+  // stored item can never drift apart
+  const isBusiness = persona === 'business';
+  const baselinePrompts = (isBusiness ? BUSINESS_BASELINE_ITEMS : BASELINE_ITEMS).map((i) => i.prompt);
 
   return (
     <section className="screen">
@@ -851,14 +856,16 @@ function Setup({
           <ul className="lp-howto-list">
             <li>
               <strong>Answer for what is true, not what sounds right.</strong> Several questions ask
-              what you would actually do under time pressure. Those answers carry more weight than
-              the ones where you describe yourself, because habits show up in situations rather than
-              in intentions.
+              what {isBusiness ? 'would really happen under pressure' : 'you would actually do under time pressure'}. Those
+              answers carry more weight than the ones where you describe
+              {isBusiness ? ' the business' : ' yourself'}, because habits show up in situations
+              rather than in intentions.
             </li>
             <li>
-              <strong>Your answers are not shared with anyone.</strong> No teacher, employer or
-              school sees this. There is no pass mark and nothing here is reported. An honest result
-              is the only kind that is any use to you.
+              <strong>Your answers are not shared with anyone.</strong>{' '}
+              {isBusiness
+                ? 'No client, lender or regulator sees this. There is no pass mark, no inspection, and nothing here is reported. An honest answer about a weak spot is the only kind that is any use to you.'
+                : 'No teacher, employer or school sees this. There is no pass mark and nothing here is reported. An honest result is the only kind that is any use to you.'}
             </li>
             <li>
               <strong>Some questions are worded in the negative.</strong> Those are marked. Answer
@@ -876,8 +883,9 @@ function Setup({
             </li>
           </ul>
           <p className="lp-howto-time">
-            About twelve minutes, 33 to 36 questions depending on your answers. You can go back
-            and change any answer before the end.
+            {isBusiness
+              ? 'About ten minutes, 40 to 42 questions depending on your answers. You can go back and change any answer before the end.'
+              : 'About twelve minutes, 33 to 36 questions depending on your answers. You can go back and change any answer before the end.'}
           </p>
         </div>
 
@@ -885,18 +893,18 @@ function Setup({
         <div className="surface" style={{ padding: '24px 26px', marginTop: 26 }}>
           <span className="eyebrow">Two questions we do not score</span>
           <p className="muted" style={{ fontSize: '.92rem', margin: '8px 0 18px', maxWidth: '62ch' }}>
-            Neither of these affects your result. We compare them with your result at the end, so you
-            can see how your own sense of things lines up with what your answers describe. Answering
-            them is optional.
+            {isBusiness
+              ? 'Neither of these affects your result. We compare them with the result at the end, so you can see how your own sense of the business lines up with what your answers describe. Answering them is optional.'
+              : 'Neither of these affects your result. We compare them with your result at the end, so you can see how your own sense of things lines up with what your answers describe. Answering them is optional.'}
           </p>
 
           <div className="baseline">
-            <div className="q">Before any questions: how healthy does your current relationship with AI feel to you?</div>
+            <div className="q">{baselinePrompts[0]}</div>
             <OptionCards choices={B1_CHOICES} selected={b1} onPick={onB1} />
           </div>
 
           <div className="baseline" style={{ marginTop: 22 }}>
-            <div className="q">Prediction: where do you expect your result to land on a ten stage route?</div>
+            <div className="q">{baselinePrompts[1]}</div>
             <OptionCards choices={BAND_CHOICES} selected={b2} onPick={onB2} />
           </div>
         </div>
