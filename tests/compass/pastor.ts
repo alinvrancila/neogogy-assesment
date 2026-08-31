@@ -234,41 +234,39 @@ head("The words a preacher reads");
     /not a spiritual assessment of your calling/i.test(generateReport(r)));
 }
 
-head("Anonymity");
+head("The record, and what may leave it");
 {
-  // The route is called for real. If it were ever to write, it would have to
-  // reach the storage layer, and the local store is a file: so the check is
-  // that the request is refused before any of that can happen, and that the
-  // stored records are untouched.
   const fs = await import("fs/promises");
   const path = await import("path");
-  const leadsPath = path.join(process.cwd(), "data", "leads.json");
-  const before = await fs.readFile(leadsPath, "utf-8").catch(() => "");
 
-  const { POST } = await import("../../src/app/api/submit/route");
-  const req = new Request("http://localhost/api/submit", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      persona: "pastor", usage: 3, b1: 4, b2: 3,
-      name: "A Name", email: "a@example.org", answers: {},
-    }),
-  });
-  const res = await POST(req as never);
-  ok("a pastor submission is refused rather than stored", res.status === 400, res.status);
-  const body = await res.json().catch(() => ({}));
-  ok("the refusal explains itself", /anonymous/i.test(body?.error ?? ""), body);
-
-  const after = await fs.readFile(leadsPath, "utf-8").catch(() => "");
-  ok("no record was written", before === after);
-
-  // and the report route, which is what the browser does call, never stores
+  // this persona now goes through the same gate as the rest
   const routeSource = await fs.readFile(
+    path.join(process.cwd(), "src", "app", "api", "submit", "route.ts"), "utf-8");
+  ok("no persona is refused at the gate any more",
+    /const ANONYMOUS_PERSONAS: Persona\[\] = \[\];/.test(routeSource));
+  const reportSource = await fs.readFile(
     path.join(process.cwd(), "src", "app", "api", "report", "route.ts"), "utf-8");
-  ok("the PDF route touches no storage",
-    !/saveLead|logEvent|listLeads|appendLocal/.test(routeSource));
-  // the anonymous path depends on this route accepting the persona at all
-  ok("the PDF route accepts this persona", /'pastor'/.test(routeSource), "not in the allow list");
+  ok("the PDF route still touches no storage",
+    !/saveLead|logEvent|listLeads|appendLocal/.test(reportSource));
+
+  // what a preacher may post carries no finding at all
+  const { sharePosts, pastorStanding } = await import("../../src/lib/share");
+  const strong = compute(preacher(3, ALL(5)));
+  const weak = compute(preacher(4, ALL(2)));
+  for (const [label, r] of [["a strong reading", strong], ["a weak reading", weak]] as const) {
+    const text = sharePosts(r).map((p) => p.text).join("\n");
+    ok(`${label}: no score, stage, or archetype in anything shareable`,
+      !/stage \d|\b\d{1,3}\.\d\b|out of 100/i.test(text)
+      && !Object.values({ a: r.archetype.name }).some((n) => text.includes(n)),
+      text.slice(0, 90));
+    ok(`${label}: no dimension name and number`,
+      !/Authorship Before God \d|Faithfulness to the Text \d|Dependence Risk \d/.test(text));
+  }
+  ok("a strong reading may say the standard was met", pastorStanding(strong).passed);
+  ok("a weak reading says only that it was completed", !pastorStanding(weak).passed);
+  ok("neither claims anyone's AI use is certified safe",
+    !/certif\w* (?:that )?(?:my|their|your)? ?(?:use|ai) (?:is|as) safe|ai safety certif/i.test(
+      sharePosts(strong).map((p) => p.text).join(" ") + " " + pastorStanding(strong).detail));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

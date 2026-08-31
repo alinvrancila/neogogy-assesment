@@ -7,9 +7,9 @@ congregation. It asks where AI is serving the calling, and where it may be
 quietly substituting for the work God does in a preacher through prayer, study,
 dependence, and presence with people.
 
-It is anonymous by design. There is no email step, no name, no church, and no
-record. The browser scores the answers and shows the reading; a PDF can be built
-and handed straight back, and no copy is kept.
+It follows the same path as the other personas: the reading appears after an
+email address is given, and a PDF arrives in the inbox. The record is kept with
+the rest, and treated with more care than the rest.
 
 ## The thesis
 
@@ -105,18 +105,28 @@ vanished this week, and whether what reaches the pulpit has been checked.
 work of a season, each with what it would look like if it were happening. These
 are offered, not prescribed. So is the reading list.
 
-## Why it stores nothing
+## What is kept, and what may be shared
 
-A minister answering honestly about prayer, dependence, and whether their
-preaching is still their own is telling us something that could cost them their
-position if it were ever attached to their name. There is no version of that
-record that could be held responsibly, and no analytics value worth the risk to
-one pastor.
+The record is kept: name, email, the reading, and the same context every other
+submission carries. It was built anonymous and changed at the owner's decision,
+and the admin carries a standing note about handling it, because a minister
+answering honestly about prayer and dependence has said something more exposing
+than anything else this instrument collects.
 
-So the check writes nothing. The browser scores it. The PDF route builds a file
-and hands it back without touching storage. A request for this persona that
-reaches the submit route is refused rather than saved. A count is not worth a
-trace, and the test suite asserts this rather than trusting it.
+What may leave that record is narrow and tested. The prepared social posts say
+that the check was taken and, where the answers support it, that the practice met
+the standard it looks for. They carry no score, no stage, no archetype, and no
+dimension. The suite asserts this on both a strong and a weak reading, so a post
+cannot start leaking findings through a later edit.
+
+The standard is met when authorship, verification, and integrity all sit at 55 or
+above, unaided capacity at 45 or above, and no harm pattern has fired. Anything
+short of that shares as completed, with nothing about what was found.
+
+The wording stops short of certifying anyone's use of AI as safe, and says so on
+the page. This instrument reads self-reported habits. It can say a practice met a
+standard of responsible use on the day it was taken; it cannot certify safety,
+and a claim it cannot support would be worth less than the one it can.
 
 ## What it is not
 

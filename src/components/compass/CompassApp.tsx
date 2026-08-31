@@ -18,7 +18,7 @@ import {
 } from '@/lib/clientSignals';
 import { BASELINE_ITEMS, BUSINESS_BASELINE_ITEMS, PASTOR_BASELINE_ITEMS, PASTOR_REFLECTION_PROMPTS } from '@/items/shared';
 import { dimensionScope } from '@/engine/display';
-import { applicableItems, compute } from '@/engine';
+import { applicableItems } from '@/engine';
 import type { Item, Persona, Submission } from '@/engine/types';
 import { USAGE_ITEM } from '@/items/shared';
 import type { CompassResult } from '@/engine';
@@ -95,7 +95,7 @@ const PERSONAS: Array<{
     who: 'You prepare and preach to a congregation',
     blurb: 'A private self-check about your preparation and your ministry.',
     explain: 'A private self-check for those who prepare and preach the Word. It asks where AI is serving your calling and where it may be standing in for the work God does in you through prayer, study, dependence, and presence with your people.',
-    note: 'Anonymous. Nothing you answer is stored with your name, email, or church; results appear on your screen and can be saved to your own device.',
+    note: 'Around twelve minutes. Your reading is sent to your email as a PDF you can keep, and you can take it again in six months to see what has moved.',
     expect: [
       'Preparation, prayer and what reaches the pulpit',
       'Checking quotations, word studies and citations',
@@ -297,26 +297,19 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
     track('assessment_complete', {
       sessionId: sessionId.current, role: persona, step: Object.keys(clean).length,
     });
-    // The pastor check is anonymous: no gate, no email, no record. The two
-    // unscored reflection prompts come next, then the result appears here in
-    // the browser without anything being sent anywhere.
+    // The two reflection prompts come before the gate for this persona, because
+    // they shape the Dependence Check the reader is about to be shown.
     if (persona === 'pastor') { setScreen('reflect'); return; }
     setScreen('gate');
   }, [persona, usage, b1, b2, answers]);
 
-  /** Scores in the browser and shows the result. Nothing leaves the device. */
-  const finishAnonymously = useCallback((reflections: Record<string, number>) => {
-    if (!submission) return;
-    const withReflections = {
-      ...submission,
-      answers: { ...submission.answers, ...reflections },
-    };
-    setResult(compute(withReflections));
-    setComparison(null);
-    setEmailed(false);
-    clearDraft();
-    setScreen('results');
-  }, [submission, clearDraft]);
+  /** Carries the two unscored answers forward, then hands over to the gate. */
+  const finishReflections = useCallback((reflections: Record<string, number>) => {
+    setSubmission((prev) => (prev
+      ? { ...prev, answers: { ...prev.answers, ...reflections } }
+      : prev));
+    setScreen('gate');
+  }, []);
 
   /* ------------------------------------------------------------ navigation */
   const advance = useCallback(() => {
@@ -501,7 +494,7 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
   }
 
   if (screen === 'reflect') {
-    return shell(<PastorReflection onDone={finishAnonymously} />);
+    return shell(<PastorReflection onDone={finishReflections} />);
   }
 
   if (screen === 'quiz' && currentItem) {
@@ -592,9 +585,9 @@ function PastorOpening({ onBack, onNext }: { onBack: () => void; onNext: () => v
           <h3 className="lp-h3">How this works</h3>
           <ul className="lp-howto-list">
             <li>
-              <strong>It is anonymous by design.</strong> There is no email step and no name. Nothing
-              you answer is stored against you, and the result appears here on your screen when you
-              finish. You can save it to your own device.
+              <strong>It is between you and the page.</strong> Nothing here is reported to a board, a
+              denomination, or a congregation, and no one is told how you answered. Your reading is
+              sent to your email so you can keep it and compare it later.
             </li>
             <li>
               <strong>Every question explains itself.</strong> Under each one you will find why it is
@@ -635,10 +628,10 @@ function PastorReflection({ onDone }: { onDone: (answers: Record<string, number>
     <section className="screen">
       <div className="wrap setup">
         <span className="eyebrow">Two last questions</span>
-        <h2 className="section-title mt-s">Not scored, and not stored</h2>
+        <h2 className="section-title mt-s">These two are not scored</h2>
         <p className="lede" style={{ maxWidth: '62ch' }}>
-          These two do not affect your result at all. They shape one part of what you are about to
-          read, the Dependence Check, and then they are gone.
+          Neither one affects your result. They shape a single part of what you are about to read,
+          the Dependence Check, which is a mirror rather than a measure.
         </p>
         {items.map((item) => (
           <div key={item.id} className="baseline" style={{ marginTop: 22 }}>
@@ -655,7 +648,7 @@ function PastorReflection({ onDone }: { onDone: (answers: Record<string, number>
           <span />
           <button className="btn btn-primary" type="button" disabled={!ready}
             onClick={() => onDone(answers)}>
-            See my reading <span className="arrow">&rarr;</span>
+            Continue <span className="arrow">&rarr;</span>
           </button>
         </div>
       </div>

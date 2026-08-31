@@ -48,7 +48,96 @@ function captionPost(r: CompassResult): string {
   ].join('\n');
 }
 
+/**
+ * The Pastor and Preacher posts.
+ *
+ * These say that the check was completed and, where the answers support it,
+ * that the practice met the standard the check looks for. They never carry a
+ * score, a stage, an archetype, or a dimension: what a preacher answered about
+ * prayer and dependence is not material for a feed.
+ *
+ * The wording is careful on purpose. This instrument reads self-reported habits.
+ * It can say a practice met a standard of responsible use; it cannot certify
+ * that anyone's use of AI is safe, and it does not claim to.
+ */
+export interface PastorStanding {
+  passed: boolean;
+  label: string;
+  detail: string;
+}
+
+const STANDARD = {
+  verification: 55,
+  agency: 55,
+  responsibleUse: 55,
+  dependencySafety: 45,
+} as const;
+
+/** Whether the reading meets the standard the check looks for. */
+export function pastorStanding(r: CompassResult): PastorStanding {
+  const meets = (Object.keys(STANDARD) as Array<keyof typeof STANDARD>)
+    .every((k) => r.dimensions[k].score >= STANDARD[k]);
+  const noHarm = !r.patterns.some((p) => p.kind === 'harm');
+  const passed = meets && noHarm;
+  return passed
+    ? {
+      passed: true,
+      label: 'Responsible AI practice in ministry',
+      detail: 'Your answers met the standard this check looks for: authorship kept, claims checked before the pulpit, care and confidences held in your own hands, and the capacity to prepare without the tools.',
+    }
+    : {
+      passed: false,
+      label: 'Completed',
+      detail: 'You completed the check. One or more readings sit below the standard it looks for, which is a normal result and the reason the practices are there. You can share that you did the work without sharing what it found.',
+    };
+}
+
+function pastorLong(r: CompassResult): string {
+  const st = pastorStanding(r);
+  return [
+    st.passed
+      ? `I completed the Preaching Formation Check, an advanced assessment of how AI is used in ministry preparation and preaching, and my practice met its standard for responsible use.`
+      : `I completed the Preaching Formation Check, an advanced assessment of how AI is used in ministry preparation and preaching.`,
+    ``,
+    `It looks at forty questions across ten areas: whether the message is still received and owned by the preacher, whether what reaches the pulpit has been checked, whether pastoral care and confidences stay in human hands, and whether a preacher could still prepare without any tool at all.`,
+    ``,
+    `I am not posting my results. They are between me and the page. What I will say is that pastors using these tools should know where they stand, and that this took about twelve minutes.`,
+    ``,
+    SHARE_URL,
+  ].join('\n');
+}
+
+function pastorShort(r: CompassResult): string {
+  const st = pastorStanding(r);
+  return st.passed
+    ? `Completed the Preaching Formation Check and met its standard for responsible AI use in ministry. Forty questions on preparation, preaching, care, and formation. Results stay private. ${SHARE_URL}`
+    : `Completed the Preaching Formation Check: forty questions on how AI is shaping preparation, preaching, care, and formation. Results stay private. ${SHARE_URL}`;
+}
+
+function pastorCaption(r: CompassResult): string {
+  const st = pastorStanding(r);
+  return [
+    st.passed
+      ? `Responsible AI practice in ministry: standard met.`
+      : `Preaching Formation Check: completed.`,
+    ``,
+    `An advanced assessment of how AI is shaping preparation, preaching, pastoral care, and a preacher's own formation. Forty questions, ten areas, about twelve minutes.`,
+    ``,
+    `I am keeping the findings to myself. The point of taking it was not a score.`,
+    ``,
+    `Link: ${SHARE_URL}`,
+  ].join('\n');
+}
+
 export function sharePosts(r: CompassResult): SharePost[] {
+  if (r.persona === 'pastor') {
+    return [
+      { network: 'linkedin', label: 'LinkedIn', text: pastorLong(r) },
+      { network: 'facebook', label: 'Facebook', text: pastorLong(r) },
+      { network: 'x', label: 'X', text: pastorShort(r) },
+      { network: 'instagram', label: 'Instagram', text: pastorCaption(r) },
+    ];
+  }
   return [
     { network: 'linkedin', label: 'LinkedIn', text: longPost(r) },
     { network: 'facebook', label: 'Facebook', text: longPost(r) },

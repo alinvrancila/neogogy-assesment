@@ -14,6 +14,7 @@ import type { Submission } from '@/engine/types';
 import { helpHarm } from '@/engine/patterns';
 import { healthyMarker, constructName } from '@/engine/display';
 import { CONSTRUCTS } from '@/engine/config';
+import { pastorStanding } from '@/lib/share';
 import type { ConstructId } from '@/engine/types';
 
 /** 1. The opening: what this is, and what it is not. */
@@ -326,6 +327,90 @@ export function PastorResources({ result }: { result: CompassResult }) {
   );
 }
 
+/**
+ * Passages to sit with, chosen for the pattern in the reading.
+ *
+ * Every quotation here is verified against the source documents by the
+ * quotation suite. Each carries a question rather than a conclusion: the point
+ * is to leave a preacher thinking, not to tell them what to think.
+ */
+const REFLECTIONS: Array<{
+  id: string; quote: string; source: string; question: string;
+  when: (r: CompassResult) => boolean;
+}> = [
+  {
+    id: 'dependence',
+    quote: 'The key question is not whether a technology is inherently good or evil, but whether our response through that technology reflects dependence on God or an attempt at independence from him.',
+    source: 'James Spencer, “Human Capacity and Technology”',
+    question: 'Take one habit from your week, not the whole of your practice. Which of the two does it look like from the inside?',
+    when: () => true,
+  },
+  {
+    id: 'friction',
+    quote: 'Some friction is holy. The hard work of reading, writing, thinking, praying, listening, and revising is part of how a person is formed.',
+    source: 'Alin Vrancila, Faith at Work, on the deliberate recovery of friction',
+    question: 'Name one piece of friction the tool has removed from your preparation. Was it the kind that was forming you, or the kind that was only costing you time?',
+    when: (r) => r.dimensions.dependencySafety.score < 70 || r.dimensions.transfer.score < 70,
+  },
+  {
+    id: 'wisdom',
+    quote: 'AI deals in knowledge, humans deal in wisdom. Speed is the enemy of wisdom, discernment, and, often, human flourishing.',
+    source: 'Todd Korpi, quoted in “Navigating the Agathokakological Age”',
+    question: 'Where in your week has speed quietly become the measure of good work?',
+    when: (r) => r.dimensions.amplification.score < 70 || r.usageProfile.usage >= 4,
+  },
+  {
+    id: 'shepherds',
+    quote: 'The church needs faithful shepherds who have listened to God and to their people. Ministry is not content production.',
+    source: 'Alin Vrancila, “Created to Create”, in Faith at Work',
+    question: 'Think of last Sunday. What in that message came from listening, and what came from producing?',
+    when: (r) => r.dimensions.agency.score < 70 || r.dimensions.creativity.score < 70,
+  },
+  {
+    id: 'attention',
+    quote: 'The fear of the Lord is a disposition, a sense of how the world works, that recognizes God as infinitely more relevant than any other actor or factor we may encounter.',
+    source: 'James Spencer, “Theological Dispositions in a Digital World”',
+    question: 'In the hours you spend preparing, where does your attention actually go first? That answer is already a kind of worship.',
+    when: () => true,
+  },
+  {
+    id: 'presence',
+    quote: 'AI and digital platforms promise connection, but it is often a disembodied, low-effort simulation.',
+    source: 'Alin Vrancila, “Navigating the Agathokakological Age”',
+    question: 'Who in your congregation have you thought about recently but not gone to see?',
+    when: (r) => r.dimensions.responsibleUse.score < 70,
+  },
+  {
+    id: 'outhuman',
+    quote: 'Our role is not to out-compute AI, but to out-human it.',
+    source: 'Alin Vrancila, “Navigating the Agathokakological Age”',
+    question: 'What is the most human thing you did in ministry this month? Would it survive a busy season?',
+    when: () => true,
+  },
+];
+
+export function PastorReflections({ result }: { result: CompassResult }) {
+  const picked = REFLECTIONS.filter((x) => x.when(result)).slice(0, 4);
+  return (
+    <section className="pastor-block">
+      <h3 className="pastor-h3">Something to sit with</h3>
+      <p className="muted">
+        Four passages from the writing this check is built on, chosen for the pattern in your
+        answers. Each one carries a question rather than a conclusion.
+      </p>
+      <div className="pastor-reflections">
+        {picked.map((x) => (
+          <figure key={x.id} className="pastor-reflection">
+            <blockquote>{x.quote}</blockquote>
+            <figcaption>{x.source}</figcaption>
+            <p className="pastor-question">{x.question}</p>
+          </figure>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /** 11. A closing word, chosen to fit the reading rather than repeated for all. */
 const CLOSINGS: Record<string, { ref: string; text: string }> = {
   strategic_integrator: { ref: '1 Peter 5:2, NLT', text: 'Care for the flock that God has entrusted to you.' },
@@ -350,6 +435,30 @@ const CLOSINGS: Record<string, { ref: string; text: string }> = {
   },
   forming_practitioner: { ref: 'Luke 6:40, NLT', text: 'The student who is fully trained will become like the teacher.' },
 };
+
+/**
+ * The completion block, and the sharing that goes with it.
+ *
+ * What can be shared is that the check was taken and, where the answers support
+ * it, that the practice met the standard. The findings themselves stay here.
+ */
+export function PastorCertificate({ result, name }: { result: CompassResult; name?: string }) {
+  const st = pastorStanding(result);
+  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  return (
+    <section className={`pastor-cert${st.passed ? ' is-met' : ''}`}>
+      <p className="asc-kicker">{st.passed ? 'Standard met' : 'Completed'}</p>
+      <h3 className="pastor-h3">{st.passed ? 'Responsible AI practice in ministry' : 'Preaching Formation Check completed'}</h3>
+      {name ? <p className="pastor-cert-name">{name}</p> : null}
+      <p>{st.detail}</p>
+      <p className="muted pastor-fineprint">
+        {st.passed
+          ? 'This records what your own answers described on ' + date + '. It reads self-reported habits, so it speaks to practice rather than certifying that any use of AI is safe. Anything you share says that you took the check and where your practice stood. Your readings stay here.'
+          : 'This records that you completed the check on ' + date + '. Anything you share says that you did the work, and nothing about what it found.'}
+      </p>
+    </section>
+  );
+}
 
 export function PastorClosing({ result, submission, onRetake }: {
   result: CompassResult;

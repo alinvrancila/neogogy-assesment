@@ -843,3 +843,29 @@ imports nothing from the storage layer. The submit route refuses this persona
 outright. The test suite asserts the refusal, asserts the stored records are
 byte-identical afterwards, and asserts the PDF route's source contains no
 storage call at all.
+
+## The anonymity decision, reversed
+
+The persona was built anonymous, at the brief's instruction and for a reason
+written down at the time: a minister answering honestly about prayer and
+dependence is exposed in a way no other respondent is.
+
+The owner has since decided the check should follow the same path as every other
+persona, with an email gate and a record in the admin. That is their call, and it
+is implemented in full: the gate, the stored record, the emailed PDF, and the
+fields in the admin.
+
+Two things were kept from the original design, because they cost nothing and
+answer the concern that produced it. The admin carries a standing note asking
+staff to treat these records with more care than the rest. And what a preacher
+can post carries no finding at all: the prepared posts say the check was taken
+and, where the answers support it, that the practice met the standard, with no
+score, stage, archetype, or dimension. The suite asserts that on a strong reading
+and on a weak one.
+
+**On the word certification.** The request was for something that reads as a
+certification of AI safety. What is implemented says the practice met a standard
+for responsible use, on the date it was taken, and says plainly on the page that
+this reads self-reported habits rather than certifying that any use of AI is
+safe. A claim the instrument cannot support would be worth less to the pastor
+making it than the one it can.

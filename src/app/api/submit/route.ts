@@ -16,12 +16,11 @@ export const runtime = 'nodejs';
 const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business', 'pastor'];
 
 /**
- * The Pastor and Preacher check is anonymous by design and never reaches this
- * route: the browser scores it and shows the result without sending anything.
- * If a request for that persona arrives anyway, from an old tab or a script, it
- * is refused rather than stored. A count is not worth a trace.
+ * Personas whose submissions are never stored. Empty at present: the Pastor and
+ * Preacher check now goes through the same gate as the rest, at the owner's
+ * decision, and its records are kept alongside them.
  */
-const ANONYMOUS_PERSONAS: Persona[] = ['pastor'];
+const ANONYMOUS_PERSONAS: Persona[] = [];
 
 type Body = {
   persona?: string;

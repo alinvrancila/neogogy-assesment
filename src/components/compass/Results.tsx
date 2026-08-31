@@ -30,6 +30,7 @@ import {
 import {
   PastorOpeningBlock, ServingAndStandingIn, DependenceCheckBlock, OutageReading,
   FaithfulnessAndIntegrity, PastorSignature, FormationRoadmap, PastorResources, PastorClosing,
+  PastorReflections, PastorCertificate,
 } from './PastorModules';
 import ShareResult from './ShareResult';
 import type { AttemptComparison } from '@/lib/history';
@@ -288,6 +289,11 @@ export default function Results({
     return (
       <div className="wrap results pastor">
         <PastorOpeningBlock result={result} />
+        {emailed ? (
+          <p className="muted" style={{ marginTop: -8, marginBottom: 16 }}>
+            {firstName ? `Thank you, ${firstName}. ` : ''}A PDF of this reading is on its way to your inbox.
+          </p>
+        ) : null}
         <AscentResults result={result} comparison={null} />
         <ServingAndStandingIn result={result} />
         <DependenceCheckBlock result={result} />
@@ -302,7 +308,10 @@ export default function Results({
           ))}
 
         <FormationRoadmap result={result} />
+        <PastorReflections result={result} />
         <PastorResources result={result} />
+        <PastorCertificate result={result} name={firstName} />
+        <ShareResult result={result} />
         <PastorClosing result={result} submission={submission ?? null} onRetake={onRetake} />
 
         <div className="foot">

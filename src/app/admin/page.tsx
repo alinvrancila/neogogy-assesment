@@ -54,22 +54,20 @@ const PERSONA_EXPLAIN: Record<string, string> = {
   parent: 'Assesses the individual: their own use and the decisions they make at home.',
   administrator: 'Assesses the individual: their own leadership work and their own decisions.',
   business: 'Assesses the business, not the individual: its decisions, continuity, customer trust, knowledge and people.',
-  pastor: 'A private, anonymous self-check for preachers. No individual results are stored, by design.',
+  pastor: 'Assesses a preacher: their preparation, their preaching, their pastoral care, and their own formation. Sensitive by nature, so handle these records accordingly.',
 };
 
 /**
- * Why the pastor persona keeps no records, written down so it does not get
- * quietly improved away.
+ * A standing note for anyone reading these records.
  *
- * A minister answering honestly about prayer, dependence, and whether their
- * preaching is still their own is telling us something that could cost them
- * their position if it were ever attached to their name. There is no version of
- * that record we could hold responsibly, and no analytics value that would be
- * worth the risk to one pastor. So the check writes nothing: no answers, no
- * scores, no address, no identifier, not even a timestamp finer than the month.
- * A count is not worth a trace.
+ * A minister has answered honestly about prayer, dependence, and whether their
+ * preaching is still their own. That is more exposing than anything else this
+ * instrument collects. The records are kept because the owner decided they
+ * should be, and they are treated with more care than the rest: no forwarding
+ * outside the team, no quoting a named pastor's answers, and no use in
+ * marketing without that person's explicit agreement.
  */
-const PASTOR_ANONYMITY_NOTE = 'Pastor and Preacher: anonymous self-check. No individual results are stored by design. A minister answering honestly about prayer and dependence is telling us something that could cost them their position if it were ever attached to their name, and no analytics value is worth that. Please do not add record keeping to this persona.';
+const PASTOR_CARE_NOTE = 'Pastor and Preacher: this person answered honestly about prayer, dependence, and whether their preaching is still their own. Treat this record with more care than the rest: do not forward it outside the team, do not quote a named pastor\u2019s answers, and do not use it in marketing without their explicit agreement.';
 
 const LEADS_PAGE_SIZE = 10;
 
@@ -358,7 +356,7 @@ function LeadDetailPanel({ lead, onClose }: { lead: LeadRow; onClose: () => void
         ) : (
           <div className="min-h-0 flex-1 overflow-auto p-4">
             {lead.role === 'pastor' ? (
-              <p className="admin-error-box mb-3 rounded-xl px-4 py-3 text-xs">{PASTOR_ANONYMITY_NOTE}</p>
+              <p className="admin-error-box mb-3 rounded-xl px-4 py-3 text-xs">{PASTOR_CARE_NOTE}</p>
             ) : null}
             {lead.role === 'business' ? (
               <div className="mb-4"><BusinessContextPanel lead={lead} /></div>
