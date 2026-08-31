@@ -134,7 +134,7 @@ export function OptionCards({
 
 /** One assessment screen. */
 export function ItemScreen({
-  item, choices, selected, onPick, header, note
+  item, choices, selected, onPick, header, note, scope
 }: {
   item: Item;
   choices: Choice[];
@@ -142,11 +142,20 @@ export function ItemScreen({
   onPick: (v: number) => void;
   header: string;
   note?: string;
+  /** Business Owner only: whether this question is about the owner or the business. */
+  scope?: 'owner' | 'business';
 }) {
   const cards = usesCards(item);
   return (
     <div className="qcard">
-      <div className="qnum">{header}</div>
+      <div className="qnum">
+        {header}
+        {scope ? (
+          <span className={`qscope qscope-${scope}`}>
+            {scope === 'owner' ? 'About you as the owner' : 'About the business'}
+          </span>
+        ) : null}
+      </div>
       <div className="qstem">{item.prompt}</div>
       {item.context ? <p className="qcontext">{item.context}</p> : null}
       {note ? <div className="qnote">{note}</div> : (item.context ? null : <div style={{ height: 14 }} />)}

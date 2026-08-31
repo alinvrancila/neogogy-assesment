@@ -11,7 +11,12 @@
 
 import type { CompassResult, RiskCategory } from '@/engine';
 import { helpHarm } from '@/engine/patterns';
-import { compositeName } from '@/engine/display';
+import {
+  compositeName, dimensionScope, reportedConstructName, constructContent,
+  SCOPE_LABEL, SCOPE_BLURB, type Scope,
+} from '@/engine/display';
+import { CONSTRUCTS } from '@/engine/config';
+import type { ConstructId } from '@/engine/types';
 
 const CATEGORY_LABEL: Record<RiskCategory, string> = {
   legal: 'Legal and compliance',
@@ -274,6 +279,85 @@ export function OwnersExperiment() {
         still do unaided. That comparison, repeated occasionally, is the most reliable ongoing test
         of whether AI is building this business or hollowing it out.
       </p>
+    </section>
+  );
+}
+
+
+/**
+ * The two levels, reported separately.
+ *
+ * Same readings the rest of the report uses, grouped so an owner can see at a
+ * glance which findings are about their own judgment and which are about how
+ * the business runs. Sorted worst first inside each block, because that is the
+ * order the work happens in.
+ */
+export function ScopedDimensions({ result, scope }: { result: CompassResult; scope: Scope }) {
+  const rows = (Object.keys(CONSTRUCTS) as ConstructId[])
+    .filter((id) => dimensionScope(result.persona, id) === scope)
+    .map((id) => ({
+      id,
+      name: reportedConstructName(result.persona, id),
+      healthy: result.dimensions[id].score,
+      shown: CONSTRUCTS[id].reportedAsRisk
+        ? result.dimensions[id].reportedScore
+        : result.dimensions[id].score,
+      state: result.dimensions[id].microState,
+      reading: (() => {
+        const c = constructContent(result.persona, id);
+        const st = result.dimensions[id].microState;
+        return st === 'strong' ? c.atStrong : st === 'developing' ? c.atDeveloping : c.atWatch;
+      })(),
+    }))
+    .sort((a, b) => a.healthy - b.healthy);
+
+  const avg = Math.round(rows.reduce((a, r) => a + r.healthy, 0) / rows.length);
+
+  return (
+    <section className={`biz-scope biz-scope-${scope}`}>
+      <div className="biz-scope-head">
+        <div>
+          <p className="asc-kicker">{scope === 'owner' ? 'Level one' : 'Level two'}</p>
+          <h3 className="biz-h2">{SCOPE_LABEL[scope]}</h3>
+          <p className="biz-scope-blurb">{SCOPE_BLURB[scope]}</p>
+        </div>
+        <div className="biz-scope-score">
+          <span>{avg}</span>
+          <small>{scope === 'owner' ? 'owner average' : 'business average'}</small>
+        </div>
+      </div>
+
+      <div className="biz-bars">
+        {rows.map((r) => (
+          <div key={r.id} className="biz-bar-row">
+            <span className="biz-bar-name">{r.name}</span>
+            <span className="biz-bar-track">
+              <b className="biz-bar-tick biz-bar-45" />
+              <b className="biz-bar-tick biz-bar-65" />
+              <i className={`biz-bar-fill biz-bar-${r.state}`} style={{ width: `${Math.max(2, r.healthy)}%` }} />
+            </span>
+            <span className={`biz-bar-val biz-bar-t-${r.state}`}>{r.shown}</span>
+          </div>
+        ))}
+      </div>
+
+      {rows.some((row) => CONSTRUCTS[row.id].reportedAsRisk) ? (
+        <p className="muted biz-bar-note">
+          Bars are plotted on the healthy reading, so Continuity Risk sits by the capability behind
+          it rather than by the risk number. Below 45 is a vulnerability, above 65 a strength.
+        </p>
+      ) : (
+        <p className="muted biz-bar-note">
+          Below 45 is named a vulnerability, above 65 a strength. The two marks on each bar are
+          those lines.
+        </p>
+      )}
+
+      <div className="biz-scope-notes">
+        {rows.slice(0, 2).map((r) => (
+          <p key={r.id}><strong>{r.name}.</strong> {r.reading}</p>
+        ))}
+      </div>
     </section>
   );
 }

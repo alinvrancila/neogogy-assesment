@@ -25,7 +25,7 @@ import { Markdown } from './Markdown';
 import AscentResults from './ascent/AscentResults';
 import {
   HealthHeadline, HelpingHarming, RiskRegister, ContinuityTest, TrustAndGovernance,
-  DecisionIntegrity, NinetyDayPlan, OwnersExperiment,
+  DecisionIntegrity, NinetyDayPlan, OwnersExperiment, ScopedDimensions,
 } from './BusinessModules';
 import ShareResult from './ShareResult';
 import type { AttemptComparison } from '@/lib/history';
@@ -283,10 +283,16 @@ export default function Results({
       {isBusiness ? (
         <>
           <HelpingHarming result={result} />
-          <RiskRegister result={result} />
+
+          {/* the two levels, side by side in the reader's mind */}
+          <ScopedDimensions result={result} scope="owner" />
+          <DecisionIntegrity result={result} />
+
+          <ScopedDimensions result={result} scope="business" />
           <ContinuityTest result={result} />
           <TrustAndGovernance result={result} />
-          <DecisionIntegrity result={result} />
+
+          <RiskRegister result={result} />
         </>
       ) : null}
 

@@ -21,7 +21,8 @@ import {
 import type { AttemptComparison } from '@/lib/history';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
 import {
-  constructName, reportedConstructName, stageName, indexName, reportTitle, disclaimerExtra,
+  constructName, reportedConstructName, constructContent, stageName, indexName, reportTitle,
+  disclaimerExtra, dimensionScope, SCOPE_LABEL, SCOPE_BLURB,
 } from '@/engine/display';
 import {
   VIEW as MAP_VIEW, pointAtIndex, routePath, routeRidge,
@@ -915,6 +916,75 @@ function NextStagePanel({ r }: { r: CompassResult }) {
   );
 }
 
+/** Business Owner: one level of the assessment, with its readings drawn large. */
+function ScopedBlockPdf({ r, scope }: { r: CompassResult; scope: 'owner' | 'business' }) {
+  const ids = (Object.keys(CONSTRUCTS) as ConstructId[])
+    .filter((id) => dimensionScope(r.persona, id) === scope);
+  const rows = ids.map((id) => ({
+    id,
+    name: reportedConstructName(r.persona, id),
+    healthy: r.dimensions[id].score,
+    shown: CONSTRUCTS[id].reportedAsRisk ? r.dimensions[id].reportedScore : r.dimensions[id].score,
+    reading: (() => {
+      const c = constructContent(r.persona, id);
+      const st = r.dimensions[id].microState;
+      return st === 'strong' ? c.atStrong : st === 'developing' ? c.atDeveloping : c.atWatch;
+    })(),
+  })).sort((a, b) => a.healthy - b.healthy);
+  const avg = Math.round(rows.reduce((a, x) => a + x.healthy, 0) / rows.length);
+  const accent = scope === 'owner' ? T.gold : T.teal;
+
+  return (
+    <>
+      <View wrap={false} minPresenceAhead={140}>
+        <View style={{ height: 4, width: 54, backgroundColor: accent, marginBottom: 8 }} />
+        <Text style={S.eyebrow}>{scope === 'owner' ? 'Level one' : 'Level two'}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+          <Text style={{ ...S.h2, marginBottom: 0 }}>{SCOPE_LABEL[scope]}</Text>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 30, color: accent }}>{avg}</Text>
+            <Text style={{ fontFamily: 'Plex', fontSize: 6, letterSpacing: 0.8, color: T.mute }}>
+              {scope === 'owner' ? 'OWNER AVERAGE' : 'BUSINESS AVERAGE'}
+            </Text>
+          </View>
+        </View>
+        <Text style={{ fontSize: 8.5, lineHeight: 1.5, color: T.mute, marginTop: 4, marginBottom: 10 }}>
+          {SCOPE_BLURB[scope]}
+        </Text>
+
+        {rows.map((row) => (
+          <View key={row.id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+            <Text style={{ fontSize: 8.5, width: 150 }}>{row.name}</Text>
+            <View style={{ flex: 1, height: 14, borderRadius: 7, backgroundColor: '#EDE5D7', position: 'relative' }}>
+              <View style={{
+                width: `${Math.max(2, row.healthy)}%`, height: 14, borderRadius: 7,
+                backgroundColor: bandColor(row.healthy),
+              }} />
+              <View style={{ position: 'absolute', left: '45%', top: 0, width: 1, height: 14, backgroundColor: T.ink, opacity: 0.3 }} />
+              <View style={{ position: 'absolute', left: '65%', top: 0, width: 1, height: 14, backgroundColor: T.ink, opacity: 0.3 }} />
+            </View>
+            <Text style={{
+              fontFamily: 'Plex', fontSize: 9.5, width: 34, textAlign: 'right',
+              color: bandTextColor(row.healthy),
+            }}>
+              {row.shown}
+            </Text>
+          </View>
+        ))}
+      </View>
+
+      {rows.slice(0, 2).map((row) => (
+        <View key={`n${row.id}`} wrap={false} style={{ marginTop: 6 }}>
+          <Text style={{ fontSize: 8.5, lineHeight: 1.5 }}>
+            <Text style={{ fontWeight: 700 }}>{row.name}. </Text>{row.reading}
+          </Text>
+        </View>
+      ))}
+      <View style={S.gap} />
+    </>
+  );
+}
+
 const HEAD_CELL = {
   fontFamily: 'Plex' as const, fontSize: 6, letterSpacing: 0.9, color: T.mute,
 };
@@ -987,7 +1057,7 @@ function RiskRegisterPdf({ r }: { r: CompassResult }) {
           ))}
         </>
       )}
-      <Footer />
+      <Footer title={reportTitle(r.persona)} />
     </Page>
   );
 }
@@ -1028,7 +1098,7 @@ function NinetyDayPdf({ r }: { r: CompassResult }) {
           ))}
         </View>
       ))}
-      <Footer />
+      <Footer title={reportTitle(r.persona)} />
     </Page>
   );
 }
@@ -1061,12 +1131,146 @@ function ContinuityPdf({ r }: { r: CompassResult }) {
 
 /* ----------------------------------------------------------------- pages */
 
-const Footer = () => (
+const Footer = ({ title = 'Neogogy Formation Compass' }: { title?: string }) => (
   <View style={S.foot} fixed>
-    <Text>Neogogy Formation Compass</Text>
+    <Text>{title}</Text>
     <Text render={({ pageNumber, totalPages }) => `${pageNumber} of ${totalPages}`} />
   </View>
 );
+
+/**
+ * The Business Owner cover.
+ *
+ * No photograph. Deep navy, one teal rule, a large score and a lot of white
+ * space, because this document gets forwarded to an accountant or a board and
+ * has to look like a business paper rather than a personal report.
+ */
+function BusinessCover({ r, name, dateStr, company, industry }: {
+  r: CompassResult; name: string; dateStr: string; company?: string; industry?: string;
+}) {
+  const NAVY = '#1B2A4A';
+  const TEAL = '#00D4AA';
+  const PAPER = '#F4F6F9';
+  const SOFT = 'rgba(244,246,249,0.72)';
+  const FAINT = 'rgba(244,246,249,0.48)';
+  const arch = r.archetype.name;
+  const archSize = arch.length > 24 ? 30 : arch.length > 18 ? 34 : 40;
+
+  return (
+    <Page size="A4" style={{ backgroundColor: NAVY, color: PAPER, fontFamily: 'Spectral' }}>
+      {/* a single rule, top left, doing the work a photograph would do */}
+      <View style={{ position: 'absolute', top: 0, left: M, width: 64, height: 5, backgroundColor: TEAL }} />
+
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: M, paddingTop: 62 }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 8, letterSpacing: 2.6, color: TEAL }}>
+          NEOGOGY  ·  BUSINESS AI HEALTH CHECK
+        </Text>
+
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.8, color: FAINT, marginTop: 54 }}>
+          PREPARED FOR
+        </Text>
+        <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 34, color: PAPER, marginTop: 8, lineHeight: 1.1 }}>
+          {company || name || 'Your business'}
+        </Text>
+        {(company && name) || industry ? (
+          <Text style={{ fontFamily: 'Plex', fontSize: 9, color: SOFT, marginTop: 10 }}>
+            {[company ? name : '', industry].filter(Boolean).join('   ·   ')}
+          </Text>
+        ) : null}
+
+        <View style={{ height: 1, backgroundColor: 'rgba(244,246,249,0.18)', marginTop: 34, marginBottom: 34 }} />
+
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.8, color: FAINT }}>
+          WHERE THIS BUSINESS STANDS
+        </Text>
+        <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: archSize, color: PAPER, marginTop: 12, lineHeight: 1.06 }}>
+          {arch}
+        </Text>
+        <Text style={{ fontFamily: 'Spectral', fontSize: 12.5, color: SOFT, marginTop: 14, lineHeight: 1.55, maxWidth: 360 }}>
+          {r.archetype.tagline}
+        </Text>
+      </View>
+
+      {/* the two levels, given the middle of the page, because the split is
+          the first thing an owner has to understand about this report */}
+      <View style={{ position: 'absolute', left: M, right: M, top: 372, flexDirection: 'row' }}>
+        {(['owner', 'business'] as const).map((scope) => {
+          const ids = (Object.keys(CONSTRUCTS) as ConstructId[])
+            .filter((id) => dimensionScope(r.persona, id) === scope);
+          const avg = Math.round(ids.reduce((a, id) => a + r.dimensions[id].score, 0) / ids.length);
+          const accent = scope === 'owner' ? '#F0B849' : TEAL;
+          return (
+            <View key={scope} style={{ flex: 1, paddingRight: 24 }}>
+              <View style={{ height: 3, width: 34, backgroundColor: accent, marginBottom: 10 }} />
+              <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.4, color: FAINT }}>
+                {scope === 'owner' ? 'ABOUT YOU AS THE OWNER' : 'ABOUT THE BUSINESS'}
+              </Text>
+              <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 40, color: accent, marginTop: 6 }}>
+                {avg}
+              </Text>
+              <Text style={{ fontFamily: 'Plex', fontSize: 7, color: SOFT, marginTop: 2 }}>
+                {`${ids.length} of 10 readings`}
+              </Text>
+              <Text style={{ fontFamily: 'Spectral', fontSize: 9, color: SOFT, marginTop: 8, lineHeight: 1.5 }}>
+                {scope === 'owner'
+                  ? 'How you decide, how you think, and how well you fit tools to work.'
+                  : 'What the business checks, keeps, would survive, and exposes.'}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+
+      {/* the number, large, with the stage beside it */}
+      <View style={{
+        position: 'absolute', left: M, right: M, bottom: 132,
+        flexDirection: 'row', alignItems: 'flex-end',
+      }}>
+        <View>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 84, color: TEAL, lineHeight: 1 }}>
+            {r.stage.rawIndex}
+          </Text>
+          <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.4, color: SOFT, marginTop: 6 }}>
+            BUSINESS AI HEALTH SCORE, OUT OF 100
+          </Text>
+        </View>
+        <View style={{ flex: 1, alignItems: 'flex-end' }}>
+          <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.4, color: FAINT }}>
+            {`STAGE ${r.stage.stage} OF 10`}
+          </Text>
+          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 19, color: PAPER, marginTop: 5 }}>
+            {r.stage.stageName}
+          </Text>
+          <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: SOFT, marginTop: 5 }}>
+            {`${r.stage.substage}  ·  ${r.overallConfidence} confidence`}
+          </Text>
+        </View>
+      </View>
+
+      {/* the two levels, named on the cover so the split is not a surprise */}
+      <View style={{
+        position: 'absolute', left: M, right: M, bottom: 62,
+        borderTopWidth: 1, borderTopColor: 'rgba(244,246,249,0.18)', paddingTop: 14,
+        flexDirection: 'row', justifyContent: 'space-between',
+      }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: SOFT, maxWidth: 330 }}>
+          Assesses the business, and the owner who runs it, separately.
+        </Text>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: FAINT }}>
+          Assessment indices, not an audit
+        </Text>
+      </View>
+
+      <View style={{
+        position: 'absolute', left: M, right: M, bottom: 30,
+        flexDirection: 'row', justifyContent: 'space-between',
+      }}>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: FAINT }}>{dateStr}</Text>
+        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: FAINT }}>assessment.neogogy.ai</Text>
+      </View>
+    </Page>
+  );
+}
 
 function Cover({ r, name, dateStr, company, industry }: {
   r: CompassResult; name: string; dateStr: string; company?: string; industry?: string;
@@ -1205,7 +1409,9 @@ export async function generateCompassPdf(args: {
 
   const doc = (
     <Document title={reportTitle(r.persona)} author="International Center for Applied Neogogy">
-      <Cover r={r} name={name} dateStr={dateStr} company={company} industry={industry} />
+      {isBusiness
+        ? <BusinessCover r={r} name={name} dateStr={dateStr} company={company} industry={industry} />
+        : <Cover r={r} name={name} dateStr={dateStr} company={company} industry={industry} />}
 
       {/*
         One flowing light page. react-pdf paginates it, and every content block
@@ -1301,6 +1507,13 @@ export async function generateCompassPdf(args: {
         </>
 
         {/* the ten dimensions as cards, replacing ten blocks of prose */}
+        {isBusiness ? (
+          <>
+            <ScopedBlockPdf r={r} scope="owner" />
+            <ScopedBlockPdf r={r} scope="business" />
+          </>
+        ) : null}
+
         <>
           <View wrap={false} minPresenceAhead={90}>
             <Text style={S.eyebrow}>Each dimension, unpacked</Text>
@@ -1393,7 +1606,7 @@ export async function generateCompassPdf(args: {
 
         <SectionBlock s={byKey('evidence')} />
 
-        <Footer />
+        <Footer title={reportTitle(r.persona)} />
       </Page>
 
       {/* Business Owner: the two outputs that need a page each, with tables

@@ -743,3 +743,30 @@ a short spill, a few lines on an otherwise empty page, before the register and
 plan pages begin. This is a property of flowing pagination rather than of the
 business persona (the existing personas do it too), and fixing it properly needs
 orphan control that react-pdf does not offer.
+
+## Two levels inside one assessment
+
+The persona was assessing two subjects at once without saying so. Three
+dimensions ask about the owner, seven about the business, and a reader with no
+way to tell them apart reads the whole thing as a personal verdict.
+
+**The split.** Owner: Owner Decision Ownership, Business AI Fluency, Strategic
+Amplification. These read how the owner decides, how they think, and how well
+they fit tools to work. Business: Verification Before Consequence, Operational
+Continuity, Institutional Knowledge Capture, Team Capability Growth, Business
+Adaptability, Governance, Data and Trust, and Market Differentiation. These read
+how the business runs when the owner is not in the room.
+
+Fluency sits on the owner side deliberately. It measures whether this person can
+name a process, a number, and an owner before automating, which is an operator's
+competence applied to the business rather than a property of the business.
+
+**Where it is said.** On the persona card, on the context screen, on a chip
+above every question, as two labelled blocks with their own averages on the
+results page and in the PDF, and on the PDF cover, where both averages appear
+before an owner has read anything else.
+
+**The cover changed with it.** The business report no longer opens on the dusk
+photograph. Deep navy, one teal rule, the score set large, the two level
+averages beside each other, and a lot of white space, because this document gets
+forwarded to an accountant or a board and has to look like a business paper.

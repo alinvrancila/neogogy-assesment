@@ -17,6 +17,7 @@ import {
   collectAttribution, collectEnvironment, pacing, SittingWatcher,
 } from '@/lib/clientSignals';
 import { BASELINE_ITEMS, BUSINESS_BASELINE_ITEMS } from '@/items/shared';
+import { dimensionScope } from '@/engine/display';
 import { applicableItems } from '@/engine';
 import type { Item, Persona, Submission } from '@/engine/types';
 import { USAGE_ITEM } from '@/items/shared';
@@ -94,7 +95,7 @@ const PERSONAS: Array<{
     who: 'You own, founded or run a business',
     blurb: 'Questions about the business, not about you.',
     explain: 'This one is different. It does not assess how you learn; it assesses your business: whether the way you and your team use AI is strengthening or weakening your decisions, your continuity, your customers\u2019 trust, your knowledge, and your people.',
-    note: 'About 10 minutes. Answer for the business as it actually runs today, not as you intend it to run.',
+    note: 'Three questions in ten are about you as the owner: the calls you make and how you think. The other seven are about the business: how it runs, what it keeps, and what it exposes. Each question says which. About 10 minutes, answered for the business as it actually runs today.',
     expect: [
       'Decisions, pricing and what reaches a customer',
       'What happens if your main AI tool disappears',
@@ -481,6 +482,9 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
             onPick={(v) => (atUsage ? chooseUsage(v) : chooseItem(currentItem.id, v))}
             header={header}
             note={note}
+            scope={persona === 'business' && currentItem.construct
+              ? dimensionScope('business', currentItem.construct)
+              : undefined}
           />
           <div className="qnav">
             <button className="back" onClick={back}><span>&larr;</span> Back</button>
@@ -572,6 +576,12 @@ function BusinessContextScreen({
         <div className="lp-howto">
           <h3 className="lp-h3">Before you start</h3>
           <ul className="lp-howto-list">
+            <li>
+              <strong>Two levels, and each question says which.</strong> Three of the ten dimensions
+              are about you as the owner: the decisions you make, how you think, and how well you fit
+              tools to work. The other seven are about the business: what it checks, what it keeps,
+              what it would survive, and what it exposes. The result reports them separately.
+            </li>
             <li>
               <strong>Answer for the business as it actually runs today.</strong> Several questions
               ask what would really happen under pressure. Those answers carry more weight than the

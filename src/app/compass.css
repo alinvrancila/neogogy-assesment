@@ -2960,3 +2960,54 @@
 .nfc .biz-action { border-top: 1px solid var(--asc-border); margin-top: .7rem; padding-top: .7rem; }
 .nfc .biz-action-h { font-weight: 700; margin: 0 0 .25rem; }
 .nfc .biz-check { font-size: .84rem; color: var(--asc-muted); margin-top: .35rem; }
+
+/* Business Owner: which level a question is about, said on every question. */
+.nfc .qscope {
+  display: inline-block;
+  margin-left: .75rem;
+  padding: .12rem .5rem;
+  border-radius: 999px;
+  font-family: var(--f-mono);
+  font-size: .62rem;
+  letter-spacing: .08em;
+  text-transform: none;
+  vertical-align: middle;
+}
+.nfc .qscope-owner { background: #F3E7DA; color: #7A4A18; }
+.nfc .qscope-business { background: #DCEEE9; color: #14584C; }
+
+/* Business Owner: the owner block and the business block, told apart. */
+.nfc .biz-scope {
+  border: 1px solid var(--asc-border);
+  border-radius: 18px;
+  background: var(--asc-card);
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  border-top: 5px solid var(--asc-teal);
+}
+.nfc .biz-scope-owner { border-top-color: #C08A2E; }
+.nfc .biz-h2 { font-family: var(--f-serif); font-size: clamp(1.35rem, 2.6vw, 1.8rem); color: var(--asc-oxblood); margin: .25rem 0 .4rem; }
+.nfc .biz-scope-head { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; justify-content: space-between; }
+.nfc .biz-scope-blurb { margin: 0; max-width: 62ch; color: var(--asc-ink); }
+.nfc .biz-scope-score { text-align: right; min-width: 110px; }
+.nfc .biz-scope-score span { display: block; font-family: var(--f-serif); font-size: 2.8rem; line-height: 1; color: var(--asc-teal); }
+.nfc .biz-scope-owner .biz-scope-score span { color: #9A6B12; }
+.nfc .biz-scope-score small { font-family: var(--f-mono); font-size: .64rem; letter-spacing: .08em; color: var(--asc-muted); text-transform: uppercase; }
+.nfc .biz-bars { margin: 1.2rem 0 .5rem; }
+.nfc .biz-bar-row { display: grid; grid-template-columns: minmax(120px, 210px) 1fr 48px; gap: .7rem; align-items: center; margin-bottom: .6rem; }
+.nfc .biz-bar-name { font-size: .92rem; }
+.nfc .biz-bar-track { position: relative; display: block; height: 16px; border-radius: 8px; background: #EDE5D7; overflow: hidden; }
+.nfc .biz-bar-fill { position: absolute; inset: 0 auto 0 0; display: block; border-radius: 8px; }
+.nfc .biz-bar-strong { background: var(--asc-teal); }
+.nfc .biz-bar-developing { background: #DBA53C; }
+.nfc .biz-bar-watch { background: #CF796E; }
+.nfc .biz-bar-tick { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(31,28,24,.28); z-index: 2; }
+.nfc .biz-bar-45 { left: 45%; }
+.nfc .biz-bar-65 { left: 65%; }
+.nfc .biz-bar-val { font-family: var(--f-mono); font-size: .84rem; text-align: right; }
+.nfc .biz-bar-t-strong { color: var(--asc-teal); }
+.nfc .biz-bar-t-developing { color: #9A6B12; }
+.nfc .biz-bar-t-watch { color: #B0685E; }
+.nfc .biz-scope-notes { border-top: 1px solid var(--asc-border); padding-top: .8rem; }
+.nfc .biz-scope-notes p { margin: 0 0 .5rem; }
+.nfc .biz-bar-note { font-size: .82rem; margin: .2rem 0 .9rem; }

@@ -273,6 +273,50 @@ const BUSINESS_CONTENT: Partial<Record<ConstructId, Partial<ConstructContent>>> 
   },
 };
 
+/**
+ * Two levels of subject inside one assessment.
+ *
+ * Three dimensions ask about the owner: the calls they make, how they think,
+ * and how well they fit tools to work. Seven ask about the business: how it
+ * runs, what it keeps, and what it exposes. Saying which is which is the
+ * difference between a report an owner can act on and one they read as a
+ * personal verdict.
+ */
+export type Scope = "owner" | "business";
+
+const BUSINESS_SCOPE: Record<ConstructId, Scope> = {
+  agency: "owner",
+  amplification: "owner",
+  fluency: "owner",
+  verification: "business",
+  dependencySafety: "business",
+  transfer: "business",
+  skillGrowth: "business",
+  adaptability: "business",
+  responsibleUse: "business",
+  creativity: "business",
+};
+
+/** Which level a dimension belongs to, or undefined where the split does not apply. */
+export function dimensionScope(persona: Persona | undefined, id: ConstructId): Scope | undefined {
+  return persona === "business" ? BUSINESS_SCOPE[id] : undefined;
+}
+
+export const SCOPE_LABEL: Record<Scope, string> = {
+  owner: "About you as the owner",
+  business: "About the business",
+};
+
+export const SCOPE_SHORT: Record<Scope, string> = {
+  owner: "Owner",
+  business: "Business",
+};
+
+export const SCOPE_BLURB: Record<Scope, string> = {
+  owner: "These three read how you decide, how you think, and how well you fit tools to work. They are about you, because a business inherits its owner's judgment.",
+  business: "These seven read how the business runs without you in the room: what it checks, what it keeps, what it would survive, and what it exposes.",
+};
+
 export const PERSONA_DISPLAY: Partial<Record<Persona, PersonaDisplay>> = {
   business: {
     reportTitle: "Business AI Health Check",
