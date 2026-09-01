@@ -1447,7 +1447,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(216px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(216px, 100%), 1fr));
   gap: 10px;
 }
 
@@ -1535,7 +1535,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: 12px;
 }
 
@@ -1807,10 +1807,12 @@
 }
 
 @media (max-width: 860px) {
-  /* the map keeps its label sizes and scrolls horizontally rather than
-     shrinking ten stage names until they cannot be read */
-  .nfc .asc-map-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .nfc .asc-map { min-width: 880px; }
+  /* The map fits the screen rather than scrolling sideways. Ten stage names
+     cannot be read at this width, so the names come off the map and the
+     numbers grow instead: the route list directly below names every camp. */
+  .nfc .asc-map-scroll { overflow-x: visible; }
+  .nfc .asc-map { min-width: 0; width: 100%; }
+  .nfc .asc-legend { font-size: .74rem; }
   .nfc .asc-modules { grid-template-columns: 1fr; }
   .nfc .asc-modules .asc-card:first-child { grid-column: auto; }
   .nfc .asc { padding: 18px 16px 22px; }
@@ -2124,7 +2126,7 @@
   margin: 18px 0 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(268px, 100%), 1fr));
   gap: 10px;
   counter-reset: none;
 }
@@ -2192,7 +2194,7 @@
 
 .nfc .lp-gets {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
   gap: 14px;
 }
 
@@ -2208,7 +2210,7 @@
 /* persona choice */
 .nfc .lp-persona-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(268px, 100%), 1fr));
   gap: 14px;
 }
 
@@ -2456,7 +2458,7 @@
 /* ---- dimension cards ---- */
 .nfc .dimcards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(330px, 100%), 1fr));
   gap: 14px;
   margin-top: 18px;
 }
@@ -3144,4 +3146,35 @@
 .nfc .pastor-dim-lens {
   display: block; font-style: normal; font-family: var(--f-sans);
   font-size: .82rem; color: var(--asc-muted); margin-top: .15rem; max-width: 62ch;
+}
+
+/* On a phone the register becomes a stack of cards. A four column table at
+   390px shows two columns and hides the rest behind a sideways scroll nobody
+   discovers, which is the same failure as a map that does not fit. */
+@media (max-width: 720px) {
+  .nfc .biz-table-wrap { overflow-x: visible; }
+  .nfc .biz-table { min-width: 0; display: block; }
+  .nfc .biz-table thead { display: none; }
+  .nfc .biz-table tbody,
+  .nfc .biz-table tr,
+  .nfc .biz-table td { display: block; width: 100%; }
+  .nfc .biz-table tr {
+    border: 1px solid var(--asc-border);
+    border-radius: 12px;
+    padding: .85rem .9rem;
+    margin-bottom: .7rem;
+  }
+  .nfc .biz-table td { border-bottom: 0; padding: .15rem 0; }
+  .nfc .biz-table td + td { margin-top: .5rem; }
+  .nfc .biz-table td[data-label] + td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--f-mono);
+    font-size: .62rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--asc-muted);
+    margin-bottom: .2rem;
+  }
+  .nfc .biz-evidence { font-size: .78rem; }
 }

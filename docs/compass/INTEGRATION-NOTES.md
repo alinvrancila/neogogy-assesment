@@ -943,3 +943,29 @@ It also now carries what a cover is for. The minister's name is set large under
 "prepared for", and the result is there at a glance: archetype, tagline, score,
 stage, three readings drawn as bars (authorship, faithfulness to the text,
 unaided capacity), and the Dependence Check in one line.
+
+## The result on a phone
+
+**The map did not fit.** It carried `min-width: 880px` under 860px and scrolled
+sideways, on the reasoning that ten stage names cannot be read at phone width.
+That was the wrong trade: a respondent on a phone saw a third of the route and
+had no way to know the rest was there.
+
+The map now fits the screen. Below 860px the names come off the map (the route
+list directly underneath names every camp anyway) and everything that remains is
+drawn larger in viewBox units so it survives the scale down: camp numbers, the
+callout, the marker, the gates, and the reach ring. The component owns those
+sizes rather than CSS, because the callout pill is sized in JavaScript from the
+label and the two would otherwise disagree. The width factor is measured against
+the actual mono face rather than guessed, and the check asserts the text fits its
+pill at 390, 820 and 1280.
+
+**Six grids could not shrink.** `repeat(auto-fit, minmax(330px, 1fr))` cannot go
+below its minimum, so at 360px the dimension cards pushed 17px past the viewport.
+All six are now `minmax(min(Npx, 100%), 1fr)`.
+
+**The risk register became a stack.** Four columns at 390px showed two and hid
+the rest behind a sideways scroll nobody discovers, which is the same failure as
+the map. Below 720px each row is a card with its fields labelled.
+
+Swept every persona at 360, 390, 430 and 768: no horizontal overflow anywhere.

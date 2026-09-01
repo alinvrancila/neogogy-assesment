@@ -126,10 +126,14 @@ export function RiskRegister({ result }: { result: CompassResult }) {
           <tbody>
             {result.riskRegister.map((e) => (
               <tr key={e.title}>
-                <td><strong>{e.title}</strong><span className="biz-desc">{e.description}</span></td>
-                <td><span className={`biz-cat biz-cat-${e.category}`}>{CATEGORY_LABEL[e.category]}</span></td>
-                <td className="biz-evidence">{e.evidence}</td>
-                <td>{e.action ?? <span className="muted">Listed, not scheduled</span>}</td>
+                <td data-label="Exposure">
+                  <strong>{e.title}</strong><span className="biz-desc">{e.description}</span>
+                </td>
+                <td data-label="Category">
+                  <span className={`biz-cat biz-cat-${e.category}`}>{CATEGORY_LABEL[e.category]}</span>
+                </td>
+                <td data-label="What your answers showed" className="biz-evidence">{e.evidence}</td>
+                <td data-label="Action">{e.action ?? <span className="muted">Listed, not scheduled</span>}</td>
               </tr>
             ))}
           </tbody>

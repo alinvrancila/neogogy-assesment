@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 /**
  * The ascent map: five coordinated layers (sky, terrain ridges, contour lines,
  * route path, camps and gates) with the live marker placed continuously.
@@ -22,6 +24,24 @@ export { GATE_DEFS };
 const minIndexOf = (stage: number) => STAGES.find((s) => s.stage === stage)?.minIndex ?? 0;
 
 /** Ridge extended past both edges so the terrain never shows a cut seam. */
+/**
+ * True on a phone. The map is drawn once for a wide screen and once for a
+ * narrow one: at 390px the whole route still has to fit, so the names come off
+ * and everything that remains is drawn larger in the viewBox to survive the
+ * scale down. Read after mount, so the server and the first paint agree.
+ */
+function useNarrow(): boolean {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 860px)');
+    const apply = () => setNarrow(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+  return narrow;
+}
+
 export default function AscentMapHero(
   { result, comparison }: { result: CompassResult; comparison?: AttemptComparison | null }
 ) {
@@ -30,13 +50,18 @@ export default function AscentMapHero(
   // that next camp. Ungated, the marker stays at the exact index.
   const raw = result.stage.rawIndex;
   const index = result.stage.gated ? minIndexOf(result.stage.stage) : result.stage.index;
+  const narrow = useNarrow();
+  // sizes in viewBox units, so they hold their rendered size at either width
+  const Z = narrow
+    ? { num: 40, name: 0, chip: 32, anchor: 28, marker: 22, dot: 11, gate: 9, chipPad: 26 }
+    : { num: 12, name: 11.5, chip: 12, anchor: 10, marker: 14, dot: 7, gate: 5, chipPad: 12 };
   const here = pointAtIndex(index);
   const reach = pointAtIndex(raw);
   // The callout is clamped so it cannot run off the panel at either extreme.
   const calloutLabel = result.stage.gated
     ? `YOU ARE HERE \u00b7 STAGE ${result.stage.stage}`
     : `YOU ARE HERE \u00b7 ${result.stage.rawIndex}`;
-  const calloutW = Math.round(calloutLabel.length * 8.6) + 36;
+  const calloutW = Math.round(calloutLabel.length * Z.chip * 0.72) + Z.chipPad * 2;
   const calloutX = Math.max(calloutW / 2 + 8, Math.min(VIEW.w - calloutW / 2 - 8, here.x));
   const nextStage = result.nextTarget.stage;
   const nextAtTop = nextStage === result.stage.stage;
@@ -168,16 +193,19 @@ export default function AscentMapHero(
                       x1={lx} y1={band + 10} x2={p.x} y2={p.y - 14}
                       stroke="var(--asc-border)" strokeWidth={1} strokeDasharray="2 4"
                     />
-                    <text x={lx} y={band - 12} textAnchor="middle"
+                    <text x={lx} y={narrow ? band + 6 : band - 12} textAnchor="middle"
+                      style={{ fontSize: isHere ? Z.num * 1.15 : Z.num }}
                       className={`asc-camp-num${isHere ? ' is-here' : ''}`}>
                       {s.stage}
                     </text>
-                    <text x={lx} y={band + 6} textAnchor="middle"
-                      className={`asc-camp-name${isHere ? ' is-here' : ''}${isNext ? ' is-next' : ''}`}>
-                      {stageName(result.persona, s.stage)}
-                    </text>
+                    {narrow ? null : (
+                      <text x={lx} y={band + 6} textAnchor="middle"
+                        className={`asc-camp-name${isHere ? ' is-here' : ''}${isNext ? ' is-next' : ''}`}>
+                        {stageName(result.persona, s.stage)}
+                      </text>
+                    )}
                     <circle
-                      cx={p.x} cy={p.y} r={isHere ? 11 : 7}
+                      cx={p.x} cy={p.y} r={isHere ? Z.dot * 1.55 : Z.dot}
                       fill={reached ? 'var(--asc-teal)' : 'var(--asc-card)'}
                       stroke={isNext ? 'var(--asc-teal)' : 'var(--asc-border)'}
                       strokeWidth={isNext ? 2.5 : 1.5}
@@ -196,7 +224,7 @@ export default function AscentMapHero(
                 return (
                   <g key={`${g.construct}-${gi}`} aria-hidden="true">
                     <line x1={p.x} y1={p.y + 14} x2={p.x} y2={p.y + 44} stroke="var(--asc-gold)" strokeWidth={1.2} />
-                    <rect x={p.x - 5} y={p.y + 41} width={10} height={10} fill="var(--asc-gold)" transform={`rotate(45 ${p.x} ${p.y + 46})`} />
+                    <rect x={p.x - Z.gate} y={p.y + 41} width={Z.gate * 2} height={Z.gate * 2} fill="var(--asc-gold)" transform={`rotate(45 ${p.x} ${p.y + 41 + Z.gate})`} />
                   </g>
                 );
               })}
@@ -263,20 +291,23 @@ export default function AscentMapHero(
                       pathLength={1}
                       strokeDasharray={`0 ${travelledLen} ${raw / 100 - travelledLen} 1`}
                     />
-                    <circle cx={reach.x} cy={reach.y} r={8} fill="none" stroke="var(--asc-gold)" strokeWidth={2.5} />
-                    <text x={reach.x} y={reach.y + 34} textAnchor="middle" className="asc-anchor-label">
+                    <circle cx={reach.x} cy={reach.y} r={narrow ? 14 : 8} fill="none" stroke="var(--asc-gold)" strokeWidth={narrow ? 4 : 2.5} />
+                    <text x={reach.x} y={reach.y + (narrow ? 62 : 34)} textAnchor="middle"
+                      style={{ fontSize: Z.anchor }} className="asc-anchor-label">
                       INDEX {raw}
                     </text>
                   </g>
                 ) : null}
-                <circle cx={here.x} cy={here.y} r={14} fill="var(--asc-card)" stroke="var(--asc-oxblood)" strokeWidth={3} />
-                <circle cx={here.x} cy={here.y} r={6} fill="var(--asc-oxblood)" />
+                <circle cx={here.x} cy={here.y} r={Z.marker} fill="var(--asc-card)" stroke="var(--asc-oxblood)" strokeWidth={narrow ? 5 : 3} />
+                <circle cx={here.x} cy={here.y} r={Z.marker * 0.43} fill="var(--asc-oxblood)" />
                 <g>
                   <rect
-                    x={calloutX - calloutW / 2} y={here.y - 106} width={calloutW} height={32} rx={16}
+                    x={calloutX - calloutW / 2} y={here.y - 106 - (narrow ? 8 : 0)}
+                    width={calloutW} height={narrow ? 48 : 32} rx={narrow ? 24 : 16}
                     fill="var(--asc-oxblood)"
                   />
-                  <text x={calloutX} y={here.y - 85} textAnchor="middle" className="asc-here-chip">
+                  <text x={calloutX} y={here.y - (narrow ? 80 : 85)} textAnchor="middle"
+                    style={{ fontSize: Z.chip }} className="asc-here-chip">
                     {calloutLabel}
                   </text>
                 </g>
