@@ -41,6 +41,17 @@ function scrollTo(id: string) {
 
 function Header({ onStart }: { onStart: () => void }) {
   const [open, setOpen] = useState(false);
+  const [moved, setMoved] = useState(false);
+
+  useEffect(() => {
+    // The bar floats over the page, so it earns its shadow only once there is
+    // something underneath it to lift away from.
+    const onScroll = () => setMoved(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   const nav = [
     ['Why it matters', 'ha-thesis'],
     ['Choose your assessment', 'ha-personas'],
@@ -49,7 +60,7 @@ function Header({ onStart }: { onStart: () => void }) {
     ['Your report', 'ha-report'],
   ] as const;
   return (
-    <header className="ha-header">
+    <header className={`ha-header${moved ? ' is-moved' : ''}`}>
       <div className="ha-wrap ha-header-in">
         <a className="ha-brand" href="#top" onClick={(e) => { e.preventDefault(); scrollTo('top'); }}>
           <span className="ha-brand-org">{BRAND.org}</span>
@@ -155,6 +166,16 @@ function PersonaPanel({ p, onBegin }: { p: PersonaContent; onBegin: (id: Persona
       {p.clarification ? <p className="ha-clarify">{p.clarification}</p> : null}
 
       <p className="ha-panel-core">{p.coreQuestion}</p>
+
+      {/* The way in sits here as well as at the foot. Someone who already knows
+          this is their assessment should never have to read to the bottom to
+          start it, and on a phone the bottom is a long way down. */}
+      <div className="ha-panel-go">
+        <button type="button" className="ha-btn ha-btn-lg ha-btn-go" onClick={() => onBegin(p.id)}>
+          {p.cta} <span aria-hidden="true">&rarr;</span>
+        </button>
+        <span className="ha-go-meta">{p.minutes}. Free, with a {BRAND.report} to keep.</span>
+      </div>
 
       <div className="ha-panel-body">
         <div>
@@ -570,7 +591,22 @@ export default function Home({ initialPersona, onBegin }: {
 }) {
   const [selected, setSelected] = useState<Persona>(initialPersona ?? 'student');
   const [variant, setVariant] = useState<'a' | 'b'>('b');
+  const [barOn, setBarOn] = useState(false);
   const deepLinked = useRef(Boolean(initialPersona));
+  const current = PERSONA_CONTENT.find((p) => p.id === selected);
+
+  useEffect(() => {
+    // On a phone the persona reading is long, so once someone is past the hero
+    // the way in follows them down the page instead of waiting at the bottom.
+    const onScroll = () => {
+      const el = document.getElementById('ha-personas');
+      if (!el) return;
+      setBarOn(window.scrollY > el.offsetTop - 120);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     // ?hero=a serves the question-first hero, for side by side comparison.
@@ -585,8 +621,9 @@ export default function Home({ initialPersona, onBegin }: {
   }, []);
 
   return (
-    <div className="ha">
+    <div className={`ha${barOn ? ' has-bar' : ''}`}>
       <Header onStart={() => scrollTo('ha-personas')} />
+      <div className="ha-header-space" aria-hidden="true" />
       <Hero variant={variant} onStart={() => scrollTo('ha-personas')} />
       <Personas selected={selected} onSelect={setSelected} onBegin={onBegin} />
       <Definition />
@@ -600,6 +637,20 @@ export default function Home({ initialPersona, onBegin }: {
       <ReportValue onStart={() => scrollTo('ha-personas')} />
       <Ecosystem />
       <Closing onStart={() => scrollTo('ha-personas')} />
+
+      {current ? (
+        <div className={`ha-bar${barOn ? ' is-on' : ''}`} style={{ ['--accent' as string]: ACCENT[current.id] }}>
+          <div className="ha-bar-in">
+            <span className="ha-bar-who">
+              <strong>{current.name}</strong>
+              <span>{current.minutes}</span>
+            </span>
+            <button type="button" className="ha-btn ha-btn-go" onClick={() => onBegin(current.id)}>
+              {current.cta} <span aria-hidden="true">&rarr;</span>
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

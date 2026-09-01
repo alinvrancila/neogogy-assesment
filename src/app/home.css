@@ -66,10 +66,17 @@
 
 /* ---------------------------------------------------------------- header */
 .nfc .ha-header {
-  position: sticky; top: 0; z-index: 30; backdrop-filter: blur(10px);
-  background: rgba(247, 240, 230, .86); border-bottom: 1px solid var(--paper-line);
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40; backdrop-filter: blur(12px);
+  background: rgba(247, 240, 230, .82); border-bottom: 1px solid transparent;
+  transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.nfc .ha-header.is-moved {
+  background: rgba(247, 240, 230, .95); border-bottom-color: var(--paper-line);
+  box-shadow: 0 6px 22px rgba(40, 25, 18, .07);
 }
 .nfc .ha-header-in { display: flex; align-items: center; gap: 18px; min-height: 68px; }
+/* the bar is out of flow, so the page keeps its own room for it */
+.nfc .ha-header-space { height: 68px; }
 .nfc .ha-brand { display: grid; text-decoration: none; color: inherit; line-height: 1.15; }
 .nfc .ha-brand-org { font-family: var(--f-display); font-weight: 700; font-size: 1.02rem; letter-spacing: .04em; text-transform: uppercase; }
 .nfc .ha-brand-product { font-family: var(--f-display); font-size: .95rem; color: var(--maroon); }
@@ -193,6 +200,27 @@
 .nfc .ha-acc-body { padding: 0 10px 12px; }
 .nfc .ha-acc-body .ha-panel { box-shadow: none; border: 0; padding: 6px 4px 4px; }
 
+/* the way in, at the top of the reading as well as the end of it */
+.nfc .ha-panel-go { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 0 0 26px; }
+.nfc .ha-btn-go { background: var(--accent); border-color: var(--accent); }
+.nfc .ha-btn-go:hover { background: var(--accent); filter: brightness(1.12); }
+.nfc .ha-go-meta { font-size: .86rem; color: var(--ink-soft); }
+
+/* the phone's way in, following the reader down the page */
+.nfc .ha-bar {
+  display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+  background: rgba(247, 240, 230, .97); border-top: 1px solid var(--paper-line);
+  backdrop-filter: blur(12px); box-shadow: 0 -8px 26px rgba(40, 25, 18, .10);
+  padding: 10px var(--pad) calc(10px + env(safe-area-inset-bottom));
+  transform: translateY(110%); transition: transform .22s ease;
+}
+.nfc .ha-bar.is-on { transform: none; }
+.nfc .ha-bar-in { display: flex; align-items: center; gap: 12px; max-width: var(--wide); margin: 0 auto; }
+.nfc .ha-bar-who { display: grid; line-height: 1.2; min-width: 0; }
+.nfc .ha-bar-who strong { font-family: var(--f-display); font-size: 1rem; }
+.nfc .ha-bar-who span { font-family: var(--f-mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+.nfc .ha-bar .ha-btn { margin-left: auto; flex: 0 1 auto; min-height: 48px; white-space: nowrap; }
+
 /* ----------------------------------------------------------------- risks */
 .nfc .ha-risks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 32px; }
 .nfc .ha-risk { border-radius: var(--r); padding: 24px; border: 1px solid var(--paper-line); background: rgba(255, 255, 255, .6); }
@@ -275,8 +303,19 @@
   .nfc .ha-cols2, .nfc .ha-two-q, .nfc .ha-steps { grid-template-columns: 1fr; gap: 26px; }
   .nfc .ha-panel-body, .nfc .ha-asked { grid-template-columns: 1fr; }
 }
+@media (max-width: 900px) {
+  /* the bar only exists where the reading is long and the thumb is the pointer */
+  .nfc .ha-bar { display: block; }
+  .nfc .ha.has-bar { padding-bottom: 84px; }
+  .nfc .ha-panel-go { gap: 10px; }
+  .nfc .ha-panel-go .ha-btn { width: 100%; justify-content: center; min-height: 52px; }
+  .nfc .ha-panel-start .ha-btn { width: 100%; min-height: 52px; }
+  .nfc .ha-rail-item, .nfc .ha-acc-head { min-height: 62px; }
+}
 @media (max-width: 620px) {
   .nfc .ha-brand-product { font-size: .84rem; }
+  .nfc .ha-bar-who span { display: none; }
+  .nfc .ha-bar .ha-btn { font-size: .9rem; padding: 12px 18px; }
   .nfc .ha-brand-by { display: none; }
   .nfc .ha-header-act .ha-btn-sm { display: none; }
   .nfc .ha-equations li { grid-template-columns: 1fr; gap: 6px; text-align: left; }
@@ -294,3 +333,7 @@
 .nfc .ha-intro-by { font-family: var(--f-mono); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
 .nfc .ha-intro-core { font-family: var(--f-display); font-size: clamp(1.05rem, 2vw, 1.3rem); line-height: 1.35; color: var(--maroon); max-width: 34ch; margin: 18px 0 10px; }
 .nfc .ha-intro-meta { font-size: .93rem; color: var(--ink-soft); margin-bottom: 10px; }
+
+/* The design system sets display on these elements by class, which outranks the
+   browser's own rule for [hidden]. Without this, "hidden" is advisory. */
+.nfc [hidden] { display: none !important; }
