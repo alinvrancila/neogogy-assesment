@@ -62,11 +62,21 @@ function Header({ onStart }: { onStart: () => void }) {
   return (
     <header className={`ha-header${moved ? ' is-moved' : ''}`}>
       <div className="ha-wrap ha-header-in">
-        <a className="ha-brand" href="#top" onClick={(e) => { e.preventDefault(); scrollTo('top'); }}>
-          <span className="ha-brand-org">{BRAND.org}</span>
-          <span className="ha-brand-product">Human Advantage Assessment</span>
-          <span className="ha-brand-by">{BRAND.poweredBy}</span>
-        </a>
+        {/* The institution first, then the product. The logo is the attribution,
+            so the words "Powered by ICAN.ph" are not repeated beside it here;
+            they carry on in the hero, the results and the report. */}
+        <div className="ha-lockup">
+          <a className="ha-lockup-ican" href={ECOSYSTEM[0].url} target="_blank" rel="noopener noreferrer"
+            aria-label="ICAN, International Center for Applied Neogogy, opens in a new tab">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={ECOSYSTEM[0].logo} alt="ICAN" width={ECOSYSTEM[0].w} height={ECOSYSTEM[0].h} />
+          </a>
+          <span className="ha-lockup-rule" aria-hidden="true" />
+          <a className="ha-brand" href="#top" onClick={(e) => { e.preventDefault(); scrollTo('top'); }}>
+            <span className="ha-brand-org">{BRAND.org}</span>
+            <span className="ha-brand-product">Human Advantage Assessment</span>
+          </a>
+        </div>
 
         <nav className={`ha-nav${open ? ' is-open' : ''}`} aria-label="Sections">
           {nav.map(([label, id]) => (

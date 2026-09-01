@@ -55,7 +55,7 @@
 .nfc .ha-btn:hover { background: var(--crimson); transform: translateY(-1px); }
 .nfc .ha-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 .nfc .ha-btn-lg { font-size: 1.02rem; padding: 15px 28px; }
-.nfc .ha-btn-sm { font-size: .84rem; padding: 9px 16px; }
+.nfc .ha-btn-sm { font-size: .84rem; padding: 9px 16px; white-space: nowrap; }
 .nfc .ha-btn-light { background: var(--ivory); color: var(--maroon); border-color: var(--ivory); }
 .nfc .ha-btn-light:hover { background: #fff; }
 .nfc .ha-link {
@@ -74,20 +74,28 @@
   background: rgba(247, 240, 230, .95); border-bottom-color: var(--paper-line);
   box-shadow: 0 6px 22px rgba(40, 25, 18, .07);
 }
-.nfc .ha-header-in { display: flex; align-items: center; gap: 18px; min-height: 68px; }
+.nfc .ha-header-in { display: flex; align-items: center; gap: 18px; min-height: 92px; }
 /* the bar is out of flow, so the page keeps its own room for it */
-.nfc .ha-header-space { height: 68px; }
+.nfc .ha-header-space { height: 92px; }
+
+/* Institution, rule, product. The rule does the work of a comma: it keeps two
+   marks from reading as one lockup while holding them at the same weight. */
+.nfc .ha-lockup { display: flex; align-items: center; gap: clamp(10px, 1.6vw, 18px); flex: 0 0 auto; }
+.nfc .ha-lockup-ican { display: flex; align-items: center; border-radius: 6px; }
+.nfc .ha-lockup-ican img { display: block; width: auto; height: 62px; object-fit: contain; }
+.nfc .ha-lockup-ican:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+.nfc .ha-lockup-rule { width: 1px; height: 46px; background: var(--paper-line); flex: 0 0 auto; }
 .nfc .ha-brand { display: grid; text-decoration: none; color: inherit; line-height: 1.15; }
-.nfc .ha-brand-org { font-family: var(--f-display); font-weight: 700; font-size: 1.02rem; letter-spacing: .04em; text-transform: uppercase; }
-.nfc .ha-brand-product { font-family: var(--f-display); font-size: .95rem; color: var(--maroon); }
+.nfc .ha-brand-org { font-family: var(--f-display); font-weight: 700; font-size: 1.12rem; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.nfc .ha-brand-product { font-family: var(--f-display); font-size: 1rem; color: var(--maroon); white-space: nowrap; }
 .nfc .ha-brand-by { font-family: var(--f-mono); font-size: .58rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); margin-top: 2px; }
 .nfc .ha-nav { display: flex; gap: 4px; margin-left: auto; }
 .nfc .ha-nav button {
-  background: none; border: 0; cursor: pointer; font-family: var(--f-body); font-size: .86rem;
-  color: var(--ink-soft); padding: 8px 10px; border-radius: 8px;
+  background: none; border: 0; cursor: pointer; font-family: var(--f-body); font-size: .84rem;
+  color: var(--ink-soft); padding: 8px 9px; border-radius: 8px; white-space: nowrap;
 }
 .nfc .ha-nav button:hover { color: var(--maroon); background: rgba(158, 29, 32, .06); }
-.nfc .ha-header-act { display: flex; align-items: center; gap: 10px; }
+.nfc .ha-header-act { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
 .nfc .ha-burger { display: none; background: none; border: 0; cursor: pointer; padding: 8px; }
 .nfc .ha-burger span { display: block; width: 20px; height: 1.6px; background: var(--ink); margin: 4px 0; }
 
@@ -301,7 +309,7 @@
   .nfc .ha-persona-split { grid-template-columns: 280px 1fr; }
   .nfc .ha-panel-foot { grid-template-columns: 1fr; }
 }
-@media (max-width: 900px) {
+@media (max-width: 1180px) {
   .nfc .ha-nav { display: none; }
   .nfc .ha-nav.is-open {
     display: grid; position: absolute; left: 0; right: 0; top: 100%; background: var(--ivory-2);
@@ -310,6 +318,8 @@
   .nfc .ha-nav.is-open button { text-align: left; padding: 11px 4px; font-size: .95rem; }
   .nfc .ha-burger { display: block; }
   .nfc .ha-header-in { position: relative; }
+}
+@media (max-width: 900px) {
   .nfc .ha-persona-split { display: none; }
   .nfc .ha-accordion { display: block; }
   .nfc .ha-risks, .nfc .ha-research, .nfc .ha-grid3 { grid-template-columns: 1fr; }
@@ -327,7 +337,18 @@
   .nfc .ha-panel-start .ha-btn { width: 100%; min-height: 52px; }
   .nfc .ha-rail-item, .nfc .ha-acc-head { min-height: 62px; }
 }
+@media (max-width: 900px) {
+  .nfc .ha-header-in { min-height: 78px; }
+  .nfc .ha-header-space { height: 78px; }
+  .nfc .ha-lockup-ican img { height: 50px; }
+  .nfc .ha-lockup-rule { height: 38px; }
+}
 @media (max-width: 620px) {
+  .nfc .ha-header-in { min-height: 70px; }
+  .nfc .ha-header-space { height: 70px; }
+  .nfc .ha-lockup-ican img { height: 42px; }
+  .nfc .ha-lockup-rule { height: 30px; }
+  .nfc .ha-brand-org { font-size: .96rem; }
   .nfc .ha-brand-product { font-size: .84rem; }
   .nfc .ha-bar-who span { display: none; }
   .nfc .ha-bar .ha-btn { font-size: .9rem; padding: 12px 18px; }
