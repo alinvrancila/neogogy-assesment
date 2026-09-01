@@ -1,15 +1,20 @@
 # Organisation logos
 
-Four supplied logos belong here. They are never redrawn, approximated, or
-re-typeset: drop the real files in at these exact paths and the ecosystem
-section on the page picks them up.
+The four supplied logos, in place. They are used as supplied: cropped to their
+own ink and rescaled, never redrawn, re-typeset or approximated.
 
-    ican.svg          ICAN
-    life-college.svg  Life College International
-    neogogy.svg       Neogogy.ai
-    lifex.svg         LifeX
+    ican.png          ICAN                       www.ican.ph
+    life-college.png  Life College International www.life.edu.ph
+    neogogy.png       Neogogy.ai                 www.neogogy.ai
+    lifex.png         LifeX                      www.lifex.ph
 
-SVG is preferred. PNG at 3x also works: change the extension in the ECOSYSTEM
-list in `src/brand.ts` to match. Until a file exists, the section renders the
-organisation's name in type rather than a placeholder mark that could be
-mistaken for a logo.
+Names, links and stored aspect ratios live in `src/brand.ts`, which the page,
+the results and the report all read from, so the four appear in the same order
+with the same links everywhere. To replace one, drop the new file in at the same
+path and update `w` and `h` to the new pixel dimensions: the page sizes each
+logo by height and the report by width, so the aspect has to be true or the
+artwork distorts.
+
+`pdfW` is that logo's width in points on the report's closing page. The four are
+tuned so a tall seal and a wide wordmark carry the same optical weight rather
+than the same bounding box.

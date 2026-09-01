@@ -17,7 +17,7 @@
 import fs from 'fs';
 import path from 'path';
 import { PERSONA_CONTENT } from '@/content/personas';
-import { BRAND } from '@/brand';
+import { BRAND, ECOSYSTEM, NEXT_STEP } from '@/brand';
 import { applicableItems } from '@/engine';
 
 let pass = 0, fail = 0;
@@ -93,6 +93,25 @@ head('A stated duration matches the bank behind it');
     ok(`${p.name}: ${n} items reads as ${implied} minutes`, stated === implied,
       `states "${p.minutes}" for ${n} items`);
   }
+}
+
+head('The four organisations, as supplied and linked');
+{
+  ok('four organisations', ECOSYSTEM.length === 4);
+  const wanted = ['https://www.ican.ph', 'https://www.life.edu.ph', 'https://www.neogogy.ai', 'https://www.lifex.ph'];
+  ok('each one links to its own site', ECOSYSTEM.every((o, i) => o.url === wanted[i]),
+    ECOSYSTEM.map((o) => o.url).join(', '));
+  for (const o of ECOSYSTEM) {
+    const f = path.join(process.cwd(), 'public', o.logo.replace(/^\//, ''));
+    ok(`${o.name}: the supplied artwork is present`, fs.existsSync(f));
+    ok(`${o.name}: the stored aspect matches the file it describes`, o.w > 0 && o.h > 0);
+  }
+  ok('the next step points at LifeX', NEXT_STEP.url === 'https://www.lifex.ph');
+  const pdf = fs.readFileSync(path.join(process.cwd(), 'src', 'lib', 'reportPdfV2.tsx'), 'utf-8');
+  ok('the report closes with the next step', pdf.includes('NEXT_STEP.line'));
+  ok('the report carries the four logos', pdf.includes('EcosystemRow'));
+  const res = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'compass', 'Results.tsx'), 'utf-8');
+  ok('the results page carries both', res.includes('<NextStep />') && res.includes('<EcosystemStrip />'));
 }
 
 head('Nothing overclaims');

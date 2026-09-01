@@ -13,6 +13,7 @@
  */
 
 import { useState } from 'react';
+import { ECOSYSTEM, NEXT_STEP } from '@/brand';
 import {
   generateReportSections, reportHead, confidenceLabel, REPORT_DISCLAIMER,
   type CompassResult, type ReportSection, type ReportSectionKey,
@@ -393,6 +394,10 @@ export default function Results({
 
       <MethodologyDisclosure />
 
+      <NextStep />
+
+      <EcosystemStrip />
+
       <div className="foot">
         <div className="footmark">International Center for Applied Neogogy <span className="wm-ican">(ICAN)</span></div>
         <div className="fl">
@@ -401,6 +406,45 @@ export default function Results({
         </div>
         <div className="fl" style={{ marginTop: 8, color: 'var(--ink-soft)' }}>{REPORT_DISCLAIMER}</div>
       </div>
+    </div>
+  );
+}
+
+
+/**
+ * Where a respondent goes next.
+ *
+ * The reading ends with a position and a set of practices, so the one link that
+ * belongs here is the place those practices are worked on. It says the same
+ * sentence as the last page of the report, from the same constant.
+ */
+function NextStep() {
+  return (
+    <div className="nextstep">
+      <p className="nextstep-line">{NEXT_STEP.line}</p>
+      <a className="nextstep-link" href={NEXT_STEP.url} target="_blank" rel="noopener noreferrer">
+        {NEXT_STEP.label}
+      </a>
+    </div>
+  );
+}
+
+/** The four organisations, as supplied, each one a link. */
+function EcosystemStrip() {
+  return (
+    <div className="ecostrip">
+      <p className="ecostrip-h">The work behind the assessment</p>
+      <ul>
+        {ECOSYSTEM.map((o) => (
+          <li key={o.name}>
+            <a href={o.url} target="_blank" rel="noopener noreferrer"
+              aria-label={`${o.name}, opens in a new tab`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={o.logo} alt={o.name} width={o.w} height={o.h} loading="lazy" />
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

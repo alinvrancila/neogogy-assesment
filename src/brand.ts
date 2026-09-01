@@ -37,14 +37,27 @@ export const CORE_QUESTION =
   'Is the way you use AI, or choose not to use AI, strengthening your capabilities?';
 
 /**
- * The four organisations behind the work. Logos are supplied artwork and are
- * never redrawn or approximated: each entry names the file it expects under
- * public/orgs, and the section renders a typographic placeholder until the real
- * file is dropped in.
+ * The four organisations behind the work.
+ *
+ * The supplied logos are used as supplied: cropped to their own ink and scaled,
+ * never redrawn, re-typeset or approximated. Each carries its own aspect so the
+ * page, the results and the report can size them optically rather than by a
+ * single box that would squash one and starve another.
  */
 export const ECOSYSTEM = [
-  { name: 'ICAN', logo: '/orgs/ican.svg', note: 'International Center for Applied Neogogy' },
-  { name: 'Life College International', logo: '/orgs/life-college.svg', note: 'Higher education' },
-  { name: 'Neogogy.ai', logo: '/orgs/neogogy.svg', note: 'Learning in the age of AI' },
-  { name: 'LifeX', logo: '/orgs/lifex.svg', note: 'Applied practice' },
+  { name: 'ICAN', note: 'International Center for Applied Neogogy',
+    url: 'https://www.ican.ph', logo: '/orgs/ican.png', w: 433, h: 300, pdfW: 76 },
+  { name: 'Life College International', note: 'Higher education',
+    url: 'https://www.life.edu.ph', logo: '/orgs/life-college.png', w: 350, h: 420, pdfW: 46 },
+  { name: 'Neogogy.ai', note: 'Learning at the speed of mind',
+    url: 'https://www.neogogy.ai', logo: '/orgs/neogogy.png', w: 435, h: 360, pdfW: 64 },
+  { name: 'LifeX', note: 'Get where you want to be, faster',
+    url: 'https://www.lifex.ph', logo: '/orgs/lifex.png', w: 614, h: 200, pdfW: 92 },
 ] as const;
+
+/** Where a respondent goes next, named once so the page and the report agree. */
+export const NEXT_STEP = {
+  line: 'Want to learn more and increase your advantage:',
+  url: 'https://www.lifex.ph',
+  label: 'www.lifex.ph',
+} as const;

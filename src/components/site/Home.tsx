@@ -549,11 +549,12 @@ function Ecosystem() {
         <ul className="ha-orgs">
           {ECOSYSTEM.map((o) => (
             <li key={o.name}>
-              {/* The supplied logo is dropped in at this path. Until then the name
-                  stands on its own rather than an approximation of a mark. */}
-              <span className="ha-org-mark" aria-hidden="true" />
-              <strong>{o.name}</strong>
-              <span>{o.note}</span>
+              <a href={o.url} target="_blank" rel="noopener noreferrer"
+                aria-label={`${o.name}, opens in a new tab`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={o.logo} alt={o.name} width={o.w} height={o.h} loading="lazy" />
+                <span className="ha-org-note">{o.note}</span>
+              </a>
             </li>
           ))}
         </ul>

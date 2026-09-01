@@ -10,9 +10,10 @@ import React from 'react';
 import path from 'path';
 import {
   Page, Document, Font, StyleSheet, Text, View, Svg, Circle, Line, Polygon, Rect, Image,
-  Path, Text as SvgText, Defs, LinearGradient, Stop,
+  Path, Text as SvgText, Defs, LinearGradient, Stop, Link,
 } from '@react-pdf/renderer';
 import { renderToBuffer } from '@react-pdf/renderer';
+import { ECOSYSTEM, NEXT_STEP } from '@/brand';
 import {
   generateReportSections, reportHead, confidenceLabel, REPORT_DISCLAIMER,
   dimensionDetails, fingerprintReadings, improvementPlan,
@@ -62,6 +63,7 @@ const bandTextColor = (healthy: number) =>
   healthy >= 65 ? '#0F7A69' : healthy >= 40 ? '#A9741F' : '#B4564A';
 
 /** The painted backdrop, shared with the web page. Decorative only. */
+const ORG = (file: string) => path.join(process.cwd(), 'public', file.replace(/^\//, ''));
 const BACKDROP = path.join(process.cwd(), 'public', 'ascent-backdrop.jpg');
 /** Dusk variant, used full bleed on the cover. Decorative only. */
 const COVER_ART = path.join(process.cwd(), 'public', 'ascent-cover.jpg');
@@ -1137,6 +1139,34 @@ function ContinuityPdf({ r }: { r: CompassResult }) {
   );
 }
 
+/**
+ * The four organisations, on the last page.
+ *
+ * Each logo is the supplied artwork, sized by its own width so a tall seal and
+ * a wide wordmark carry the same optical weight, and each is a live link.
+ */
+const EcosystemRow = () => (
+  <View style={{
+    backgroundColor: '#FFFFFF', borderRadius: 8, padding: '16 20 12',
+    borderWidth: 1, borderColor: T.hair,
+  }} wrap={false}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+      {ECOSYSTEM.map((o) => (
+        <Link key={o.name} src={o.url} style={{ textDecoration: 'none' }}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
+          <Image src={ORG(o.logo)} style={{ width: o.pdfW, height: (o.pdfW * o.h) / o.w }} />
+        </Link>
+      ))}
+    </View>
+    <Text style={{
+      fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.1, textTransform: 'uppercase',
+      color: T.mute, textAlign: 'center', marginTop: 12,
+    }}>
+      International Center for Applied Neogogy · www.ican.ph
+    </Text>
+  </View>
+);
+
 /* ----------------------------------------------------------------- pages */
 
 const Footer = ({ title = 'Neogogy Human Advantage Assessment · Powered by ICAN.ph' }: { title?: string }) => (
@@ -1496,14 +1526,28 @@ export async function generateCompassPdf(args: {
           <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 13, color: T.oxblood, marginTop: 16 }}>
             The summit is a direction, not a finish line.
           </Text>
-          <View style={{ height: 1, backgroundColor: T.hair, marginVertical: 20 }} />
+          {/* Where the practices in this report are worked on. Live link in the
+              file, and readable as plain text when the file is printed. */}
+          <View style={{
+            marginTop: 20, padding: '14 18', borderRadius: 6,
+            backgroundColor: T.oxblood,
+          }} wrap={false}>
+            <Text style={{ fontSize: 10, color: '#F6EFE6', marginBottom: 5 }}>{NEXT_STEP.line}</Text>
+            <Link src={NEXT_STEP.url} style={{
+              fontFamily: 'Spectral', fontWeight: 700, fontSize: 15, color: '#FFFFFF',
+              textDecoration: 'none',
+            }}>
+              {NEXT_STEP.label}
+            </Link>
+          </View>
+
+          <View style={{ height: 1, backgroundColor: T.hair, marginVertical: 18 }} />
           <Text style={{ fontSize: 9, lineHeight: 1.55, color: T.mute, maxWidth: 400 }}>
             {REPORT_DISCLAIMER}{disclaimerExtra(r.persona) ? ` ${disclaimerExtra(r.persona)}` : ''}
           </Text>
         </View>
-        <Text style={{ fontFamily: 'Plex', fontSize: 8.5, color: T.mute }}>
-          International Center for Applied Neogogy · www.ican.ph
-        </Text>
+
+        <EcosystemRow />
       </Page>
     </Document>
   );

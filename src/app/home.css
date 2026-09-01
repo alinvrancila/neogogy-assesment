@@ -273,11 +273,25 @@
 .nfc .ha-steps li > span:last-child { font-size: .92rem; color: var(--ink-soft); line-height: 1.55; }
 
 /* ------------------------------------------------------------------ orgs */
-.nfc .ha-orgs { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; margin-top: 26px; }
-.nfc .ha-orgs li { display: grid; justify-items: center; gap: 4px; padding: 20px 26px; min-width: 190px; border: 1px solid var(--paper-line); border-radius: 14px; background: rgba(255, 255, 255, .5); }
-.nfc .ha-org-mark { width: 34px; height: 34px; border-radius: 8px; border: 1px dashed var(--paper-line); }
-.nfc .ha-orgs strong { font-family: var(--f-display); font-size: 1rem; }
-.nfc .ha-orgs span { font-size: .78rem; color: var(--ink-soft); }
+/* The four logos share a card and a common optical height rather than a common
+   box: one is a tall seal, one is a wide wordmark, and forcing them into the
+   same rectangle would flatter neither. */
+.nfc .ha-orgs { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 30px; }
+.nfc .ha-orgs li { display: grid; }
+.nfc .ha-orgs a {
+  display: grid; justify-items: center; align-content: center; gap: 12px;
+  padding: 24px 20px; border: 1px solid var(--paper-line); border-radius: 16px;
+  background: #fff; text-decoration: none; min-height: 186px;
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.nfc .ha-orgs a:hover { border-color: var(--gold-soft); transform: translateY(-2px); box-shadow: 0 12px 30px var(--shadow); }
+.nfc .ha-orgs a:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.nfc .ha-orgs img { display: block; width: auto; max-width: 100%; object-fit: contain; }
+.nfc .ha-orgs li:nth-child(1) img { height: 74px; }
+.nfc .ha-orgs li:nth-child(2) img { height: 104px; }
+.nfc .ha-orgs li:nth-child(3) img { height: 88px; }
+.nfc .ha-orgs li:nth-child(4) img { height: 48px; }
+.nfc .ha-org-note { font-size: .76rem; color: var(--ink-soft); text-align: center; line-height: 1.4; }
 
 .nfc .ha-disclaimer { font-size: .82rem; color: rgba(242, 232, 220, .6); max-width: 58ch; margin: 26px auto 0; line-height: 1.55; }
 .nfc .ha-section-dark .ha-btn-light { margin-top: 8px; }
@@ -299,6 +313,7 @@
   .nfc .ha-persona-split { display: none; }
   .nfc .ha-accordion { display: block; }
   .nfc .ha-risks, .nfc .ha-research, .nfc .ha-grid3 { grid-template-columns: 1fr; }
+  .nfc .ha-orgs { grid-template-columns: 1fr 1fr; }
   .nfc .ha-stat-arrow { display: none; }
   .nfc .ha-cols2, .nfc .ha-two-q, .nfc .ha-steps { grid-template-columns: 1fr; gap: 26px; }
   .nfc .ha-panel-body, .nfc .ha-asked { grid-template-columns: 1fr; }
@@ -321,7 +336,7 @@
   .nfc .ha-equations li { grid-template-columns: 1fr; gap: 6px; text-align: left; }
   .nfc .ha-equations span, .nfc .ha-equations em { text-align: left; }
   .nfc .ha-panel-head { flex-direction: column; gap: 12px; }
-  .nfc .ha-orgs li { min-width: 0; width: 100%; }
+  .nfc .ha-orgs { grid-template-columns: 1fr 1fr; }
 }
 
 /* ------------------------------------------------- the assessment introduction

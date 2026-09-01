@@ -3403,3 +3403,40 @@
   .nfc .rcover-minister .rcover-identity,
   .nfc .rcover-minister .rcover-assessment { max-width: 46%; }
 }
+
+/* ================================================= where to go next, and who
+   The reading ends with practices, so the one link that belongs at the end is
+   the place those practices are worked on. Below it, the four organisations as
+   supplied: a common optical height on white, never a common box. */
+.nfc .nextstep {
+  margin: 34px 0 0; padding: 26px 28px; border-radius: var(--r);
+  background: var(--maroon); color: var(--ivory-2); text-align: center;
+}
+.nfc .nextstep-line { font-size: 1rem; margin-bottom: 10px; opacity: .92; }
+.nfc .nextstep-link {
+  display: inline-block; font-family: var(--f-display); font-weight: 600;
+  font-size: clamp(1.2rem, 3.4vw, 1.7rem); color: #fff; text-decoration: none;
+  border-bottom: 2px solid var(--gold-soft); padding-bottom: 2px;
+}
+.nfc .nextstep-link:hover { border-bottom-color: #fff; }
+
+.nfc .ecostrip { margin-top: 30px; }
+.nfc .ecostrip-h {
+  font-family: var(--f-mono); font-size: .68rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--ink-soft); text-align: center; margin-bottom: 14px;
+}
+.nfc .ecostrip ul { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.nfc .ecostrip a {
+  display: flex; align-items: center; justify-content: center; min-height: 128px;
+  padding: 16px; background: #fff; border: 1px solid var(--paper-line); border-radius: 14px;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.nfc .ecostrip a:hover { border-color: var(--gold-soft); box-shadow: 0 10px 24px var(--shadow); }
+.nfc .ecostrip img { display: block; width: auto; max-width: 100%; object-fit: contain; }
+.nfc .ecostrip li:nth-child(1) img { height: 56px; }
+.nfc .ecostrip li:nth-child(2) img { height: 76px; }
+.nfc .ecostrip li:nth-child(3) img { height: 64px; }
+.nfc .ecostrip li:nth-child(4) img { height: 36px; }
+@media (max-width: 720px) {
+  .nfc .ecostrip ul { grid-template-columns: 1fr 1fr; }
+}
