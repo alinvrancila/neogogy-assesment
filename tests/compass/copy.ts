@@ -142,6 +142,22 @@ head('Every assessment has its own link, its own words, and a card');
   ok('each route is its own canonical', route.includes('canonical: `/${p.slug}`'));
 }
 
+head('The report shows itself');
+{
+  const dir = path.join(process.cwd(), 'public', 'report');
+  const home = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'site', 'Home.tsx'), 'utf-8');
+  const files = (home.match(/\{ file: '([a-z-]+)'/g) ?? []).map((m) => m.replace(/.*'([a-z-]+)'.*/, '$1'));
+  ok('twelve pages are shown', files.length === 12, `${files.length} listed`);
+  for (const f of files) {
+    const p = path.join(dir, `${f}.jpg`);
+    const kb = fs.existsSync(p) ? Math.round(fs.statSync(p).size / 1024) : -1;
+    ok(`page ${f}.jpg is present and light (${kb}KB)`, kb > 0 && kb < 160);
+  }
+  // The pages carry an example profile's numbers, so the page has to say so.
+  ok('the gallery says whose numbers these are',
+    /belong to one example profile rather than to you/.test(home));
+}
+
 head('Nothing overclaims');
 {
   const banned = [/\bvalidated psychometric\b(?!\s+measurement)/i, /\bclinical diagnos/i, /\bpsychological evaluation\b/i];

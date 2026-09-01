@@ -100,7 +100,7 @@
 .nfc .ha-burger span { display: block; width: 20px; height: 1.6px; background: var(--ink); margin: 4px 0; }
 
 /* ------------------------------------------------------------------ hero */
-.nfc .ha-hero { position: relative; padding: clamp(34px, 4.4vw, 56px) 0 clamp(26px, 3.4vw, 44px); overflow: hidden; }
+.nfc .ha-hero { scroll-margin-top: 104px; position: relative; padding: clamp(34px, 4.4vw, 56px) 0 clamp(26px, 3.4vw, 44px); overflow: hidden; }
 .nfc .ha-hero-in { position: relative; z-index: 2; max-width: 940px; }
 .nfc .ha-hero-art {
   position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .5;
@@ -132,7 +132,7 @@
 .nfc .ha-by-light { color: rgba(242, 232, 220, .7); margin-top: 22px; }
 
 /* -------------------------------------------------------------- sections */
-.nfc .ha-section { padding: clamp(48px, 7vw, 92px) 0; }
+.nfc .ha-section { padding: clamp(48px, 7vw, 92px) 0; scroll-margin-top: 104px; }
 .nfc #ha-personas { padding-top: clamp(30px, 4vw, 52px); }
 .nfc .ha-section-tint { background: rgba(255, 253, 249, .58); border-top: 1px solid var(--paper-line); border-bottom: 1px solid var(--paper-line); }
 .nfc .ha-section-dark { background: var(--ink); color: var(--ivory); }
@@ -338,12 +338,14 @@
   .nfc .ha-rail-item, .nfc .ha-acc-head { min-height: 62px; }
 }
 @media (max-width: 900px) {
+  .nfc .ha-section, .nfc .ha-hero { scroll-margin-top: 88px; }
   .nfc .ha-header-in { min-height: 78px; }
   .nfc .ha-header-space { height: 78px; }
   .nfc .ha-lockup-ican img { height: 50px; }
   .nfc .ha-lockup-rule { height: 38px; }
 }
 @media (max-width: 620px) {
+  .nfc .ha-section, .nfc .ha-hero { scroll-margin-top: 80px; }
   .nfc .ha-header-in { min-height: 70px; }
   .nfc .ha-header-space { height: 70px; }
   .nfc .ha-lockup-ican img { height: 42px; }
@@ -373,3 +375,28 @@
 /* The design system sets display on these elements by class, which outranks the
    browser's own rule for [hidden]. Without this, "hidden" is advisory. */
 .nfc [hidden] { display: none !important; }
+
+/* --------------------------------------------------------- inside the report
+   Twelve real pages. They are shown at a size where the shape of a page reads
+   and the type does not, which is the honest way round: the caption says what
+   the page is, and opening it is how you read it. */
+.nfc .ha-pages { margin: 34px 0 38px; }
+.nfc .ha-pages-head { margin-bottom: 20px; }
+.nfc .ha-pages-note { font-size: .95rem; line-height: 1.6; color: var(--ink-soft); max-width: 62ch; }
+.nfc .ha-pages ul { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px 20px; }
+.nfc .ha-pages a { display: grid; gap: 10px; text-decoration: none; color: inherit; }
+.nfc .ha-pages img {
+  display: block; width: 100%; height: auto; aspect-ratio: 760 / 984; object-fit: cover;
+  object-position: top center; background: #fff; border: 1px solid var(--paper-line);
+  border-radius: 8px; box-shadow: 0 8px 22px var(--shadow);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.nfc .ha-pages a:hover img { transform: translateY(-3px); box-shadow: 0 16px 34px var(--shadow-lg); border-color: var(--gold-soft); }
+.nfc .ha-pages a:focus-visible img { outline: 2px solid var(--gold); outline-offset: 3px; }
+.nfc .ha-page-cap { display: grid; gap: 3px; font-size: .84rem; line-height: 1.4; color: var(--ink-soft); }
+.nfc .ha-page-cap em {
+  font-family: var(--f-mono); font-style: normal; font-size: .6rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--maroon);
+}
+@media (max-width: 1080px) { .nfc .ha-pages ul { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 700px) { .nfc .ha-pages ul { grid-template-columns: repeat(2, 1fr); gap: 18px 14px; } }

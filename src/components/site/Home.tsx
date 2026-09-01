@@ -513,6 +513,61 @@ function Different() {
   );
 }
 
+
+/**
+ * Pages from a real report.
+ *
+ * Every image here is a page rendered from the same engine and the same layout
+ * a respondent receives, not a mockup, which is why the gallery says whose
+ * numbers they are. The point of showing twelve is the point of the section:
+ * the reading is long, and a person deciding whether to spend ten minutes on it
+ * deserves to see what comes back.
+ */
+const REPORT_PAGES: Array<{ file: string; caption: string; only?: string }> = [
+  { file: 'cover', caption: 'Your result, named' },
+  { file: 'route', caption: 'Where you are on the route' },
+  { file: 'profile', caption: 'What your answers say about you' },
+  { file: 'dimensions', caption: 'Ten dimensions, one at a time' },
+  { file: 'helping', caption: 'What is helping, and what is working against you' },
+  { file: 'strengths', caption: 'What you do well, and what needs attention' },
+  { file: 'next-stage', caption: 'Your next stage, and the practices that reach it' },
+  { file: 'plan', caption: 'What to do next, in order' },
+  { file: 'limits', caption: 'What this is built on, and what it cannot tell you' },
+  { file: 'risk-register', caption: 'A risk register', only: 'Business Owner' },
+  { file: 'ninety-days', caption: 'Your next ninety days', only: 'Business Owner' },
+  { file: 'roadmap', caption: 'This week, this month, this season', only: 'Minister' },
+];
+
+function ReportPages() {
+  return (
+    <div className="ha-pages">
+      <div className="ha-pages-head">
+        <p className="ha-kicker">Inside the report</p>
+        <p className="ha-pages-note">
+          Real pages, rendered by the same engine that will read your answers. The numbers on them
+          belong to one example profile rather than to you. Open any page to read it.
+        </p>
+      </div>
+      <ul>
+        {REPORT_PAGES.map((p) => (
+          <li key={p.file}>
+            <a href={`/report/${p.file}.jpg`} target="_blank" rel="noopener noreferrer"
+              aria-label={`${p.caption}, a full size page from an example report, opens in a new tab`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/report/${p.file}.jpg`} alt={`Report page: ${p.caption}`}
+                width={760} height={984} loading="lazy" />
+              <span className="ha-page-cap">
+                {p.only ? <em>{p.only}</em> : null}
+                {p.caption}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function ReportValue({ onStart }: { onStart: () => void }) {
   const steps = [
     ['Your position', 'See where your current practices place you on a developmental continuum.'],
@@ -540,6 +595,8 @@ function ReportValue({ onStart }: { onStart: () => void }) {
               <strong>{h}</strong><span>{b}</span></li>
           ))}
         </ol>
+        <ReportPages />
+
         <div className="ha-center">
           <button type="button" className="ha-btn ha-btn-lg" onClick={onStart}>
             See my Human Advantage <span aria-hidden="true">&rarr;</span>
