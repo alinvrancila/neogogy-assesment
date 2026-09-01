@@ -18,7 +18,7 @@ const SHARE_IMAGE = {
   url: '/share/og.jpg',
   width: 1200,
   height: 630,
-  alt: 'A climber on a lit route of ten steps toward a mountain summit, under the words: find out what stage of AI usage you are in, and why it matters.',
+  alt: 'A person standing on a summit above the clouds at sunrise, under the words: AI is becoming more capable, are you? Take the Neogogy Human Advantage Assessment to learn more.',
   type: 'image/jpeg',
 };
 const SHARE_DESC = 'Is the way you use AI, or choose not to use AI, strengthening your capabilities? A free assessment across ten dimensions, in six perspectives, with a personal Human Advantage Report to keep. Powered by ICAN.ph.';

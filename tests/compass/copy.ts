@@ -126,9 +126,14 @@ head('Every assessment has its own link, its own words, and a card');
   }
   ok('the site card exists as the fallback',
     fs.existsSync(path.join(process.cwd(), 'public', SITE_CARD.replace(/^\//, ''))));
-  // Not a failure: a persona without its own card still previews as the site.
-  if (missing.length) {
-    console.log(`        awaiting artwork: ${missing.map((s2) => `og-${s2}.jpg`).join(', ')}`);
+  ok('every assessment has a card of its own', missing.length === 0,
+    missing.map((s2) => `og-${s2}.jpg`).join(', '));
+  // A card that is too heavy is quietly skipped by WhatsApp and iMessage, so
+  // the weight is checked, not just the presence.
+  for (const p of PERSONA_CONTENT) {
+    const f = path.join(process.cwd(), 'public', shareCard(p.slug).replace(/^\//, ''));
+    const kb = Math.round(fs.statSync(f).size / 1024);
+    ok(`${p.name}: card is light enough to preview (${kb}KB)`, kb < 300);
   }
   const route = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '[persona]', 'page.tsx'), 'utf-8');
   ok('the card is declared to both Open Graph and Twitter',
