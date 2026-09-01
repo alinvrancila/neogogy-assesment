@@ -19,6 +19,7 @@ import path from 'path';
 import { PERSONA_CONTENT } from '@/content/personas';
 import { BRAND, ECOSYSTEM, NEXT_STEP } from '@/brand';
 import { applicableItems } from '@/engine';
+import { shareCard, hasOwnCard, SITE_CARD } from '@/lib/shareCard';
 
 let pass = 0, fail = 0;
 const ok = (label: string, cond: boolean, detail?: string) => {
@@ -112,6 +113,28 @@ head('The four organisations, as supplied and linked');
   ok('the report carries the four logos', pdf.includes('EcosystemRow'));
   const res = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'compass', 'Results.tsx'), 'utf-8');
   ok('the results page carries both', res.includes('<NextStep />') && res.includes('<EcosystemStrip />'));
+}
+
+head('Every assessment has its own link, its own words, and a card');
+{
+  const missing: string[] = [];
+  for (const p of PERSONA_CONTENT) {
+    const card = shareCard(p.slug);
+    ok(`${p.name}: /${p.slug} resolves a share card`,
+      fs.existsSync(path.join(process.cwd(), 'public', card.replace(/^\//, ''))));
+    if (!hasOwnCard(p.slug)) missing.push(p.slug);
+  }
+  ok('the site card exists as the fallback',
+    fs.existsSync(path.join(process.cwd(), 'public', SITE_CARD.replace(/^\//, ''))));
+  // Not a failure: a persona without its own card still previews as the site.
+  if (missing.length) {
+    console.log(`        awaiting artwork: ${missing.map((s2) => `og-${s2}.jpg`).join(', ')}`);
+  }
+  const route = fs.readFileSync(path.join(process.cwd(), 'src', 'app', '[persona]', 'page.tsx'), 'utf-8');
+  ok('the card is declared to both Open Graph and Twitter',
+    /openGraph:[\s\S]*images: \[image\]/.test(route) && /twitter:[\s\S]*images: \[image\]/.test(route));
+  ok('the description is the persona\'s own question', route.includes('p.coreQuestion'));
+  ok('each route is its own canonical', route.includes('canonical: `/${p.slug}`'));
 }
 
 head('Nothing overclaims');
