@@ -3272,7 +3272,7 @@
   background: linear-gradient(to bottom, #E8ECEE 0%, rgba(232,236,238,0) 34%);
 }
 .nfc .rcover-student .rcover-art::before {
-  content: ''; position: absolute; left: 0; right: 0; bottom: 0; z-index: 1;
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0;
   height: 16%; background: linear-gradient(to top, rgba(28,42,56,.6), rgba(28,42,56,0));
 }
 .nfc .rcover-student .rcover-result { position: absolute; left: var(--pad); top: 15%; max-width: 56%; }
@@ -3304,13 +3304,14 @@
 
 /* ---- 3. Parent: paper field from the right, everything right aligned */
 .nfc .rcover-parent { background: #F3E7DA; color: #4A3529; }
+.nfc .rcover-parent .rcover-brand i { opacity: 1; color: #6E5646; }
 .nfc .rcover-parent .rcover-art::after {
   content: ''; position: absolute; inset: 0;
-  background: linear-gradient(to left, rgba(246,239,230,.94) 0%, rgba(246,239,230,.9) 52%, rgba(246,239,230,0) 82%);
+  background: linear-gradient(to right, rgba(246,239,230,0) 0 31%, rgba(246,239,230,.93) 34%, rgba(246,239,230,.93) 100%);
 }
 .nfc .rcover-parent .rcover-art::before {
-  content: ''; position: absolute; left: 0; right: 0; top: 0; z-index: 1;
-  height: 15%; background: linear-gradient(to bottom, rgba(246,239,230,.88), rgba(246,239,230,0));
+  content: ''; position: absolute; left: 0; top: 0; width: 40%; height: 21%;
+  background: linear-gradient(to bottom, rgba(246,239,230,.97) 0%, rgba(246,239,230,.9) 62%, rgba(246,239,230,0) 100%);
 }
 .nfc .rcover-parent .rcover-result {
   position: absolute; right: var(--pad); top: 14%; max-width: 56%; text-align: right;
@@ -3337,7 +3338,7 @@
   background: linear-gradient(to right, #2E4756 0%, rgba(46,71,86,.5) 14%, rgba(46,71,86,0) 34%);
 }
 .nfc .rcover-leader .rcover-art::before {
-  content: ''; position: absolute; left: 0; right: 0; top: 0; z-index: 1;
+  content: ''; position: absolute; left: 0; right: 0; top: 0;
   height: 16%; background: linear-gradient(to bottom, rgba(28,44,55,.72), rgba(28,44,55,0));
 }
 .nfc .rcover-leader .rcover-result { position: absolute; left: var(--pad); top: 17%; max-width: 40%; }

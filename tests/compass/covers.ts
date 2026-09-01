@@ -108,6 +108,11 @@ head('The assets exist');
 for (const f of ['student.jpg', 'teacher.jpg', 'parent.jpg', 'leader.jpg', 'minister.jpg', 'business.jpg', 'mark.png']) {
   ok(`artwork ${f}`, fs.existsSync(path.join(process.cwd(), 'public', 'covers', f)));
 }
+// the page loads its own lighter copies, so a phone does not pull a print file
+for (const f of ['student.jpg', 'teacher.jpg', 'parent.jpg', 'leader.jpg', 'minister.jpg', 'business.jpg']) {
+  const p = path.join(process.cwd(), 'public', 'covers', 'web', f);
+  ok(`web artwork ${f} exists and is light`, fs.existsSync(p) && fs.statSync(p).size < 500_000);
+}
 for (const f of ['SourceSerif4-Regular.ttf', 'SourceSerif4-SemiBold.ttf', 'SourceSerif4-SemiBoldItalic.ttf',
   'IBMPlexSans-Regular.ttf', 'IBMPlexSans-SemiBold.ttf', 'IBMPlexMono-Regular.ttf', 'IBMPlexMono-Medium.ttf']) {
   ok(`font ${f} is vendored`, fs.existsSync(path.join(process.cwd(), 'public', 'fonts', f)));

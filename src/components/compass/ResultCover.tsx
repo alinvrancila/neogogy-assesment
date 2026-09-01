@@ -7,7 +7,9 @@
  * result on screen and then opens the file sees one document rather than two
  * designs. It reads from the same mapper as the PDF, so the two cannot say
  * different things, and it carries no score for the same reason the PDF does
- * not: this is the qualitative result.
+ * not: this is the qualitative result. The artwork comes from covers/web,
+ * which is the same painting at a fifth of the weight: the print file needs
+ * the full resolution, a phone opening its result does not.
  */
 
 import type { CompassResult } from '@/engine';
@@ -24,7 +26,7 @@ export default function ResultCover({ result, name, company }: {
     <section className={`rcover rcover-${d.persona}`} aria-label={`${d.assessmentName} cover`}>
       <div className="rcover-art" role="presentation">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`/covers/${d.persona}.jpg`} alt="" />
+        <img src={`/covers/web/${d.persona}.jpg`} alt="" loading="eager" decoding="async" />
       </div>
 
       <div className="rcover-inner">

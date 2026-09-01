@@ -9,7 +9,7 @@
  */
 
 import React from 'react';
-import { Image, Page, Text, View, Svg, Path, Line, Circle } from '@react-pdf/renderer';
+import { Image, Page, Text, View, Svg, Path, Line, Circle, Rect, Defs, LinearGradient, Stop } from '@react-pdf/renderer';
 import type { AssessmentCoverData } from './data';
 import {
   ART, LETTER, SAFE, RAIL_SAFE, BrandMark, AssessmentIdentity, ResultBlock,
@@ -155,6 +155,18 @@ export function ParentCover({ data }: { data: AssessmentCoverData }) {
       <Svg style={{ ...abs, left: 0, top: 0 }} width={LETTER.w} height={LETTER.h}>
         <Path d={`M ${LETTER.w * 0.2} ${LETTER.h * 0.86} Q ${LETTER.w * 0.72} ${LETTER.h * 0.06} ${LETTER.w * 0.99} ${LETTER.h * 0.72}`}
           fill="none" stroke={CLAY} strokeOpacity={0.4} strokeWidth={1} />
+      </Svg>
+
+      {/* the canopy mesh runs behind the wordmark, so it gets its own light */}
+      <Svg style={{ ...abs, left: 0, top: 0 }} width={LETTER.w * 0.4} height={132}>
+        <Defs>
+          <LinearGradient id="parentBrandWash" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="#F6EFE6" stopOpacity={0.97} />
+            <Stop offset="0.62" stopColor="#F6EFE6" stopOpacity={0.9} />
+            <Stop offset="1" stopColor="#F6EFE6" stopOpacity={0} />
+          </LinearGradient>
+        </Defs>
+        <Rect x={0} y={0} width={LETTER.w * 0.4} height={132} fill="url(#parentBrandWash)" />
       </Svg>
 
       <View style={{ ...abs, left: SAFE, right: SAFE, top: SAFE, flexDirection: 'row', justifyContent: 'space-between' }}>
