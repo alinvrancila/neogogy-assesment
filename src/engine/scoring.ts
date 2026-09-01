@@ -275,7 +275,7 @@ export function scoreDimensions(persona: Persona, sub: Submission): {
 }
 
 // ---------------------------------------------------------------------------
-// Composites (§18) — implemented deliberately, not blindly
+// Composites (§18), implemented deliberately, not blindly
 // ---------------------------------------------------------------------------
 
 export function composites(dims: Record<ConstructId, DimensionResult>, up: UsageProfile) {

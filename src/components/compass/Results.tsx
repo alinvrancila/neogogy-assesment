@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Formation Compass v2 results experience.
+ * Human Advantage Assessment results experience.
  *
  * Flow (Part E, Phase 3, as revised): the email gate is required. A respondent
  * submits their details, the server scores the submission, and the full result
@@ -396,7 +396,7 @@ export default function Results({
       <div className="foot">
         <div className="footmark">International Center for Applied Neogogy <span className="wm-ican">(ICAN)</span></div>
         <div className="fl">
-          The Neogogy Formation Compass · created by Alin Vrancila, Ph.D. ·{' '}
+          Neogogy Human Advantage Assessment · Powered by ICAN.ph · created by Alin Vrancila, Ph.D. ·{' '}
           <a href="https://www.ican.ph" target="_blank" rel="noopener noreferrer">www.ican.ph</a>
         </div>
         <div className="fl" style={{ marginTop: 8, color: 'var(--ink-soft)' }}>{REPORT_DISCLAIMER}</div>

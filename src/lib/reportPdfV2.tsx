@@ -1,5 +1,5 @@
 /**
- * Formation Compass v2 report PDF.
+ * Human Advantage Report PDF.
  *
  * Layout only. Every word in this file that a respondent reads comes from the
  * narrative engine via generateReportSections(); nothing here writes prose
@@ -1139,7 +1139,7 @@ function ContinuityPdf({ r }: { r: CompassResult }) {
 
 /* ----------------------------------------------------------------- pages */
 
-const Footer = ({ title = 'Neogogy Formation Compass' }: { title?: string }) => (
+const Footer = ({ title = 'Neogogy Human Advantage Assessment · Powered by ICAN.ph' }: { title?: string }) => (
   <View style={S.foot} fixed>
     <Text>{title}</Text>
     <Text render={({ pageNumber, totalPages }) => `${pageNumber} of ${totalPages}`} />

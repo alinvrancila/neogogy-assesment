@@ -674,7 +674,7 @@ export function indexName(persona: Persona | undefined): string {
 }
 
 export function reportTitle(persona: Persona | undefined): string {
-  return of(persona)?.reportTitle ?? "The Neogogy Formation Compass";
+  return of(persona)?.reportTitle ?? "Neogogy Human Advantage Assessment";
 }
 
 export function archetypeDisplay(

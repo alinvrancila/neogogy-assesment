@@ -23,7 +23,8 @@
     "test:quotes": "tsx tests/compass/quotes.ts",
     "art:minister": "node scripts/art/render-pastor-cover.mjs",
     "art:business": "node scripts/art/render-business-cover.mjs",
-    "test:covers": "tsx tests/compass/covers.ts"
+    "test:covers": "tsx tests/compass/covers.ts",
+    "test:copy": "tsx tests/compass/copy.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.620.0",

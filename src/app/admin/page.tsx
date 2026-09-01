@@ -922,7 +922,7 @@ export default function AdminPage() {
       <div className="admin-dashboard-wrap mx-auto space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="admin-eyebrow text-sm uppercase tracking-[0.3em]">The Neogogy Formation Compass</p>
+            <p className="admin-eyebrow text-sm uppercase tracking-[0.3em]">Neogogy Human Advantage Assessment</p>
             <h1 className="admin-title mt-2 font-serif text-3xl">
               {view === 'analytics' ? 'Analytics dashboard' : 'Records and admin'}
             </h1>

@@ -1,5 +1,5 @@
 /**
- * Neogogy Formation Compass v2 — core type system.
+ * Neogogy Human Advantage Assessment, core type system.
  *
  * Design decisions this file encodes (see docs/ARCHITECTURE.md):
  * - Ten measured constructs, all scored internally as "healthy = high" on 0..100.
@@ -113,7 +113,7 @@ export interface Submission {
   persona: Persona;
   usage: number;        // 1..5 usage frequency
   b1?: number;          // felt-health desirability baseline (1..5)
-  b2?: number;          // predicted-result baseline (1..5)  — calibration input
+  b2?: number;          // predicted-result baseline (1..5), calibration input
   answers: Answers;
   modalityFocus?: string;
 }

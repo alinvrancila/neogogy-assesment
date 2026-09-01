@@ -1,0 +1,112 @@
+/**
+ * The copy rules, enforced.
+ *
+ * Two of them are absolute and easy to break by accident, so they are checked
+ * rather than remembered:
+ *
+ *   1. No em dash or en dash anywhere in the source. The rule covers
+ *      respondent-facing copy; the check covers everything, because a comment
+ *      today is a headline tomorrow and a wide net costs nothing.
+ *   2. The retired umbrella name does not reappear as the product name.
+ *
+ * It also checks the things the page promises against what the assessment
+ * actually does, so a stated duration cannot drift from the item bank it
+ * describes.
+ */
+
+import fs from 'fs';
+import path from 'path';
+import { PERSONA_CONTENT } from '@/content/personas';
+import { BRAND } from '@/brand';
+import { applicableItems } from '@/engine';
+
+let pass = 0, fail = 0;
+const ok = (label: string, cond: boolean, detail?: string) => {
+  if (cond) { pass++; console.log(`  ok    ${label}`); }
+  else { fail++; console.log(`  FAIL  ${label}${detail ? `\n        ${detail}` : ''}`); }
+};
+const head = (s: string) => console.log(`\n${s}`);
+
+function walk(dir: string, out: string[] = []): string[] {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) walk(p, out);
+    else if (/\.(ts|tsx|css)$/.test(e.name)) out.push(p);
+  }
+  return out;
+}
+
+const FILES = walk(path.join(process.cwd(), 'src'));
+
+head('No em dash, no en dash');
+{
+  const offenders: string[] = [];
+  for (const f of FILES) {
+    fs.readFileSync(f, 'utf-8').split('\n').forEach((line, i) => {
+      if (line.includes('—') || line.includes('–')) {
+        offenders.push(`${path.relative(process.cwd(), f)}:${i + 1}`);
+      }
+    });
+  }
+  ok('no dash characters anywhere in src', offenders.length === 0, offenders.join('\n        '));
+}
+
+head('The product is named once, and named the same everywhere');
+{
+  ok('the brand module is the full name', BRAND.product === 'Neogogy Human Advantage Assessment');
+  ok('the attribution is present', BRAND.poweredBy === 'Powered by ICAN.ph');
+  const stale: string[] = [];
+  for (const f of FILES) {
+    // storage.ts names what legacy records were, which stays true
+    if (f.endsWith('storage.ts')) continue;
+    const s = fs.readFileSync(f, 'utf-8');
+    if (s.includes('Formation Compass')) stale.push(path.relative(process.cwd(), f));
+  }
+  ok('the retired umbrella name is gone', stale.length === 0, stale.join(', '));
+  // "formation" as a concept is not the same thing as the retired product name
+  const minister = PERSONA_CONTENT.find((p) => p.id === 'pastor')!;
+  ok('formation survives where it is a concept', minister.motifName === 'Formation');
+}
+
+head('Six assessments, each one complete');
+{
+  const slugs = new Set(PERSONA_CONTENT.map((p) => p.slug));
+  ok('six personas', PERSONA_CONTENT.length === 6);
+  ok('six distinct routes', slugs.size === 6);
+  for (const p of PERSONA_CONTENT) {
+    ok(`${p.name}: asks a core question`, p.coreQuestion.trim().endsWith('?'));
+    ok(`${p.name}: explains what it is about`, p.about.length >= 2);
+    ok(`${p.name}: says why it matters`, p.why.length >= 1);
+    ok(`${p.name}: lists what it asks about`, p.asked.length >= 5);
+    ok(`${p.name}: says what may be discovered`, p.discover.length >= 5);
+    ok(`${p.name}: has its own way in`, p.cta.startsWith('Begin as'));
+  }
+}
+
+head('A stated duration matches the bank behind it');
+{
+  // roughly 17 items a minute is the pace the production copy has always assumed
+  for (const p of PERSONA_CONTENT) {
+    const n = applicableItems(p.id, 5).length;
+    const stated = Number((p.minutes.match(/\d+/) ?? ['0'])[0]);
+    const implied = n <= 36 ? 10 : 12;
+    ok(`${p.name}: ${n} items reads as ${implied} minutes`, stated === implied,
+      `states "${p.minutes}" for ${n} items`);
+  }
+}
+
+head('Nothing overclaims');
+{
+  const banned = [/\bvalidated psychometric\b(?!\s+measurement)/i, /\bclinical diagnos/i, /\bpsychological evaluation\b/i];
+  const offenders: string[] = [];
+  for (const f of FILES.filter((f) => f.includes('/site/') || f.endsWith('personas.ts'))) {
+    const s = fs.readFileSync(f, 'utf-8');
+    // the disclaimer says what this is NOT, which is the opposite of a claim
+    const claims = s.replace(/they are not[^.]*\./gi, '');
+    for (const b of banned) if (b.test(claims)) offenders.push(path.relative(process.cwd(), f));
+  }
+  ok('no clinical or psychometric claim is made', offenders.length === 0, offenders.join(', '));
+}
+
+console.log(`\n${pass} passed, ${fail} failed`);
+process.exit(fail ? 1 : 0);

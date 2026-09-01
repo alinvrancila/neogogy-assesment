@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Formation Compass v2 visuals.
+ * Human Advantage Assessment visuals.
  *
  * Three pieces, all driven straight from a CompassResult and none of them
  * computing anything the engine has not already decided:
@@ -258,7 +258,7 @@ export function ReportPreview() {
       <div className="rp-page rp-back1" />
       <div className="rp-page rp-cover">
         <div className="rp-band">
-          <div className="rp-band-eyebrow">The Neogogy Formation Compass</div>
+          <div className="rp-band-eyebrow">Neogogy Human Advantage Assessment</div>
           <div className="rp-band-title">Your Formation Profile</div>
         </div>
         <div className="rp-pad">

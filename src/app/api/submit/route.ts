@@ -336,11 +336,11 @@ export async function POST(request: NextRequest) {
         to: body.email,
         name: fullName,
         personaName: result.archetype.name,
-        subject: `Your Formation Compass result: ${result.archetype.name}`,
+        subject: `Your Human Advantage Report: ${result.archetype.name}`,
         bodyText: [
           `Hello ${first},`,
           ``,
-          `Your Formation Compass report is attached.`,
+          `Your Human Advantage Report is attached.`,
           ``,
           `Your answers are consistent with ${result.archetype.name}: ${result.archetype.tagline}`,
           `They place you at stage ${result.stage.stage} of 10 on the Neogogy continuum, ${result.stage.stageName}, with a developmental index of ${result.stage.rawIndex}.`,

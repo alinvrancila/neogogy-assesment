@@ -18,7 +18,7 @@ export interface SharePost { network: 'linkedin' | 'facebook' | 'x' | 'instagram
 /** Longer, reflective, suited to a professional feed. */
 function longPost(r: CompassResult): string {
   return [
-    `I took the Neogogy Formation Compass, a free assessment of how AI is shaping the way I think and work.`,
+    `I took the Neogogy Human Advantage Assessment, a free reading of whether the way I use AI is strengthening my capabilities.`,
     ``,
     `It placed me at stage ${r.stage.stage} of 10 on its continuum, ${r.stage.stageName}, and described the pattern in my answers as ${r.archetype.name}.`,
     ``,
@@ -32,7 +32,7 @@ function longPost(r: CompassResult): string {
 
 /** Short, for a feed that rewards brevity. */
 function shortPost(r: CompassResult): string {
-  return `Stage ${r.stage.stage} of 10 on the Neogogy Formation Compass: ${r.stage.stageName}. A free assessment of how AI is shaping your judgment and capability, not just your output. ${SHARE_URL}`;
+  return `Stage ${r.stage.stage} of 10 on the Neogogy Human Advantage Assessment: ${r.stage.stageName}. A free reading of whether the way you use AI is strengthening your judgment and capability, not just your output. ${SHARE_URL}`;
 }
 
 /** Caption style, since Instagram has no share URL and everything is pasted. */

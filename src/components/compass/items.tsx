@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Item rendering primitives for Formation Compass v2.
+ * Item rendering primitives for the Human Advantage Assessment.
  *
  * Components never score. They render an Item from the engine's item model and
  * report the chosen raw value back. All scoring happens in src/engine.

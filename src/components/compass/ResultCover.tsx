@@ -36,7 +36,7 @@ export default function ResultCover({ result, name, company }: {
             <img src="/covers/mark.png" alt="" className="rcover-seal" />
             <span>
               <b>Neogogy</b>
-              <i>The Formation Compass</i>
+              <i>Human Advantage Assessment</i>
             </span>
           </span>
           <span className="rcover-assessment">{d.assessmentName}</span>

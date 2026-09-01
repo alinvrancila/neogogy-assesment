@@ -54,7 +54,7 @@ export const REPORT_DISCLAIMER =
 
 export function reportHead(r: CompassResult): ReportHead {
   return {
-    title: "Neogogy Formation Compass · Personal Report",
+    title: "Neogogy Human Advantage Assessment · Human Advantage Report",
     subtitle: `Profile for a ${PERSONA_LABEL[r.persona]} · ${CONF_LABEL[r.overallConfidence]}`,
   };
 }

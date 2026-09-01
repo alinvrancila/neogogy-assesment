@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Formation Compass v2, assessment flow.
+ * Human Advantage Assessment, assessment flow.
  *
  * This component drives screens and collects answers. It contains no scoring
  * math of any kind: the screen list comes from applicableItems(), and the
@@ -29,6 +29,9 @@ import {
 import { IcanLogo, DimensionBars, DimensionRadar } from './Visuals';
 import { STAGES } from '@/engine/config';
 import Results, { GateForm, type GateData, type GateState } from './Results';
+import Home from '@/components/site/Home';
+import { BRAND } from '@/brand';
+import { personaById } from '@/content/personas';
 
 type Screen = 'hero' | 'setup' | 'context' | 'opening' | 'quiz' | 'reflect' | 'gate' | 'results';
 
@@ -166,9 +169,11 @@ type Saved = {
   pos: number;
 };
 
-export default function CompassApp({ sample }: { sample?: CompassResult }) {
+export default function CompassApp({ initialPersona }: { initialPersona?: Persona }) {
   const [screen, setScreen] = useState<Screen>('hero');
-  const [persona, setPersona] = useState<Persona | null>(null);
+  const [persona, setPersona] = useState<Persona | null>(initialPersona ?? null);
+  /** True when the page chose the persona, so setup does not ask again. */
+  const [preset, setPreset] = useState(false);
   const [usage, setUsage] = useState<number | null>(null);
   const [b1, setB1] = useState<number | null>(null);
   const [b2, setB2] = useState<number | null>(null);
@@ -427,7 +432,7 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
 
   const restart = useCallback(() => {
     clearDraft();
-    setScreen('hero'); setPersona(null); setUsage(null); setB1(null); setB2(null);
+    setScreen('hero'); setPersona(null); setPreset(false); setUsage(null); setB1(null); setB2(null);
     setAnswers({}); setPos(0); setSubmission(null);
     setResult(null); setEmailed(false); setFirstName(''); setComparison(null);
     setGate({ submitting: false, error: null });
@@ -439,7 +444,22 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
   const shell = (inner: React.ReactNode) => <div className="nfc">{inner}</div>;
 
   if (screen === 'hero') {
-    return shell(<Hero onStart={() => setScreen('setup')} sample={sample} />);
+    return shell(
+      <Home
+        initialPersona={initialPersona}
+        onBegin={(p) => {
+          setPersona(p);
+          setPreset(true);
+          if (!startedRef.current) {
+            startedRef.current = true;
+            track('assessment_start', { sessionId: sessionId.current, role: p });
+          }
+          track('role_selected', { sessionId: sessionId.current, role: p });
+          setScreen('setup');
+          window.scrollTo({ top: 0 });
+        }}
+      />
+    );
   }
 
   if (screen === 'setup') {
@@ -458,6 +478,7 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
         }}
         onB1={setB1}
         onB2={setB2}
+        preset={preset}
         onBack={() => setScreen('hero')}
         onStart={() => {
           if (persona === 'pastor') { setScreen('opening'); return; }
@@ -545,7 +566,7 @@ export default function CompassApp({ sample }: { sample?: CompassResult }) {
   // If there is no assembled submission the gate cannot do anything, so send
   // the respondent somewhere that works rather than to an inert form.
   if (!submission) {
-    return shell(<Hero onStart={() => { restart(); setScreen('setup'); }} sample={sample} />);
+    return shell(<Home onBegin={(p) => { restart(); setPersona(p); setPreset(true); setScreen('setup'); }} />);
   }
   return shell(
     <GateForm
@@ -751,8 +772,8 @@ function QuizBar({ personaName, progress, exact }: { personaName: string; progre
     <div className="qbar">
       <div className="wrap qbar-in">
         <div className="qbar-brand">
-          <span className="app-title">The Neogogy Formation Compass</span>
-          <span className="app-sub">ICAN.ph assessment</span>
+          <span className="app-title">Human Advantage Assessment</span>
+          <span className="app-sub">Powered by ICAN.ph</span>
         </div>
         <div className="qbar-status">
           <div className="meta">
@@ -766,173 +787,15 @@ function QuizBar({ personaName, progress, exact }: { personaName: string; progre
   );
 }
 
-function Hero({ onStart, sample }: { onStart: () => void; sample?: CompassResult }) {
-  return (
-    <section className="screen" id="hero">
-      <div className="wrap">
-        <div className="brandbar">
-          <IcanLogo height={120} className="brand-logo" />
-          <span className="bsep" />
-          <span className="btext">The Formation Compass<br />a reflective assessment</span>
-        </div>
-      </div>
-
-      {/* the painted route, used here as the promise of the result */}
-      <div className="lp-hero">
-        <div className="wrap lp-hero-inner">
-          <div className="lp-hero-copy">
-            <h1 className="display">Find out where<br />you stand with AI.</h1>
-            <p className="lede">
-              Most of us can tell whether AI makes us faster. Almost none of us can tell whether it is
-              making us sharper. This assessment answers that, across ten dimensions of how you work
-              with AI, and places you on a ten stage route from first contact to a mature practice.
-            </p>
-            <div className="hero-cta">
-              <button className="btn btn-primary" onClick={onStart}>
-                Start the assessment <span className="arrow">&rarr;</span>
-              </button>
-              <button className="btn btn-ghost" onClick={() => document.getElementById('lp-what')?.scrollIntoView({ behavior: 'smooth' })}>
-                See what you get
-              </button>
-            </div>
-            <div className="hero-meta">
-              <span className="chip"><span className="dot" /> About 12 minutes</span>
-              <span className="chip"><span className="dot" /> 33 to 36 questions</span>
-              <span className="chip"><span className="dot" /> Free, with a report to keep</span>
-            </div>
-          </div>
-        </div>
-        <div className="lp-hero-art" aria-hidden="true" />
-      </div>
-
-      <div className="wrap">
-        {/* the whole route, so nobody starts blind */}
-        <section className="lp-block" id="lp-continuum">
-          <p className="lp-kicker">The route</p>
-          <h2 className="lp-h2">Ten stages, from first contact to a practice that renews itself</h2>
-          <p className="lp-lead">
-            Your answers place you somewhere along this route. It is not a ranking and there is no
-            pass mark. Most people land in the middle, and the useful part is knowing which stage you
-            are in and what the next one actually asks of you.
-          </p>
-          <ol className="lp-stages">
-            {STAGES.map((st) => (
-              <li key={st.stage}>
-                <span className="lp-stage-n">{st.stage}</span>
-                <span className="lp-stage-body">
-                  <strong>{st.name}</strong>
-                  <span>{st.short}</span>
-                </span>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        {/* what the result actually looks like, from a real computed example */}
-        <section className="lp-block" id="lp-what">
-          <p className="lp-kicker">What you get</p>
-          <h2 className="lp-h2">A report built from your answers, not a label</h2>
-          <p className="lp-lead">
-            Everything below is a genuine result produced by the same engine that will score you,
-            from one example set of answers. Your own numbers will be different.
-          </p>
-
-          {sample ? (
-            <div className="lp-sample">
-              <div className="lp-sample-tag">Example profile, not your result</div>
-              <div className="lp-sample-grid">
-                <div>
-                  <h3 className="lp-h3">Ten dimensions, scored and explained</h3>
-                  <DimensionBars result={sample} />
-                </div>
-                <div>
-                  <h3 className="lp-h3">The shape of a profile</h3>
-                  <DimensionRadar result={sample} />
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="lp-gets">
-            <div className="lp-get">
-              <h3 className="lp-h3">Where you are, and why</h3>
-              <p>
-                Your stage on the route, and the one practice doing most to hold you there. Not
-                always your lowest score, which is usually the more useful finding.
-              </p>
-            </div>
-            <div className="lp-get">
-              <h3 className="lp-h3">What is helping and what is costing you</h3>
-              <p>
-                Patterns across your answers, including the one this instrument exists to catch:
-                high capability sitting on thin independent skill, which feels like success while it
-                develops.
-              </p>
-            </div>
-            <div className="lp-get">
-              <h3 className="lp-h3">A plan you can actually start</h3>
-              <p>
-                One thing for this week, a habit for the next month, and what would move you a stage
-                over three months. Built from your answers rather than looked up from a label.
-              </p>
-            </div>
-            <div className="lp-get">
-              <h3 className="lp-h3">Honest limits</h3>
-              <p>
-                Each dimension carries a confidence level. Where your answers gave us little to work
-                with, the report says so instead of pretending to certainty.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* why it matters */}
-        <section className="lp-block" id="why">
-          <p className="lp-kicker">Why this matters</p>
-          <h2 className="lp-h2">Same tool, opposite outcomes</h2>
-          <div className="strip">
-            <div className="cell surface">
-              <div className="n">92%</div>
-              <div className="t">of students now learn with AI, while only about a third have ever had guidance on how.</div>
-              <div className="src">HEPI / Kortext 2025</div>
-            </div>
-            <div className="cell surface">
-              <div className="n">17%</div>
-              <div className="t">worse on a later unaided exam for those who practised with an unrestricted chatbot, against no AI at all.</div>
-              <div className="src">Bastani et al., PNAS 2025</div>
-            </div>
-            <div className="cell surface">
-              <div className="n">2&times;</div>
-              <div className="t">the learning gains when the same technology is used deliberately, against established classroom practice.</div>
-              <div className="src">Kestin et al., Sci. Reports 2025</div>
-            </div>
-          </div>
-          <p className="lp-lead center" style={{ maxWidth: '62ch', margin: '22px auto 0' }}>
-            The difference between those two results is not the tool. It is how it is used. This
-            assessment is a way of reading that difference in your own practice.
-          </p>
-        </section>
-
-        <div className="center" style={{ marginTop: 30, paddingBottom: 10 }}>
-          <button className="btn btn-primary" onClick={onStart}>
-            Start the assessment <span className="arrow">&rarr;</span>
-          </button>
-          <p className="muted" style={{ maxWidth: '58ch', margin: '18px auto 0', fontSize: '.86rem' }}>
-            These are assessment indices built from self reported answers. They are designed to
-            support reflection, and they are not a validated psychometric measurement.
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function Setup({
-  persona, b1, b2, onPersona, onB1, onB2, onBack, onStart
+  persona, b1, b2, preset, onPersona, onB1, onB2, onBack, onStart
 }: {
   persona: Persona | null;
   b1: number | null;
   b2: number | null;
+  /** The page already chose the persona, so this screen does not ask again. */
+  preset?: boolean;
   onPersona: (p: Persona) => void;
   onB1: (v: number) => void;
   onB2: (v: number) => void;
@@ -950,16 +813,30 @@ function Setup({
   return (
     <section className="screen">
       <div className="wrap setup">
-        <span className="eyebrow">Step 1 of 2</span>
-        <h2 className="section-title mt-s">Which of these is closest to you?</h2>
-        <p className="lede" style={{ maxWidth: '62ch' }}>
+        {preset && persona ? (
+          /* Arriving with a persona already chosen: this is the assessment
+             introduction, not a second chooser. */
+          <div className="ha-intro">
+            <p className="ha-intro-brand">{BRAND.product}</p>
+            <h2 className="ha-intro-name">{personaById(persona).name} Assessment</h2>
+            <p className="ha-intro-by">{BRAND.poweredBy}</p>
+            <p className="ha-intro-core">{personaById(persona).coreQuestion}</p>
+            <p className="ha-intro-meta">
+              {personaById(persona).minutes}. Your answers will generate a personal {BRAND.report}.
+            </p>
+            <button type="button" className="ha-link" onClick={onBack}>Choose a different assessment</button>
+          </div>
+        ) : null}
+        <span className="eyebrow" hidden={preset}>Step 1 of 2</span>
+        <h2 className="section-title mt-s" hidden={preset}>Which of these is closest to you?</h2>
+        <p className="lede" style={{ maxWidth: '62ch' }} hidden={preset}>
           There are five sets of questions. Four of them ask about you and your own practice. The
           fifth, Business Owner, is different: it assesses a business rather than a person. Pick the
           one that matches the life you actually live day to day, and if two fit, choose the one
           where you use AI most.
         </p>
 
-        <div className="field mt-m">
+        <div className="field mt-m" hidden={preset}>
           <div className="lp-persona-grid">
             {PERSONAS.map((p) => {
               const sel = persona === p.id;
@@ -991,7 +868,7 @@ function Setup({
           </div>
         </div>
 
-        {chosen ? (
+        {chosen && !preset ? (
           <div className="lp-chosen" role="status">
             <strong>{chosen.name} selected.</strong> {chosen.explain} You can go back and change
             this before you begin.

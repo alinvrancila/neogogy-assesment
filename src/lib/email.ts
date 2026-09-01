@@ -39,7 +39,7 @@ export const sendReportEmail = async ({
   const mail = new MailComposer({
     from: process.env.EMAIL_FROM,
     to,
-    subject: subject || `Your Neogogy Formation Compass: ${personaName}`,
+    subject: subject || `Your Human Advantage Report: ${personaName}`,
     text: bodyText,
     attachments: [
       {
