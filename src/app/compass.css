@@ -3178,3 +3178,227 @@
   }
   .nfc .biz-evidence { font-size: .78rem; }
 }
+
+/* =============================================================== the cover
+   The six PDF compositions, on the page. One shared grammar, six placements,
+   so a respondent sees one document rather than two designs. Sizes are in
+   clamp() against the container so the cover holds from 360px to print width.
+   ========================================================================= */
+.nfc .rcover {
+  position: relative;
+  aspect-ratio: 17 / 22;
+  overflow: hidden;
+  border-radius: 14px;
+  margin-bottom: 28px;
+  container-type: inline-size;
+  --pad: clamp(16px, 4.6cqw, 46px);
+  --rail: clamp(12px, 3.4cqw, 34px);
+}
+.nfc .rcover-art { position: absolute; inset: 0; }
+.nfc .rcover-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nfc .rcover-inner { position: absolute; inset: 0; }
+
+.nfc .rcover-head {
+  position: absolute; left: var(--pad); right: var(--pad); top: var(--pad);
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+}
+.nfc .rcover-brand { display: flex; align-items: center; gap: clamp(5px, 1cqw, 9px); }
+.nfc .rcover-seal {
+  width: clamp(20px, 3.4cqw, 34px); height: clamp(20px, 3.4cqw, 34px);
+  background: #fff; border-radius: 3px; padding: 3px; object-fit: contain;
+}
+.nfc .rcover-brand b {
+  display: block; font-family: var(--f-display);
+  font-size: clamp(11px, 1.9cqw, 19px); line-height: 1.1;
+}
+.nfc .rcover-brand i {
+  display: block; font-style: normal; font-family: var(--f-mono);
+  font-size: clamp(5px, .78cqw, 8px); letter-spacing: .14em; text-transform: uppercase;
+  opacity: .74; margin-top: 2px;
+}
+.nfc .rcover-assessment {
+  font-family: var(--f-mono); font-size: clamp(6.5px, 1.06cqw, 11px);
+  letter-spacing: .14em; text-transform: uppercase; text-align: right; max-width: 46%;
+}
+
+.nfc .rcover-eyebrow {
+  font-family: var(--f-mono); font-size: clamp(6.5px, .96cqw, 10px);
+  letter-spacing: .16em; text-transform: uppercase; margin: 0 0 clamp(6px, 1.1cqw, 12px);
+}
+.nfc .rcover-title {
+  font-family: var(--f-display); font-weight: 600; line-height: 1.05;
+  margin: 0 0 clamp(8px, 1.5cqw, 16px);
+}
+.nfc .rcover-title.len-short { font-size: clamp(30px, 7.4cqw, 74px); }
+.nfc .rcover-title.len-medium { font-size: clamp(26px, 6.1cqw, 61px); }
+.nfc .rcover-title.len-long { font-size: clamp(22px, 4.9cqw, 49px); }
+.nfc .rcover-summary {
+  font-size: clamp(10px, 1.6cqw, 16px); line-height: 1.5; margin: 0; max-width: 34ch;
+}
+.nfc .rcover-name {
+  font-family: var(--f-display); font-weight: 600; line-height: 1.12; margin: 0;
+}
+.nfc .rcover-name.len-short { font-size: clamp(17px, 3.7cqw, 37px); }
+.nfc .rcover-name.len-medium { font-size: clamp(15px, 3.1cqw, 31px); }
+.nfc .rcover-name.len-long { font-size: clamp(13px, 2.5cqw, 25px); }
+.nfc .rcover-concept { position: absolute; z-index: 1; max-width: 46%; text-shadow: 0 1px 5px rgba(0,0,0,.5); }
+.nfc .rcover-teacher .rcover-concept, .nfc .rcover-parent .rcover-concept { text-shadow: 0 1px 5px rgba(0,0,0,.42); }
+.nfc .rcover-concept em {
+  display: block; font-family: var(--f-display); font-style: italic;
+  font-size: clamp(9px, 1.7cqw, 17px);
+}
+.nfc .rcover-concept span {
+  display: block; font-family: var(--f-mono); font-size: clamp(5px, .82cqw, 8.5px);
+  letter-spacing: .1em; text-transform: uppercase; margin-top: 3px; opacity: .86;
+}
+.nfc .rcover-meta {
+  position: absolute; z-index: 1; left: var(--rail); right: var(--rail); bottom: var(--rail);
+  display: flex; gap: clamp(10px, 2.4cqw, 26px); margin: 0; padding-top: clamp(6px, 1.2cqw, 13px);
+}
+.nfc .rcover-meta > div { flex: 1; min-width: 0; }
+.nfc .rcover-meta dt {
+  font-family: var(--f-mono); font-size: clamp(5px, .84cqw, 8.5px);
+  letter-spacing: .12em; text-transform: uppercase; margin-bottom: 3px;
+}
+.nfc .rcover-meta dd {
+  margin: 0; font-weight: 600; font-size: clamp(7.5px, 1.24cqw, 13px); overflow-wrap: anywhere;
+}
+
+/* ---- 1. Student: field of questions, artwork across the lower 74 percent */
+.nfc .rcover-student { background: #E8ECEE; color: #22364B; }
+.nfc .rcover-student .rcover-art { top: 26%; }
+.nfc .rcover-student .rcover-art::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, #E8ECEE 0%, rgba(232,236,238,0) 34%);
+}
+.nfc .rcover-student .rcover-art::before {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; z-index: 1;
+  height: 16%; background: linear-gradient(to top, rgba(28,42,56,.6), rgba(28,42,56,0));
+}
+.nfc .rcover-student .rcover-result { position: absolute; left: var(--pad); top: 15%; max-width: 56%; }
+.nfc .rcover-student .rcover-summary { color: #5B6E80; }
+.nfc .rcover-student .rcover-identity {
+  position: absolute; left: var(--pad); bottom: 13%;
+  background: rgba(34,54,75,.9); color: #fff;
+  padding: clamp(10px, 1.9cqw, 20px) clamp(14px, 2.6cqw, 28px); border-radius: 4px;
+}
+.nfc .rcover-student .rcover-concept { right: var(--pad); bottom: 13%; text-align: right; color: #fff; }
+.nfc .rcover-student .rcover-meta { color: #fff; border-top: 1px solid rgba(255,255,255,.5); }
+
+/* ---- 2. Teacher: a contained plate on deep green */
+.nfc .rcover-teacher { background: #1F3B32; color: #EFEAE0; }
+.nfc .rcover-teacher .rcover-art { inset: 14% var(--pad) 29% var(--pad); border-radius: 2px; overflow: hidden; }
+.nfc .rcover-teacher .rcover-assessment { color: #E7C169; }
+.nfc .rcover-teacher .rcover-identity { position: absolute; left: calc(var(--pad) + 16px); top: 56%; color: #fff; }
+.nfc .rcover-teacher .rcover-concept { right: calc(var(--pad) + 16px); top: 57%; text-align: right; color: #E7C169; }
+.nfc .rcover-teacher .rcover-result {
+  position: absolute; left: var(--pad); right: var(--pad);
+  bottom: calc(var(--rail) + clamp(30px, 5.4cqw, 54px));
+  display: grid; grid-template-columns: 1.06fr .94fr; gap: clamp(10px, 2.2cqw, 24px);
+  align-items: end;
+}
+.nfc .rcover-teacher .rcover-eyebrow { grid-column: 1 / -1; }
+.nfc .rcover-teacher .rcover-title { color: #E7C169; }
+.nfc .rcover-teacher .rcover-summary { align-self: end; padding-bottom: 6px; }
+.nfc .rcover-teacher .rcover-meta { border-top: 1px solid rgba(239,234,224,.28); }
+
+/* ---- 3. Parent: paper field from the right, everything right aligned */
+.nfc .rcover-parent { background: #F3E7DA; color: #4A3529; }
+.nfc .rcover-parent .rcover-art::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to left, rgba(246,239,230,.94) 0%, rgba(246,239,230,.9) 52%, rgba(246,239,230,0) 82%);
+}
+.nfc .rcover-parent .rcover-art::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; z-index: 1;
+  height: 15%; background: linear-gradient(to bottom, rgba(246,239,230,.88), rgba(246,239,230,0));
+}
+.nfc .rcover-parent .rcover-result {
+  position: absolute; right: var(--pad); top: 14%; max-width: 56%; text-align: right;
+}
+.nfc .rcover-parent .rcover-title { color: #A9482F; }
+.nfc .rcover-parent .rcover-summary { color: #6E5646; margin-left: auto; }
+.nfc .rcover-parent .rcover-identity {
+  position: absolute; right: var(--pad); bottom: 18%; text-align: right;
+  border-top: 1px solid rgba(74,53,41,.28); padding-top: clamp(8px, 1.5cqw, 16px);
+}
+.nfc .rcover-parent .rcover-name { color: #A9482F; }
+.nfc .rcover-parent .rcover-concept { left: var(--pad); bottom: 18%; color: #fff; }
+.nfc .rcover-parent .rcover-meta { color: #fff; }
+.nfc .rcover-parent .rcover-inner::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+  height: clamp(52px, 9cqw, 90px); background: rgba(74,53,41,.92); z-index: 0;
+}
+
+/* ---- 4. Leader: slate column beside the room */
+.nfc .rcover-leader { background: #2E4756; color: #EDE7DD; }
+.nfc .rcover-leader .rcover-art { left: 34%; }
+.nfc .rcover-leader .rcover-art::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to right, #2E4756 0%, rgba(46,71,86,.5) 14%, rgba(46,71,86,0) 34%);
+}
+.nfc .rcover-leader .rcover-art::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; z-index: 1;
+  height: 16%; background: linear-gradient(to bottom, rgba(28,44,55,.72), rgba(28,44,55,0));
+}
+.nfc .rcover-leader .rcover-result { position: absolute; left: var(--pad); top: 17%; max-width: 40%; }
+.nfc .rcover-leader .rcover-title { color: #E4B75F; }
+.nfc .rcover-leader .rcover-identity { position: absolute; left: var(--pad); bottom: 17%; max-width: 40%; }
+.nfc .rcover-leader .rcover-name { color: #fff; }
+.nfc .rcover-leader .rcover-concept { left: 46%; bottom: 20%; color: #fff; }
+.nfc .rcover-leader .rcover-meta { border-top: 1px solid rgba(237,231,221,.34); }
+
+/* ---- 5. Minister: ivory column, threshold line, image on the right */
+.nfc .rcover-minister { background: #F2E7DC; color: #3A2B25; }
+.nfc .rcover-minister .rcover-art { left: 46%; }
+.nfc .rcover-minister .rcover-inner::before {
+  content: ''; position: absolute; left: 46%; top: 8%; bottom: 14%;
+  width: 1.5px; background: #D9A441; opacity: .75;
+}
+.nfc .rcover-minister .rcover-head { flex-direction: column; align-items: flex-start; gap: clamp(8px, 1.6cqw, 16px); }
+.nfc .rcover-minister .rcover-assessment { color: #7B2B32; text-align: left; max-width: 40%; }
+.nfc .rcover-minister .rcover-result { position: absolute; left: var(--pad); top: 22%; max-width: 40%; }
+.nfc .rcover-minister .rcover-title { color: #7B2B32; }
+.nfc .rcover-minister .rcover-identity {
+  position: absolute; left: var(--pad); bottom: 19%; max-width: 40%;
+  border-top: 1px solid rgba(58,43,37,.24); padding-top: clamp(8px, 1.5cqw, 16px);
+}
+.nfc .rcover-minister .rcover-name { color: #7B2B32; }
+.nfc .rcover-minister .rcover-concept { right: var(--pad); bottom: 26%; text-align: right; color: #fff; }
+.nfc .rcover-minister .rcover-meta { color: #fff; }
+.nfc .rcover-minister .rcover-inner::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+  height: clamp(52px, 9cqw, 90px); background: rgba(74,52,47,.94); z-index: 0;
+}
+
+/* ---- 6. Business: framed plate on terracotta */
+.nfc .rcover-business { background: #A8412C; color: #F6EDE4; }
+.nfc .rcover-business .rcover-art { inset: 8% var(--pad) 20% 44%; border-radius: 2px; overflow: hidden; }
+.nfc .rcover-business .rcover-result { position: absolute; left: var(--pad); top: 19%; max-width: 36%; }
+.nfc .rcover-business .rcover-title { color: #E9B96A; }
+.nfc .rcover-business .rcover-identity { position: absolute; left: var(--pad); bottom: 16%; max-width: 36%; }
+.nfc .rcover-business .rcover-name { color: #fff; }
+.nfc .rcover-business .rcover-concept { right: calc(var(--pad) + 12px); bottom: 22%; text-align: right; color: #fff; }
+.nfc .rcover-business .rcover-meta { border-top: 1px solid rgba(246,237,228,.4); }
+
+@media (max-width: 620px) {
+  /* the metadata rail is the first thing to go when there is no room for it */
+  .nfc .rcover-concept { display: none; }
+  .nfc .rcover-meta > div:nth-child(3) { display: none; }
+  /* the result needs more room under the plate once the type stops shrinking */
+  .nfc .rcover-teacher .rcover-art { inset: 13% var(--pad) 40% var(--pad); }
+  .nfc .rcover-teacher .rcover-identity { top: 44%; }
+  /* the side-plate covers give the type more of the column once the plate
+     stops shrinking, so a long result word cannot run under the artwork */
+  .nfc .rcover-title.len-short { font-size: clamp(23px, 6.6cqw, 40px); }
+  .nfc .rcover-title.len-medium { font-size: clamp(20px, 5.6cqw, 34px); }
+  .nfc .rcover-title.len-long { font-size: clamp(17px, 4.6cqw, 28px); }
+  .nfc .rcover-business .rcover-art { inset: 8% var(--pad) 24% 54%; }
+  .nfc .rcover-business .rcover-result,
+  .nfc .rcover-business .rcover-identity { max-width: 48%; }
+  .nfc .rcover-leader .rcover-art { left: 44%; }
+  .nfc .rcover-leader .rcover-result,
+  .nfc .rcover-leader .rcover-identity { max-width: 50%; }
+  .nfc .rcover-minister .rcover-result,
+  .nfc .rcover-minister .rcover-identity,
+  .nfc .rcover-minister .rcover-assessment { max-width: 46%; }
+}

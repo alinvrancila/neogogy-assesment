@@ -32,7 +32,9 @@ import {
 } from '@/components/compass/ascent/route';
 import type { ConstructId } from '@/engine/types';
 
-const PAGE = { w: 595.28, h: 841.89 };
+// US Letter, in points. The cover and the body are one document, so they are
+// one size: a report that changes paper halfway through prints badly.
+const PAGE = { w: 612, h: 792 };
 const M = 48;
 const CW = PAGE.w - M * 2;
 
@@ -1011,7 +1013,7 @@ function RiskRegisterPdf({ r }: { r: CompassResult }) {
   };
 
   return (
-    <Page size="A4" style={S.light} wrap>
+    <Page size={[PAGE.w, PAGE.h]} style={S.light} wrap>
       <View wrap={false}>
         <Text style={S.eyebrow}>The exposure</Text>
         <Text style={S.h2}>Risk register</Text>
@@ -1071,7 +1073,7 @@ function RiskRegisterPdf({ r }: { r: CompassResult }) {
 /** Business Owner: the ninety day plan, on its own page, three blocks. */
 function NinetyDayPdf({ r }: { r: CompassResult }) {
   return (
-    <Page size="A4" style={S.light} wrap>
+    <Page size={[PAGE.w, PAGE.h]} style={S.light} wrap>
       <View wrap={false}>
         <Text style={S.eyebrow}>What to do</Text>
         <Text style={S.h2}>Your next ninety days</Text>
@@ -1151,145 +1153,6 @@ const Footer = ({ title = 'Neogogy Formation Compass' }: { title?: string }) => 
  * space, because this document gets forwarded to an accountant or a board and
  * has to look like a business paper rather than a personal report.
  */
-/**
- * The Minister/Preacher cover.
- *
- * Ink-light, one accent, a great deal of white space, and no name field: this
- * check is anonymous and the file should look like it belongs to the person
- * holding it rather than to a system that recorded them.
- */
-function PastorCover({ r, dateStr, name }: { r: CompassResult; dateStr: string; name?: string }) {
-  const PAPER = '#F6EFE4';
-  const SOFT = 'rgba(246,239,228,0.74)';
-  const FAINT = 'rgba(246,239,228,0.5)';
-  const GOLD = '#F0C15C';
-  const JADE = '#5FCBAE';
-  const arch = r.archetype.name;
-  const archSize = arch.length > 24 ? 27 : arch.length > 18 ? 31 : 36;
-
-  // three readings that answer the first question an owner of this report has:
-  // is the message still mine, is it true, and could I do this without the tool
-  const glance: Array<[string, number]> = [
-    ['Authorship', r.dimensions.agency.score],
-    ['Faithfulness to the text', r.dimensions.verification.score],
-    ['Unaided capacity', r.dimensions.dependencySafety.score],
-  ];
-  const depend = r.dependenceCheck?.level;
-  const dependLabel = depend === 'led'
-    ? 'Prayer and the text lead'
-    : depend === 'present'
-      ? 'Present, and the tool often leads'
-      : depend === 'trailing'
-        ? 'The tool leads'
-        : '';
-
-  return (
-    <Page size="A4" style={{ backgroundColor: '#160F2B', color: PAPER, fontFamily: 'Spectral' }}>
-      <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-        {/* eslint-disable-next-line jsx-a11y/alt-text */}
-        <Image src={MINISTER_ART} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-      </View>
-
-      <View style={{ position: 'absolute', top: 0, left: M, width: 52, height: 3, backgroundColor: GOLD }} />
-
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: M, paddingTop: 52 }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 8, letterSpacing: 2.4, color: GOLD }}>
-          PREACHING FORMATION CHECK
-        </Text>
-
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.8, color: FAINT, marginTop: 44 }}>
-          PREPARED FOR
-        </Text>
-        <Text style={{
-          fontFamily: 'Spectral', fontWeight: 700, fontSize: 32, color: PAPER,
-          marginTop: 7, lineHeight: 1.12,
-        }}>
-          {name || 'A minister of the Word'}
-        </Text>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: SOFT, marginTop: 10 }}>
-          {dateStr}
-        </Text>
-      </View>
-
-      {/* the reading, at a glance, in the middle where the light is */}
-      <View style={{ position: 'absolute', left: M, right: M, top: 300 }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.6, color: FAINT }}>
-          WHERE YOUR PRACTICE STANDS
-        </Text>
-        <Text style={{
-          fontFamily: 'Spectral', fontWeight: 800, fontSize: archSize, color: PAPER,
-          marginTop: 9, lineHeight: 1.1,
-        }}>
-          {arch}
-        </Text>
-        <Text style={{ fontFamily: 'Spectral', fontSize: 11.5, color: SOFT, marginTop: 9, lineHeight: 1.55, maxWidth: 330 }}>
-          {r.archetype.tagline}
-        </Text>
-      </View>
-
-      <View style={{ position: 'absolute', left: M, right: M, top: 470, flexDirection: 'row', alignItems: 'flex-end' }}>
-        <View>
-          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 56, color: GOLD, lineHeight: 1 }}>
-            {r.stage.rawIndex}
-          </Text>
-          <Text style={{ fontFamily: 'Plex', fontSize: 6.4, letterSpacing: 1.1, color: SOFT, marginTop: 5 }}>
-            FORMATION HEALTH SCORE, OUT OF 100
-          </Text>
-        </View>
-        <View style={{ flex: 1, alignItems: 'flex-end' }}>
-          <Text style={{ fontFamily: 'Plex', fontSize: 6.4, letterSpacing: 1.1, color: FAINT }}>
-            {`STAGE ${r.stage.stage} OF 10`}
-          </Text>
-          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 17, color: PAPER, marginTop: 4 }}>
-            {r.stage.stageName}
-          </Text>
-        </View>
-      </View>
-
-      {/* three readings, drawn rather than listed */}
-      <View style={{ position: 'absolute', left: M, right: M, bottom: 168 }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 6.4, letterSpacing: 1.1, color: FAINT, marginBottom: 9 }}>
-          AT A GLANCE
-        </Text>
-        {glance.map(([label, value]) => (
-          <View key={label} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 7 }}>
-            <Text style={{ fontSize: 8.5, width: 132, color: SOFT }}>{label}</Text>
-            <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: 'rgba(246,239,228,0.16)' }}>
-              <View style={{
-                width: `${Math.max(2, value)}%`, height: 6, borderRadius: 3,
-                backgroundColor: value >= 65 ? JADE : value >= 45 ? GOLD : '#E0808F',
-              }} />
-            </View>
-            <Text style={{ fontFamily: 'Plex', fontSize: 8.5, width: 34, textAlign: 'right', color: PAPER }}>
-              {value}
-            </Text>
-          </View>
-        ))}
-        {dependLabel ? (
-          <Text style={{ fontFamily: 'Plex', fontSize: 7, color: SOFT, marginTop: 6 }}>
-            {`Dependence Check: ${dependLabel}`}
-          </Text>
-        ) : null}
-      </View>
-
-      <View style={{
-        position: 'absolute', left: M, right: M, bottom: 56,
-        borderTopWidth: 1, borderTopColor: 'rgba(246,239,228,0.2)', paddingTop: 11,
-      }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7, color: SOFT, lineHeight: 1.6 }}>
-          A private self-reflection index drawn from your own answers. Not a spiritual assessment of
-          your calling, your faithfulness, or your ministry.
-        </Text>
-      </View>
-
-      <View style={{ position: 'absolute', left: M, right: M, bottom: 28, flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7, color: FAINT }}>Neogogy</Text>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7, color: FAINT }}>assessment.neogogy.ai</Text>
-      </View>
-    </Page>
-  );
-}
-
 /** Pastor: the Dependence Check, the outage reading, and the roadmap. */
 function PastorBlocksPdf({ r }: { r: CompassResult }) {
   const ACCENT = '#2E6E63';
@@ -1348,7 +1211,7 @@ function PastorBlocksPdf({ r }: { r: CompassResult }) {
 /** Pastor: this week, this month, this season, on its own page. */
 function FormationRoadmapPdf({ r }: { r: CompassResult }) {
   return (
-    <Page size="A4" style={S.light} wrap>
+    <Page size={[PAGE.w, PAGE.h]} style={S.light} wrap>
       <View wrap={false}>
         <Text style={S.eyebrow}>A way forward</Text>
         <Text style={S.h2}>This week, this month, this season</Text>
@@ -1389,264 +1252,6 @@ function FormationRoadmapPdf({ r }: { r: CompassResult }) {
   );
 }
 
-function BusinessCover({ r, name, dateStr, company, industry }: {
-  r: CompassResult; name: string; dateStr: string; company?: string; industry?: string;
-}) {
-  const NAVY = '#1B2A4A';
-  const TEAL = '#00D4AA';
-  const CRIMSON = '#C4384A';
-  const PAPER = '#F4F6F9';
-  const SOFT = 'rgba(244,246,249,0.72)';
-  const FAINT = 'rgba(244,246,249,0.48)';
-  const arch = r.archetype.name;
-  const archSize = arch.length > 24 ? 30 : arch.length > 18 ? 34 : 40;
-
-  return (
-    <Page size="A4" style={{ backgroundColor: NAVY, color: PAPER, fontFamily: 'Spectral' }}>
-      {/* the dial: a crimson sweep on a navy field, cropped by the page so it
-          frames the type rather than sitting behind it as a picture */}
-      <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-        {/* eslint-disable-next-line jsx-a11y/alt-text */}
-        <Image src={BUSINESS_ART} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-      </View>
-
-      <View style={{ position: 'absolute', top: 0, left: M, width: 64, height: 5, backgroundColor: TEAL }} />
-
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: M, paddingTop: 62 }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 8, letterSpacing: 2.6, color: TEAL }}>
-          NEOGOGY  ·  BUSINESS AI HEALTH CHECK
-        </Text>
-
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.8, color: FAINT, marginTop: 54 }}>
-          PREPARED FOR
-        </Text>
-        <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 34, color: PAPER, marginTop: 8, lineHeight: 1.1 }}>
-          {company || name || 'Your business'}
-        </Text>
-        {(company && name) || industry ? (
-          <Text style={{ fontFamily: 'Plex', fontSize: 9, color: SOFT, marginTop: 10 }}>
-            {[company ? name : '', industry].filter(Boolean).join('   ·   ')}
-          </Text>
-        ) : null}
-
-        <View style={{ height: 1, backgroundColor: 'rgba(244,246,249,0.18)', marginTop: 34, marginBottom: 34 }} />
-
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ width: 22, height: 2, backgroundColor: CRIMSON, marginRight: 8 }} />
-          <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.8, color: FAINT }}>
-            WHERE THIS BUSINESS STANDS
-          </Text>
-        </View>
-        <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: archSize, color: PAPER, marginTop: 12, lineHeight: 1.06 }}>
-          {arch}
-        </Text>
-        <Text style={{ fontFamily: 'Spectral', fontSize: 12.5, color: SOFT, marginTop: 14, lineHeight: 1.55, maxWidth: 360 }}>
-          {r.archetype.tagline}
-        </Text>
-      </View>
-
-      {/* the two levels, given the middle of the page, because the split is
-          the first thing an owner has to understand about this report */}
-      <View style={{ position: 'absolute', left: M, right: M, top: 372, flexDirection: 'row' }}>
-        {(['owner', 'business'] as const).map((scope) => {
-          const ids = (Object.keys(CONSTRUCTS) as ConstructId[])
-            .filter((id) => dimensionScope(r.persona, id) === scope);
-          const avg = Math.round(ids.reduce((a, id) => a + r.dimensions[id].score, 0) / ids.length);
-          const accent = scope === 'owner' ? '#F0B849' : TEAL;
-          return (
-            <View key={scope} style={{ flex: 1, paddingRight: 24 }}>
-              <View style={{ height: 3, width: 34, backgroundColor: accent, marginBottom: 10 }} />
-              <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.4, color: FAINT }}>
-                {scope === 'owner' ? 'ABOUT YOU AS THE OWNER' : 'ABOUT THE BUSINESS'}
-              </Text>
-              <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 40, color: accent, marginTop: 6 }}>
-                {avg}
-              </Text>
-              <Text style={{ fontFamily: 'Plex', fontSize: 7, color: SOFT, marginTop: 2 }}>
-                {`${ids.length} of 10 readings`}
-              </Text>
-              <Text style={{ fontFamily: 'Spectral', fontSize: 9, color: SOFT, marginTop: 8, lineHeight: 1.5 }}>
-                {scope === 'owner'
-                  ? 'How you decide, how you think, and how well you fit tools to work.'
-                  : 'What the business checks, keeps, would survive, and exposes.'}
-              </Text>
-            </View>
-          );
-        })}
-      </View>
-
-      {/* the number, large, with the stage beside it */}
-      <View style={{
-        position: 'absolute', left: M, right: M, bottom: 132,
-        flexDirection: 'row', alignItems: 'flex-end',
-      }}>
-        <View>
-          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 84, color: TEAL, lineHeight: 1 }}>
-            {r.stage.rawIndex}
-          </Text>
-          <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.4, color: SOFT, marginTop: 6 }}>
-            BUSINESS AI HEALTH SCORE, OUT OF 100
-          </Text>
-        </View>
-        <View style={{ flex: 1, alignItems: 'flex-end' }}>
-          <Text style={{ fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.4, color: FAINT }}>
-            {`STAGE ${r.stage.stage} OF 10`}
-          </Text>
-          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 19, color: PAPER, marginTop: 5 }}>
-            {r.stage.stageName}
-          </Text>
-          <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: SOFT, marginTop: 5 }}>
-            {`${r.stage.substage}  ·  ${r.overallConfidence} confidence`}
-          </Text>
-        </View>
-      </View>
-
-      {/* the two levels, named on the cover so the split is not a surprise */}
-      <View style={{
-        position: 'absolute', left: M, right: M, bottom: 62,
-        borderTopWidth: 1, borderTopColor: 'rgba(244,246,249,0.18)', paddingTop: 14,
-        flexDirection: 'row', justifyContent: 'space-between',
-      }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: SOFT, maxWidth: 330 }}>
-          Assesses the business, and the owner who runs it, separately.
-        </Text>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: FAINT }}>
-          Assessment indices, not an audit
-        </Text>
-      </View>
-
-      <View style={{
-        position: 'absolute', left: M, right: M, bottom: 30,
-        flexDirection: 'row', justifyContent: 'space-between',
-      }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: FAINT }}>{dateStr}</Text>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: FAINT }}>assessment.neogogy.ai</Text>
-      </View>
-    </Page>
-  );
-}
-
-function Cover({ r, name, dateStr, company, industry }: {
-  r: CompassResult; name: string; dateStr: string; company?: string; industry?: string;
-}) {
-  const IVORY = '#F7F1E4';
-  const SOFT = 'rgba(247,241,228,0.74)';
-  const FAINT = 'rgba(247,241,228,0.55)';
-
-  // The archetype is the headline. Long names are given a smaller size so they
-  // still fit on two lines rather than overflowing the page.
-  const archetype = r.archetype.name;
-  const archSize = archetype.length > 22 ? 34 : archetype.length > 16 ? 40 : 46;
-
-  return (
-    <Page size="A4" style={S.cover}>
-      {/* full bleed dusk scene, decorative only */}
-      <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
-        {/* eslint-disable-next-line jsx-a11y/alt-text */}
-        <Image src={COVER_ART} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-      </View>
-
-      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: M, paddingTop: 54 }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 8, letterSpacing: 2.4, color: '#4FD3B8' }}>
-          {r.persona === 'business'
-            ? 'NEOGOGY  ·  BUSINESS AI HEALTH CHECK'
-            : 'NEOGOGY  ·  THE FORMATION COMPASS'}
-        </Text>
-
-        {/* the reader's own name, given real presence */}
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.8, color: FAINT, marginTop: 40 }}>
-          PREPARED FOR
-        </Text>
-        <Text style={{
-          fontFamily: 'Spectral', fontWeight: 700, fontSize: 30, color: IVORY,
-          marginTop: 6, lineHeight: 1.12,
-        }}>
-          {(r.persona === 'business' && company) || name || 'Your report'}
-        </Text>
-        {r.persona === 'business' && (company || industry) ? (
-          <Text style={{ fontFamily: 'Plex', fontSize: 8.5, color: SOFT, marginTop: 8 }}>
-            {[company ? name : '', industry].filter(Boolean).join('  ·  ')}
-          </Text>
-        ) : null}
-
-        <View style={{ height: 1, backgroundColor: 'rgba(247,241,228,0.28)', marginTop: 26, marginBottom: 26 }} />
-
-        {/* the result, as the headline */}
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.8, color: FAINT }}>
-          {r.persona === 'business' ? 'YOUR BUSINESS AND AI' : 'YOUR ASCENT WITH AI'}
-        </Text>
-        <Text style={{
-          fontFamily: 'Spectral', fontWeight: 800, fontSize: archSize, color: IVORY,
-          marginTop: 10, lineHeight: 1.04,
-        }}>
-          {archetype}
-        </Text>
-        <Text style={{
-          fontFamily: 'Spectral', fontSize: 12.5, color: SOFT, marginTop: 12,
-          lineHeight: 1.5, maxWidth: 340,
-        }}>
-          {r.archetype.tagline}
-        </Text>
-      </View>
-
-      {/* the stage band sits over the brightest part of the glow, so it
-          carries its own scrim rather than relying on the artwork */}
-      <View style={{
-        position: 'absolute', left: 0, right: 0, bottom: 96,
-        height: 148, backgroundColor: '#14120F', opacity: 0.42,
-      }} />
-
-      {/* stage and index, sitting over the glow near the horizon */}
-      <View style={{
-        position: 'absolute', left: M, right: M, bottom: 118,
-        flexDirection: 'row', alignItems: 'center',
-      }}>
-        <View style={{
-          width: 104, height: 104, borderRadius: 52,
-          borderWidth: 1.6, borderColor: 'rgba(247,241,228,0.55)',
-          alignItems: 'center', justifyContent: 'center', marginRight: 20,
-          backgroundColor: 'rgba(20,18,15,0.58)',
-        }}>
-          <Text style={{ fontFamily: 'Spectral', fontWeight: 800, fontSize: 30, color: IVORY }}>
-            {r.stage.rawIndex}
-          </Text>
-          <Text style={{ fontFamily: 'Plex', fontSize: 5.4, letterSpacing: 1.1, color: IVORY, marginTop: 3, opacity: 0.82 }}>
-            {r.persona === 'business' ? 'AI HEALTH SCORE' : 'DEVELOPMENTAL INDEX'}
-          </Text>
-        </View>
-
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: 'Plex', fontSize: 7.5, letterSpacing: 1.6, color: '#4FD3B8' }}>
-            STAGE {r.stage.stage} OF 10
-          </Text>
-          <Text style={{ fontFamily: 'Spectral', fontWeight: 700, fontSize: 21, color: IVORY, marginTop: 3 }}>
-            {r.stage.stageName}
-          </Text>
-          <Text style={{ fontFamily: 'Plex', fontSize: 8, color: IVORY, marginTop: 5, opacity: 0.86 }}>
-            {r.stage.substage}  ·  {confidenceLabel(r.overallConfidence).toLowerCase()}
-          </Text>
-        </View>
-      </View>
-
-      {/* a quiet line of orientation, and the imprint */}
-      <View style={{ position: 'absolute', left: M, right: M, bottom: 52 }}>
-        <View style={{ height: 1, backgroundColor: 'rgba(247,241,228,0.22)', marginBottom: 12 }} />
-        <Text style={{ fontFamily: 'Spectral', fontSize: 10, color: SOFT, lineHeight: 1.5 }}>
-          A journey, not a verdict. The summit is a direction, not a finish line.
-        </Text>
-      </View>
-
-      <View style={{
-        position: 'absolute', left: M, right: M, bottom: 26,
-        flexDirection: 'row', justifyContent: 'space-between',
-      }}>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: FAINT }}>{dateStr}</Text>
-        <Text style={{ fontFamily: 'Plex', fontSize: 7.5, color: FAINT }}>assessment.neogogy.ai</Text>
-      </View>
-    </Page>
-  );
-}
-
 export async function generateCompassPdf(args: {
   result: CompassResult;
   name?: string;
@@ -1676,7 +1281,7 @@ export async function generateCompassPdf(args: {
         splitting. Pagination is therefore driven by content length instead of
         by fixed page assignments, which is what keeps pages full.
       */}
-      <Page size="A4" style={S.light} wrap>
+      <Page size={[PAGE.w, PAGE.h]} style={S.light} wrap>
         {/* The map opens the page: a plate this tall cannot re-flow past a
             page break, so it is placed where it always has full height. */}
         <>
@@ -1874,7 +1479,7 @@ export async function generateCompassPdf(args: {
       {isPastor && (r.formationRoadmap?.length ?? 0) > 0 ? <FormationRoadmapPdf r={r} /> : null}
 
       {/* Closing */}
-      <Page size="A4" style={S.closing}>
+      <Page size={[PAGE.w, PAGE.h]} style={S.closing}>
         {/* eslint-disable-next-line jsx-a11y/alt-text */}
         <Image src={BACKDROP} style={{ position: 'absolute', bottom: 0, left: 0, width: PAGE.w, height: PAGE.h * 0.42, opacity: 0.85 }} />
         <View style={{ position: 'absolute', top: 0, left: 0, width: PAGE.w, height: PAGE.h * 0.6, backgroundColor: T.paper, opacity: 0.5 }} />

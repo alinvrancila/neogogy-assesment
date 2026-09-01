@@ -79,3 +79,19 @@ the image being bright in the right place.
 Assessment questions, answers, scoring, interpretation, result selection,
 storage, email delivery, APIs, authentication, analytics, and the report body.
 The regression dump for every persona is byte identical.
+
+
+## The cover on the page
+
+`src/components/compass/ResultCover.tsx` renders the same six compositions in
+HTML at the top of the results page, for every persona, reading from the same
+`toCoverData` mapper as the PDF so the two cannot say different things. The
+styles live under `.rcover` in `src/app/compass.css`: one shared grammar (brand,
+assessment name, result, name, concept label, metadata rail) and six placement
+blocks, sized in `clamp()` against a `container-type: inline-size` box so the
+cover holds its proportions from a 360px phone to full width.
+
+Below 620px the concept label and the access column drop out, the side-plate
+covers (business, leader, minister) widen their text column, and the teacher
+plate shortens so the result band never runs under the artwork. The paper is US
+Letter, 612x792, in `src/lib/covers/kit.tsx` and in every `Page` of the report.

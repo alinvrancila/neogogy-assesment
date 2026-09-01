@@ -23,6 +23,7 @@ import {
 } from './ResultCharts';
 import { Markdown } from './Markdown';
 import AscentResults from './ascent/AscentResults';
+import ResultCover from './ResultCover';
 import {
   HealthHeadline, HelpingHarming, RiskRegister, ContinuityTest, TrustAndGovernance,
   DecisionIntegrity, NinetyDayPlan, OwnersExperiment, ScopedDimensions,
@@ -288,6 +289,7 @@ export default function Results({
   if (isPastor) {
     return (
       <div className="wrap results pastor">
+        <ResultCover result={result} name={firstName} />
         <PastorOpeningBlock result={result} />
         {emailed ? (
           <p className="muted" style={{ marginTop: -8, marginBottom: 16 }}>
@@ -327,6 +329,8 @@ export default function Results({
 
   return (
     <div className="wrap results">
+      <ResultCover result={result} name={firstName} />
+
       {isBusiness ? <HealthHeadline result={result} /> : null}
 
       <AscentResults result={result} comparison={comparison} />

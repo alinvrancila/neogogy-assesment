@@ -125,5 +125,20 @@ head('Six layouts, not one template');
     fs.readFileSync(path.join(process.cwd(), 'src', 'lib', 'covers', 'kit.tsx'), 'utf-8')));
 }
 
+head('The page opens on the same six designs');
+{
+  const web = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'compass', 'ResultCover.tsx'), 'utf-8');
+  const css = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'compass.css'), 'utf-8');
+  const results = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'compass', 'Results.tsx'), 'utf-8');
+  ok('the web cover reads from the same mapper as the PDF', /toCoverData/.test(web));
+  // the only thing the cover may take from the result is what the mapper returns
+  ok('the web cover carries no score', !/result\.(stage|index|composite|constructs|dimensions)/.test(web));
+  for (const p of ['student', 'teacher', 'parent', 'leader', 'minister', 'business']) {
+    ok(`the page styles the ${p} cover`, css.includes(`.rcover-${p} `));
+  }
+  ok('every persona result opens on the cover',
+    (results.match(/<ResultCover /g) || []).length >= 2);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

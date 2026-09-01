@@ -13,7 +13,7 @@ import { Image, Page, Text, View, Svg, Path, Line, Circle } from '@react-pdf/ren
 import type { AssessmentCoverData } from './data';
 import {
   ART, LETTER, SAFE, RAIL_SAFE, BrandMark, AssessmentIdentity, ResultBlock,
-  PersonName, ConceptLabel, CoverMetadata,
+  PersonName, ConceptLabel, CoverMetadata, resultSize,
 } from './kit';
 
 const page = (bg: string) => ({ width: LETTER.w, height: LETTER.h, backgroundColor: bg });
@@ -57,8 +57,11 @@ export function StudentCover({ data }: { data: AssessmentCoverData }) {
         <PersonName data={data} tint="#FFFFFF" labelTint="rgba(255,255,255,0.78)" />
       </View>
 
-      <View style={{ ...abs, right: SAFE, bottom: 128, alignItems: 'flex-end' }}>
-        <ConceptLabel data={data} tint="#FFFFFF" subTint="rgba(255,255,255,0.86)" align="right" />
+      <View style={{
+        ...abs, right: SAFE - 62, top: LETTER.h * 0.44,
+        transform: 'rotate(90deg)', width: 200,
+      }}>
+        <ConceptLabel data={data} tint="#FFFFFF" subTint="rgba(255,255,255,0.88)" />
       </View>
 
       <View style={{ ...abs, left: RAIL_SAFE, right: RAIL_SAFE, bottom: RAIL_SAFE }}>
@@ -73,8 +76,8 @@ export function TeacherCover({ data }: { data: AssessmentCoverData }) {
   const FIELD = '#1F3B32';
   const GOLD = '#E7C169';
   const CHALK = '#EFEAE0';
-  const plateTop = LETTER.h * 0.16;
-  const plateH = LETTER.h * 0.42;
+  const plateTop = LETTER.h * 0.15;
+  const plateH = LETTER.h * 0.44;
   return (
     <Page size={[LETTER.w, LETTER.h]} style={page(FIELD)}>
       <View style={{ ...abs, left: SAFE, right: SAFE, top: SAFE, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -103,9 +106,29 @@ export function TeacherCover({ data }: { data: AssessmentCoverData }) {
         <ConceptLabel data={data} tint={GOLD} subTint="rgba(231,193,105,0.85)" align="right" />
       </View>
 
-      <View style={{ ...abs, left: SAFE, top: plateTop + plateH + 34, flexDirection: 'row' }}>
-        <View style={{ width: 268 }}>
-          <ResultBlock data={data} tint={GOLD} summaryTint="rgba(239,234,224,0.86)" width={268} eyebrowTint="rgba(239,234,224,0.7)" />
+      {/* the mockup splits this band: result on the left, summary on the right.
+          It is anchored to the rail rather than to the plate, so no dead band
+          opens between the two however long the result name runs. */}
+      <View style={{ ...abs, left: SAFE, right: SAFE, bottom: 88 }}>
+        <Text style={{
+          fontFamily: 'PlexMono', fontWeight: 500, fontSize: 8, letterSpacing: 1.5,
+          color: 'rgba(239,234,224,0.7)', marginBottom: 14,
+        }}>
+          YOUR ASSESSMENT RESULT
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+          <Text style={{
+            fontFamily: 'SourceSerif', fontWeight: 600, fontSize: resultSize(data.resultTitle),
+            color: GOLD, lineHeight: 1.06, width: 262,
+          }}>
+            {data.resultTitle}
+          </Text>
+          <Text style={{
+            fontFamily: 'PlexSans', fontSize: 12.5, color: 'rgba(239,234,224,0.88)',
+            lineHeight: 1.5, flex: 1, marginLeft: 22, marginBottom: 6,
+          }}>
+            {data.resultSummary}
+          </Text>
         </View>
       </View>
 
