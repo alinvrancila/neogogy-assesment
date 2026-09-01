@@ -326,7 +326,7 @@ export async function POST(request: NextRequest) {
   let emailSent = false;
   try {
     const pdf = await generateCompassPdf({
-      result, name: fullName, comparison,
+      result, name: fullName, comparison, leadId: lead.id,
       company: lead.meta?.business?.company,
       industry: lead.meta?.business?.industry,
     });

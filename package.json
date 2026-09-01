@@ -22,7 +22,8 @@
     "test:pastor": "tsx tests/compass/pastor.ts",
     "test:quotes": "tsx tests/compass/quotes.ts",
     "art:minister": "node scripts/art/render-pastor-cover.mjs",
-    "art:business": "node scripts/art/render-business-cover.mjs"
+    "art:business": "node scripts/art/render-business-cover.mjs",
+    "test:covers": "tsx tests/compass/covers.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.620.0",
@@ -39,6 +40,8 @@
     "tailwindcss": "^3.4.5"
   },
   "devDependencies": {
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@fontsource/source-serif-4": "^5.3.0",
     "@types/node": "^20.14.2",
     "@types/nodemailer": "^8.0.1",
     "@types/qrcode": "^1.5.6",
@@ -48,7 +51,7 @@
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.5",
     "postcss": "^8.4.37",
-    "typescript": "^5.6.2",
-    "tsx": "^4.23.12"
+    "tsx": "^4.23.12",
+    "typescript": "^5.6.2"
   }
 }

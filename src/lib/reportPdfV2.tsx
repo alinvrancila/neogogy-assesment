@@ -24,6 +24,8 @@ import {
   constructName, reportedConstructName, constructContent, stageName, indexName, reportTitle,
   disclaimerExtra, dimensionScope, SCOPE_LABEL, SCOPE_BLURB,
 } from '@/engine/display';
+import { toCoverData } from '@/lib/covers/data';
+import { AssessmentCover } from '@/lib/covers/layouts';
 import {
   VIEW as MAP_VIEW, pointAtIndex, routePath, routeRidge,
   GATE_DEFS,
@@ -1652,8 +1654,10 @@ export async function generateCompassPdf(args: {
   /** Business Owner only, volunteered by the respondent. */
   company?: string;
   industry?: string;
+  /** The stored record, when there is one, so the cover can carry a reference. */
+  leadId?: string;
 }): Promise<Buffer> {
-  const { result: r, name = '', comparison = null, company, industry } = args;
+  const { result: r, name = '', comparison = null, company, industry, leadId } = args;
   const isBusiness = r.persona === 'business';
   const isPastor = r.persona === 'pastor';
   const sections = generateReportSections(r);
@@ -1662,11 +1666,9 @@ export async function generateCompassPdf(args: {
 
   const doc = (
     <Document title={reportTitle(r.persona)} author="International Center for Applied Neogogy">
-      {isPastor
-        ? <PastorCover r={r} dateStr={dateStr} name={name} />
-        : isBusiness
-          ? <BusinessCover r={r} name={name} dateStr={dateStr} company={company} industry={industry} />
-          : <Cover r={r} name={name} dateStr={dateStr} company={company} industry={industry} />}
+      <AssessmentCover data={toCoverData({
+        result: r, name, leadId, company, date: new Date(),
+      })} />
 
       {/*
         One flowing light page. react-pdf paginates it, and every content block
