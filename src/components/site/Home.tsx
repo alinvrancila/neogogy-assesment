@@ -21,8 +21,10 @@ import '@/app/home.css';
 import { useEffect, useRef, useState } from 'react';
 import type { Persona } from '@/engine/types';
 import { PERSONA_CONTENT, type PersonaContent } from '@/content/personas';
+import { COVER_PERSONA } from '@/lib/covers/data';
 import { BRAND, CORE_QUESTION, ECOSYSTEM } from '@/brand';
 import MotifMark from './Motifs';
+import { RisingCurves, Spectrum, SurfaceDepth, StatRing, StatDrop, StatRise, TwoStates } from './Figures';
 
 const ACCENT: Record<Persona, string> = {
   student: '#2F6F62',
@@ -156,6 +158,7 @@ function Hero({ variant, onStart }: { variant: 'a' | 'b'; onStart: () => void })
 
         <p className="ha-by">{BRAND.poweredBy}</p>
       </div>
+      <div className="ha-hero-fig"><RisingCurves /></div>
       <div className="ha-hero-art" aria-hidden="true" />
     </section>
   );
@@ -167,6 +170,16 @@ function PersonaPanel({ p, onBegin }: { p: PersonaContent; onBegin: (id: Persona
   const accent = ACCENT[p.id];
   return (
     <div className="ha-panel" style={{ ['--accent' as string]: accent }}>
+      <div className="ha-panel-art">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/covers/web/${COVER_PERSONA[p.id]}.jpg`} alt="" loading="lazy" />
+        <span className="ha-panel-art-mark"><MotifMark motif={p.motif} color="#fff" size={64} /></span>
+        <span className="ha-panel-art-name">
+          <em>{p.motifName}</em>
+          <strong>{p.name}</strong>
+        </span>
+      </div>
+
       <div className="ha-panel-head">
         <div className="ha-panel-motif"><MotifMark motif={p.motif} color={accent} size={104} /></div>
         <div>
@@ -362,6 +375,7 @@ function Risks() {
       <div className="ha-wrap">
         <p className="ha-kicker">Two risks, not one</p>
         <h2 className="ha-h2">Both ends of the range carry a cost.</h2>
+        <div className="ha-fig ha-fig-wide"><Spectrum /></div>
         <div className="ha-risks">
           {cols.map((c) => (
             <div key={c.k} className={`ha-risk ha-risk-${c.tone}`}>
@@ -399,11 +413,14 @@ function Performance() {
         <p className="ha-kicker">Output is not capability</p>
         <h2 className="ha-h2">Better AI assisted performance does not automatically mean greater
           human capability.</h2>
-        <ul className="ha-equations">
+        <div className="ha-split">
+          <div className="ha-fig"><SurfaceDepth /></div>
+          <ul className="ha-equations">
           {rows.map(([a, b]) => (
             <li key={a}><strong>{a}</strong><span aria-hidden="true">does not automatically mean</span><em>{b}</em></li>
           ))}
-        </ul>
+          </ul>
+        </div>
         <p className="ha-statement">The Human Advantage Assessment looks beneath the output.</p>
       </div>
     </section>
@@ -445,11 +462,13 @@ function TwoQuestions() {
       <div className="ha-wrap">
         <div className="ha-two-q">
           <div>
+            <div className="ha-fig ha-fig-sm"><TwoStates side="alone" /></div>
             <h2 className="ha-h2">If AI disappeared tomorrow, what could you still do?</h2>
             <ul className="ha-qlist">{gone.map((q) => <li key={q}>{q}</li>)}</ul>
             <p className="ha-note">Independence matters. But this is only half of the question.</p>
           </div>
           <div>
+            <div className="ha-fig ha-fig-sm"><TwoStates side="amplified" /></div>
             <h2 className="ha-h2">If AI becomes dramatically more capable tomorrow, will you know how
               to work with it?</h2>
             <ul className="ha-qlist">{better.map((q) => <li key={q}>{q}</li>)}</ul>
@@ -479,6 +498,7 @@ function Research() {
         <ol className="ha-research">
           {stats.map((s, i) => (
             <li key={s.n}>
+              <span className="ha-stat-fig">{i === 0 ? <StatRing /> : i === 1 ? <StatDrop /> : <StatRise />}</span>
               <span className="ha-stat-n">{s.n}</span>
               <span className="ha-stat-t">{s.t}</span>
               <span className="ha-stat-src">{s.src}</span>

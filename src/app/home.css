@@ -102,6 +102,7 @@
 /* ------------------------------------------------------------------ hero */
 .nfc .ha-hero { scroll-margin-top: 104px; position: relative; padding: clamp(34px, 4.4vw, 56px) 0 clamp(26px, 3.4vw, 44px); overflow: hidden; }
 .nfc .ha-hero-in { position: relative; z-index: 2; max-width: 940px; }
+@media (min-width: 901px) { .nfc .ha-hero-in { max-width: min(940px, 62vw); } }
 .nfc .ha-hero-art {
   position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .5;
   background:
@@ -207,6 +208,9 @@
 .nfc .ha-acc-item.is-open .ha-acc-sign::after { opacity: 0; }
 .nfc .ha-acc-body { padding: 0 10px 12px; }
 .nfc .ha-acc-body .ha-panel { box-shadow: none; border: 0; padding: 6px 4px 4px; }
+/* inside the accordion the panel has almost no padding, so the banner needs its
+   own margins rather than the negative ones that reach the panel edge */
+.nfc .ha-acc-body .ha-panel-art { margin: -6px -4px 20px; border-radius: 10px; }
 
 /* the way in, at the top of the reading as well as the end of it */
 .nfc .ha-panel-go { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 0 0 26px; }
@@ -400,3 +404,66 @@
 }
 @media (max-width: 1080px) { .nfc .ha-pages ul { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 700px) { .nfc .ha-pages ul { grid-template-columns: repeat(2, 1fr); gap: 18px 14px; } }
+
+/* ================================================================= figures
+   The page argues something no photograph can show, so the pictures are
+   diagrams: each carries the claim its paragraph makes, and a reader who only
+   looks at the pictures still gets the argument. */
+.nfc .ha-fig { margin: 26px 0; }
+.nfc .ha-fig-wide { max-width: 900px; margin: 30px auto 34px; }
+.nfc .ha-fig-sm { max-width: 300px; margin: 0 0 18px; }
+.nfc .ha-hero-fig {
+  position: absolute; right: max(var(--pad), 4vw); top: 50%; transform: translateY(-46%);
+  width: min(430px, 34vw); z-index: 2; opacity: .96; pointer-events: none;
+}
+
+/* the persona reading opens on that persona's own artwork */
+.nfc .ha-panel-art {
+  position: relative; margin: calc(clamp(20px, 3vw, 34px) * -1) calc(clamp(20px, 3vw, 34px) * -1) 24px;
+  border-radius: var(--r) var(--r) 0 0; overflow: hidden; aspect-ratio: 21 / 8; background: var(--ink);
+}
+.nfc .ha-panel-art img {
+  width: 100%; height: 100%; object-fit: cover; object-position: center 42%; display: block;
+}
+.nfc .ha-panel-art::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(100deg, rgba(24,18,14,.82) 0%, rgba(24,18,14,.42) 46%, rgba(24,18,14,0) 74%);
+}
+.nfc .ha-panel-art-mark { position: absolute; right: 22px; bottom: 14px; opacity: .55; z-index: 1; }
+.nfc .ha-panel-art-name {
+  position: absolute; left: clamp(18px, 3vw, 30px); bottom: clamp(14px, 2.4vw, 24px); z-index: 1;
+  display: grid; gap: 4px; color: #fff;
+}
+.nfc .ha-panel-art-name em {
+  font-family: var(--f-mono); font-style: normal; font-size: .64rem; letter-spacing: .18em;
+  text-transform: uppercase; opacity: .82;
+}
+.nfc .ha-panel-art-name strong {
+  font-family: var(--f-display); font-weight: 600; font-size: clamp(1.5rem, 3vw, 2.2rem); line-height: 1.05;
+}
+/* the artwork now carries the name, so the head block drops its duplicate */
+.nfc .ha-panel-head .ha-kicker, .nfc .ha-panel-head .ha-panel-name { display: none; }
+.nfc .ha-panel-head { align-items: center; gap: 18px; }
+.nfc .ha-panel-motif { opacity: .85; }
+.nfc .ha-panel-who { margin-top: 0; font-size: 1.02rem; }
+
+/* output above the line, capability under it, beside the sentences that say so */
+.nfc .ha-split { display: grid; grid-template-columns: 360px 1fr; gap: 40px; align-items: center; margin-top: 30px; }
+.nfc .ha-split .ha-equations { margin-top: 0; }
+
+/* each finding gets its shape, so the number is not the only thing carrying it */
+.nfc .ha-stat-fig { display: block; margin-bottom: 4px; }
+.nfc .ha-research li { align-content: start; }
+
+@media (max-width: 1180px) {
+  .nfc .ha-hero-fig { width: min(340px, 32vw); opacity: .9; }
+}
+@media (max-width: 900px) {
+  /* the figure stops competing with the headline and goes under the reading */
+  .nfc .ha-hero-fig {
+    position: static; transform: none; width: 100%; max-width: 420px; margin: 26px 0 0; opacity: 1;
+  }
+  .nfc .ha-split { grid-template-columns: 1fr; gap: 24px; }
+  .nfc .ha-fig-sm { max-width: 240px; }
+  .nfc .ha-panel-art { aspect-ratio: 16 / 8; }
+}
