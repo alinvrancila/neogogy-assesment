@@ -11,7 +11,7 @@
  * the text beside it already says what it says.
  */
 
-import { STAGES } from '@/engine/config';
+import { CONSTRUCTS, STAGES } from '@/engine/config';
 import { stageName } from '@/engine/display';
 import { pointAtIndex, routePath, contourPaths, routeRidge } from '@/components/compass/ascent/route';
 
@@ -259,5 +259,89 @@ export function TwoStates({ side }: { side: 'alone' | 'amplified' }) {
         </>
       )}
     </svg>
+  );
+}
+
+/* ------------------------------------------------------- the ten dimensions */
+
+/**
+ * What the assessment actually reads.
+ *
+ * The ten dimensions, named, arranged as a ring rather than a list, because the
+ * claim under it is that they move independently: high on one is not high on
+ * the next, and the shape a person makes across all ten is the finding. Names
+ * come from the engine, so a renamed dimension renames itself here.
+ */
+export function DimensionRing() {
+  const names = Object.values(CONSTRUCTS).map((c) => c.name);
+  const R = 140, cx = 310, cy = 200;
+  return (
+    <svg viewBox="0 0 620 400" role="img"
+      aria-label={`The ten dimensions the assessment reads: ${names.join(', ')}.`}
+      style={{ display: 'block', width: '100%', height: 'auto' }}>
+      <circle cx={cx} cy={cy} r={R} fill="none" stroke={C.line} strokeWidth="1" />
+      <circle cx={cx} cy={cy} r={R * 0.66} fill="none" stroke={C.line} strokeWidth="1" strokeDasharray="2 5" />
+      <circle cx={cx} cy={cy} r={R * 0.33} fill="none" stroke={C.line} strokeWidth="1" strokeDasharray="2 5" />
+
+      {names.map((n, i) => {
+        const a = (i / names.length) * Math.PI * 2 - Math.PI / 2;
+        const x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R;
+        const right = Math.cos(a) > 0.08, left = Math.cos(a) < -0.08;
+        const lx = x + Math.cos(a) * 14, ly = y + Math.sin(a) * 14;
+        return (
+          <g key={n}>
+            <line x1={cx} y1={cy} x2={x} y2={y} stroke={C.line} strokeWidth="1" />
+            <circle cx={x} cy={y} r="5" fill="#fff" stroke={C.gold} strokeWidth="2" />
+            <text x={lx} y={ly + 4} textAnchor={right ? 'start' : left ? 'end' : 'middle'}
+              fill={C.ink} fontSize="12.5" fontFamily="var(--f-body)">{n}</text>
+          </g>
+        );
+      })}
+
+      <circle cx={cx} cy={cy} r="34" fill="#fff" stroke={C.maroon} strokeWidth="1.6" />
+      <text x={cx} y={cy - 2} textAnchor="middle" fill={C.maroon} fontSize="13" fontWeight="600"
+        fontFamily="var(--f-display)">Human</text>
+      <text x={cx} y={cy + 14} textAnchor="middle" fill={C.maroon} fontSize="13" fontWeight="600"
+        fontFamily="var(--f-display)">Advantage</text>
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ glyphs */
+
+/** Six small marks, one per claim, so the cards are not six grey rectangles. */
+export function CardGlyph({ kind }: { kind: number }) {
+  const t = C.gold;
+  const shapes = [
+    // measures the human side: a figure inside the frame, not the frame
+    <g key="0"><rect x="4" y="4" width="34" height="34" rx="6" fill="none" stroke={t} strokeWidth="1.4" />
+      <circle cx="21" cy="16" r="5" fill={t} /><path d="M 21 23 v 10 M 21 26 l -7 6 M 21 26 l 7 6" stroke={t} strokeWidth="2" fill="none" strokeLinecap="round" /></g>,
+    // both ends: two weights on one beam
+    <g key="1"><line x1="6" y1="21" x2="36" y2="21" stroke={t} strokeWidth="1.6" />
+      <circle cx="10" cy="21" r="5" fill="none" stroke={t} strokeWidth="1.8" />
+      <circle cx="32" cy="21" r="5" fill="none" stroke={t} strokeWidth="1.8" />
+      <circle cx="21" cy="21" r="3" fill={t} /></g>,
+    // output from capability: a surface with something under it
+    <g key="2"><line x1="5" y1="18" x2="37" y2="18" stroke={t} strokeWidth="1.6" />
+      <path d="M 10 12 h 22" stroke={t} strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M 8 25 h 26 M 8 31 h 18" stroke={t} strokeWidth="2.2" strokeLinecap="round" opacity="0.55" /></g>,
+    // independence and augmentation: one alone, one connected
+    <g key="3"><circle cx="13" cy="21" r="6" fill="none" stroke={t} strokeWidth="1.8" />
+      <circle cx="30" cy="21" r="6" fill="none" stroke={t} strokeWidth="1.8" />
+      <path d="M 30 21 l 7 -7 M 30 21 l 7 7 M 30 21 l 8 0" stroke={t} strokeWidth="1.3" strokeLinecap="round" /></g>,
+    // context specific: six paths from one origin
+    <g key="4">{[0, 1, 2, 3, 4, 5].map((i) => {
+      const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+      return <line key={i} x1="21" y1="21" x2={21 + Math.cos(a) * 15} y2={21 + Math.sin(a) * 15}
+        stroke={t} strokeWidth="1.5" strokeLinecap="round" />;
+    })}<circle cx="21" cy="21" r="3.4" fill={t} /></g>,
+    // somewhere to go: a step up, with the next one drawn
+    <g key="5"><path d="M 5 33 h 10 v -8 h 10 v -8 h 10" fill="none" stroke={t} strokeWidth="1.8"
+      strokeLinejoin="round" /><path d="M 35 17 v -8 h 3" fill="none" stroke={t} strokeWidth="1.4"
+      strokeDasharray="2 3" /></g>,
+  ];
+  return (
+    <svg viewBox="0 0 42 42" width="42" height="42" aria-hidden="true" focusable="false"
+      style={{ display: 'block' }}>{shapes[kind % shapes.length]}</svg>
   );
 }

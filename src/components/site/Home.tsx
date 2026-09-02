@@ -24,7 +24,7 @@ import { PERSONA_CONTENT, type PersonaContent } from '@/content/personas';
 import { COVER_PERSONA } from '@/lib/covers/data';
 import { BRAND, CORE_QUESTION, ECOSYSTEM } from '@/brand';
 import MotifMark from './Motifs';
-import { RouteBand, Spectrum, SurfaceDepth, StatRing, StatDrop, StatRise, TwoStates } from './Figures';
+import { RouteBand, Spectrum, SurfaceDepth, StatRing, StatDrop, StatRise, TwoStates, DimensionRing, CardGlyph } from './Figures';
 
 const ACCENT: Record<Persona, string> = {
   student: '#2F6F62',
@@ -180,9 +180,16 @@ function PersonaPanel({ p, onBegin }: { p: PersonaContent; onBegin: (id: Persona
   const accent = ACCENT[p.id];
   return (
     <div className="ha-panel" style={{ ['--accent' as string]: accent }}>
-      <div className="ha-panel-art">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`/covers/web/${COVER_PERSONA[p.id]}.jpg`} alt="" loading="lazy" />
+      {/* All six banners are held here at once, and the chosen one is faded in.
+          Loading a single banner on demand meant every switch showed an empty
+          band while a fresh request went out; six cropped strips together weigh
+          less than one of the full covers did. */}
+      <div className="ha-panel-art" style={{ backgroundColor: accent }}>
+        {PERSONA_CONTENT.map((q) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={q.id} src={`/covers/band/${COVER_PERSONA[q.id]}.jpg`} alt=""
+            className={q.id === p.id ? 'is-on' : ''} width={1160} height={442} decoding="async" />
+        ))}
         <span className="ha-panel-art-mark"><MotifMark motif={p.motif} color="#fff" size={64} /></span>
         <span className="ha-panel-art-name">
           <em>{p.motifName}</em>
@@ -328,19 +335,30 @@ function Personas({ selected, onSelect, onBegin }: {
 function Definition() {
   return (
     <section className="ha-section ha-section-tint" id="ha-definition">
-      <div className="ha-wrap ha-narrow">
-        <p className="ha-kicker">Human Advantage</p>
-        <h2 className="ha-h2">What is your Human Advantage?</h2>
-        <p className="ha-lead">
-          As AI becomes more capable, the important question is not whether humans can outperform
-          machines at every task. The question is whether people are developing the judgment,
-          independence, creativity, adaptability, responsibility, and wisdom required to use powerful
-          systems without surrendering the capabilities that should remain theirs.
-        </p>
-        <p className="ha-statement">
-          Your Human Advantage is not simply what AI cannot do. It is the capability you continue to
-          build, own, exercise, and take responsibility for in a world where AI is everywhere.
-        </p>
+      <div className="ha-wrap">
+        <div className="ha-def">
+          <div>
+            <p className="ha-kicker">Human Advantage</p>
+            <h2 className="ha-h2">What is your Human Advantage?</h2>
+            <p className="ha-lead">
+              As AI becomes more capable, the important question is not whether humans can outperform
+              machines at every task. The question is whether people are developing the judgment,
+              independence, creativity, adaptability, responsibility, and wisdom required to use
+              powerful systems without surrendering the capabilities that should remain theirs.
+            </p>
+            <p className="ha-statement ha-statement-left">
+              Your Human Advantage is not simply what AI cannot do. It is the capability you continue
+              to build, own, exercise, and take responsibility for in a world where AI is everywhere.
+            </p>
+          </div>
+          <div className="ha-def-fig">
+            <DimensionRing />
+            <p className="ha-fig-cap">
+              The ten dimensions your answers are read across. They move independently, and the
+              shape you make across all ten is the finding.
+            </p>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -537,8 +555,9 @@ function Different() {
         <p className="ha-kicker">What makes it different</p>
         <h2 className="ha-h2">What makes the {BRAND.product} different?</h2>
         <div className="ha-grid3">
-          {items.map(([h, b]) => (
+          {items.map(([h, b], i) => (
             <div key={h} className="ha-card">
+              <span className="ha-card-glyph"><CardGlyph kind={i} /></span>
               <h3 className="ha-h3">{h}</h3>
               <p>{b}</p>
             </div>

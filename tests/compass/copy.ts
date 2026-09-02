@@ -219,6 +219,25 @@ head('The page draws the continuum the way the report does');
     /ha-hero[\s\S]{0,4000}<RouteBand \/>/.test(home));
 }
 
+head('The persona banners are ready before they are needed');
+{
+  const dir = path.join(process.cwd(), 'public', 'covers', 'band');
+  let total = 0;
+  for (const p of PERSONA_CONTENT) {
+    const slug = p.slug === 'leader' ? 'leader' : p.slug === 'minister' ? 'minister' : p.slug;
+    const f = path.join(dir, `${slug}.jpg`);
+    const kb = fs.existsSync(f) ? Math.round(fs.statSync(f).size / 1024) : -1;
+    total += Math.max(kb, 0);
+    ok(`${p.name}: banner crop exists and is light (${kb}KB)`, kb > 0 && kb < 90);
+  }
+  // All six are held at once so a switch never waits on a request, which only
+  // works while the set stays small.
+  ok(`all six together are under 400KB (${total}KB)`, total < 400);
+  const home = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'site', 'Home.tsx'), 'utf-8');
+  ok('the panel holds every banner rather than fetching one on demand',
+    /PERSONA_CONTENT\.map\(\(q\) => \(/.test(home) && /covers\/band/.test(home));
+}
+
 head('Nothing overclaims');
 {
   const banned = [/\bvalidated psychometric\b(?!\s+measurement)/i, /\bclinical diagnos/i, /\bpsychological evaluation\b/i];
