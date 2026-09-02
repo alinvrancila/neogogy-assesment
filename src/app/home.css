@@ -467,3 +467,22 @@
   .nfc .ha-fig-sm { max-width: 240px; }
   .nfc .ha-panel-art { aspect-ratio: 16 / 8; }
 }
+
+/* ------------------------------------------------------------- the continuum
+   The same terrain, route and camps the report draws on its second page, from
+   the same module, so the promise on the page and the page in the file cannot
+   diverge. No marker here: nobody is anywhere yet. */
+.nfc .ha-routeband { padding: 0 0 clamp(30px, 4vw, 52px); }
+.nfc .ha-routeband-cap {
+  margin: 16px auto 0; max-width: 66ch; text-align: center; font-size: .96rem;
+  line-height: 1.6; color: var(--ink-soft);
+}
+.nfc .ha-routeband .rb-name { font-size: 15px; }
+.nfc .ha-routeband .rb-num { font-size: 12px; }
+@media (max-width: 820px) {
+  /* The names stop fitting long before the terrain does. The report's own map
+     does the same thing at this width: the route keeps its shape, the numbers
+     are drawn larger to survive the scale down, and the names come off. */
+  .nfc .ha-routeband .rb-name, .nfc .ha-routeband .rb-lead { display: none; }
+  .nfc .ha-routeband .rb-num { font-size: 34px; }
+}

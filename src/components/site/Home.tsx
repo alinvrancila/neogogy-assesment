@@ -24,7 +24,7 @@ import { PERSONA_CONTENT, type PersonaContent } from '@/content/personas';
 import { COVER_PERSONA } from '@/lib/covers/data';
 import { BRAND, CORE_QUESTION, ECOSYSTEM } from '@/brand';
 import MotifMark from './Motifs';
-import { RisingCurves, Spectrum, SurfaceDepth, StatRing, StatDrop, StatRise, TwoStates } from './Figures';
+import { RouteBand, Spectrum, SurfaceDepth, StatRing, StatDrop, StatRise, TwoStates } from './Figures';
 
 const ACCENT: Record<Persona, string> = {
   student: '#2F6F62',
@@ -158,7 +158,6 @@ function Hero({ variant, onStart }: { variant: 'a' | 'b'; onStart: () => void })
 
         <p className="ha-by">{BRAND.poweredBy}</p>
       </div>
-      <div className="ha-hero-fig"><RisingCurves /></div>
       <div className="ha-hero-art" aria-hidden="true" />
     </section>
   );
@@ -719,6 +718,16 @@ export default function Home({ initialPersona, onBegin }: {
       <Header onStart={() => scrollTo('ha-personas')} />
       <div className="ha-header-space" aria-hidden="true" />
       <Hero variant={variant} onStart={() => scrollTo('ha-personas')} />
+
+      <section className="ha-routeband" aria-labelledby="ha-routeband-h">
+        <div className="ha-wrap">
+          <RouteBand />
+          <p className="ha-routeband-cap" id="ha-routeband-h">
+            Ten stages, from first contact to a practice that renews itself. Your answers place you
+            on this route, and your report opens on where you are standing.
+          </p>
+        </div>
+      </section>
       <Personas selected={selected} onSelect={setSelected} onBegin={onBegin} />
       <Definition />
       <Thesis />

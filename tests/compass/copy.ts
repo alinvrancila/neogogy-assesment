@@ -193,6 +193,20 @@ head('The site card says what the site is');
   ok('the alt text describes the picture that is there', /summit above the clouds/.test(layout));
 }
 
+head('The page draws the continuum the way the report does');
+{
+  const fig = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'site', 'Figures.tsx'), 'utf-8');
+  ok('the band comes from the report\'s own route module',
+    /from '@\/components\/compass\/ascent\/route'/.test(fig));
+  ok('it draws the real stages rather than a decorative count',
+    /STAGES\.map/.test(fig) && /from '@\/engine\/config'/.test(fig));
+  ok('it carries no marker, because nobody is anywhere yet',
+    !/rawIndex|stage\.index|YOU ARE HERE/.test(fig));
+  ok('the graph the assessment never draws is gone', !/RisingCurves/.test(fig));
+  const home = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'site', 'Home.tsx'), 'utf-8');
+  ok('the page opens on it', home.indexOf('<RouteBand />') < home.indexOf('<Personas'));
+}
+
 head('Nothing overclaims');
 {
   const banned = [/\bvalidated psychometric\b(?!\s+measurement)/i, /\bclinical diagnos/i, /\bpsychological evaluation\b/i];

@@ -11,6 +11,9 @@
  * the text beside it already says what it says.
  */
 
+import { STAGES } from '@/engine/config';
+import { pointAtIndex, routePath, contourPaths, routeRidge } from '@/components/compass/ascent/route';
+
 const C = {
   ink: '#26201C',
   soft: '#6A5E54',
@@ -28,35 +31,75 @@ const svg = (extra?: React.CSSProperties): React.SVGProps<SVGSVGElement> => ({
   style: { display: 'block', width: '100%', height: 'auto', ...extra },
 });
 
-/* ------------------------------------------------ the two capability curves */
+/* ----------------------------------------------------------------- the route */
 
-/** AI rises steeply. The question the page asks is what the other line does. */
-export function RisingCurves() {
+/**
+ * The continuum, drawn the way the report draws it.
+ *
+ * This is the same terrain, the same route geometry and the same ten camps that
+ * page two of every report shows, from the same module, so what a visitor sees
+ * here is what arrives in their file rather than a marketing version of it. No
+ * marker: nobody is anywhere yet.
+ */
+export function RouteBand() {
+  const full = routePath();
+  const contours = contourPaths(6);
   return (
-    <svg viewBox="0 0 460 300" {...svg()}>
+    <svg viewBox="0 96 1200 424" role="img"
+      aria-label="The ten stage route the assessment places you on, drawn as a climb from first contact at the left to a mature practice at the summit."
+      style={{ display: 'block', width: '100%', height: 'auto' }}>
       <defs>
-        <linearGradient id="fgAi" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={C.crimson} stopOpacity={0.16} />
-          <stop offset="1" stopColor={C.crimson} stopOpacity={0} />
+        <linearGradient id="fgScrim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#F7F1E4" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="#F7F1E4" stopOpacity="0" />
         </linearGradient>
+        <clipPath id="fgClip"><rect x="0" y="96" width="1200" height="424" rx="16" /></clipPath>
       </defs>
-      <line x1="42" y1="258" x2="440" y2="258" stroke={C.line} strokeWidth="1.2" />
-      <line x1="42" y1="24" x2="42" y2="258" stroke={C.line} strokeWidth="1.2" />
-      <text x="42" y="284" fill={C.soft} fontSize="11" fontFamily="var(--f-mono)">now</text>
-      <text x="392" y="284" fill={C.soft} fontSize="11" fontFamily="var(--f-mono)">ahead</text>
 
-      <path d="M 42 244 C 170 236 286 176 440 34 L 440 258 L 42 258 Z" fill="url(#fgAi)" />
-      <path d="M 42 244 C 170 236 286 176 440 34" fill="none" stroke={C.crimson} strokeWidth="2.6" strokeLinecap="round" />
-      <text x="436" y="26" textAnchor="end" fill={C.crimson} fontSize="14" fontWeight="600" fontFamily="var(--f-display)">AI capability</text>
+      <g clipPath="url(#fgClip)">
+        <image href="/ascent-backdrop.jpg" x="0" y="96" width="1200" height="424"
+          preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
+        <rect x="0" y="96" width="1200" height="424" fill="#F7F1E4" opacity="0.42" aria-hidden="true" />
+        <rect x="0" y="96" width="1200" height="150" fill="url(#fgScrim)" aria-hidden="true" />
 
-      <path d="M 42 236 C 150 232 250 226 440 214" fill="none" stroke={C.soft}
-        strokeWidth="2" strokeDasharray="5 6" strokeLinecap="round" />
-      <path d="M 42 236 C 150 224 250 190 440 128" fill="none" stroke={C.growth} strokeWidth="2.6" strokeLinecap="round" />
-      <text x="436" y="112" textAnchor="end" fill={C.growth} fontSize="14" fontWeight="600" fontFamily="var(--f-display)">your capability</text>
-      <text x="436" y="206" textAnchor="end" fill={C.soft} fontSize="12" fontFamily="var(--f-body)">or this</text>
+        <polygon points={routeRidge(10)} fill="#6E6147" opacity={0.2} aria-hidden="true" />
+        <g aria-hidden="true">
+          {contours.map((d, i) => (
+            <path key={i} d={d} fill="none" stroke="var(--asc-contour)" strokeWidth={1} opacity={0.46 - i * 0.05} />
+          ))}
+        </g>
 
-      <circle cx="42" cy="240" r="5" fill={C.ink} />
-      <text x="54" y="216" fill={C.ink} fontSize="12" fontFamily="var(--f-mono)">YOU ARE HERE</text>
+        {/* the route itself, whole: this is a map of the climb, not a score */}
+        <path d={full} fill="none" stroke="#FBF8F1" strokeWidth={11} strokeLinecap="round" opacity={0.8} />
+        <path d={full} fill="none" stroke="var(--asc-teal)" strokeWidth={5} strokeLinecap="round" opacity={0.85} />
+
+        {STAGES.map((st, i) => {
+          const p = pointAtIndex(st.minIndex);
+          const up = st.stage % 2 === 1;
+          const last = i === STAGES.length - 1;
+          // Names alternate above and below the route so they never queue up,
+          // and each one is held inside the frame: the first camp sits on the
+          // left edge and the summit runs off the right, so both anchor inward.
+          const ly = up ? Math.max(p.y - 30, 158) : Math.min(p.y + (last ? 82 : 44), 498);
+          const anchor = p.x < 130 ? 'start' : p.x > 1070 ? 'end' : 'middle';
+          const lx = anchor === 'start' ? 26 : anchor === 'end' ? 1174 : p.x;
+          const numY = up ? ly - 18 : ly - 40;
+          // with names hidden the number reads as the camp label, so it is placed
+          // relative to the camp as well as to the name it sits above
+          return (
+            <g key={st.stage}>
+              <line className="rb-lead" x1={p.x} y1={up ? p.y - 11 : p.y + 11} x2={p.x}
+                y2={up ? ly + 10 : ly - 26} stroke="var(--asc-border)" strokeWidth={1} strokeDasharray="2 3" />
+              <circle cx={p.x} cy={p.y} r={7} fill="var(--asc-card)" stroke="var(--asc-teal)" strokeWidth={2} />
+              <text className="rb-num" x={lx} y={numY} textAnchor={anchor} fill="var(--asc-teal)"
+                fontFamily="var(--f-mono)" letterSpacing="0.8">{st.stage}</text>
+              <text className="rb-name" x={lx} y={ly} textAnchor={anchor} fill="var(--asc-ink)"
+                fontWeight="600" fontFamily="var(--f-display)">{st.name}</text>
+            </g>
+          );
+        })}
+      </g>
+      <rect x="0.5" y="96.5" width="1199" height="423" rx="16" fill="none" stroke="var(--asc-border)" strokeWidth="1" />
     </svg>
   );
 }
