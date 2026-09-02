@@ -64,7 +64,9 @@ head('The product is named once, and named the same everywhere');
     // storage.ts names what legacy records were, which stays true
     if (f.endsWith('storage.ts')) continue;
     const s = fs.readFileSync(f, 'utf-8');
-    if (s.includes('Formation Compass')) stale.push(path.relative(process.cwd(), f));
+    // case insensitive: the name lived on in capitals on every report cover for
+    // a week because this check was not
+    if (/formation compass/i.test(s)) stale.push(path.relative(process.cwd(), f));
   }
   ok('the retired umbrella name is gone', stale.length === 0, stale.join(', '));
   // "formation" as a concept is not the same thing as the retired product name

@@ -78,6 +78,8 @@ export default function Dashboard() {
   const [detail, setDetail] = useState<PersonDetail | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  /** The organisation a group report is being prepared for. */
+  const [reportFor, setReportFor] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true); setErr(null);
@@ -399,6 +401,14 @@ export default function Dashboard() {
       {/* ------------------------------------------------- organisations */}
       {tab === 'organisations' ? (
         <div className="space-y-4">
+          {reportFor ? (
+            <GroupReportPanel
+              domain={reportFor}
+              people={data.organisations.find((o) => o.domain === reportFor)?.people ?? 0}
+              onClose={() => setReportFor('')}
+            />
+          ) : null}
+
           <Card title="Organisations"
             hint="People grouped by email domain, personal providers excluded, and only where at least two people share a domain.">
             {data.organisations.length ? (
@@ -423,9 +433,13 @@ export default function Dashboard() {
                         <td className="p-2 text-right font-mono">{o.underexposed}</td>
                         <td className="p-2 text-right font-mono" style={{ color: '#159E88' }}>{o.improved}</td>
                         <td className="p-2 text-right font-mono" style={{ color: '#CF796E' }}>{o.declined}</td>
-                        <td className="p-2 text-right">
+                        <td className="p-2 text-right whitespace-nowrap">
                           <button onClick={() => { setDomain(o.domain); setTab('overview'); }}
                             className="admin-button admin-button-outline rounded-full px-3 py-1.5 text-xs">Filter</button>
+                          <button onClick={() => setReportFor(o.domain)}
+                            className="admin-button admin-button-outline ml-2 rounded-full px-3 py-1.5 text-xs">
+                            Generate report
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -828,5 +842,88 @@ export default function Dashboard() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Prepare one report for a whole organisation.
+ *
+ * The domain is how people are grouped, but a class is rarely called by its
+ * email domain, so the cover takes whatever name is typed here. The persona
+ * filter is offered because a school is usually two groups sharing an address:
+ * a report that mixes its teachers and its students describes neither.
+ */
+function GroupReportPanel(
+  { domain, people, onClose }: { domain: string; people: number; onClose: () => void }
+) {
+  const [label, setLabel] = useState(domain);
+  const [persona, setPersona] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const generate = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const qs = new URLSearchParams({ domain, label: label.trim() || domain });
+      if (persona) qs.set('persona', persona);
+      const res = await fetch(`/api/admin/org-report?${qs.toString()}`, { credentials: 'include' });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: `Request failed (${res.status})` }));
+        throw new Error(body.error || `Request failed (${res.status})`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(label.trim() || domain).replace(/[^a-z0-9]+/gi, '_')}_Group_Report.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not generate the report.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card title={`Group report: ${domain}`}
+      hint={`One document for the whole group, built from every member's latest result. ${people} ${people === 1 ? 'person has' : 'people have'} completed it.`}>
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1 text-xs">
+          <span className="admin-muted uppercase tracking-[0.12em]">Name on the cover</span>
+          <input value={label} onChange={(e) => setLabel(e.target.value)}
+            placeholder="Northgate College, Year 12"
+            className="admin-input w-72 rounded-lg px-3 py-2 text-sm" />
+        </label>
+        <label className="flex flex-col gap-1 text-xs">
+          <span className="admin-muted uppercase tracking-[0.12em]">Limit to one assessment</span>
+          <select value={persona} onChange={(e) => setPersona(e.target.value)}
+            className="admin-input w-56 rounded-lg px-3 py-2 text-sm">
+            <option value="">Everyone in this organisation</option>
+            <option value="student">Students</option>
+            <option value="teacher">Teachers</option>
+            <option value="parent">Parents</option>
+            <option value="administrator">Leaders</option>
+            <option value="pastor">Ministers</option>
+            <option value="business">Business owners</option>
+          </select>
+        </label>
+        <button onClick={generate} disabled={busy}
+          className="admin-button admin-button-primary rounded-full px-4 py-2 text-sm disabled:opacity-60">
+          {busy ? 'Building the report...' : 'Generate report'}
+        </button>
+        <button onClick={onClose}
+          className="admin-button admin-button-outline rounded-full px-4 py-2 text-sm">Close</button>
+      </div>
+      {error ? <p className="mt-3 text-sm" style={{ color: '#CF796E' }}>{error}</p> : null}
+      <p className="admin-muted mt-3 text-xs">
+        Each person is counted once, using their latest attempt. The report carries the group centre,
+        the spread, both ends, the ten dimensions, what is holding the group, and the practices that
+        would move it, all counted from the individual results rather than written for the group.
+      </p>
+    </Card>
   );
 }

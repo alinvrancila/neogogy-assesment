@@ -162,3 +162,34 @@ its checkpoint and one resource pointer. Carried as `formationRoadmap`.
 computes and returns a file and touches no storage. The submit route refuses this
 persona outright rather than storing it. The admin carries a written note
 explaining why, so the design is not improved away later.
+
+## The group report
+
+`src/engine/group.ts` aggregates results the engine has already produced into a
+reading for an organisation, a class or a team. It is pure and computes nothing
+new about a person: `buildGroupResult(label, members)` returns the centre (a
+count of where most people stand, never an average dressed as one), the spread
+and both ends, the ten dimensions with their range and interquartile band,
+constraints counted from each member's own bottleneck, group signals, movement
+for repeat takers, and the practices to act on, tallied from the recommendations
+members already received. It also states what weight the reading can carry: at
+fewer than eight people it says so.
+
+`src/lib/groupReportPdf.tsx` is layout only and reads that object. It opens on
+the Business Owner cover design, in terracotta and gold, with the organisation
+name where a person's name sits on an individual report, because a group reading
+is addressed to whoever runs the group.
+
+`/api/admin/org-report?domain=&label=&persona=&from=&to=` is behind the admin
+gate. It counts each person once at their latest attempt, so a keen retaker
+cannot weight the mean, and 404s rather than returning an empty report.
+
+In the admin, Organisations gained a **Generate report** button per row. The
+panel takes the name to print on the cover, since a class is rarely called by
+its email domain, and can narrow to one assessment, since a school is usually
+two groups sharing an address and a report mixing its teachers with its students
+describes neither.
+
+`tests/compass/group.ts` recomputes every statistic by hand from the same
+members and compares, and asserts the report reads the group object rather than
+calculating anything of its own.

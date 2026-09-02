@@ -85,10 +85,10 @@ export function BrandMark({ tint, subdued }: { tint: string; subdued?: string })
           Neogogy
         </Text>
         <Text style={{
-          fontFamily: 'PlexMono', fontWeight: 500, fontSize: 5.6, letterSpacing: 1.1,
+          fontFamily: 'PlexMono', fontWeight: 500, fontSize: 5.2, letterSpacing: 1,
           color: subdued ?? tint, marginTop: 1,
         }}>
-          THE FORMATION COMPASS
+          HUMAN ADVANTAGE ASSESSMENT
         </Text>
       </View>
     </View>
