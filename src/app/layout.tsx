@@ -21,7 +21,10 @@ const SHARE_IMAGE = {
   alt: 'A person standing on a summit above the clouds at sunrise, under the words: AI is becoming more capable, are you? Take the Neogogy Human Advantage Assessment to learn more.',
   type: 'image/jpeg',
 };
-const SHARE_DESC = 'Is the way you use AI, or choose not to use AI, strengthening your capabilities? A free assessment across ten dimensions, in six perspectives, with a personal Human Advantage Report to keep. Powered by ICAN.ph.';
+// Two sentences: the question the assessment exists to ask, then what a
+// respondent gets for answering it. Kept near 200 characters, which is what
+// Facebook, LinkedIn and X show before they cut.
+const SHARE_DESC = 'Is the way you use AI, or choose not to use AI, strengthening your capabilities? A free assessment from ICAN.ph across ten dimensions, in six perspectives, with a personal Human Advantage Report to keep.';
 
 export const metadata: Metadata = {
   title: SHARE_TITLE,

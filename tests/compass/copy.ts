@@ -17,7 +17,7 @@
 import fs from 'fs';
 import path from 'path';
 import { PERSONA_CONTENT } from '@/content/personas';
-import { BRAND, ECOSYSTEM, NEXT_STEP } from '@/brand';
+import { BRAND, CORE_QUESTION, ECOSYSTEM, NEXT_STEP } from '@/brand';
 import { applicableItems } from '@/engine';
 import { shareCard, hasOwnCard, SITE_CARD } from '@/lib/shareCard';
 
@@ -162,6 +162,19 @@ head('The report shows itself');
   // The pages carry an example profile's numbers, so the page has to say so.
   ok('the gallery says whose numbers these are',
     /belong to one example profile rather than to you/.test(home));
+}
+
+head('The site card says what the site is');
+{
+  const layout = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'layout.tsx'), 'utf-8');
+  const title = (layout.match(/const SHARE_TITLE = '([^']+)'/) ?? [])[1] ?? '';
+  const desc = (layout.match(/const SHARE_DESC = '([^']+)'/) ?? [])[1] ?? '';
+  ok('the title is the product name', title === BRAND.product, title);
+  const sentences = desc.split(/(?<=[.?!])\s+/).filter(Boolean);
+  ok('the description is two sentences', sentences.length === 2, `${sentences.length}: ${desc}`);
+  ok('it opens on the question the assessment asks', sentences[0] === CORE_QUESTION, sentences[0]);
+  ok('it fits what a network will show', desc.length > 120 && desc.length <= 220, `${desc.length} characters`);
+  ok('the alt text describes the picture that is there', /summit above the clouds/.test(layout));
 }
 
 head('Nothing overclaims');
