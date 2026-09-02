@@ -12,6 +12,7 @@
  */
 
 import { STAGES } from '@/engine/config';
+import { stageName } from '@/engine/display';
 import { pointAtIndex, routePath, contourPaths, routeRidge } from '@/components/compass/ascent/route';
 
 const C = {
@@ -40,12 +41,16 @@ const svg = (extra?: React.CSSProperties): React.SVGProps<SVGSVGElement> => ({
  * page two of every report shows, from the same module, so what a visitor sees
  * here is what arrives in their file rather than a marketing version of it. No
  * marker: nobody is anywhere yet.
+ *
+ * The names are the shared ones, which student, teacher, parent and leader all
+ * use. Business and minister rename their stages to their own worlds, and a
+ * page that has not asked who you are yet should not open in one of them.
  */
 export function RouteBand() {
   const full = routePath();
   const contours = contourPaths(6);
   return (
-    <svg viewBox="0 96 1200 424" role="img"
+    <svg viewBox="0 128 1200 392" role="img"
       aria-label="The ten stage route the assessment places you on, drawn as a climb from first contact at the left to a mature practice at the summit."
       style={{ display: 'block', width: '100%', height: 'auto' }}>
       <defs>
@@ -53,14 +58,14 @@ export function RouteBand() {
           <stop offset="0%" stopColor="#F7F1E4" stopOpacity="0.9" />
           <stop offset="100%" stopColor="#F7F1E4" stopOpacity="0" />
         </linearGradient>
-        <clipPath id="fgClip"><rect x="0" y="96" width="1200" height="424" rx="16" /></clipPath>
+        <clipPath id="fgClip"><rect x="0" y="128" width="1200" height="392" rx="16" /></clipPath>
       </defs>
 
       <g clipPath="url(#fgClip)">
-        <image href="/ascent-backdrop.jpg" x="0" y="96" width="1200" height="424"
+        <image href="/ascent-backdrop.jpg" x="0" y="128" width="1200" height="392"
           preserveAspectRatio="xMidYMid slice" aria-hidden="true" />
-        <rect x="0" y="96" width="1200" height="424" fill="#F7F1E4" opacity="0.42" aria-hidden="true" />
-        <rect x="0" y="96" width="1200" height="150" fill="url(#fgScrim)" aria-hidden="true" />
+        <rect x="0" y="128" width="1200" height="392" fill="#F7F1E4" opacity="0.42" aria-hidden="true" />
+        <rect x="0" y="128" width="1200" height="130" fill="url(#fgScrim)" aria-hidden="true" />
 
         <polygon points={routeRidge(10)} fill="#6E6147" opacity={0.2} aria-hidden="true" />
         <g aria-hidden="true">
@@ -80,7 +85,7 @@ export function RouteBand() {
           // Names alternate above and below the route so they never queue up,
           // and each one is held inside the frame: the first camp sits on the
           // left edge and the summit runs off the right, so both anchor inward.
-          const ly = up ? Math.max(p.y - 30, 158) : Math.min(p.y + (last ? 82 : 44), 498);
+          const ly = up ? Math.max(p.y - 30, 168) : Math.min(p.y + (last ? 76 : 44), 500);
           const anchor = p.x < 130 ? 'start' : p.x > 1070 ? 'end' : 'middle';
           const lx = anchor === 'start' ? 26 : anchor === 'end' ? 1174 : p.x;
           const numY = up ? ly - 18 : ly - 40;
@@ -94,12 +99,12 @@ export function RouteBand() {
               <text className="rb-num" x={lx} y={numY} textAnchor={anchor} fill="var(--asc-teal)"
                 fontFamily="var(--f-mono)" letterSpacing="0.8">{st.stage}</text>
               <text className="rb-name" x={lx} y={ly} textAnchor={anchor} fill="var(--asc-ink)"
-                fontWeight="600" fontFamily="var(--f-display)">{st.name}</text>
+                fontWeight="600" fontFamily="var(--f-display)">{stageName('student', st.stage)}</text>
             </g>
           );
         })}
       </g>
-      <rect x="0.5" y="96.5" width="1199" height="423" rx="16" fill="none" stroke="var(--asc-border)" strokeWidth="1" />
+      <rect x="0.5" y="128.5" width="1199" height="391" rx="16" fill="none" stroke="var(--asc-border)" strokeWidth="1" />
     </svg>
   );
 }

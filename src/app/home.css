@@ -100,9 +100,9 @@
 .nfc .ha-burger span { display: block; width: 20px; height: 1.6px; background: var(--ink); margin: 4px 0; }
 
 /* ------------------------------------------------------------------ hero */
-.nfc .ha-hero { scroll-margin-top: 104px; position: relative; padding: clamp(34px, 4.4vw, 56px) 0 clamp(26px, 3.4vw, 44px); overflow: hidden; }
+.nfc .ha-hero { scroll-margin-top: 104px; position: relative; padding: clamp(30px, 3.8vw, 48px) 0 clamp(22px, 2.8vw, 36px); overflow: hidden; }
 .nfc .ha-hero-in { position: relative; z-index: 2; max-width: 940px; }
-@media (min-width: 901px) { .nfc .ha-hero-in { max-width: min(940px, 62vw); } }
+@media (min-width: 901px) { .nfc .ha-hero-in { max-width: 1080px; } }
 .nfc .ha-hero-art {
   position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .5;
   background:
@@ -472,10 +472,9 @@
    The same terrain, route and camps the report draws on its second page, from
    the same module, so the promise on the page and the page in the file cannot
    diverge. No marker here: nobody is anywhere yet. */
-.nfc .ha-routeband { padding: 0 0 clamp(30px, 4vw, 52px); }
+.nfc .ha-routeband { margin: clamp(18px, 2.4vw, 26px) 0 0; }
 .nfc .ha-routeband-cap {
-  margin: 16px auto 0; max-width: 66ch; text-align: center; font-size: .96rem;
-  line-height: 1.6; color: var(--ink-soft);
+  margin: 12px 0 0; max-width: 68ch; font-size: .92rem; line-height: 1.55; color: var(--ink-soft);
 }
 .nfc .ha-routeband .rb-name { font-size: 15px; }
 .nfc .ha-routeband .rb-num { font-size: 12px; }

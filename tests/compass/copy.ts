@@ -20,6 +20,8 @@ import path from 'path';
 import { PERSONA_CONTENT } from '@/content/personas';
 import { BRAND, CORE_QUESTION, ECOSYSTEM, NEXT_STEP } from '@/brand';
 import { applicableItems } from '@/engine';
+import { STAGES } from '@/engine/config';
+import { stageName } from '@/engine/display';
 import { shareCard, hasOwnCard, SITE_CARD } from '@/lib/shareCard';
 
 let pass = 0, fail = 0;
@@ -205,6 +207,16 @@ head('The page draws the continuum the way the report does');
   ok('the graph the assessment never draws is gone', !/RisingCurves/.test(fig));
   const home = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'site', 'Home.tsx'), 'utf-8');
   ok('the page opens on it', home.indexOf('<RouteBand />') < home.indexOf('<Personas'));
+  // Business and minister rename their stages. A page that has not asked who
+  // you are yet must not open in one of those worlds.
+  ok('it uses the shared stage names', /stageName\('student', st\.stage\)/.test(fig));
+  ok('student and teacher share those names',
+    STAGES.every((st) => stageName('student', st.stage) === stageName('teacher', st.stage)));
+  ok('business does not, which is why it is not the default',
+    STAGES.some((st) => stageName('business', st.stage) !== stageName('student', st.stage)));
+  // It belongs to the hero, so nothing stands between the route and choosing.
+  ok('the route sits inside the hero rather than under it',
+    /ha-hero[\s\S]{0,4000}<RouteBand \/>/.test(home));
 }
 
 head('Nothing overclaims');

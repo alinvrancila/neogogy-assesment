@@ -157,6 +157,17 @@ function Hero({ variant, onStart }: { variant: 'a' | 'b'; onStart: () => void })
         </ul>
 
         <p className="ha-by">{BRAND.poweredBy}</p>
+
+        {/* The route, inside the hero rather than under it. It is the promise
+            the assessment makes, not a section standing between a visitor and
+            the moment they can begin. */}
+        <div className="ha-routeband">
+          <RouteBand />
+          <p className="ha-routeband-cap">
+            Ten stages, from first contact to a practice that renews itself. Your answers place you
+            on this route.
+          </p>
+        </div>
       </div>
       <div className="ha-hero-art" aria-hidden="true" />
     </section>
@@ -718,16 +729,6 @@ export default function Home({ initialPersona, onBegin }: {
       <Header onStart={() => scrollTo('ha-personas')} />
       <div className="ha-header-space" aria-hidden="true" />
       <Hero variant={variant} onStart={() => scrollTo('ha-personas')} />
-
-      <section className="ha-routeband" aria-labelledby="ha-routeband-h">
-        <div className="ha-wrap">
-          <RouteBand />
-          <p className="ha-routeband-cap" id="ha-routeband-h">
-            Ten stages, from first contact to a practice that renews itself. Your answers place you
-            on this route, and your report opens on where you are standing.
-          </p>
-        </div>
-      </section>
       <Personas selected={selected} onSelect={setSelected} onBegin={onBegin} />
       <Definition />
       <Thesis />
