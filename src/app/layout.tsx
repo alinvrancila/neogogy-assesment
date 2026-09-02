@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Crimson_Pro, Inter } from 'next/font/google';
 import './globals.css';
+import { SITE_CARD } from '@/lib/shareCard';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -15,7 +16,7 @@ const SHARE_TITLE = 'Neogogy Human Advantage Assessment';
 // One share card for every network. 1200 by 630 is the size Facebook,
 // LinkedIn and X all crop from, so this is what a shared link shows.
 const SHARE_IMAGE = {
-  url: '/share/og.jpg',
+  url: SITE_CARD,
   width: 1200,
   height: 630,
   alt: 'A person standing on a summit above the clouds at sunrise, under the words: AI is becoming more capable, are you? Take the Neogogy Human Advantage Assessment to learn more.',

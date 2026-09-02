@@ -15,6 +15,7 @@
  */
 
 import fs from 'fs';
+import { createHash } from 'crypto';
 import path from 'path';
 import { PERSONA_CONTENT } from '@/content/personas';
 import { BRAND, CORE_QUESTION, ECOSYSTEM, NEXT_STEP } from '@/brand';
@@ -132,6 +133,21 @@ head('Every assessment has its own link, its own words, and a card');
   }
   ok('the site card exists as the fallback',
     fs.existsSync(path.join(process.cwd(), 'public', SITE_CARD.replace(/^\//, ''))));
+  // The networks cache a picture against its URL, so the URL has to change when
+  // the picture does. That is what the hash in the filename is for.
+  const hashed = /\/share\/og(-[a-z-]+)?\.[0-9a-f]{8}\.jpg$/;
+  ok('the site card URL is content addressed', hashed.test(SITE_CARD), SITE_CARD);
+  for (const p of PERSONA_CONTENT) {
+    ok(`${p.name}: card URL is content addressed`, hashed.test(shareCard(p.slug)), shareCard(p.slug));
+  }
+  const man = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'share', 'manifest.json'), 'utf-8'));
+  ok('the manifest names seven cards', Object.keys(man).length === 7, Object.keys(man).join(', '));
+  for (const [base, file] of Object.entries(man)) {
+    const buf = fs.readFileSync(path.join(process.cwd(), 'public', 'share', String(file)));
+    const want = createHash('sha256').update(buf).digest('hex').slice(0, 8);
+    ok(`${base}: the hash in the name matches the bytes`, String(file).includes(`.${want}.`),
+      `${file} holds ${want}`);
+  }
   ok('every assessment has a card of its own', missing.length === 0,
     missing.map((s2) => `og-${s2}.jpg`).join(', '));
   // A card that is too heavy is quietly skipped by WhatsApp and iMessage, so

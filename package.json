@@ -24,7 +24,8 @@
     "art:minister": "node scripts/art/render-pastor-cover.mjs",
     "art:business": "node scripts/art/render-business-cover.mjs",
     "test:covers": "tsx tests/compass/covers.ts",
-    "test:copy": "tsx tests/compass/copy.ts"
+    "test:copy": "tsx tests/compass/copy.ts",
+    "cards": "node scripts/share-cards.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.620.0",
