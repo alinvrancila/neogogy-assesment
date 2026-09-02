@@ -860,6 +860,43 @@ function GroupReportPanel(
   const [persona, setPersona] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [coverTitle, setCoverTitle] = useState('');
+  const [coverSubtitle, setCoverSubtitle] = useState('');
+  const [logo, setLogo] = useState('');
+  const [saved, setSaved] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    fetch(`/api/admin/org-profile?domain=${encodeURIComponent(domain)}`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!live || !d?.profile) return;
+        setCoverTitle(d.profile.coverTitle || '');
+        setCoverSubtitle(d.profile.coverSubtitle || '');
+        setLogo(d.profile.logo || '');
+      })
+      .catch(() => undefined);
+    return () => { live = false; };
+  }, [domain]);
+
+  const pickLogo = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => setLogo(String(reader.result || ''));
+    reader.readAsDataURL(file);
+  };
+
+  const saveCover = async () => {
+    setSaved(null);
+    setError(null);
+    const res = await fetch('/api/admin/org-profile', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain, coverTitle, coverSubtitle, logo }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) setError(body.error || 'Could not save the cover.');
+    else setSaved('Cover saved. It appears on the next report generated.');
+  };
 
   const generate = async () => {
     setBusy(true);
@@ -918,6 +955,46 @@ function GroupReportPanel(
         <button onClick={onClose}
           className="admin-button admin-button-outline rounded-full px-4 py-2 text-sm">Close</button>
       </div>
+      <div className="mt-5 border-t pt-4" style={{ borderColor: 'rgba(128,116,100,0.18)' }}>
+        <p className="admin-strong text-sm font-medium">The cover</p>
+        <p className="admin-muted mb-3 text-xs">
+          The organisation&apos;s own logo takes the place the assessment&apos;s mark holds on an
+          individual report. Empty fields render nothing rather than placeholder text, and the four
+          partner logos always appear below.
+        </p>
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="admin-muted uppercase tracking-[0.12em]">Title line, up to 60</span>
+            <input value={coverTitle} maxLength={60} onChange={(e) => setCoverTitle(e.target.value)}
+              placeholder={label}
+              className="admin-input w-72 rounded-lg px-3 py-2 text-sm" />
+          </label>
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="admin-muted uppercase tracking-[0.12em]">Subtitle, up to 160</span>
+            <input value={coverSubtitle} maxLength={160} onChange={(e) => setCoverSubtitle(e.target.value)}
+              placeholder="A dedication, a wave name, or nothing at all"
+              className="admin-input w-96 rounded-lg px-3 py-2 text-sm" />
+          </label>
+          <label className="flex flex-col gap-1 text-xs">
+            <span className="admin-muted uppercase tracking-[0.12em]">Logo, PNG, JPG or SVG</span>
+            <input type="file" accept="image/png,image/jpeg,image/svg+xml"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) pickLogo(f); }}
+              className="admin-input rounded-lg px-3 py-2 text-xs" />
+          </label>
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logo} alt="" style={{ height: 40, width: 'auto', background: '#fff', padding: 4, borderRadius: 4 }} />
+          ) : null}
+          <button onClick={saveCover}
+            className="admin-button admin-button-outline rounded-full px-4 py-2 text-sm">Save cover</button>
+          {logo ? (
+            <button onClick={() => setLogo('')}
+              className="admin-button admin-button-outline rounded-full px-4 py-2 text-sm">Remove logo</button>
+          ) : null}
+        </div>
+        {saved ? <p className="mt-2 text-xs" style={{ color: '#159E88' }}>{saved}</p> : null}
+      </div>
+
       {error ? <p className="mt-3 text-sm" style={{ color: '#CF796E' }}>{error}</p> : null}
       <p className="admin-muted mt-3 text-xs">
         Each person is counted once, using their latest attempt. The report carries the group centre,

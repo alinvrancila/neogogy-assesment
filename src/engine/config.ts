@@ -9,6 +9,19 @@ import type { ConstructDef, ConstructId } from "./types";
 // Constructs
 // ---------------------------------------------------------------------------
 
+/**
+ * What produced a reading.
+ *
+ * A comparison across waves is only valid when all four match, so a group
+ * report prints them and a wave-on-wave comparison checks them.
+ */
+export const VERSIONS = {
+  instrument: '2.3',
+  scoring: '2.1',
+  scenario: '2.0',
+  language: 'en-GB',
+} as const;
+
 export const CONSTRUCTS: Record<ConstructId, ConstructDef> = {
   agency: {
     id: "agency", name: "Human Agency",

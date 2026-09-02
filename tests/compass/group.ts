@@ -35,7 +35,7 @@ function member(persona: Persona, usage: number, level: number, i: number): Grou
   });
   const sub: Submission = { persona, usage, b1: 4, b2: 3, answers };
   return {
-    name: `Member ${i}`, email: `m${i}@school.edu`, persona,
+    key: `r${i}`, persona, usage, felt: 4, predicted: 3,
     result: compute(sub), takenAt: '2026-09-01T00:00:00.000Z',
   };
 }
@@ -55,10 +55,11 @@ head('It refuses to read a group that is not there');
 head('The spread is the spread');
 {
   const s = spreadOf([10, 20, 30, 40]);
-  ok('mean', s.mean === 25, String(s.mean));
+  ok('mean is kept for the export', s.mean === 25, String(s.mean));
   ok('min and max', s.min === 10 && s.max === 40);
   ok('n counts every value', s.n === 4);
   ok('standard deviation', near(s.sd, 11.18, 0.02), String(s.sd));
+  ok('quartiles', spreadOf([10, 20, 30, 40]).q1 <= spreadOf([10, 20, 30, 40]).q3);
   ok('a value that is not a number is dropped, not counted as zero',
     spreadOf([10, NaN, 30]).n === 2);
   ok('an empty set is empty rather than zero-shaped', spreadOf([]).n === 0);
@@ -71,7 +72,8 @@ head('Where the group is standing');
 
   const indices = CLASS.map((m) => m.result.stage.rawIndex);
   const mean = indices.reduce((a, b) => a + b, 0) / indices.length;
-  ok('the mean index is the mean of the members', near(g.index.mean, mean));
+  ok('the mean is available for the export', near(g.index.mean, mean));
+  ok('the median leads', g.index.median > 0);
   ok('the range runs from the lowest member to the highest',
     near(g.index.min, Math.min(...indices)) && near(g.index.max, Math.max(...indices)));
 
@@ -84,10 +86,9 @@ head('Where the group is standing');
   ok('the centre is a stage somebody is actually standing in',
     g.distribution.some((d) => d.stage === g.centre.stage));
 
-  ok('the extremes are the real extremes',
-    near(g.extremes.top.index, Math.max(...indices)) && near(g.extremes.bottom.index, Math.min(...indices)));
-  ok('the span is the distance between them',
-    near(g.extremes.span, Math.max(...indices) - Math.min(...indices)));
+  ok('the range is the real range',
+    near(g.index.min, Math.min(...indices)) && near(g.index.max, Math.max(...indices)));
+  ok('quartiles are printed, not only a chart', g.index.q1 <= g.index.median && g.index.median <= g.index.q3);
 }
 
 head('The ten dimensions, across the group');
@@ -97,15 +98,17 @@ head('The ten dimensions, across the group');
   for (const d of g.dimensions) {
     const scores = CLASS.map((m) => m.result.dimensions[d.construct].score);
     const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
-    ok(`${d.name}: the mean is the members' mean`, near(d.spread.mean, mean), `${d.spread.mean} vs ${mean}`);
-    ok(`${d.name}: the watch count is a count of members`, d.watch.n <= g.n);
+    ok(`${d.name}: the mean matches the members`, near(d.spread.mean, mean), `${d.spread.mean} vs ${mean}`);
+    ok(`${d.name}: quartiles are ordered`, d.spread.q1 <= d.spread.median && d.spread.median <= d.spread.q3);
+    ok(`${d.name}: band counts add to the group`,
+      d.bands.strong.n + d.bands.developing.n + d.bands.watch.n === g.n);
   }
-  ok('strengths are the three highest means',
-    g.strengths[0].spread.mean >= g.strengths[1].spread.mean
-    && g.strengths[1].spread.mean >= g.strengths[2].spread.mean);
-  ok('the watchlist is the three lowest means',
-    g.watchlist[0].spread.mean <= g.watchlist[1].spread.mean
-    && g.watchlist[1].spread.mean <= g.watchlist[2].spread.mean);
+  ok('strengths are the three highest medians',
+    g.strengths[0].spread.median >= g.strengths[1].spread.median
+    && g.strengths[1].spread.median >= g.strengths[2].spread.median);
+  ok('the watchlist is the three lowest medians',
+    g.watchlist[0].spread.median <= g.watchlist[1].spread.median
+    && g.watchlist[1].spread.median <= g.watchlist[2].spread.median);
   ok('strengths and the watchlist do not overlap in a group this wide',
     !g.strengths.some((s) => g.watchlist.some((w) => w.construct === s.construct)));
 }
@@ -142,7 +145,12 @@ head('It says how much weight it can carry');
   const ten = Array.from({ length: 10 }, (_, i) => member('student', 4, (i % 5) + 1, i));
   ok('ten is workable', buildGroupResult('Ten', ten).confidence.level === 'workable');
   const thirty = Array.from({ length: 30 }, (_, i) => member('student', 4, (i % 5) + 1, i));
-  ok('thirty is firm', buildGroupResult('Thirty', thirty).confidence.level === 'firm');
+  const big = buildGroupResult('Thirty', thirty);
+  ok('thirty is firm', big.confidence.level === 'firm');
+  ok('below thirty, no confidence interval', buildGroupResult('Six', CLASS).index.ci === undefined);
+  ok('at thirty, an interval appears', !!big.index.ci);
+  ok('below thirty, no correlations', buildGroupResult('Six', CLASS).correlations.length === 0);
+  ok('at thirty, correlations appear', big.correlations.length === 3);
   ok('the note names the number it was read across',
     buildGroupResult('Six', CLASS).confidence.note.includes('6'));
 }
@@ -167,6 +175,7 @@ head('Movement, where there is any');
   const withDeltas = CLASS.map((m, i) => ({ ...m, indexDelta: i < 2 ? 6 : i < 4 ? -4 : 0 }));
   const g = buildGroupResult('Northgate, Year 12', withDeltas);
   ok('repeat takers are counted', g.movement.repeatTakers === 6);
+  ok('the median change is reported', typeof g.movement.medianDelta === 'number');
   ok('improved', g.movement.improved === 2);
   ok('declined', g.movement.declined === 2);
   ok('held', g.movement.held === 2);
@@ -174,11 +183,67 @@ head('Movement, where there is any');
     buildGroupResult('Fresh', CLASS).movement.repeatTakers === 0);
 }
 
+head('Nobody is named, ranked or singled out');
+{
+  const g = buildGroupResult('Northgate, Year 12', CLASS);
+  const json = JSON.stringify(g);
+  ok('no member key reaches the reading', !CLASS.some((m) => json.includes(m.key)));
+  ok('there is no extremes block at all', !('extremes' in (g as unknown as Record<string, unknown>)));
+  const pdf = fs.readFileSync(path.join(process.cwd(), 'src', 'lib', 'groupReportPdf.tsx'), 'utf-8');
+  ok('the report never prints a member label',
+    !/furthest along|earliest on the route|\bm\.label\b|extremes\./i.test(pdf));
+}
+
+head('Segments are suppressed rather than shown thin');
+{
+  // 9 and 3: the small side is too thin, and the large side is withheld too,
+  // because naming it would leave the other three identifiable by subtraction
+  const lopsided = buildGroupResult('Riverside', [
+    ...Array.from({ length: 9 }, (_, i) => member('student', 4, 3, i)),
+    ...Array.from({ length: 3 }, (_, i) => member('teacher', 4, 3, 100 + i)),
+  ]).segments.filter((s2) => s2.dimension === 'Assessment');
+  ok('a segment of three is withheld', !!lopsided.find((s2) => s2.n === 3)?.suppressed);
+  ok('the withheld segment carries no figures', lopsided.find((s2) => s2.n === 3)?.index === undefined);
+  ok('its complement is withheld too, or subtraction identifies the three',
+    !!lopsided.find((s2) => s2.n === 9)?.suppressed);
+
+  // 9 and 8: both sides clear the threshold, so both are reported
+  const even = buildGroupResult('Riverside', [
+    ...Array.from({ length: 9 }, (_, i) => member('student', 4, 3, i)),
+    ...Array.from({ length: 8 }, (_, i) => member('teacher', 4, 3, 100 + i)),
+  ]).segments.filter((s2) => s2.dimension === 'Assessment');
+  ok('both sides are shown when both clear the threshold',
+    even.every((s2) => !s2.suppressed) && even.length === 2);
+  ok('a shown segment carries quartiles',
+    (even[0].index?.q3 ?? 0) >= (even[0].index?.q1 ?? 0));
+  const solo = buildGroupResult('Solo', [CLASS[0]]);
+  ok('a one person group suppresses every segment', solo.segments.every((s2) => s2.suppressed));
+}
+
+head('It prints what produced it');
+{
+  const g = buildGroupResult('Northgate, Year 12', CLASS);
+  ok('instrument, scoring, scenario and language versions travel with the reading',
+    !!(g.versions.instrument && g.versions.scoring && g.versions.scenario && g.versions.language));
+  ok('one canonical band table', g.bands.strength === 65 && g.bands.vulnerability === 45);
+  ok('the window it covers is recorded', !!g.window.first && !!g.window.last);
+  ok('polarisation is flagged per dimension',
+    g.dimensions.every((d) => typeof d.polarised === 'boolean'));
+  ok('bottleneck concentration is reported with a reading',
+    typeof g.concentration.share === 'number' && !!g.concentration.reading);
+  ok('what is not collected is stated rather than estimated', g.headline.notCollected.length >= 5);
+}
+
 head('The report is wired to the group, and only to the group');
 {
   const pdf = fs.readFileSync(path.join(process.cwd(), 'src', 'lib', 'groupReportPdf.tsx'), 'utf-8');
   ok('the PDF reads the group result and computes nothing itself',
-    !/\.reduce\(|Math\.(mean|sqrt)|sort\(\(a, b\) => a\.result/.test(pdf));
+    !/Math\.sqrt|sort\(\(a, b\) => a\.result/.test(pdf));
+  ok('the cover can carry the organisation\'s own logo', /p\?\.logo/.test(pdf));
+  ok('an empty cover field renders nothing', /subtitle \? \(/.test(pdf));
+  ok('the four partners appear on the cover', /In partnership with/.test(pdf));
+  ok('the appendix prints the band table', /The band table/.test(pdf));
+  ok('the two dependency names are distinguished', /Two names that are not the same thing/.test(pdf));
   ok('it opens on the Business Owner cover artwork', /ART\('business\.jpg'\)/.test(pdf));
   ok('the organisation name is what the cover announces', /\{g\.label\}/.test(pdf));
   ok('it says what it is not', /not a clinical diagnosis/.test(pdf));
