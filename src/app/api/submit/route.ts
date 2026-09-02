@@ -349,7 +349,7 @@ export async function POST(request: NextRequest) {
           ``,
           `These are assessment indices drawn from self reported answers, meant to support reflection rather than to measure you.`,
           ``,
-          `Explore the framework at www.ican.ph.`,
+          `Explore the framework at ican.ph.`,
           ``,
           `---`,
           ``,

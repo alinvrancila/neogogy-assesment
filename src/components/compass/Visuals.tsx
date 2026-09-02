@@ -278,7 +278,7 @@ export function ReportPreview() {
             <div className="rp-stat"><span style={{ color: '#2F6F62' }}>10</span><label>Dimensions</label></div>
             <div className="rp-stat"><span style={{ color: '#00A98A' }}>5</span><label>Next moves</label></div>
           </div>
-          <div className="rp-meta"><span>Prepared for you</span><span>www.ican.ph</span></div>
+          <div className="rp-meta"><span>Prepared for you</span><span>ican.ph</span></div>
         </div>
       </div>
       <div className="rp-badge">Sample report</div>

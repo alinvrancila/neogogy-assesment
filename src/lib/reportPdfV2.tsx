@@ -1162,7 +1162,7 @@ const EcosystemRow = () => (
       fontFamily: 'Plex', fontSize: 7, letterSpacing: 1.1, textTransform: 'uppercase',
       color: T.mute, textAlign: 'center', marginTop: 12,
     }}>
-      International Center for Applied Neogogy · www.ican.ph
+      International Center for Applied Neogogy · ican.ph
     </Text>
   </View>
 );

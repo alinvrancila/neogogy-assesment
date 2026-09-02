@@ -64,10 +64,16 @@ function Header({ onStart }: { onStart: () => void }) {
       <div className="ha-wrap ha-header-in">
         {/* The institution first, then the product. The logo is the attribution,
             so the words "Powered by ICAN.ph" are not repeated beside it here;
-            they carry on in the hero, the results and the report. */}
+            they carry on in the hero, the results and the report.
+
+            Both marks return to the top of the page. A header logo that leaves
+            the site takes a visitor out of the assessment mid-thought; the four
+            logos at the foot of the page are where each organisation is
+            actually visited. */}
         <div className="ha-lockup">
-          <a className="ha-lockup-ican" href={ECOSYSTEM[0].url} target="_blank" rel="noopener noreferrer"
-            aria-label="ICAN, International Center for Applied Neogogy, opens in a new tab">
+          <a className="ha-lockup-ican" href="#top"
+            onClick={(e) => { e.preventDefault(); scrollTo('top'); }}
+            aria-label="ICAN, International Center for Applied Neogogy, back to the top">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={ECOSYSTEM[0].logo} alt="ICAN" width={ECOSYSTEM[0].w} height={ECOSYSTEM[0].h} />
           </a>

@@ -46,18 +46,18 @@ export const CORE_QUESTION =
  */
 export const ECOSYSTEM = [
   { name: 'ICAN', note: 'International Center for Applied Neogogy',
-    url: 'https://www.ican.ph', logo: '/orgs/ican.png', w: 433, h: 300, pdfW: 76 },
+    url: 'https://ican.ph', logo: '/orgs/ican.png', w: 433, h: 300, pdfW: 76 },
   { name: 'Life College International', note: 'Higher education',
     url: 'https://www.life.edu.ph', logo: '/orgs/life-college.png', w: 350, h: 420, pdfW: 46 },
   { name: 'Neogogy.ai', note: 'Learning at the speed of mind',
     url: 'https://www.neogogy.ai', logo: '/orgs/neogogy.png', w: 435, h: 360, pdfW: 64 },
   { name: 'LifeX', note: 'Get where you want to be, faster',
-    url: 'https://www.lifex.ph', logo: '/orgs/lifex.png', w: 614, h: 200, pdfW: 92 },
+    url: 'https://lifex.ph', logo: '/orgs/lifex.png', w: 614, h: 200, pdfW: 92 },
 ] as const;
 
 /** Where a respondent goes next, named once so the page and the report agree. */
 export const NEXT_STEP = {
   line: 'Want to learn more and increase your advantage:',
-  url: 'https://www.lifex.ph',
-  label: 'www.lifex.ph',
+  url: 'https://lifex.ph',
+  label: 'lifex.ph',
 } as const;

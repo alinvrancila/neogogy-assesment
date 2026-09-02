@@ -99,7 +99,7 @@ head('A stated duration matches the bank behind it');
 head('The four organisations, as supplied and linked');
 {
   ok('four organisations', ECOSYSTEM.length === 4);
-  const wanted = ['https://www.ican.ph', 'https://www.life.edu.ph', 'https://www.neogogy.ai', 'https://www.lifex.ph'];
+  const wanted = ['https://ican.ph', 'https://www.life.edu.ph', 'https://www.neogogy.ai', 'https://lifex.ph'];
   ok('each one links to its own site', ECOSYSTEM.every((o, i) => o.url === wanted[i]),
     ECOSYSTEM.map((o) => o.url).join(', '));
   for (const o of ECOSYSTEM) {
@@ -107,7 +107,13 @@ head('The four organisations, as supplied and linked');
     ok(`${o.name}: the supplied artwork is present`, fs.existsSync(f));
     ok(`${o.name}: the stored aspect matches the file it describes`, o.w > 0 && o.h > 0);
   }
-  ok('the next step points at LifeX', NEXT_STEP.url === 'https://www.lifex.ph');
+  ok('the next step points at LifeX', NEXT_STEP.url === 'https://lifex.ph');
+  // ican.ph and lifex.ph have no www host at all, so a www link there is dead
+  ok('no organisation link uses a host that does not exist',
+    !ECOSYSTEM.some((o) => /^https:\/\/www\.(ican|lifex)\.ph/.test(o.url)));
+  const homeSrc = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'site', 'Home.tsx'), 'utf-8');
+  ok('the header mark returns to the top rather than leaving the site',
+    /ha-lockup-ican" href="#top"/.test(homeSrc));
   const pdf = fs.readFileSync(path.join(process.cwd(), 'src', 'lib', 'reportPdfV2.tsx'), 'utf-8');
   ok('the report closes with the next step', pdf.includes('NEXT_STEP.line'));
   ok('the report carries the four logos', pdf.includes('EcosystemRow'));
