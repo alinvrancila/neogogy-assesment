@@ -14,7 +14,7 @@ import type { CompassResult, Persona } from '@/engine/types';
 import { reportTitle } from '@/engine/display';
 
 export type CoverPersona =
-  | 'student' | 'teacher' | 'parent' | 'leader' | 'minister' | 'business';
+  | 'student' | 'teacher' | 'parent' | 'leader' | 'minister' | 'business' | 'professional';
 
 export type AssessmentCoverData = {
   persona: CoverPersona;
@@ -37,6 +37,7 @@ export const COVER_PERSONA: Record<Persona, CoverPersona> = {
   teacher: 'teacher',
   parent: 'parent',
   administrator: 'leader',
+  professional: 'professional',
   pastor: 'minister',
   business: 'business',
 };
@@ -48,6 +49,7 @@ const ASSESSMENT_NAME: Record<CoverPersona, string> = {
   leader: 'Leadership AI Judgment Check',
   minister: 'Preaching Formation Check',
   business: 'Business AI Resilience Check',
+  professional: 'Professional AI Work Practice Check',
 };
 
 const CONCEPT: Record<CoverPersona, { title: string; subtitle: string }> = {
@@ -57,11 +59,12 @@ const CONCEPT: Record<CoverPersona, { title: string; subtitle: string }> = {
   leader: { title: 'The Consequence Room', subtitle: 'A branching civic decision junction' },
   minister: { title: 'The Quiet Threshold', subtitle: 'A vertical threshold crossed by a page-path' },
   business: { title: 'The Resilient Workshop', subtitle: 'A removable operating loop' },
+  professional: { title: 'The Working Thread', subtitle: 'A woven thread through the workday' },
 };
 
 const ID_PREFIX: Record<CoverPersona, string> = {
   student: 'STU', teacher: 'TCH', parent: 'PAR',
-  leader: 'LDR', minister: 'MIN', business: 'BUS',
+  leader: 'LDR', minister: 'MIN', business: 'BUS', professional: 'PRO',
 };
 
 /**

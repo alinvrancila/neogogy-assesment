@@ -13,7 +13,7 @@
 import type { Persona } from '@/engine/types';
 
 /** The visual motif each persona is built on. Never an emoji, never an icon of a job. */
-export type Motif = 'emergence' | 'illumination' | 'stewardship' | 'systems' | 'formation' | 'resilience';
+export type Motif = 'emergence' | 'illumination' | 'stewardship' | 'systems' | 'formation' | 'resilience' | 'judgment';
 
 export type AskedAbout = { title: string; body: string };
 
@@ -309,6 +309,53 @@ export const PERSONA_CONTENT: PersonaContent[] = [
     ],
     minutes: 'Around 12 minutes',
     cta: 'Begin as a Business Owner',
+    isNew: true,
+  },
+  /* -------------------------------------------------------- professional */
+  {
+    id: 'professional',
+    name: 'Professional',
+    slug: 'professional',
+    motif: 'judgment',
+    motifName: 'The working thread',
+    motifMeaning: 'One thread running through a working day, and a hand kept on it.',
+    who: 'You work, and AI has arrived in it.',
+    whoList: ['Employees', 'Managers', 'Specialists', 'Freelancers', 'Public service', 'Anyone whose role is not covered by the other five'],
+    clarification: 'This is the general set. If none of the other five describes your work, this one is for you, and it asks about the AI in your working life and the AI you use outside it.',
+    coreQuestion: 'Is the way you use AI, at work and outside it, making you more capable?',
+    about: [
+      'These questions are about your own work rather than a sector. They ask what you actually do with AI when you write, decide, research, solve something new, answer people, and handle information that belongs to someone else.',
+      'They also ask about the rest of your life, because for most people the tool at the desk and the tool at the kitchen table are the same one an hour apart, and a reading that only looked at the office would miss half of what is forming you.',
+      'The assessment examines whether AI assisted work becomes capability that is genuinely yours, and looks for the case where excellent output is hiding work you could no longer do unaided.',
+      'And it examines underexposure. If you use little AI, it considers whether that is a deliberate choice with your capability intact, or a gap leaving fluency, adaptability and judgment undeveloped.',
+    ],
+    whyHeading: 'Why this matters',
+    why: [
+      'Most people were never given guidance on this. AI arrived in the work, the habits formed quietly, and nobody checked what they were doing to the person underneath.',
+      'Your Human Advantage is not how fast you produce. It is whether you can still explain the work, defend the decision, do it when the tool is down, and tell the difference between an answer that is right and one that merely sounds right.',
+    ],
+    whyPull: 'What happens to you when the tool does the work?',
+    asked: [
+      { title: 'The work you send on', body: 'What you check before something with your name on it reaches another person.' },
+      { title: 'Decisions that matter', body: 'Where AI contributes, and where the judgment and the responsibility stay with you.' },
+      { title: 'A week without it', body: 'What your work would look like if the tools were unavailable.' },
+      { title: 'What you will not paste in', body: 'How you handle information that belongs to somebody else.' },
+      { title: 'Skills you used to have', body: 'What is quietly going out of practice, and whether you chose that.' },
+      { title: 'Learning that stays', body: 'Whether what you solve with AI is something you could do again unaided.' },
+      { title: 'Your own voice', body: 'Whether what you produce still sounds like you.' },
+      { title: 'Keeping up deliberately', body: 'Whether you review how you use AI, or drift with whatever changed this month.' },
+    ],
+    discover: [
+      'Where AI is genuinely making you more capable',
+      'Where it may be standing in for capability rather than building it',
+      'How much of your work survives without the tools',
+      'How verification and judgment are actually functioning',
+      'Whether underexposure is leaving you behind',
+      'Which one capability is holding you where you are',
+      'What to do this week, this month, and over three months',
+    ],
+    minutes: 'About 10 minutes',
+    cta: 'Begin as a Professional',
     isNew: true,
   },
 ];

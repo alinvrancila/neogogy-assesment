@@ -944,6 +944,7 @@ function GroupReportPanel(
             <option value="teacher">Teachers</option>
             <option value="parent">Parents</option>
             <option value="administrator">Leaders</option>
+            <option value="professional">Professionals</option>
             <option value="pastor">Ministers</option>
             <option value="business">Business owners</option>
           </select>

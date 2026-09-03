@@ -22,6 +22,7 @@ import { PARENT_ITEMS } from "../items/parent";
 import { ADMINISTRATOR_ITEMS } from "../items/administrator";
 import { BUSINESS_ITEMS } from "../items/business";
 import { PASTOR_ITEMS } from "../items/pastor";
+import { PROFESSIONAL_ITEMS } from "../items/professional";
 import {
   OUTCOME_ITEMS, LOW_USE_REASON, HIGH_USE_PROBES, USAGE_ITEM, BASELINE_ITEMS,
   BUSINESS_USAGE_ITEM, BUSINESS_BASELINE_ITEMS, BUSINESS_LOW_USE_REASON, BUSINESS_HIGH_USE_PROBES,
@@ -39,6 +40,7 @@ const PERSONA_BANKS: Record<Persona, Item[]> = {
   administrator: ADMINISTRATOR_ITEMS,
   business: BUSINESS_ITEMS,
   pastor: PASTOR_ITEMS,
+  professional: PROFESSIONAL_ITEMS,
 };
 
 /**

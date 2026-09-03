@@ -193,3 +193,25 @@ describes neither.
 `tests/compass/group.ts` recomputes every statistic by hand from the same
 members and compares, and asserts the report reads the group object rather than
 calculating anything of its own.
+
+
+## The Professional set
+
+The seventh persona, added as the catch-all: anyone whose work is not a
+classroom, a congregation, a household or a business they own. Thirty items in
+`src/items/professional.ts`, one claim, one reverse item and one real situation
+per construct, on the shared scoring, gates, stages and archetypes, so a
+Professional respondent lands on the same route as everyone else.
+
+It asks about the AI in a working life and the AI outside it, because for most
+people that is the same tool an hour apart, and a set that only asked about the
+office would miss half of what is forming them. Nothing in it is specific to a
+sector, a rank or a qualification.
+
+Cover: `ProfessionalCover`, the supplied plum design. The artwork is drawn first
+and the field laid over it in three pieces, a band above, a band below and a
+triangle down the left whose hypotenuse is the diagonal, because react-pdf has
+no clip path on an image: the cut is made by what covers it. The result title is
+set locally rather than through `ResultBlock`, capped by its longest word
+against the dark width it actually has, since the plum narrows as it falls and a
+long single word has nowhere to wrap to.

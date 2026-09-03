@@ -22,6 +22,7 @@ const ROLE_COLORS: Record<string, string> = {
   teacher: '#D69A2D',
   parent: '#8A6BA8',
   administrator: '#3F6EA8',
+  professional: '#7A4E70',
   business: '#9E1D20',
   pastor: '#7B8F3E',
 };
@@ -74,6 +75,7 @@ const ROLE_LABEL: Record<string, string> = {
   educator: 'Educator',
   parent: 'Parent',
   administrator: 'Leader or administrator',
+  professional: 'Professional',
   leader: 'Leader',
   business: 'Business Owner',
   pastor: 'Minister/Preacher',
@@ -89,6 +91,7 @@ const PERSONA_EXPLAIN: Record<string, string> = {
   teacher: 'Assesses the individual: their own teaching practice, not their students.',
   parent: 'Assesses the individual: their own use and the decisions they make at home.',
   administrator: 'Assesses the individual: their own leadership work and their own decisions.',
+  professional: 'Assesses the individual: their own work, and the AI they use outside it.',
   business: 'Assesses the business, not the individual: its decisions, continuity, customer trust, knowledge and people.',
   pastor: 'Assesses a preacher: their preparation, their preaching, their pastoral care, and their own formation. Sensitive by nature, so handle these records accordingly.',
 };

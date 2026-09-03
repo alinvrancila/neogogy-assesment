@@ -119,6 +119,20 @@ const PERSONAS: Array<{
       'Staff tool use, customer data and your policy',
     ],
   },
+  {
+    id: 'professional',
+    name: 'Professional',
+    isNew: true,
+    who: 'You work, and AI has arrived in it',
+    blurb: 'The general set, for work that the other five do not describe.',
+    explain: 'Questions about your own work rather than a sector, and about the AI you use outside it too, because for most people that is the same tool an hour apart. They ask what you actually do with it, not what you know about it.',
+    note: 'Pick this one if none of the other five fits. About 10 minutes.',
+    expect: [
+      'What you check before work goes out with your name on it',
+      'What a week without the tools would look like',
+      'What you will not paste in, and what is going out of practice',
+    ],
+  },
 ];
 
 /** Coarse screen count used only before the usage answer is known. */

@@ -113,9 +113,27 @@ function Resilience({ c }: { c: string }) {
   );
 }
 
+/** Many small calls, and a hand kept on them. */
+function Judgment({ c }: { c: string }) {
+  const pts: Array<[number, number]> = [[26, 30], [50, 22], [74, 32], [80, 56], [62, 74], [36, 72], [22, 54]];
+  return (
+    <>
+      {pts.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={i % 3 === 0 ? 4.6 : 3.2} fill="none"
+          stroke={c} strokeOpacity={0.4 + (i % 3) * 0.16} strokeWidth={1.5} />
+      ))}
+      {pts.map(([x, y], i) => (
+        <line key={`l${i}`} x1={50} y1={50} x2={x} y2={y} stroke={c} strokeOpacity={0.18} strokeWidth={1} />
+      ))}
+      <circle cx={50} cy={50} r={12} fill="none" stroke={c} strokeWidth={1.8} />
+      <circle cx={50} cy={50} r={4} fill={c} />
+    </>
+  );
+}
+
 const SHAPES: Record<Motif, (p: { c: string }) => React.JSX.Element> = {
   emergence: Emergence, illumination: Illumination, stewardship: Stewardship,
-  systems: Systems, formation: Formation, resilience: Resilience,
+  systems: Systems, formation: Formation, resilience: Resilience, judgment: Judgment,
 };
 
 export default function MotifMark({ motif, color = 'currentColor', size = 100 }: {

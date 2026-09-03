@@ -13,7 +13,7 @@
 // Personas
 // ---------------------------------------------------------------------------
 
-export type Persona = "student" | "teacher" | "parent" | "administrator" | "business" | "pastor";
+export type Persona = "student" | "teacher" | "parent" | "administrator" | "business" | "pastor" | "professional";
 
 // ---------------------------------------------------------------------------
 // Constructs (measured dimensions)

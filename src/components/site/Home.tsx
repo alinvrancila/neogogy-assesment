@@ -33,6 +33,7 @@ const ACCENT: Record<Persona, string> = {
   administrator: '#2E4756',
   pastor: '#7B2B32',
   business: '#9E1D20',
+  professional: '#472A41',
 };
 
 function scrollTo(id: string) {

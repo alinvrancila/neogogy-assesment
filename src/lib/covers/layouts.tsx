@@ -9,9 +9,10 @@
  */
 
 import React from 'react';
-import { Image, Page, Text, View, Svg, Path, Line, Circle, Rect, Defs, LinearGradient, Stop } from '@react-pdf/renderer';
+import { Image, Page, Text, View, Svg, Path, Line, Circle, Rect, Polygon, Defs, LinearGradient, Stop } from '@react-pdf/renderer';
 import type { AssessmentCoverData } from './data';
 import {
+  ContrastField,
   ART, LETTER, SAFE, RAIL_SAFE, BrandMark, AssessmentIdentity, ResultBlock,
   PersonName, ConceptLabel, CoverMetadata, resultSize,
 } from './kit';
@@ -324,9 +325,90 @@ export function BusinessCover({ data }: { data: AssessmentCoverData }) {
   );
 }
 
+/* ---------------------------------------------- 7. Professional, The Working Thread
+   A plum field with the workbench entering on a diagonal wedge, as supplied.
+   The artwork is drawn first and the field is laid over it in three pieces: a
+   band above, a band below, and a triangle down the left, whose hypotenuse is
+   the diagonal. react-pdf has no clip path on an image, so the cut is made by
+   what covers it rather than by what contains it. */
+export function ProfessionalCover({ data }: { data: AssessmentCoverData }) {
+  const PLUM = '#472A41';
+  const GOLD = '#E8C87A';
+  const PAPER = '#F1EAE6';
+  const artTop = LETTER.h * 0.163;
+  const artBottom = LETTER.h * 0.836;
+  const wedgeX = LETTER.w * 0.275;
+  return (
+    <Page size={[LETTER.w, LETTER.h]} style={page(PLUM)}>
+      {/* eslint-disable-next-line jsx-a11y/alt-text */}
+      <Image src={ART('professional.jpg')}
+        style={{ ...abs, left: 0, top: 0, width: LETTER.w, height: LETTER.h, objectFit: 'cover' }} />
+
+      <Svg style={{ ...abs, left: 0, top: 0 }} width={LETTER.w} height={LETTER.h}>
+        <Rect x={0} y={0} width={LETTER.w} height={artTop} fill={PLUM} />
+        <Rect x={0} y={artBottom} width={LETTER.w} height={LETTER.h - artBottom} fill={PLUM} />
+        <Polygon points={`0,${artTop} ${wedgeX},${artTop} 0,${LETTER.h * 0.782}`} fill={PLUM} />
+        {/* the thread: a few loose diagonals crossing the field */}
+        {[0.24, 0.4, 0.56, 0.72].map((t, i) => (
+          <Line key={i}
+            x1={LETTER.w * (t - 0.2)} y1={LETTER.h * (0.2 + i * 0.13)}
+            x2={LETTER.w * (t + 0.02)} y2={LETTER.h * (0.12 + i * 0.13)}
+            stroke={GOLD} strokeOpacity={0.34} strokeWidth={0.9} />
+        ))}
+      </Svg>
+
+      <View style={{ ...abs, left: SAFE, top: SAFE }}><BrandMark tint={PAPER} subdued="rgba(241,234,230,0.72)" /></View>
+      <View style={{ ...abs, right: SAFE, top: SAFE, width: 200 }}>
+        <AssessmentIdentity name={data.assessmentName} tint="rgba(241,234,230,0.92)" />
+      </View>
+
+      {/* The result is set here rather than through the shared block because the
+          plum narrows as it falls: a long single word has nowhere to wrap to,
+          so the size is capped by the longest word against the dark width the
+          title actually has. */}
+      <View style={{ ...abs, left: SAFE, top: LETTER.h * 0.17, width: 260 }}>
+        <Text style={{
+          fontFamily: 'PlexMono', fontWeight: 500, fontSize: 8, letterSpacing: 1.5,
+          textTransform: 'uppercase', color: 'rgba(241,234,230,0.72)', marginBottom: 12,
+        }}>
+          Your assessment result
+        </Text>
+        <Text style={{
+          fontFamily: 'SourceSerif', fontWeight: 600, color: GOLD, lineHeight: 1.02,
+          fontSize: Math.min(
+            resultSize(data.resultTitle),
+            Math.floor(250 / (0.52 * Math.max(...data.resultTitle.split(/\s+/).map((w) => w.length)))),
+          ),
+        }}>
+          {data.resultTitle}
+        </Text>
+        <Text style={{
+          fontFamily: 'PlexSans', fontSize: 11.5, lineHeight: 1.5,
+          color: 'rgba(241,234,230,0.9)', marginTop: 14, width: 236,
+        }}>
+          {data.resultSummary}
+        </Text>
+      </View>
+
+      <View style={{ ...abs, left: SAFE, bottom: LETTER.h * 0.155 }}>
+        <PersonName data={data} tint="#FFFFFF" labelTint="rgba(241,234,230,0.74)" />
+      </View>
+
+      <View style={{ ...abs, right: SAFE, bottom: LETTER.h * 0.185, alignItems: 'flex-end' }}>
+        <ConceptLabel data={data} tint="#FFFFFF" subTint="rgba(255,255,255,0.86)" align="right" />
+      </View>
+
+      <View style={{ ...abs, left: RAIL_SAFE, right: RAIL_SAFE, bottom: RAIL_SAFE }}>
+        <CoverMetadata data={data} labelTint="rgba(241,234,230,0.72)" valueTint={PAPER} ruleTint="rgba(241,234,230,0.42)" />
+      </View>
+    </Page>
+  );
+}
+
 const LAYOUTS = {
   student: StudentCover, teacher: TeacherCover, parent: ParentCover,
   leader: LeaderCover, minister: MinisterCover, business: BusinessCover,
+  professional: ProfessionalCover,
 } as const;
 
 /** The one place a persona chooses its layout. Unknown personas fail loudly. */

@@ -14,7 +14,7 @@ import { lookupIp } from '@/lib/geoip';
 
 export const runtime = 'nodejs';
 
-const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business', 'pastor'];
+const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business', 'pastor', 'professional'];
 
 /**
  * Personas whose submissions are never stored. Empty at present: the Pastor and

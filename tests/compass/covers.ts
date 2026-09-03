@@ -105,11 +105,11 @@ head('A name is never shortened');
 }
 
 head('The assets exist');
-for (const f of ['student.jpg', 'teacher.jpg', 'parent.jpg', 'leader.jpg', 'minister.jpg', 'business.jpg', 'mark.png']) {
+for (const f of ['student.jpg', 'teacher.jpg', 'parent.jpg', 'leader.jpg', 'minister.jpg', 'business.jpg', 'professional.jpg', 'mark.png']) {
   ok(`artwork ${f}`, fs.existsSync(path.join(process.cwd(), 'public', 'covers', f)));
 }
 // the page loads its own lighter copies, so a phone does not pull a print file
-for (const f of ['student.jpg', 'teacher.jpg', 'parent.jpg', 'leader.jpg', 'minister.jpg', 'business.jpg']) {
+for (const f of ['student.jpg', 'teacher.jpg', 'parent.jpg', 'leader.jpg', 'minister.jpg', 'business.jpg', 'professional.jpg']) {
   const p = path.join(process.cwd(), 'public', 'covers', 'web', f);
   ok(`web artwork ${f} exists and is light`, fs.existsSync(p) && fs.statSync(p).size < 500_000);
 }
@@ -118,10 +118,10 @@ for (const f of ['SourceSerif4-Regular.ttf', 'SourceSerif4-SemiBold.ttf', 'Sourc
   ok(`font ${f} is vendored`, fs.existsSync(path.join(process.cwd(), 'public', 'fonts', f)));
 }
 
-head('Six layouts, not one template');
+head('Seven layouts, not one template');
 {
   const src = fs.readFileSync(path.join(process.cwd(), 'src', 'lib', 'covers', 'layouts.tsx'), 'utf-8');
-  for (const n of ['StudentCover', 'TeacherCover', 'ParentCover', 'LeaderCover', 'MinisterCover', 'BusinessCover']) {
+  for (const n of ['StudentCover', 'TeacherCover', 'ParentCover', 'LeaderCover', 'MinisterCover', 'BusinessCover', 'ProfessionalCover']) {
     ok(`${n} is its own component`, new RegExp(`function ${n}\\(`).test(src));
   }
   ok('an unknown persona fails loudly rather than showing the wrong design',

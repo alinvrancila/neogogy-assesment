@@ -34,6 +34,7 @@ const PERSONA_LABEL: Record<Persona, string> = {
   student: 'Student', teacher: 'Teacher', parent: 'Parent',
   administrator: 'Leader / Administrator', pastor: 'Minister / Preacher',
   business: 'Business Owner',
+  professional: 'Professional',
 };
 
 /* -------------------------------------------------------------- the inputs */

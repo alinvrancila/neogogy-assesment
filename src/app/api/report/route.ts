@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 // Every persona may build a file here. This route computes and returns; it
 // touches no storage, which is what makes it the right path for the anonymous
 // Minister/Preacher check.
-const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business', 'pastor'];
+const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business', 'pastor', 'professional'];
 
 const bad = (error: string, status = 400) =>
   new Response(JSON.stringify({ error }), { status, headers: { 'Content-Type': 'application/json' } });
