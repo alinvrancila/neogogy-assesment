@@ -3440,3 +3440,32 @@
 @media (max-width: 720px) {
   .nfc .ecostrip ul { grid-template-columns: 1fr 1fr; }
 }
+
+/* ---- 7. Professional: the workbench entering on a diagonal, on plum
+   The seventh cover shipped without this block, so it rendered with no field,
+   no placement and no colour. It mirrors the print cover: the artwork is cut by
+   a wedge rather than contained by one, and the metadata rail sits on the plum
+   below it rather than on the picture. */
+.nfc .rcover-professional { background: #472A41; color: #F1EAE6; }
+.nfc .rcover-professional .rcover-art {
+  clip-path: polygon(27.5% 16.3%, 100% 16.3%, 100% 83.6%, 0 83.6%, 0 78%);
+}
+.nfc .rcover-professional .rcover-art img { object-position: center 46%; }
+.nfc .rcover-professional .rcover-assessment { color: rgba(241, 234, 230, .92); }
+.nfc .rcover-professional .rcover-result {
+  position: absolute; left: var(--pad); top: 19%; max-width: 42%;
+}
+.nfc .rcover-professional .rcover-title { color: #E8C87A; }
+.nfc .rcover-professional .rcover-summary { color: rgba(241, 234, 230, .9); max-width: 26ch; }
+.nfc .rcover-professional .rcover-identity { position: absolute; left: var(--pad); bottom: 20%; max-width: 44%; }
+.nfc .rcover-professional .rcover-name { color: #fff; }
+.nfc .rcover-professional .rcover-concept { right: var(--pad); bottom: 21%; text-align: right; color: #fff; }
+.nfc .rcover-professional .rcover-meta { border-top: 1px solid rgba(241, 234, 230, .42); }
+@media (max-width: 620px) {
+  /* the wedge eats the column a phone needs, so the cut straightens up and the
+     artwork drops below the header rather than under it */
+  .nfc .rcover-professional .rcover-art { clip-path: polygon(0 40%, 100% 40%, 100% 80%, 0 80%); }
+  .nfc .rcover-professional .rcover-result { top: 15%; max-width: 92%; }
+  .nfc .rcover-professional .rcover-summary { max-width: none; }
+  .nfc .rcover-professional .rcover-identity { bottom: 13%; max-width: 92%; }
+}

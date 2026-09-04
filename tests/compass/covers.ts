@@ -138,7 +138,9 @@ head('The page opens on the same six designs');
   ok('the web cover reads from the same mapper as the PDF', /toCoverData/.test(web));
   // the only thing the cover may take from the result is what the mapper returns
   ok('the web cover carries no score', !/result\.(stage|index|composite|constructs|dimensions)/.test(web));
-  for (const p of ['student', 'teacher', 'parent', 'leader', 'minister', 'business']) {
+  // every persona the mapper can return, not a list written by hand: a seventh
+  // persona shipped with no cover styles at all because this was hardcoded
+  for (const p of new Set(Object.values(COVER_PERSONA))) {
     ok(`the page styles the ${p} cover`, css.includes(`.rcover-${p} `));
   }
   ok('every persona result opens on the cover',
