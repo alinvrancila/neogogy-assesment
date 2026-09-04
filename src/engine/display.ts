@@ -36,6 +36,41 @@ export interface PersonaDisplay {
   disclaimerExtra?: string;
 }
 
+
+/* ----------------------------------------------------------- professional */
+
+/**
+ * The catch-all set reads on the shared dimensions, but the words around them
+ * were written for a classroom or a boardroom. These name the same constructs
+ * in the language of ordinary work: what you send, what you decide, what you
+ * could still do on a bad week.
+ */
+const PROFESSIONAL_CONSTRUCT_NAMES: Partial<Record<ConstructId, string>> = {
+  agency: "Decision Ownership",
+  verification: "Checking Before You Act",
+  dependencySafety: "Unaided Capability",
+  fluency: "Practical AI Fluency",
+  transfer: "What You Keep",
+  amplification: "Better Thinking, Not Only Faster",
+  skillGrowth: "Craft That Still Grows",
+  adaptability: "Deliberate Practice",
+  responsibleUse: "The Line You Hold",
+  creativity: "Your Own Voice",
+};
+
+const PROFESSIONAL_PRINCIPLES: Partial<Record<ConstructId, string>> = {
+  agency: "The decision, and the answer for it afterwards, stay with the person who made it.",
+  verification: "A claim is checked somewhere the tool did not supply, in proportion to what it would cost to be wrong.",
+  dependencySafety: "The work still exists on the week the tool does not.",
+  fluency: "Knowing from use where a tool is reliable, and where it is confidently wrong.",
+  transfer: "What was solved with help can be done again without it.",
+  amplification: "The tool widens the thinking, not only the output.",
+  skillGrowth: "Capability that would show with no AI in the room.",
+  adaptability: "Habits are reviewed on purpose rather than left to drift with the tools.",
+  responsibleUse: "The line about other people's information holds when it is inconvenient.",
+  creativity: "What you make still sounds like you.",
+};
+
 /* --------------------------------------------------------------- business */
 
 const BUSINESS_CONSTRUCT_NAMES: Record<ConstructId, string> = {
@@ -600,6 +635,28 @@ export const PERSONA_DISPLAY: Partial<Record<Persona, PersonaDisplay>> = {
       "Knowledge capture", "Strategic amplification", "Market readiness",
     ],
     disclaimerExtra: "This is not legal, financial, or compliance advice.",
+  },
+
+  professional: {
+    reportTitle: "Professional AI Work Practice Check",
+    indexName: "Practice Health Score",
+    subject: "person",
+    constructNames: PROFESSIONAL_CONSTRUCT_NAMES,
+    constructPrinciples: PROFESSIONAL_PRINCIPLES,
+    riskName: "Reliance Risk",
+    composites: {
+      futureReadiness: "Readiness for what is coming",
+      augmentation: "Genuine amplification",
+      judgment: "Judgment held",
+      capabilityTransfer: "Capability retained",
+      dependencyIndex: "Reliance exposure",
+      underexposure: "Exposure gap",
+    },
+    fingerprintLabels: [
+      "Practical fluency", "Unaided capability", "Checking", "Amplification",
+      "Decision ownership", "Reliance", "Readiness",
+    ],
+    disclaimerExtra: "This reading is about your practice on the day you answered, not about your competence, your role, or your standing at work. It is not an appraisal and it is not designed to be shared with an employer unless you choose to.",
   },
 
   pastor: {

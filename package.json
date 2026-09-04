@@ -26,6 +26,7 @@
     "test:covers": "tsx tests/compass/covers.ts",
     "test:copy": "tsx tests/compass/copy.ts",
     "test:group": "tsx tests/compass/group.ts",
+    "test:professional": "tsx tests/compass/professional.ts",
     "seed:cohort": "node scripts/seed-cohort.mjs",
     "cards": "node scripts/share-cards.mjs"
   },
