@@ -205,6 +205,29 @@ function validate(body: Body): { ok: true; submission: Submission } | { ok: fals
     if (!allowed.includes(value)) return { ok: false, error: `Out of range answer for ${id}` };
   }
 
+  // A result is a placement on a developmental route, and a route position
+  // cannot be read from answers that were never given. Without this, a
+  // submission carrying almost nothing scores every unevidenced dimension at
+  // the neutral prior of 50, which lands on stage 5 and reads back as "AI
+  // Functional" to somebody who told us nothing at all.
+  const scored = items.filter((i) => ['claim', 'reverse', 'scenario', 'outcome'].includes(i.type));
+  const answeredScored = scored.filter((i) => {
+    const v = Number((answers as Record<string, unknown>)[i.id]);
+    // 0 is "not enough experience to say", which is deliberately excluded from
+    // scoring, so it does not count as evidence here either.
+    return Number.isInteger(v) && v > 0;
+  }).length;
+  const floor = Math.ceil(scored.length * 0.6);
+  if (answeredScored < floor) {
+    return {
+      ok: false,
+      error: `This assessment needs more of your answers before it can place you. `
+        + `${answeredScored} of ${scored.length} questions carried an answer, and at least ${floor} are needed. `
+        + `Go back and complete the ones you skipped, and if a question genuinely does not apply to you, `
+        + `answer it as it is rather than leaving it out.`,
+    };
+  }
+
   const inRange1to5 = (v: unknown) =>
     v === undefined || (Number.isInteger(Number(v)) && Number(v) >= 1 && Number(v) <= 5);
   if (!inRange1to5(body.b1) || !inRange1to5(body.b2)) {
