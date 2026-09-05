@@ -10,11 +10,33 @@ import { round1 } from "./scoring";
 
 type Dims = Record<ConstructId, DimensionResult>;
 
-/** Weighted developmental index, 0..100. Weights live in config.CONSTRUCTS. */
+/**
+ * Weighted developmental index, 0..100. Weights live in config.CONSTRUCTS.
+ *
+ * Only dimensions that carry evidence are counted, and the remaining weights
+ * are renormalised over them. A dimension nobody answered holds a neutral prior
+ * of 50, which is a sensible placeholder for a display but is not a reading:
+ * fed into this sum it moves a person towards the middle of the route on the
+ * strength of having said nothing. That is how a submission carrying almost no
+ * answers used to come back as stage 5, AI Functional, which is the one
+ * placement this instrument must never invent.
+ *
+ * With no evidence at all there is no position to report, and this returns 0
+ * rather than 50, so an empty reading cannot be mistaken for a middling one.
+ * The submission boundary rejects those before they reach here; this is the
+ * second line, not the first.
+ */
 export function developmentalIndex(dims: Dims): number {
   let sum = 0;
-  for (const def of Object.values(CONSTRUCTS)) sum += dims[def.id].score * def.continuumWeight;
-  return round1(sum);
+  let weight = 0;
+  for (const def of Object.values(CONSTRUCTS)) {
+    const dim = dims[def.id];
+    if (!dim || dim.evidenceCount <= 0) continue;
+    sum += dim.score * def.continuumWeight;
+    weight += def.continuumWeight;
+  }
+  if (weight <= 0) return 0;
+  return round1(sum / weight);
 }
 
 function stageForIndex(index: number): StageDef {
@@ -29,8 +51,15 @@ function gateCap(dims: Dims, persona?: Persona): { cap: number; reasons: string[
   let reasons: string[] = [];
   for (const s of STAGES) {
     if (!s.gates) continue;
+    // A dimension nobody answered holds a prior, not a reading, and a prior
+    // cannot satisfy a gate: gates are the promise that a stage was earned on
+    // specific evidence. Unevidenced fails, which caps the stage rather than
+    // certifying it.
     const failed = Object.entries(s.gates)
-      .filter(([c, min]) => dims[c as ConstructId].score < (min as number))
+      .filter(([c, min]) => {
+        const dim = dims[c as ConstructId];
+        return !dim || dim.evidenceCount <= 0 || dim.score < (min as number);
+      })
       .map(([c, min]) => `${constructName(persona, c as ConstructId)} is ${dims[c as ConstructId].score}, and stage ${s.stage} (${stageName(persona, s.stage)}) requires at least ${min}`);
     if (failed.length > 0) { cap = Math.min(cap, s.stage - 1); if (reasons.length === 0) reasons = failed; }
   }

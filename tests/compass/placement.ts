@@ -102,6 +102,49 @@ for (const p of PERSONAS) {
   ok('an empty submission does not carry high confidence', empty.overallConfidence !== 'high');
 }
 
+head('The index is read from evidence, never from its absence');
+{
+  for (const p of PERSONAS) {
+    const items = applicableItems(p, 3);
+    const scored = items.filter((i) => SCORED.includes(i.type));
+
+    // nothing answered at all
+    const empty = compute({ persona: p, usage: 3, b1: 3, b2: 3, answers: {} } as Submission);
+    ok(`${p}: an empty reading is not placed in the middle`,
+      empty.stage.stage !== 5, `stage ${empty.stage.stage}, index ${empty.stage.rawIndex}`);
+    ok(`${p}: an empty reading carries no index`, empty.stage.rawIndex === 0, String(empty.stage.rawIndex));
+
+    // one weak answer: the index follows that answer, not the prior
+    const one: Record<string, number> = {};
+    one[scored.find((i) => i.type === 'claim')!.id] = 1;
+    const single = compute({ persona: p, usage: 3, b1: 3, b2: 3, answers: one } as Submission);
+    ok(`${p}: one weak answer reads low, not middling`,
+      single.stage.rawIndex < 20, String(single.stage.rawIndex));
+
+    // half the questions, answered strongly: the index reflects them, and the
+    // gates still refuse to certify an advanced stage on half the evidence
+    const half: Record<string, number> = {};
+    scored.slice(0, Math.ceil(scored.length / 2)).forEach((it) => {
+      const t = top(it);
+      half[it.id] = it.type === 'reverse' ? 1 : t;
+    });
+    const partial = compute({ persona: p, usage: 3, b1: 3, b2: 3, answers: half } as Submission);
+    ok(`${p}: strong partial evidence is not capped at the middle`,
+      partial.stage.rawIndex > 60, String(partial.stage.rawIndex));
+    ok(`${p}: and is not certified at the summit on half the answers`,
+      partial.stage.stage < 10, `stage ${partial.stage.stage}`);
+    ok(`${p}: thin evidence is reported as thin`,
+      partial.overallConfidence === 'insufficient' || partial.overallConfidence === 'preliminary',
+      partial.overallConfidence);
+  }
+
+  const src = fs.readFileSync(path.join(process.cwd(), 'src', 'engine', 'continuum.ts'), 'utf-8');
+  ok('the index skips dimensions with no evidence', /evidenceCount <= 0/.test(src));
+  ok('and renormalises over the ones that have it', /sum \/ weight/.test(src));
+  ok('with nothing at all it reports no position rather than a middle',
+    /if \(weight <= 0\) return 0;/.test(src));
+}
+
 head('The boundary refuses to place a respondent on too little evidence');
 {
   // The engine still returns a neutral prior for an unevidenced dimension,
