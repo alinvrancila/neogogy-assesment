@@ -257,7 +257,7 @@ head('The site says what it does with your data');
     'unsubscribe', 'delete']) {
     ok(`the notice covers ${required}`, new RegExp(required, 'i').test(prose));
   }
-  ok('it names a route to exercise rights', /privacy@ican\.ph/.test(prose));
+  ok('it names a route to exercise rights', /info@neogogy\.ai/.test(prose));
   ok('it states a retention period', /twenty four months/i.test(prose));
   ok('consent is not required to receive the report', /whether or not you tick it/i.test(prose));
   ok('the terms refuse appraisal use', /rank, appraise, select/i.test(

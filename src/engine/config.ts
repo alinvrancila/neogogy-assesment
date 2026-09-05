@@ -95,6 +95,8 @@ export const SCORING = {
   /** Micro-state cutoffs. */
   /** Part B3: strong >= 65, developing 40..64.9, watch < 40. */
   microStrong: 65, microWatch: 40,
+  /** A dimension needs this many answered scored items before it is reported. */
+  minInputsForDimension: 2,
   /** A dimension counts as a genuine strength / vulnerability only past these. */
   strengthFloor: 65, vulnerabilityCeiling: 45,
 };

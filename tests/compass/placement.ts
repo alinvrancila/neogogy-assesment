@@ -14,7 +14,7 @@
 import fs from 'fs';
 import path from 'path';
 import { compute, applicableItems } from '@/engine';
-import { STAGES } from '@/engine/config';
+import { CONSTRUCTS, STAGES } from '@/engine/config';
 import type { Item, Persona, Submission } from '@/engine/types';
 
 let pass = 0, fail = 0;
@@ -163,6 +163,41 @@ head('The boundary refuses to place a respondent on too little evidence');
     ok(`${p}: the floor is a majority of its ${scored.length} scored questions`,
       Math.ceil(scored.length * 0.6) >= 20);
   }
+}
+
+head('A dimension is reported only when it was answered');
+{
+  for (const p of PERSONAS) {
+    const items = applicableItems(p, 3);
+    const scored = items.filter((i) => SCORED.includes(i.type));
+    // answer exactly one item on one dimension, and enough elsewhere to pass
+    // the boundary, so the per-dimension rule is what is being tested
+    const one = scored.find((i) => i.construct === 'creativity')!;
+    const answers: Record<string, number> = {};
+    scored.filter((i) => i.construct !== 'creativity').forEach((i) => { answers[i.id] = 3; });
+    answers[one.id] = 5;
+    const r = compute({ persona: p, usage: 3, b1: 3, b2: 3, answers } as Submission);
+    // The invariant, which holds whatever an individual bank's secondaries do:
+    // a dimension is reported on two items or more, or not reported at all.
+    // One is never a reading.
+    const ones = (Object.keys(CONSTRUCTS) as ConstructId[])
+      .filter((c) => r.dimensions[c].evidenceCount === 1);
+    ok(`${p}: no dimension is reported on a single answer`, ones.length === 0, ones.join(', '));
+    const unevidenced = (Object.keys(CONSTRUCTS) as ConstructId[])
+      .filter((c) => r.dimensions[c].evidenceCount === 0);
+    ok(`${p}: an unevidenced dimension says so rather than guessing`,
+      unevidenced.every((c) => r.dimensions[c].confidence === 'insufficient'));
+    ok(`${p}: dimensions that were answered are still reported`,
+      r.dimensions.verification.evidenceCount >= 2);
+  }
+  const cfg = fs.readFileSync(path.join(process.cwd(), 'src', 'engine', 'config.ts'), 'utf-8');
+  ok('the minimum is two answered items', /minInputsForDimension: 2/.test(cfg));
+  const sc = fs.readFileSync(path.join(process.cwd(), 'src', 'engine', 'scoring.ts'), 'utf-8');
+  ok('a dimension below the minimum carries no evidence, so the index, the gates and the constraint all skip it',
+    /evidenceCount: meetsMinimum \? primaryCount : 0/.test(sc));
+  const results = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'compass', 'Results.tsx'), 'utf-8');
+  ok('a refusal for missing answers offers the way back',
+    /Take me back to the questions/.test(results));
 }
 
 head('A journey is only a journey within one assessment');

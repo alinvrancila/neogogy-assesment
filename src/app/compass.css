@@ -3469,3 +3469,7 @@
   .nfc .rcover-professional .rcover-summary { max-width: none; }
   .nfc .rcover-professional .rcover-identity { bottom: 13%; max-width: 92%; }
 }
+
+/* A refusal that offers the way back, rather than a wall with a reason on it. */
+.nfc .gate-err-back { margin-top: 10px; }
+.nfc .gate-err[role="alert"] { display: grid; }

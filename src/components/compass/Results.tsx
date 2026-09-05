@@ -124,7 +124,19 @@ export function GateForm({
             <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
             <span>Send me my report and occasional insights about educational opportunities. You can unsubscribe any time.</span>
           </label>
-          {gate.error ? <p className="gate-err">{gate.error}</p> : null}
+          {gate.error ? (
+            <div className="gate-err" role="alert">
+              <p>{gate.error}</p>
+              {/* A refusal for missing answers has somewhere to go. Without this
+                  the message is a wall: it tells a respondent what is wrong and
+                  then leaves them on the form that cannot fix it. */}
+              {/needs more of your answers/.test(gate.error) ? (
+                <button type="button" className="btn btn-ghost gate-err-back" onClick={onBack}>
+                  Take me back to the questions <span className="arrow">&rarr;</span>
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           <button type="submit" className="btn btn-primary" disabled={gate.submitting}
             style={{ marginTop: 16, width: '100%', justifyContent: 'center' }}>
             {gate.submitting ? 'Scoring your answers' : 'Show my results'} <span className="arrow">&rarr;</span>

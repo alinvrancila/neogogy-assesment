@@ -25,7 +25,7 @@ export interface LegalDoc {
 }
 
 const CONTROLLER = 'International Center for Applied Neogogy (ICAN), ican.ph';
-const CONTACT = 'privacy@ican.ph';
+const CONTACT = 'info@neogogy.ai';
 const DATE = '5 September 2026';
 
 export const PRIVACY: LegalDoc = {

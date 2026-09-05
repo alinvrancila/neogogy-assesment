@@ -246,17 +246,26 @@ export function scoreDimensions(persona: Persona, sub: Submission): {
   for (const cid of CONSTRUCT_IDS) {
     const contribs = buckets[cid] ?? [];
     const primaryCount = contribs.filter(c => ["claim", "reverse", "scenario", "outcome"].includes(c.type)).length;
-    let score = 50; // neutral prior only when no evidence exists at all
-    if (contribs.length > 0) {
+    // A dimension is reported only when at least two of its scored items were
+    // answered. One answer is an anecdote, and a whole dimension built on it
+    // then flows into the index, the gates and the constraint as though it were
+    // a reading. Below the minimum it holds the neutral prior for display and
+    // carries an evidence count of zero, which is what excludes it downstream.
+    const meetsMinimum = primaryCount >= SCORING.minInputsForDimension;
+    let score = 50; // neutral prior only when there is not enough evidence
+    if (contribs.length > 0 && meetsMinimum) {
       const wsum = contribs.reduce((a, c) => a + Math.abs(c.weight), 0);
       score = contribs.reduce((a, c) => a + c.score100 * c.weight, 0) / (wsum || 1);
       score = Math.max(0, Math.min(100, score));
     }
     const gap = gaps.find(g => g.construct === cid);
-    let confidence: ConfidenceLevel =
-      primaryCount >= SCORING.minInputsForFullConfidence ? "high"
+    // Confidence follows the same minimum, so a dimension cannot report
+    // "preliminary" while carrying no evidence downstream. Below the minimum it
+    // is insufficient, which is what the report prints as not enough evidence.
+    let confidence: ConfidenceLevel = !meetsMinimum ? "insufficient"
+      : primaryCount >= SCORING.minInputsForFullConfidence ? "high"
       : primaryCount >= 2 ? "moderate"
-      : primaryCount >= 1 ? "preliminary" : "insufficient";
+      : "preliminary";
     if (gap?.flagged && confidence === "high") confidence = "moderate";
     // Low usage caps confidence on experiential constructs instead of penalizing the score (§4.1 fix)
     if (sub.usage <= USAGE.lowUseMax && USAGE.experientialConstructs.includes(cid)
@@ -268,7 +277,9 @@ export function scoreDimensions(persona: Persona, sub: Submission): {
       score: round1(score),
       reportedScore: cid === "dependencySafety" ? round1(100 - score) : round1(score),
       confidence,
-      evidenceCount: primaryCount,
+      // Zero when the minimum was not met, so the index, the gates and the
+      // constraint all skip it by the same rule.
+      evidenceCount: meetsMinimum ? primaryCount : 0,
       consistencyGap: gap ? { claim: gap.claim, behavior: gap.behavior, gap: gap.gap, flagged: gap.flagged } : undefined,
       microState: score >= SCORING.microStrong ? "strong" : score >= SCORING.microWatch ? "developing" : "watch",
     };
