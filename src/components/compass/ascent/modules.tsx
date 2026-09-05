@@ -97,11 +97,14 @@ export function OrientationCard({ result }: { result: CompassResult }) {
         {STAGES.find((s) => s.stage === result.stage.stage)?.short}
       </p>
 
+      {/* C1: the direction has to be unambiguous. "Only 1.4 points from stage 8"
+          read as a warning about falling back when it was shown to somebody who
+          had just climbed into stage 9. */}
       {result.stage.borderline ? (
         <p className="asc-orient-zone">
-          You are only {result.stage.borderline.distance} points from stage{' '}
-          {result.stage.borderline.adjacentStage}, so treat this as a stretch of the route rather
-          than a line you have crossed. A small change in habit moves it either way.
+          {result.stage.borderline.adjacentStage < result.stage.stage
+            ? `You have just crossed into this stage, by ${result.stage.borderline.distance} points. Treat it as a stretch of the route rather than a line you have cleared: a small change in habit moves it either way.`
+            : `You are ${result.stage.borderline.distance} points short of stage ${result.stage.borderline.adjacentStage}. Treat this as a stretch of the route rather than a line you have failed to cross: a small change in habit moves it either way.`}
         </p>
       ) : null}
 

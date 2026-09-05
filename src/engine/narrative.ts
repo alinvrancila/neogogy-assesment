@@ -34,7 +34,7 @@ const CONF_LABEL: Record<string, string> = {
 export type ReportSectionKey =
   | "profile" | "continuum" | "signature" | "helping" | "harming"
   | "strengths" | "selfKnowledge" | "bottleneck" | "nextStage"
-  | "roadmap" | "plan" | "evidence" | "experiment";
+  | "roadmap" | "plan" | "evidence" | "experiment" | "divergence";
 
 export interface ReportSection {
   key: ReportSectionKey;
@@ -266,7 +266,9 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     L.push(`Placement is continuous rather than a box you fall into, and the stages above you are reached by specific, nameable changes rather than by general improvement. Stages 5 and above also carry gates: minimum readings on agency, verification, independent capability, responsible use and transfer, so that fluency alone cannot carry someone past a weakness that matters.`);
     if (r.stage.borderline) {
       L.push(``);
-      L.push(`You are within ${r.stage.borderline.distance} points of stage ${r.stage.borderline.adjacentStage}; treat this placement as a zone, not a verdict. Small, real changes in habit will move it.`);
+      L.push(r.stage.borderline.adjacentStage < r.stage.stage
+        ? `You have just crossed into this stage, by ${r.stage.borderline.distance} points. Treat the placement as a zone rather than a verdict: small, real changes in habit will move it.`
+        : `You are ${r.stage.borderline.distance} points short of stage ${r.stage.borderline.adjacentStage}. Treat the placement as a zone rather than a verdict: small, real changes in habit will move it.`);
     }
     if (r.stage.gated) {
       L.push(``);
@@ -381,6 +383,39 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     S.push({ key: "strengths", n: 6, title: "What you do well, and what needs attention", lines: L });
   }
 
+  // 6b. Where the answers pull in two directions (C5).
+  //
+  // The engine already computes, per dimension, the gap between what a person
+  // said about themselves and what they chose in a real situation. It flagged
+  // those gaps, quietly lowered confidence, and never told the reader. This is
+  // the most interesting thing the instrument knows about a contradictory
+  // respondent, and both directions matter: describing yourself more harshly
+  // than you behave is as much a finding as the other way round.
+  {
+    const gaps = (Object.keys(CONSTRUCTS) as ConstructId[])
+      .map((c) => ({ c, d: r.dimensions[c] }))
+      .filter((x) => x.d.consistencyGap?.flagged)
+      .sort((a, b) => Math.abs(b.d.consistencyGap!.gap) - Math.abs(a.d.consistencyGap!.gap))
+      .slice(0, 3);
+
+    if (gaps.length) {
+      const L: string[] = [];
+      L.push(`On ${gaps.length === 1 ? "one dimension" : `${gaps.length} dimensions`}, what you said about yourself and what you chose in a real situation did not line up. Both are probably true, and one of them is what shows up in your work.`);
+      L.push(``);
+      for (const { c, d } of gaps) {
+        const g = d.consistencyGap!;
+        const name = constructName(r.persona, c);
+        const band = (v: number) => (v >= 4.5 ? "the top of the scale" : v >= 3.5 ? "the upper end" : v >= 2.5 ? "the middle" : v >= 1.5 ? "the lower end" : "the bottom of the scale");
+        L.push(g.gap > 0
+          ? `**${name}.** You described yourself at ${band(g.claim)}, and the situations you chose read at ${band(g.behavior)}. The description is the version you intend; the situations are the version that happens when the day is short. The gap is where to look.`
+          : `**${name}.** You described yourself at ${band(g.claim)}, and the situations you chose read at ${band(g.behavior)}. You are harder on yourself here than your own choices are, which usually means a standard you hold and do not credit yourself for meeting.`);
+      }
+      L.push(``);
+      L.push(`This is not an accusation of inconsistency. Everybody has a gap between the practice they describe and the practice they fall back on when the day is short. Naming it is the point: it is the difference the report can see and you cannot.`);
+      S.push({ key: "divergence", n: 7, title: "Where your answers pull in two directions", lines: L });
+    }
+  }
+
   // 7. Self-knowledge
   {
     const L: string[] = [];
@@ -486,6 +521,10 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     L.push(``);
     L.push(`Both are available at ican.ph/books.`);
     L.push(``);
+    // B2: the scale leans, and a reader should be told rather than discover it.
+    L.push(`**The scale leans, deliberately.** Heavy dependence costs far more on this index than complete avoidance does, and that is a choice rather than an accident. Dependence erodes capability that is slow to rebuild. Underexposure leaves capability intact and is a fluency gap, which is why avoidance is held back by the practice gates rather than by the index itself. Both are real risks, and they are not equally expensive to recover from.`);
+    // C1: ten named stages imply a resolution four items per dimension cannot carry.
+    L.push(`**On the ten stages.** The route is named in ten stages because that is a useful way to describe a direction of travel, not because this instrument can resolve ten distinguishable levels. Read your stage as a neighbourhood rather than a coordinate, and read the constraint below it as the finding.`);
     L.push(`**Two honest limits.** Each dimension rests on two self-description questions, one reverse-worded question and one real-situation question. That is fewer questions per dimension than a formal psychological test would use, which is exactly why you see a confidence level on each one rather than a single confident number. And all of it is self-reported: this assessment sees what you told it, so its usefulness to you depends on your answers staying honest as your use of AI grows.`);
     S.push({ key: "evidence", n: 12, title: "What this is built on, and what it cannot tell you", lines: L });
   }

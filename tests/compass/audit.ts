@@ -119,5 +119,42 @@ head('7.4 Every spoke and bar reads one direction');
     /Independent Capability/.test(viz) && !/'Dependency Risk'/.test(viz));
 }
 
+head('B2 and C1: the scale says which way it leans, and how much it can resolve');
+{
+  const r = dependent('student');
+  const lines = generateReportSections(r).flatMap((s) => s.lines).join(' ');
+  ok('the asymmetry is stated rather than discovered', /The scale leans, deliberately/.test(lines));
+  ok('with the reason, not just the fact', /slow to rebuild/.test(lines));
+  ok('ten stages carry a resolution caveat', /neighbourhood rather than a coordinate/.test(lines));
+}
+
+head('C5: the contradiction is disclosed, in both directions');
+{
+  // flattering self-description, poor situations
+  const mixed = compute(build('student', 4, (it) =>
+    (it.type === 'claim' ? top(it) : it.type === 'reverse' ? top(it) : 1)));
+  const sec = generateReportSections(mixed).find((s) => s.key === 'divergence');
+  ok('a contradictory profile is told', !!sec);
+  ok('titled without accusation', sec?.title === 'Where your answers pull in two directions');
+  const body = (sec?.lines ?? []).join(' ');
+  ok('it says both are probably true', /Both are probably true/.test(body));
+  ok('and refuses to call it dishonesty', /not an accusation of inconsistency/.test(body));
+  ok('it covers the harsher-on-yourself direction too',
+    /harder on yourself/.test(fs.readFileSync(
+      path.join(process.cwd(), 'src', 'engine', 'narrative.ts'), 'utf-8')));
+
+  const consistent = compute(build('student', 4, (it) => (it.type === 'reverse' ? 1 : top(it))));
+  ok('a consistent profile is not given the section',
+    !generateReportSections(consistent).find((s) => s.key === 'divergence'));
+}
+
+head('C1: the boundary reads in the direction it happened');
+{
+  const src = fs.readFileSync(
+    path.join(process.cwd(), 'src', 'components', 'compass', 'ascent', 'modules.tsx'), 'utf-8');
+  ok('crossing into a stage is not phrased as falling towards the one below',
+    /You have just crossed into this stage/.test(src) && !/You are only \{result\.stage\.borderline\.distance\} points from/.test(src));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

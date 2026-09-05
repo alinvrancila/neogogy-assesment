@@ -75,9 +75,18 @@ export const PRIVACY: LegalDoc = {
     {
       heading: 'How long it is kept',
       body: [
-        'Your result and the answers behind it are kept for as long as the movement it enables is useful to you, and reviewed every twenty four months. If you have not returned in that period we delete the record.',
+        'Your result and the answers behind it are deleted twenty four months after your last completed assessment. Taking it again restarts that period, because the comparison between sittings is the reason the earlier one is kept at all.',
+        'De-identified aggregate data may be kept indefinitely for research and benchmarking. It carries no name, no email, no address and no identifier that points back to a person, and it is only ever reported in groups large enough that no individual can be recognised within them.',
         'Marketing consent and the contact details attached to it are kept until you withdraw it, and the withdrawal itself is kept as proof that you asked.',
-        'Aggregate statistics, which contain no personal data, are kept indefinitely.',
+      ],
+    },
+    {
+      heading: 'Your report link',
+      body: [
+        'Your report has its own web address, and the address contains a long random token that cannot be guessed. Anyone holding the link can read that report, so treat it the way you would treat the report itself.',
+        'The link works for as long as the record does, twenty four months from your last completed assessment, and then both go together.',
+        'Two controls sit on the report. "Email me my link" sends it only to the address already on the record, never to one typed at the time. "Get a new link" issues a fresh address and stops the old one working, which is what to use if you have shared a link and want it closed.',
+        'Report pages ask search engines not to index them, and they do not pass the address on to any site you click through to. The token is stripped before anything is written to our analytics or our server logs, so the link is not recoverable from either.',
       ],
     },
     {
