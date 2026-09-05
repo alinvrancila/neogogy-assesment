@@ -15,7 +15,7 @@ import fs from 'fs';
 import path from 'path';
 import { compute, applicableItems } from '@/engine';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
-import type { Item, Persona, Submission } from '@/engine/types';
+import type { ConstructId, Item, Persona, Submission } from '@/engine/types';
 
 let pass = 0, fail = 0;
 const ok = (label: string, cond: boolean, detail?: string) => {

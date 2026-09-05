@@ -146,9 +146,9 @@ const RADAR_LABEL: Record<string, string> = {
 
 export function DimensionRadar({ result }: { result: CompassResult }) {
   const ids = Object.keys(CONSTRUCTS) as ConstructId[];
-  const S = 440;
+  const S = 560;
   const c = S / 2;
-  const R = 138;
+  const R = 128;
   const n = ids.length;
 
   const pt = (i: number, radius: number) => {
@@ -192,20 +192,26 @@ export function DimensionRadar({ result }: { result: CompassResult }) {
           return <circle key={id} cx={x} cy={y} r={3} fill={TEAL} />;
         })}
         {ids.map((id, i) => {
-          const [x, y] = pt(i, R + 26);
+          const [x, y] = pt(i, R + 22);
+          // Anchored by which side of the wheel the spoke is on, so a long
+          // label reads inward instead of running off the edge. Centred
+          // labels put "Independent Capability" half outside the frame.
+          const cos = Math.cos((Math.PI * 2 * i) / n - Math.PI / 2);
+          const anchor = cos > 0.25 ? 'start' : cos < -0.25 ? 'end' : 'middle';
           return (
             <text
-              key={id} x={x} y={y} textAnchor="middle" fontSize={9} fill={MUTE}
+              key={id} x={x} y={y} textAnchor={anchor} fontSize={9.5} fill={MUTE}
               fontFamily="var(--f-mono)"
             >
-              {RADAR_LABEL[id]} {valueOf(id)}
+              <tspan x={x} dy={0}>{RADAR_LABEL[id]}</tspan>
+              <tspan x={x} dy={12} fill={INK}>{valueOf(id)}</tspan>
             </text>
           );
         })}
       </svg>
       <figcaption className="viz-cap">
-        Dependency Risk is plotted as risk, so lower is healthier on that spoke. Every other
-        dimension is plotted so higher is healthier.
+        Every dimension is plotted the same way: further from the centre is healthier. The shape
+        across all ten is the finding, not any single point on it.
       </figcaption>
     </figure>
   );
