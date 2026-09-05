@@ -28,6 +28,7 @@
     "test:group": "tsx tests/compass/group.ts",
     "test:professional": "tsx tests/compass/professional.ts",
     "test:placement": "tsx tests/compass/placement.ts",
+    "test:audit": "tsx tests/compass/audit.ts",
     "seed:cohort": "node scripts/seed-cohort.mjs",
     "cards": "node scripts/share-cards.mjs"
   },

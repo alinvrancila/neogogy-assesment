@@ -16,6 +16,7 @@ import type { CompassResult, ConstructId } from "./types";
 import { CONSTRUCTS, STAGES } from "./config";
 import {
   constructName, reportedConstructName, constructContent, constructPrinciple, stageDetail as stageDetailFor,
+  riskLean,
   compositeName, indexName, disclaimerExtra,
 } from "./display";
 import { CONSTRUCT_CONTENT, STAGE_DETAIL, EVIDENCE_BASE, FRAMEWORK_SOURCES } from "./content";
@@ -243,10 +244,21 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     L.push(``);
     L.push(stageDef.short);
     L.push(``);
-    const det = stageDetailFor(r.persona, r.stage.stage);
+    // Which way this reading is off the path decides which description of the
+    // camp is true for the person standing in it. A low index reached through
+    // dependence and a low index reached through disconnection are opposite
+    // lives, and the generic text only ever described the second.
+    const lean = riskLean(r.composites.dependencyIndex, r.composites.underexposure);
+    const det = stageDetailFor(r.persona, r.stage.stage, lean);
     if (det) {
       L.push(`*What this stage usually looks like.* ${det.looksLike}`);
       L.push(`*The trap at this stage.* ${det.trap}`);
+    }
+    if (lean !== "balanced") {
+      L.push(``);
+      L.push(lean === "dependence"
+        ? `*Which way you are off the path.* Towards dependence. Your reliance reading is ${Math.round(r.composites.dependencyIndex)} against an underexposure reading of ${Math.round(r.composites.underexposure)}, so the work here is protection rather than more practice.`
+        : `*Which way you are off the path.* Towards disconnection. Your underexposure reading is ${Math.round(r.composites.underexposure)} against a reliance reading of ${Math.round(r.composites.dependencyIndex)}, so the work here is deliberate practice rather than more restraint.`);
     }
     L.push(``);
     L.push(`The full continuum runs: ${STAGES.map(x => `${x.stage}. ${x.name}`).join(", ")}.`);
@@ -412,7 +424,8 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     const L: string[] = [];
     const atTop = r.nextTarget.stage === r.stage.stage;
     L.push(`**Target: Stage ${r.nextTarget.stage}, ${r.nextTarget.stageName}.**`);
-    const nd = stageDetailFor(r.persona, r.nextTarget.stage);
+    const nd = stageDetailFor(r.persona, r.nextTarget.stage,
+      riskLean(r.composites.dependencyIndex, r.composites.underexposure));
     if (nd) {
       L.push(``);
       L.push(atTop

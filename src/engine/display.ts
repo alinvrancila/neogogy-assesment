@@ -12,7 +12,10 @@
 
 import type { ConstructId, Persona, CompassResult } from "./types";
 import { CONSTRUCTS, STAGES } from "./config";
-import { CONSTRUCT_CONTENT, STAGE_DETAIL, type ConstructContent } from "./content";
+import {
+  CONSTRUCT_CONTENT, STAGE_DETAIL, STAGE_DETAIL_DEPENDENCE, STAGE_DETAIL_DISCONNECTION,
+  type ConstructContent,
+} from "./content";
 
 export interface PersonaDisplay {
   /** What the whole thing is called on screen and in the file. */
@@ -714,8 +717,35 @@ export function stageName(persona: Persona | undefined, stage: number): string {
   return of(persona)?.stageNames?.[stage] ?? STAGES.find((s) => s.stage === stage)?.name ?? "";
 }
 
-export function stageDetail(persona: Persona | undefined, stage: number) {
-  return of(persona)?.stageDetail?.[stage] ?? STAGE_DETAIL[stage];
+/** Which way a reading is off the path, when it is off it in a nameable way. */
+export type RiskLean = "dependence" | "disconnection" | "balanced";
+
+/**
+ * A stage description that matches the person standing in it.
+ *
+ * A persona with its own ladder keeps its own text in both directions, because
+ * rewriting the ministry stages for dependence and then falling back to generic
+ * technology prose would be worse than either. Everyone else gets the
+ * dependence variant at the low camps when that is the direction they are off.
+ */
+export function stageDetail(persona: Persona | undefined, stage: number, lean: RiskLean = "balanced") {
+  const own = of(persona)?.stageDetail?.[stage];
+  if (own) return own;
+  if (lean === "dependence" && STAGE_DETAIL_DEPENDENCE[stage]) return STAGE_DETAIL_DEPENDENCE[stage];
+  if (lean === "disconnection" && STAGE_DETAIL_DISCONNECTION[stage]) return STAGE_DETAIL_DISCONNECTION[stage];
+  return STAGE_DETAIL[stage];
+}
+
+/**
+ * Which way this reading leans, from the two composites the report already
+ * prints. Neither is a failure on its own: the lean is only named when one is
+ * clearly ahead of the other, so a balanced profile is never given a direction
+ * it did not earn.
+ */
+export function riskLean(dependencyIndex: number, underexposure: number): RiskLean {
+  if (dependencyIndex >= 55 && dependencyIndex - underexposure >= 15) return "dependence";
+  if (underexposure >= 55 && underexposure - dependencyIndex >= 15) return "disconnection";
+  return "balanced";
 }
 
 export function compositeName(

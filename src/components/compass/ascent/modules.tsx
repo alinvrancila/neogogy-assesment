@@ -14,6 +14,8 @@ import { CONSTRUCTS, STAGES } from '@/engine/config';
 import { constructName, constructContent, reportedConstructName, stageName, indexName } from '@/engine/display';
 import { CONSTRUCT_CONTENT } from '@/engine/content';
 import type { ConstructId } from '@/engine/types';
+import { riskLean } from '@/engine/display';
+import { firstStepFor } from '@/engine/firstStep';
 import { GATE_DEFS } from './AscentMapHero';
 import type { AttemptComparison } from '@/lib/history';
 
@@ -306,19 +308,19 @@ export function RouteLogCard({ result }: { result: CompassResult }) {
 
 /* ------------------------------------------------------------- next climb */
 
-const SUPPORTING = [
-  {
-    title: 'Make verification observable.',
-    body: 'Keep a small note of what you checked beside the final output.',
-  },
-  {
-    title: 'Protect one unassisted capability.',
-    body: 'Repeat one task without AI and compare what remains yours.',
-  },
-];
-
 export function NextClimbCard({ result }: { result: CompassResult }) {
+  // The first step comes from the constraint and the direction of risk, the
+  // same two things the plan further down the page is built on. It used to be
+  // one fixed sentence handed to everybody, including to readers whose problem
+  // was that they already did it.
+  const lean = riskLean(result.composites.dependencyIndex, result.composites.underexposure);
+  const step = firstStepFor(result.bottleneck.construct, lean);
   const primary = result.recommendations[0];
+  // Two habits from the respondent's own plan, not a fixed pair.
+  const supporting = result.recommendations.slice(1, 3).map((rec) => ({
+    title: rec.capability,
+    body: rec.practice,
+  }));
   return (
     <section className="asc-card" aria-labelledby="asc-next-h">
       <p className="asc-kicker">Your next climb</p>
@@ -330,19 +332,20 @@ export function NextClimbCard({ result }: { result: CompassResult }) {
 
       <div className="asc-experiment">
         <p className="asc-kicker asc-kicker-gold">First step · start small, make it real</p>
-        <h3 className="asc-exp-h">Draft without assistance first.</h3>
-        <p className="asc-exp-b">
-          Create a short human outline before inviting AI into one meaningful task.
+        <h3 className="asc-exp-h">{step.title}</h3>
+        <p className="asc-exp-b">{step.body}</p>
+        {/* The reason, not another action. The bottleneck carries why this
+            dimension is the one holding the person, which is the question the
+            label actually asks. */}
+        <p className="asc-exp-why">
+          <strong>Why this one:</strong> {result.bottleneck.reason
+            || primary?.riskToMonitor
+            || `${constructName(result.persona, result.bottleneck.construct)} is the reading doing most to hold your position.`}
         </p>
-        {primary ? (
-          <p className="asc-exp-why">
-            <strong>Why this one:</strong> {primary.behaviorChange}
-          </p>
-        ) : null}
       </div>
 
       <ul className="asc-support">
-        {SUPPORTING.map((s) => (
+        {supporting.map((s) => (
           <li key={s.title}>
             <strong>{s.title}</strong> {s.body}
           </li>

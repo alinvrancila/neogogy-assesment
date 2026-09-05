@@ -281,6 +281,54 @@ export const CONSTRUCT_CONTENT: Record<ConstructId, ConstructContent> = {
 };
 
 /** Extra colour on each stage, beyond the one line the config carries. */
+/**
+ * The same camps, read from the other direction.
+ *
+ * A single index has one low end and the instrument has two failure modes, so
+ * the generic text at the bottom of the route describes somebody who has barely
+ * touched AI. Read by a daily heavy user who scored low because nothing is
+ * checked and nothing survives without the tool, it says the opposite of their
+ * life: "little or no hands-on practice" printed a few inches from "reported AI
+ * use: heavy".
+ *
+ * These are the dependence-direction variants, selected by the two composites
+ * the report already computes. Above stage 6 the generic text holds for both
+ * directions, because by then the two paths have converged on the same work.
+ */
+export const STAGE_DETAIL_DEPENDENCE: Record<number, { looksLike: string; trap: string }> = {
+  1: { looksLike: "AI is doing a great deal of the work and very little of it is being checked, kept or reproduced. The output exists; almost nothing of it has stayed with you.",
+       trap: "Reading the volume of finished work as evidence of capability. On this reading it is evidence of the tool's capability, not yet of yours." },
+  2: { looksLike: "The tools are in daily use and the habits around them have not formed. Work goes out unverified, and starting anything without assistance has become genuinely hard.",
+       trap: "Believing the fluency is yours because the speed is. Speed here belongs to the tool, and it leaves when the tool does." },
+  3: { looksLike: "Frequent use with unstable practice. Some work is checked and some is not, and which is which depends on how much time there was rather than on what was at stake.",
+       trap: "Letting the deadline decide what gets verified. That is a rule, it is just not one you chose." },
+  4: { looksLike: "Broad, confident use across many tasks, with verification and independent capability thin underneath it. Breadth is well ahead of protection.",
+       trap: "Volume growing faster than judgment. This is the stage where dependence usually forms, and it does not feel like a problem while it is forming." },
+  5: { looksLike: "The tools are properly integrated and the checking has not kept pace. What you produce is good; what you could produce without help has narrowed.",
+       trap: "Mistaking a working system for a resilient one. The system works until the tool changes underneath it." },
+  6: { looksLike: "Real capability with real exposure. Judgment is present in most places and absent in a few, and the few are usually the ones under time pressure.",
+       trap: "Protecting the practices you enjoy and skipping the ones you do not. Verification is rarely the enjoyable half." },
+};
+
+/**
+ * The disconnection-direction variants.
+ *
+ * The generic text from stage 3 upward assumes regular use, so it told a person
+ * who barely opens a tool that their "use is broad" and their "breadth is ahead
+ * of discipline". Stages 1 and 2 already describe low use correctly and are not
+ * overridden here.
+ */
+export const STAGE_DETAIL_DISCONNECTION: Record<number, { looksLike: string; trap: string }> = {
+  3: { looksLike: "Capability that stands on its own, and very little practice with the tools. What you can do, you can do unaided; what the tools can do, you are largely guessing at.",
+       trap: "Judging the tools from a small number of early attempts and treating that as a settled view." },
+  4: { looksLike: "A strong independent foundation with thin practical fluency on top of it. You could do the work without help, and you would struggle to work well with help.",
+       trap: "Calling a gap a principle. Some of this restraint is chosen and some of it is simply unpractised, and from inside they feel identical." },
+  5: { looksLike: "Real judgment, real independence, and not much recent experience of what these tools now do. Your view of them is a year or two behind what they are.",
+       trap: "Deciding about AI from a distance. The judgment may well be right, and it is not yet informed by practice." },
+  6: { looksLike: "Well protected and lightly exposed. Verification, authorship and independent capability are in good order, and the fluency to use these tools well is undeveloped.",
+       trap: "Assuming that because dependence is not your risk, nothing is. Underexposure is the other way to be left behind, and it arrives more slowly." },
+};
+
 export const STAGE_DETAIL: Record<number, { looksLike: string; trap: string }> = {
   1: { looksLike: "AI is essentially absent from how you work or learn. Whatever opinions you hold about it are not yet grounded in your own experience.",
        trap: "Deciding about AI from a distance. The judgment may be right, but it is not yet informed by practice." },
