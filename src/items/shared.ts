@@ -114,9 +114,12 @@ export const OUTCOME_ITEMS: Item[] = [
     scale: "outcome", riskSignal: "transfer_low", version: 2 },
   { id: "out_persist", persona: "shared", type: "outcome", construct: "skillGrowth",
     secondary: [{ construct: "dependencySafety", weight: 0.5 }],
-    prompt: "Compared with before I used AI regularly, the time I spend working on a hard problem before I ask for help has...",
-    context: "Asking for help includes opening an AI tool. If you cannot tell yet, choose the last option.",
-    scale: "outcome", riskSignal: "skill_erosion", version: 2 },
+    // A quantity of time cannot be "worse" or "better", and the two readings a
+    // respondent might take of that word score in opposite directions on a
+    // dependency measure. This item asks for the quantity and labels it as one.
+    prompt: "Compared with before you used AI regularly, how long do you work on a hard problem before you open an AI tool?",
+    context: "Opening a tool counts as asking for help. If you cannot tell yet, choose the last option.",
+    scale: "duration", riskSignal: "skill_erosion", version: 2 },
 ];
 
 /** Adaptive branch: only shown when usage <= 2. Determines WHY use is low (§13, §4). */
@@ -160,6 +163,9 @@ export const SCALE_LABELS: Record<string, string[]> = {
   frequency: ["Never", "Rarely", "Sometimes", "Often", "Almost always"],
   confidence: ["Not confident", "Slightly confident", "Moderately confident", "Very confident", "Completely confident"],
   outcome: ["Significantly worse", "Somewhat worse", "Unchanged", "Somewhat better", "Significantly better"],
+  // Longer before reaching for the tool is the healthy direction, so the order
+  // matches every other scale: 1 is the concerning end, 5 is the healthy one.
+  duration: ["Much less time than before", "Somewhat less", "About the same", "Somewhat more", "Much more time than before"],
 };
 
 

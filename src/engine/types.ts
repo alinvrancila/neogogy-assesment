@@ -56,7 +56,7 @@ export type ItemType =
   | "branch"     // adaptive follow-up (low-use reasons, high-use probes)
   | "baseline";  // B1 desirability, B2 prediction (unscored, gap layer only)
 
-export type ScaleKey = "agreement" | "frequency" | "confidence" | "outcome";
+export type ScaleKey = "agreement" | "frequency" | "confidence" | "outcome" | "duration";
 
 export interface ItemOption {
   value: number;          // 1..5 (or 0 = "not enough experience" on outcome items)
