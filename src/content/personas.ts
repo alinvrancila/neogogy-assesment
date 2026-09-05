@@ -10,6 +10,7 @@
  * base personas run 34 to 35 scored items, minister and business run 41 to 42.
  */
 
+import { applicableItems } from '@/engine';
 import type { Persona } from '@/engine/types';
 
 /** The visual motif each persona is built on. Never an emoji, never an icon of a job. */
@@ -366,3 +367,36 @@ export const personaById = (id: Persona) => {
   if (!found) throw new Error(`No persona content for: ${String(id)}`);
   return found;
 };
+
+/**
+ * What each set actually asks, counted from the bank rather than typed.
+ *
+ * Every stated length used to be a hand-written number, and they drifted: the
+ * homepage said six perspectives when there were seven, one intro promised
+ * "40 to 42 questions" two lines above "about ten minutes" and then delivered
+ * forty three. These are derived, so a set cannot describe itself wrongly.
+ *
+ * The screen count is one more than the scored bank: the usage question is
+ * asked first and routes the rest.
+ */
+export function questionRange(id: Persona): { low: number; high: number } {
+  const counts = [1, 2, 3, 4, 5].map((u) => applicableItems(id, u).length + 1);
+  return { low: Math.min(...counts), high: Math.max(...counts) };
+}
+
+/** "33 to 36 questions", or "36 questions" when a set does not branch. */
+export function questionCountLabel(id: Persona): string {
+  const { low, high } = questionRange(id);
+  return low === high ? `${low} questions` : `${low} to ${high} questions`;
+}
+
+/** One duration for one set, derived from its own length. */
+export function minutesLabel(id: Persona): string {
+  return questionRange(id).high > 38 ? 'about 12 minutes' : 'about 10 minutes';
+}
+
+/** The range across every set, for the homepage. */
+export function overallMinutes(): string {
+  const highs = PERSONA_CONTENT.map((p) => questionRange(p.id).high);
+  return Math.max(...highs) > 38 ? 'About 10 to 12 minutes' : 'About 10 minutes';
+}

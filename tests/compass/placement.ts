@@ -165,5 +165,16 @@ head('The boundary refuses to place a respondent on too little evidence');
   }
 }
 
+head('A journey is only a journey within one assessment');
+{
+  const src = fs.readFileSync(path.join(process.cwd(), 'src', 'lib', 'history.ts'), 'utf-8');
+  ok('prior attempts are matched on the assessment as well as the person',
+    /persona\?: string/.test(src) && /l\.persona === persona/.test(src));
+  ok('the comparison passes the current assessment through',
+    /priorAttempts\(email, excludeId, current\.persona\)/.test(src));
+  ok('the reason is recorded where the next person will read it',
+    /not comparable with an index from another/.test(src));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

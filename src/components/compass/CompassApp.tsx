@@ -31,7 +31,7 @@ import { STAGES } from '@/engine/config';
 import Results, { GateForm, type GateData, type GateState } from './Results';
 import Home from '@/components/site/Home';
 import { BRAND } from '@/brand';
-import { personaById } from '@/content/personas';
+import { personaById, questionCountLabel, minutesLabel } from '@/content/personas';
 
 type Screen = 'hero' | 'setup' | 'context' | 'opening' | 'quiz' | 'reflect' | 'gate' | 'results';
 
@@ -639,7 +639,7 @@ function PastorOpening({ onBack, onNext }: { onBack: () => void; onNext: () => v
             </li>
           </ul>
           <p className="lp-howto-time">
-            Around twelve minutes, 40 to 42 questions depending on your answers.
+            {`Around ${minutesLabel('pastor').replace('about ', '')}, ${questionCountLabel('pastor')} depending on your answers.`}
           </p>
         </div>
 
@@ -923,8 +923,8 @@ function Setup({
           </ul>
           <p className="lp-howto-time">
             {isBusiness
-              ? 'About ten minutes, 40 to 42 questions depending on your answers. You can go back and change any answer before the end.'
-              : 'About twelve minutes, 33 to 36 questions depending on your answers. You can go back and change any answer before the end.'}
+              ? `About ${minutesLabel('business').replace('about ', '')}, ${questionCountLabel('business')} depending on your answers. You can go back and change any answer before the end.`
+              : `About ${minutesLabel(persona ?? 'student').replace('about ', '')}, ${questionCountLabel(persona ?? 'student')} depending on your answers. You can go back and change any answer before the end.`}
           </p>
         </div>
 

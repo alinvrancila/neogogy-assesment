@@ -20,7 +20,7 @@
 import '@/app/home.css';
 import { useEffect, useRef, useState } from 'react';
 import type { Persona } from '@/engine/types';
-import { PERSONA_CONTENT, type PersonaContent } from '@/content/personas';
+import { PERSONA_CONTENT, overallMinutes, type PersonaContent } from '@/content/personas';
 import { COVER_PERSONA } from '@/lib/covers/data';
 import { BRAND, CORE_QUESTION, ECOSYSTEM } from '@/brand';
 import MotifMark from './Motifs';
@@ -151,8 +151,8 @@ function Hero({ variant, onStart }: { variant: 'a' | 'b'; onStart: () => void })
         </div>
 
         <ul className="ha-proof">
-          <li>About 10 to 12 minutes</li>
-          <li>Six perspectives</li>
+          <li>{overallMinutes()}</li>
+          <li>{PERSONA_CONTENT.length} perspectives</li>
           <li>Research informed</li>
           <li>A personal {BRAND.report} to keep</li>
         </ul>
@@ -703,6 +703,10 @@ function Closing({ onStart }: { onStart: () => void }) {
           validated psychometric measurement.
         </p>
         <p className="ha-by ha-by-light">{BRAND.product}. {BRAND.poweredBy}</p>
+        <p className="ha-legal-links">
+          <a href="/privacy">Privacy notice</a>
+          <a href="/terms">Terms of use</a>
+        </p>
       </div>
     </section>
   );

@@ -133,8 +133,11 @@ export function GateForm({
             Along with what you typed, we record the technical details every website receives: your
             internet address and the city it maps to, your device, browser and language, and how
             long the assessment took. We use it to understand who this reaches and to spot answers
-            that were not seriously given. We honor the Philippines Data Privacy Act and GDPR
-            basics: tell us and we delete your record, and we never sell your data.
+            that were not seriously given. We never sell your data, and one message to us deletes
+            your record. What is held, why, for how long and how to have it removed is set out in
+            full in the{' '}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer">privacy notice</a>, with the{' '}
+            <a href="/terms" target="_blank" rel="noopener noreferrer">terms of use</a> beside it.
           </p>
         </form>
         <div className="qnav" style={{ marginTop: 18 }}>
@@ -403,6 +406,8 @@ export default function Results({
         <div className="fl">
           Neogogy Human Advantage Assessment · Powered by ICAN.ph · created by Alin Vrancila, Ph.D. ·{' '}
           <a href="https://ican.ph" target="_blank" rel="noopener noreferrer">ican.ph</a>
+          {' · '}<a href="/privacy">Privacy</a>
+          {' · '}<a href="/terms">Terms</a>
         </div>
         <div className="fl" style={{ marginTop: 8, color: 'var(--ink-soft)' }}>{REPORT_DISCLAIMER}</div>
       </div>

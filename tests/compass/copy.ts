@@ -19,6 +19,7 @@ import { createHash } from 'crypto';
 import path from 'path';
 import { PERSONA_CONTENT } from '@/content/personas';
 import { BRAND, CORE_QUESTION, ECOSYSTEM, NEXT_STEP } from '@/brand';
+import { PRIVACY, TERMS } from '@/content/legal';
 import { applicableItems } from '@/engine';
 import { STAGES } from '@/engine/config';
 import { stageName } from '@/engine/display';
@@ -243,6 +244,50 @@ head('The persona banners are ready before they are needed');
   const home = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'site', 'Home.tsx'), 'utf-8');
   ok('the panel holds every banner rather than fetching one on demand',
     /PERSONA_CONTENT\.map\(\(q\) => \(/.test(home) && /covers\/band/.test(home));
+}
+
+head('The site says what it does with your data');
+{
+  ok('a privacy notice exists', fs.existsSync(path.join(process.cwd(), 'src', 'app', 'privacy', 'page.tsx')));
+  ok('terms exist', fs.existsSync(path.join(process.cwd(), 'src', 'app', 'terms', 'page.tsx')));
+
+  const prose = PRIVACY.sections.flatMap((x) => [x.heading, ...x.body, ...(x.list ?? []),
+    ...(x.rows?.body.flat() ?? [])]).join(' ');
+  for (const required of ['controller', 'lawful basis', 'National Privacy Commission',
+    'unsubscribe', 'delete']) {
+    ok(`the notice covers ${required}`, new RegExp(required, 'i').test(prose));
+  }
+  ok('it names a route to exercise rights', /privacy@ican\.ph/.test(prose));
+  ok('it states a retention period', /twenty four months/i.test(prose));
+  ok('consent is not required to receive the report', /whether or not you tick it/i.test(prose));
+  ok('the terms refuse appraisal use', /rank, appraise, select/i.test(
+    TERMS.sections.flatMap((x) => x.body).join(' ')));
+
+  // every category in the data inventory has to appear in the notice
+  const inventory = fs.readFileSync(path.join(process.cwd(), 'docs', 'DATA-COLLECTED.md'), 'utf-8');
+  for (const field of ['IP address', 'Mobile phone', 'Marketing consent', 'Email']) {
+    ok(`the inventory lists ${field}`, inventory.includes(field));
+    ok(`and the notice accounts for ${field}`,
+      new RegExp(field.split(' ')[0], 'i').test(prose));
+  }
+
+  const results = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'compass', 'Results.tsx'), 'utf-8');
+  ok('the lead form links the notice where the email is asked for', /href="\/privacy"/.test(results));
+  ok('the old claim of compliance without a notice is gone',
+    !/honor the Philippines Data Privacy Act/.test(results));
+  const home = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'site', 'Home.tsx'), 'utf-8');
+  ok('the homepage links both', /href="\/privacy"/.test(home) && /href="\/terms"/.test(home));
+}
+
+head('The page counts what the assessment actually asks');
+{
+  const home = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'site', 'Home.tsx'), 'utf-8');
+  ok('the perspective count is derived, not typed',
+    /PERSONA_CONTENT\.length\} perspectives/.test(home) && !/Six perspectives/.test(home));
+  ok('the duration is derived', /overallMinutes\(\)/.test(home));
+  const app = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'compass', 'CompassApp.tsx'), 'utf-8');
+  ok('the intro counts come from the bank',
+    /questionCountLabel\(/.test(app) && !/40 to 42 questions/.test(app));
 }
 
 head('Nothing overclaims');

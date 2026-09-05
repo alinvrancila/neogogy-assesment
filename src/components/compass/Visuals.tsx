@@ -7,7 +7,7 @@
  * computing anything the engine has not already decided:
  *   ContinuumStrip  the ten stage ramp with the continuous index marker,
  *                   the borderline zone, and the gate marker
- *   DimensionRadar  ten dimensions, dependencySafety shown as Dependency Risk
+ *   DimensionRadar  ten dimensions, every spoke healthy-outward
  *   NextStagePanel  current position to next target, or the maintenance loop
  *
  * Brand: Deep Navy ground, a single Electric Teal accent, hairline rules,
@@ -135,7 +135,7 @@ const RADAR_LABEL: Record<string, string> = {
   fluency: 'Fluency',
   agency: 'Agency',
   amplification: 'Amplification',
-  dependencySafety: 'Dependency Risk',
+  dependencySafety: 'Independent Capability',
   verification: 'Verification',
   skillGrowth: 'Skill Growth',
   creativity: 'Creativity',
@@ -156,11 +156,18 @@ export function DimensionRadar({ result }: { result: CompassResult }) {
     return [c + Math.cos(a) * radius, c + Math.sin(a) * radius] as const;
   };
 
-  // Plotted on the reported scale, so Dependency Risk is drawn as the risk value.
-  const valueOf = (id: ConstructId) => {
-    const d = result.dimensions[id];
-    return CONSTRUCTS[id].reportedAsRisk ? d.reportedScore : d.score;
-  };
+  /**
+   * Every spoke reads the same direction: further out is healthier.
+   *
+   * Dependency Risk used to be plotted at its risk value, so a healthy reading
+   * of 19 cut a deep notch into the shape at exactly the point where the person
+   * was doing best, and an unhealthy 86 pushed a bulge outward. Nine spokes
+   * said one thing and the tenth said the opposite, inside one polygon, with
+   * the explanation in small type underneath. It is drawn on its healthy
+   * reading now, which is Independent Capability, and the print report has
+   * always done the same.
+   */
+  const valueOf = (id: ConstructId) => result.dimensions[id].score;
 
   const poly = ids.map((id, i) => pt(i, (valueOf(id) / 100) * R).join(',')).join(' ');
 
@@ -371,12 +378,16 @@ export function DimensionBars({ result }: { result: CompassResult }) {
   return (
     <div className="bars">
       {rows.map(({ id, d, def }) => {
-        const shownValue = def.reportedAsRisk ? d.reportedScore : d.score;
-        const color = bandColor(d.score); // colour always follows the healthy reading
+        // Bar length reads the same direction as every other bar: longer is
+        // healthier. Drawing the risk value here put a short bar on a person's
+        // best dimension, in the same green as the long bars that mean the
+        // opposite, so scanning the lengths gave the reader the wrong answer.
+        const shownValue = d.score;
+        const color = bandColor(d.score);
         return (
           <div className="bar-row" key={id}>
             <div className="bar-label">
-              {def.reportedAsRisk ? 'Dependency Risk' : def.name}
+              {def.reportedAsRisk ? 'Independent Capability' : def.name}
               {d.confidence !== 'high' ? <span className="bar-conf">{d.confidence}</span> : null}
             </div>
             <div className="bar-track">

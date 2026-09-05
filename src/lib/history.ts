@@ -42,12 +42,26 @@ const norm = (email: string) => email.trim().toLowerCase();
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
 /** Every prior v2 attempt for an email, oldest first. */
-export async function priorAttempts(email: string, excludeId?: string): Promise<LeadRecord[]> {
+/**
+ * A person's earlier sittings of the same assessment.
+ *
+ * Persona is part of the match, not only the email. The seven sets ask
+ * different questions, place on differently named stages and, for Business and
+ * Minister, score against a different route entirely, so an index from one is
+ * not comparable with an index from another. Matching on email alone produced
+ * exactly the failure it sounds like: a teacher who also took the parent set
+ * was shown a climb of sixty seven points that never happened, in the largest
+ * type on the report.
+ */
+export async function priorAttempts(
+  email: string, excludeId?: string, persona?: string
+): Promise<LeadRecord[]> {
   if (!email.trim()) return [];
   const target = norm(email);
   const all = await listLeads();
   return all
     .filter((l) => l.engineVersion === 2 && !!l.result && norm(l.email || '') === target)
+    .filter((l) => (persona ? l.persona === persona : true))
     .filter((l) => l.id !== excludeId)
     .sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
 }
@@ -115,7 +129,8 @@ export async function buildComparison(
   now: Date,
   excludeId?: string
 ): Promise<AttemptComparison | null> {
-  const prior = await priorAttempts(email, excludeId);
+  // Same person, same assessment. A different set is a different instrument.
+  const prior = await priorAttempts(email, excludeId, current.persona);
   if (!prior.length) return null;
   const mostRecent = prior[prior.length - 1];
   return compareToPrevious(current, mostRecent, prior.length + 1, now);
