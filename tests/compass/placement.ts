@@ -16,6 +16,7 @@ import { assessmentOf } from '@/lib/history';
 import path from 'path';
 import { compute, applicableItems } from '@/engine';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
+import { constructName } from '@/engine/display';
 import type { ConstructId, Item, Persona, Submission } from '@/engine/types';
 
 let pass = 0, fail = 0;
@@ -218,6 +219,44 @@ head('A journey is only a journey within one assessment');
     /priorAttempts\(email, excludeId, current\.persona\)/.test(src));
   ok('the reason is recorded where the next person will read it',
     /not comparable with an index from another/.test(src));
+}
+
+head('A gated report names the dimension its own evidence cites');
+{
+  // The gate sentence is written in the persona's vocabulary, and the
+  // bottleneck used to be recovered by matching that sentence against the
+  // canonical dimension names. For every edition that renames its dimensions
+  // the match failed and the fallback blamed verification, so a gated Business
+  // Owner was told "verification before consequence is holding the
+  // classification down. Owner Decision Ownership is 0" in one sentence.
+  const low = (p: Persona, construct: string): Submission => {
+    const answers: Record<string, number> = {};
+    applicableItems(p, 4).forEach((it) => {
+      const t = it.options?.length ? Math.max(...it.options.map((o) => o.value)) : 5;
+      const lvl = it.construct === construct ? 1 : 5;
+      const h = Math.max(1, Math.min(t, Math.round(((lvl - 1) / 4) * (t - 1)) + 1));
+      answers[it.id] = it.type === 'reverse' ? t + 1 - h : h;
+    });
+    return { persona: p, usage: 4, b1: 4, b2: 3, answers };
+  };
+
+  const SETS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business', 'pastor', 'professional'];
+  let gatedSeen = 0;
+  for (const construct of ['agency', 'verification', 'responsibleUse', 'transfer', 'dependencySafety']) {
+    for (const p of SETS) {
+      const r = compute(low(p, construct));
+      if (!r.stage.gated) continue;
+      gatedSeen += 1;
+      const named = r.stage.gated.constructs[0];
+      ok(`${p}, ${construct}: the bottleneck is the gate that failed`,
+        r.bottleneck.construct === named, `${r.bottleneck.construct} vs ${named}`);
+      ok(`${p}, ${construct}: and the sentence does not contradict itself`,
+        r.bottleneck.reason.toLowerCase()
+          .includes(constructName(p, named).toLowerCase()),
+        r.bottleneck.reason.slice(0, 140));
+    }
+  }
+  ok('the check actually exercised gated placements', gatedSeen >= 20, String(gatedSeen));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

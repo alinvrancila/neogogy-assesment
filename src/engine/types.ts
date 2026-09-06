@@ -159,7 +159,10 @@ export interface StageResult {
   stageName: string;
   substage: "early" | "established" | "transitioning";
   borderline?: { adjacentStage: number; distance: number }; // §4.2 fix
-  gated?: { cappedFrom: number; reasons: string[] };        // §36 gating
+  /** §36 gating. `constructs` is parallel to `reasons`: the dimension each
+   *  sentence is about, carried rather than parsed back out of the prose,
+   *  because the prose is written in the persona's own vocabulary. */
+  gated?: { cappedFrom: number; reasons: string[]; constructs: ConstructId[] };
 }
 
 export interface Bottleneck {

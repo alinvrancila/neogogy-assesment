@@ -215,6 +215,19 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
   const resumedDraft = useRef(false);
   const restored = useRef(false);
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /**
+   * The answers as they stand right now.
+   *
+   * Choosing an option schedules the move to the next screen on a timer, and
+   * the function that timer holds was built during the render before the choice
+   * landed. For every question but the last that costs nothing, because the move
+   * is only a change of position. On the last question the same stale function
+   * assembles the submission, and it assembled it from the answers as they were
+   * one click earlier: every respondent was scored without their final answer,
+   * and it was the same question missing for everyone taking that edition. The
+   * submission is built from this ref, which is never a render behind.
+   */
+  const answersRef = useRef<Record<string, number>>({});
 
   /* ------------------------------------------------ applicable screen list */
   const items: Item[] = useMemo(
@@ -289,6 +302,7 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
     try { window.sessionStorage.removeItem(STORE_KEY); } catch { /* best effort */ }
   }, []);
 
+  useEffect(() => { answersRef.current = answers; }, [answers]);
   useEffect(() => { window.scrollTo(0, 0); }, [screen, pos]);
   useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); }, []);
 
@@ -297,11 +311,12 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
     if (!persona || usage == null) return;
     const applicable = itemsRef.current;
     const ids = new Set(applicable.map((i) => i.id));
+    const given = answersRef.current;
     const clean: Record<string, number> = {};
-    Object.entries(answers).forEach(([k, v]) => { if (ids.has(k)) clean[k] = v; });
+    Object.entries(given).forEach(([k, v]) => { if (ids.has(k)) clean[k] = v; });
 
     if (process.env.NODE_ENV !== 'production') {
-      const stray = Object.keys(answers).filter((k) => !ids.has(k));
+      const stray = Object.keys(given).filter((k) => !ids.has(k));
       if (stray.length) {
         // eslint-disable-next-line no-console
         console.error('[compass] answers contain non-applicable item ids:', stray);
@@ -323,7 +338,7 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
     // they shape the Dependence Check the reader is about to be shown.
     if (persona === 'pastor') { setScreen('reflect'); return; }
     setScreen('gate');
-  }, [persona, usage, b1, b2, answers]);
+  }, [persona, usage, b1, b2]);
 
   /** Carries the two unscored answers forward, then hands over to the gate. */
   const finishReflections = useCallback((reflections: Record<string, number>) => {
@@ -363,6 +378,7 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
     setAnswers((a) => {
       const next: Record<string, number> = {};
       Object.entries(a).forEach(([k, val]) => { if (ids.has(k)) next[k] = val; });
+      answersRef.current = next;
       return next;
     });
     advanceSoon();
@@ -374,7 +390,11 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
       // is a useful signal about how considered the responses are.
       if (a[id] !== undefined && a[id] !== v) revisions.current += 1;
       answerStamps.current.push(Date.now());
-      return { ...a, [id]: v };
+      const next = { ...a, [id]: v };
+      // Written here as well as in the effect, so the submission is correct even
+      // if the timer beats the effect.
+      answersRef.current = next;
+      return next;
     });
     advanceSoon();
   }, [advanceSoon]);

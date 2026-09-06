@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { compute, applicableItems } from '@/engine';
+import { PASTOR_REFLECTION_PROMPTS } from '@/items/shared';
 import type { Persona } from '@/engine/types';
 import { generateCompassPdf } from '@/lib/reportPdfV2';
 
@@ -31,6 +32,14 @@ export async function POST(request: NextRequest) {
   if (!body.answers || typeof body.answers !== 'object') return bad('Missing answers.');
 
   const ids = new Set(applicableItems(persona, usage).map((i) => i.id));
+  // The Minister check asks two questions that are not in the item bank: they
+  // are never scored and never stored, but they do travel with the submission
+  // because the Dependence Check is read from them. Refusing them here rejected
+  // the exact request the "Save as PDF" button makes, so the button answered
+  // "The file could not be built" every time it was pressed. They are accepted
+  // and passed to compute, which is also what makes the file agree with the
+  // reading already on the screen.
+  if (persona === 'pastor') for (const q of PASTOR_REFLECTION_PROMPTS) ids.add(q.id);
   for (const id of Object.keys(body.answers)) {
     if (!ids.has(id)) return bad(`Unknown item for this assessment: ${id}`);
   }

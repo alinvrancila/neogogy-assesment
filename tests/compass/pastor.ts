@@ -362,5 +362,59 @@ head('C4: the ministry ladder reads in both directions');
     /stageNameFor\(r\.persona, x\.stage\)/.test(nar));
 }
 
-console.log(`\n${pass} passed, ${fail} failed`);
-process.exit(fail ? 1 : 0);
+/**
+ * The file the Minister is offered, built the way the button builds it.
+ *
+ * The two reflection prompts are not in the item bank, on purpose, but they do
+ * travel with the submission because the Dependence Check is read from them.
+ * The report route used to refuse them, so "Save as PDF" answered "The file
+ * could not be built" every single time it was pressed, for every Minister.
+ * Nothing caught it, because nothing had ever called the route the way the
+ * button calls it.
+ */
+async function theSaveButton() {
+  head("The file the Minister can save is the one the button asks for");
+  const { POST } = await import("../../src/app/api/report/route");
+  const { PASTOR_REFLECTION_PROMPTS } = await import("../../src/items/shared");
+
+  const build = (withReflections: boolean) => {
+    const answers: Record<string, number> = {};
+    applicableItems("pastor", 4).forEach((it) => {
+      const t = it.options?.length ? Math.max(...it.options.map((o) => o.value)) : 5;
+      answers[it.id] = it.type === "reverse" ? t - 1 : 4;
+    });
+    if (withReflections) PASTOR_REFLECTION_PROMPTS.forEach((q) => { answers[q.id] = 3; });
+    return answers;
+  };
+
+  const call = async (answers: Record<string, number>) => {
+    const res = await POST(new Request("http://localhost/api/report", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ persona: "pastor", usage: 4, b1: 4, b2: 3, answers, name: "Minister" }),
+    }) as never);
+    const bytes = Buffer.from(await res.arrayBuffer());
+    return { status: res.status, isPdf: bytes.slice(0, 5).toString() === "%PDF-", size: bytes.length,
+      error: bytes.slice(0, 5).toString() === "%PDF-" ? "" : bytes.toString().slice(0, 160) };
+  };
+
+  ok("the reflection prompts are not in the item bank",
+    PASTOR_REFLECTION_PROMPTS.every((q) => !applicableItems("pastor", 4).some((i) => i.id === q.id)));
+
+  const asPressed = await call(build(true));
+  ok("the route accepts the submission the button actually sends",
+    asPressed.status === 200, `${asPressed.status} ${asPressed.error}`);
+  ok("and returns a real document", asPressed.isPdf && asPressed.size > 50_000,
+    `${(asPressed.size / 1024).toFixed(0)}kb`);
+
+  const withoutThem = await call(build(false));
+  ok("a submission without them still builds, for every other path",
+    withoutThem.status === 200 && withoutThem.isPdf, withoutThem.status);
+
+  const alien = await call({ ...build(true), not_a_real_item: 3 });
+  ok("and an item from nowhere is still refused", alien.status === 400, alien.status);
+}
+
+theSaveButton().then(() => {
+  console.log(`\n${pass} passed, ${fail} failed`);
+  process.exit(fail ? 1 : 0);
+});

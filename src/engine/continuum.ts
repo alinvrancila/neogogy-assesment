@@ -46,9 +46,12 @@ function stageForIndex(index: number): StageDef {
 }
 
 /** The highest stage a profile's gates allow, regardless of index (§36). */
-function gateCap(dims: Dims, persona?: Persona): { cap: number; reasons: string[] } {
+function gateCap(
+  dims: Dims, persona?: Persona
+): { cap: number; reasons: string[]; constructs: ConstructId[] } {
   let cap = STAGES.length;
   let reasons: string[] = [];
+  let constructs: ConstructId[] = [];
   for (const s of STAGES) {
     if (!s.gates) continue;
     // A dimension nobody answered holds a prior, not a reading, and a prior
@@ -60,22 +63,31 @@ function gateCap(dims: Dims, persona?: Persona): { cap: number; reasons: string[
         const dim = dims[c as ConstructId];
         return !dim || dim.evidenceCount <= 0 || dim.score < (min as number);
       })
-      .map(([c, min]) => `${constructName(persona, c as ConstructId)} is ${dims[c as ConstructId].score}, and stage ${s.stage} (${stageName(persona, s.stage)}) requires at least ${min}`);
-    if (failed.length > 0) { cap = Math.min(cap, s.stage - 1); if (reasons.length === 0) reasons = failed; }
+      .map(([c, min]) => ({
+        construct: c as ConstructId,
+        reason: `${constructName(persona, c as ConstructId)} is ${dims[c as ConstructId].score}, and stage ${s.stage} (${stageName(persona, s.stage)}) requires at least ${min}`,
+      }));
+    if (failed.length > 0) {
+      cap = Math.min(cap, s.stage - 1);
+      if (reasons.length === 0) {
+        reasons = failed.map((f) => f.reason);
+        constructs = failed.map((f) => f.construct);
+      }
+    }
   }
-  return { cap, reasons };
+  return { cap, reasons, constructs };
 }
 
 export function placeOnContinuum(dims: Dims, persona?: Persona): StageResult {
   const rawIndex = developmentalIndex(dims);
   const byIndex = stageForIndex(rawIndex);
-  const { cap, reasons } = gateCap(dims, persona);
+  const { cap, reasons, constructs } = gateCap(dims, persona);
 
   let stageDef = byIndex;
   let gated: StageResult["gated"];
   if (byIndex.stage > cap) {
     stageDef = STAGES[Math.max(0, cap - 1)];
-    gated = { cappedFrom: byIndex.stage, reasons };
+    gated = { cappedFrom: byIndex.stage, reasons, constructs };
   }
 
   // substage within the stage's index band
@@ -123,9 +135,19 @@ export function nextTarget(stage: StageResult): { stage: number; stageName: stri
  */
 export function findBottleneck(dims: Dims, stage: StageResult, persona?: Persona): Bottleneck {
   if (stage.gated) {
-    // first failed gate names the construct
+    // The first failed gate names the construct, and it says so directly.
+    //
+    // This used to recover the construct by matching the reason sentence against
+    // the canonical dimension names. The sentence is written with
+    // constructName(persona, ...), so for any edition that renames its
+    // dimensions the match failed and the fallback blamed verification instead.
+    // A gated Business Owner whose real constraint was decision ownership was
+    // told, in one sentence, that "verification before consequence is holding
+    // the classification down. Owner Decision Ownership is 0."
     const firstReason = stage.gated.reasons[0];
-    const construct = (Object.values(CONSTRUCTS).find(c => firstReason.startsWith(c.name))?.id ?? "verification") as ConstructId;
+    const construct = (stage.gated.constructs?.[0]
+      ?? Object.values(CONSTRUCTS).find(c => firstReason.startsWith(c.name))?.id
+      ?? "verification") as ConstructId;
     return { construct, viaGate: true,
       reason: `Your ${indexName(persona)} (${stage.rawIndex}) already supports a higher stage, but ${constructName(persona, construct).toLowerCase()} is holding the classification down. ${firstReason}. Raising it unlocks the stage your other capabilities have earned.` };
   }
