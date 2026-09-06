@@ -11,6 +11,7 @@ import { buildComparison } from '@/lib/history';
 import { sharePosts, SHARE_URL } from '@/lib/share';
 import { requestContext } from '@/lib/requestContext';
 import { lookupIp } from '@/lib/geoip';
+import { sendLifePortalContactLead } from '@/lib/lifePortalWebhook';
 
 export const runtime = 'nodejs';
 
@@ -160,6 +161,14 @@ async function serverMeta(request: NextRequest): Promise<SubmissionMeta> {
     acceptLanguages: ctx.languages,
     ...(geo || {}),
   };
+}
+
+function assessmentPageUrl(request: NextRequest, landingPath?: string): string | undefined {
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  if (!host) return undefined;
+  const proto = request.headers.get('x-forwarded-proto') || 'https';
+  const path = landingPath && landingPath.startsWith('/') ? landingPath : '/';
+  return `${proto}://${host}${path}`;
 }
 
 /**
@@ -329,6 +338,46 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('saveLead failed', error);
     // A storage failure must never cost the respondent their result.
+  }
+
+  try {
+    const webhook = await sendLifePortalContactLead(lead, {
+      pageUrl: assessmentPageUrl(request, lead.meta?.landingPath),
+      referrer: request.headers.get('referer') || undefined,
+    });
+    if (webhook.sent) {
+      await logEvent({
+        event: 'lifeportal_webhook_sent',
+        sessionId: body.sessionId,
+        role: lead.role,
+        zone: result.archetype.id,
+        device: lead.meta?.device,
+        country: lead.meta?.country,
+        countryCode: lead.meta?.countryCode,
+        browser: lead.meta?.browser,
+        os: lead.meta?.os,
+        bot: lead.meta?.bot,
+        referrerHost: lead.meta?.referrerHost,
+        utmSource: lead.meta?.utmSource,
+      });
+    }
+  } catch (error) {
+    console.error('lifePortal webhook failed', error);
+    // The CRM handoff is operationally important, but it must not block a result.
+    await logEvent({
+      event: 'lifeportal_webhook_failed',
+      sessionId: body.sessionId,
+      role: lead.role,
+      zone: result.archetype.id,
+      device: lead.meta?.device,
+      country: lead.meta?.country,
+      countryCode: lead.meta?.countryCode,
+      browser: lead.meta?.browser,
+      os: lead.meta?.os,
+      bot: lead.meta?.bot,
+      referrerHost: lead.meta?.referrerHost,
+      utmSource: lead.meta?.utmSource,
+    });
   }
 
   await logEvent({

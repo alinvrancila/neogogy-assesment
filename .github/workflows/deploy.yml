@@ -35,6 +35,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Test Life Portal webhook mapping
+        run: npm run test:lifeportal-webhook
+
       - name: Build
         run: npm run build
 
@@ -114,16 +117,47 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION || 'ap-southeast-1' }}
+          LIFE_PORTAL_WEBHOOK_ENABLED: ${{ secrets.LIFE_PORTAL_WEBHOOK_ENABLED }}
+          LIFE_PORTAL_WEBHOOK_URL: ${{ secrets.LIFE_PORTAL_WEBHOOK_URL }}
+          LIFE_PORTAL_WEBHOOK_SECRET: ${{ secrets.LIFE_PORTAL_WEBHOOK_SECRET }}
+          LIFE_PORTAL_STAGE_CODE: ${{ secrets.LIFE_PORTAL_STAGE_CODE }}
+          LIFE_PORTAL_FIRST_INQUIRY_SOURCE_CODE: ${{ secrets.LIFE_PORTAL_FIRST_INQUIRY_SOURCE_CODE }}
+          LIFE_PORTAL_PROGRAM_CODE: ${{ secrets.LIFE_PORTAL_PROGRAM_CODE }}
+          LIFE_PORTAL_ACADEMIC_TERM_CODE: ${{ secrets.LIFE_PORTAL_ACADEMIC_TERM_CODE }}
+          LIFE_PORTAL_SOURCE_OF_ORIGIN_CODE: ${{ secrets.LIFE_PORTAL_SOURCE_OF_ORIGIN_CODE }}
+          LIFE_PORTAL_UTM_SOURCE: ${{ secrets.LIFE_PORTAL_UTM_SOURCE }}
+          LIFE_PORTAL_UTM_MEDIUM: ${{ secrets.LIFE_PORTAL_UTM_MEDIUM }}
+          LIFE_PORTAL_UTM_CAMPAIGN: ${{ secrets.LIFE_PORTAL_UTM_CAMPAIGN }}
+          LIFE_PORTAL_UTM_TERM: ${{ secrets.LIFE_PORTAL_UTM_TERM }}
         run: |
           test -n "$EC2_USER"
           test -n "$AWS_ACCESS_KEY_ID"
           test -n "$AWS_SECRET_ACCESS_KEY"
+          append_env_if_set() {
+            key="$1"
+            value="$2"
+            if [ -n "$value" ]; then
+              printf '%s=%s\n' "$key" "$value"
+            fi
+          }
           umask 077
           {
             printf 'AWS_ACCESS_KEY_ID=%s\n' "$AWS_ACCESS_KEY_ID"
             printf 'AWS_SECRET_ACCESS_KEY=%s\n' "$AWS_SECRET_ACCESS_KEY"
             printf 'AWS_REGION=%s\n' "$AWS_REGION"
             printf 'AWS_DEFAULT_REGION=%s\n' "$AWS_REGION"
+            append_env_if_set LIFE_PORTAL_WEBHOOK_ENABLED "$LIFE_PORTAL_WEBHOOK_ENABLED"
+            append_env_if_set LIFE_PORTAL_WEBHOOK_URL "$LIFE_PORTAL_WEBHOOK_URL"
+            append_env_if_set LIFE_PORTAL_WEBHOOK_SECRET "$LIFE_PORTAL_WEBHOOK_SECRET"
+            append_env_if_set LIFE_PORTAL_STAGE_CODE "$LIFE_PORTAL_STAGE_CODE"
+            append_env_if_set LIFE_PORTAL_FIRST_INQUIRY_SOURCE_CODE "$LIFE_PORTAL_FIRST_INQUIRY_SOURCE_CODE"
+            append_env_if_set LIFE_PORTAL_PROGRAM_CODE "$LIFE_PORTAL_PROGRAM_CODE"
+            append_env_if_set LIFE_PORTAL_ACADEMIC_TERM_CODE "$LIFE_PORTAL_ACADEMIC_TERM_CODE"
+            append_env_if_set LIFE_PORTAL_SOURCE_OF_ORIGIN_CODE "$LIFE_PORTAL_SOURCE_OF_ORIGIN_CODE"
+            append_env_if_set LIFE_PORTAL_UTM_SOURCE "$LIFE_PORTAL_UTM_SOURCE"
+            append_env_if_set LIFE_PORTAL_UTM_MEDIUM "$LIFE_PORTAL_UTM_MEDIUM"
+            append_env_if_set LIFE_PORTAL_UTM_CAMPAIGN "$LIFE_PORTAL_UTM_CAMPAIGN"
+            append_env_if_set LIFE_PORTAL_UTM_TERM "$LIFE_PORTAL_UTM_TERM"
           } > runtime.env
           scp -i ~/.ssh/neogogy_deploy_key -P "$EC2_PORT" \
             app.tar.gz runtime.env deploy/neogogy.service deploy/nginx.conf \

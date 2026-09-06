@@ -16,6 +16,7 @@
     "art:cover": "node scripts/art/render-cover.mjs",
     "test:analytics": "tsx tests/compass/analytics.ts",
     "test:context": "tsx tests/compass/context.ts",
+    "test:lifeportal-webhook": "tsx tests/compass/lifeportal-webhook.ts",
     "test:gated": "tsx tests/compass/gated.ts",
     "test:export": "tsx tests/compass/export.ts",
     "test:business": "tsx tests/compass/business.ts",

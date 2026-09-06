@@ -12,6 +12,8 @@
 - **Storage:** DynamoDB tables `neogogy-leads` and `neogogy-events` (region `ap-southeast-1`, on-demand billing).
 - **Analytics:** self-hosted events to DynamoDB; summary at `GET /api/stats?token=...`.
 - **Email:** Amazon SES, wired but disabled (`EMAIL_ENABLED=false`). See below.
+- **CRM webhook:** completed assessment takers are sent to Life Portal as contact
+  leads when `LIFE_PORTAL_WEBHOOK_SECRET` is configured server-side.
 
 ## Live URLs
 
@@ -151,6 +153,25 @@ The deploy job expects the production environment file to already exist on the
 server at `/home/ec2-user/.env.production`; it copies that file into
 `/opt/neogogy/app/.env.production` during each deploy. Do not commit
 `.env.production` or SSH keys.
+
+For the Life Portal CRM integration, add these optional production secrets:
+
+| Secret | Value |
+| ------ | ----- |
+| `LIFE_PORTAL_WEBHOOK_SECRET` | Shared signing secret from Life Portal's external contact webhook settings |
+| `LIFE_PORTAL_WEBHOOK_URL` | Optional override; defaults to `https://lifeportal.life.edu.ph/api/public/integrations/contacts/webhook` |
+| `LIFE_PORTAL_WEBHOOK_ENABLED` | Optional override; set to `false` to pause outbound CRM sync |
+| `LIFE_PORTAL_STAGE_CODE` | Optional override; defaults to `inquiry` |
+| `LIFE_PORTAL_FIRST_INQUIRY_SOURCE_CODE` | Optional override; defaults to `rfi` |
+| `LIFE_PORTAL_PROGRAM_CODE` | Optional Life Portal program code, for example `bs-entrepreneurship` |
+| `LIFE_PORTAL_ACADEMIC_TERM_CODE` | Optional Life Portal academic term code, for example `intake-2026-2027-t2` |
+| `LIFE_PORTAL_SOURCE_OF_ORIGIN_CODE` | Optional explicit source code; otherwise Life Portal derives it from attribution |
+
+Each completed assessment sends the lead's name, email, mobile phone, stage,
+assessment persona, archetype, scores, business context, consent flag, UTM
+values, referrer, landing page, device, and location summary. Webhook failures
+are logged and counted as `lifeportal_webhook_failed`; the respondent still sees
+their result.
 
 During deploy, the workflow discovers the GitHub runner's public IP, temporarily
 authorizes that `/32` for SSH on the EC2 security group, and revokes it in an
