@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { isAdminAuthed } from '@/lib/adminAuth';
-import { getLead, listLeads, deleteLead } from '@/lib/storage';
+import { getLead, listLeads, deleteLead, withoutReportToken } from '@/lib/storage';
 import { buildLeadCsv } from '@/lib/leadCsv';
 
 export const runtime = 'nodejs';
@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
   if (id) {
     const lead = await getLead(id);
     if (!lead) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json({ lead });
+    // The report token never leaves the database. The admin reads results, not links.
+    return NextResponse.json({ lead: withoutReportToken(lead) });
   }
 
   const leads = await listLeads();
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  return NextResponse.json({ leads });
+  return NextResponse.json({ leads: leads.map(withoutReportToken) });
 }
 
 /** Delete a single submission. A person's other attempts are untouched. */

@@ -1,5 +1,6 @@
 import path from 'path';
 import { randomUUID } from 'crypto';
+import { tokensMatch } from '@/lib/reportLink';
 
 /**
  * Storage layer for leads and analytics events.
@@ -50,6 +51,18 @@ export type LeadRecord = {
   confidence?: string;
   /** v2 only: set when this record was produced by rescoring a v1 submission. */
   rescoredFrom?: string;
+
+  /**
+   * The report link (B3).
+   *
+   * A long random token that addresses this record's report page. Whoever holds
+   * it can read the report, which is why it is treated as a secret everywhere
+   * outside this table: it is stripped from anything sent to the admin, it is
+   * never exported, and it is never written to an event or a log line. Reissuing
+   * it replaces this value, and that is what stops an old link working.
+   */
+  reportToken?: string;
+  reportTokenIssuedAt?: string;
 
   /**
    * v2 only: context about how the assessment was taken.
@@ -350,6 +363,94 @@ export const getLead = async (id: string): Promise<LeadRecord | null> => {
   }
   const leads = await readLocal<LeadRecord>('leads.json');
   return leads.find((lead) => lead.id === id) || null;
+};
+
+/**
+ * A record with its report token removed.
+ *
+ * Anything that leaves this module for a browser, a file or a screen goes
+ * through here first. The admin has every right to read a person's result; it
+ * has no need of a live link to it, and a token in a page payload is a token in
+ * a cache, a screenshot and a support thread.
+ */
+export const withoutReportToken = <T extends Partial<LeadRecord>>(lead: T): T => {
+  const { reportToken, ...rest } = lead as LeadRecord;
+  return rest as unknown as T;
+};
+
+/**
+ * Find a submission by its report token.
+ *
+ * Filtered at the database rather than in the process, so the whole table is
+ * never pulled across to answer one link. Returns null for anything that does
+ * not match exactly, which is the only authorisation a report page has.
+ */
+export const getLeadByReportToken = async (token: string): Promise<LeadRecord | null> => {
+  if (!token) return null;
+
+  let candidates: LeadRecord[] = [];
+  if (LEADS_TABLE) {
+    const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
+    const doc = await getDocClient();
+    let lastKey: any = undefined;
+    do {
+      const result: any = await doc.send(
+        new ScanCommand({
+          TableName: LEADS_TABLE,
+          FilterExpression: '#t = :t',
+          ExpressionAttributeNames: { '#t': 'reportToken' },
+          ExpressionAttributeValues: { ':t': token },
+          ExclusiveStartKey: lastKey,
+        })
+      );
+      candidates = candidates.concat((result.Items as LeadRecord[]) || []);
+      lastKey = result.LastEvaluatedKey;
+    } while (lastKey && !candidates.length);
+  } else {
+    candidates = await readLocal<LeadRecord>('leads.json');
+  }
+
+  return candidates.find((lead) => tokensMatch(lead.reportToken, token)) || null;
+};
+
+/**
+ * When this person last completed an assessment.
+ *
+ * Retention runs from here rather than from the record's own date, because
+ * taking the assessment again restarts the period for everything held about
+ * them. A report link outlives its own sitting for exactly that reason.
+ */
+export const lastCompletedAtForEmail = async (email: string): Promise<string | null> => {
+  const target = email.trim().toLowerCase();
+  if (!target) return null;
+
+  let rows: Array<{ email?: string; createdAt?: string }> = [];
+  if (LEADS_TABLE) {
+    const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
+    const doc = await getDocClient();
+    let lastKey: any = undefined;
+    do {
+      const result: any = await doc.send(
+        new ScanCommand({
+          TableName: LEADS_TABLE,
+          ProjectionExpression: 'email, createdAt',
+          ExclusiveStartKey: lastKey,
+        })
+      );
+      rows = rows.concat((result.Items as typeof rows) || []);
+      lastKey = result.LastEvaluatedKey;
+    } while (lastKey);
+  } else {
+    rows = await readLocal<LeadRecord>('leads.json');
+  }
+
+  let latest: string | null = null;
+  for (const row of rows) {
+    if ((row.email || '').trim().toLowerCase() !== target) continue;
+    if (!row.createdAt) continue;
+    if (!latest || row.createdAt > latest) latest = row.createdAt;
+  }
+  return latest;
 };
 
 export const logEvent = async (

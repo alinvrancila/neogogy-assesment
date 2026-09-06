@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   test:
-    name: Lint, typecheck, and build
+    name: Lint, typecheck, build, and test
     runs-on: ubuntu-latest
 
     steps:
@@ -37,3 +37,9 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      # The suites are the only thing holding the audit fixes and the privacy
+      # notice's promises closed. A build that passes while test:link fails is a
+      # build that has quietly stopped keeping them.
+      - name: Test
+        run: npm test

@@ -99,7 +99,12 @@ export function toCoverData(args: {
     resultTitle: r.archetype.name.replace(/^The\s+/i, ''),
     resultSummary: r.archetype.tagline,
     personName: (persona === 'business' ? (company || name) : name).trim() || 'Your report',
-    assessmentDate: date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+    // Fixed zone. The cover is server rendered on a saved report and rendered
+    // in the browser at the end of a sitting, and a date that shifts between
+    // the two is both a hydration mismatch and a wrong answer.
+    assessmentDate: date.toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+    }),
     reportId: makeReportId(persona, r, leadId),
     accessUrl: 'assessment.neogogy.ai',
     conceptTitle: concept.title,

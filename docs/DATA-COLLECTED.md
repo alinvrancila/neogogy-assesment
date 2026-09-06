@@ -18,6 +18,15 @@ Asked for directly at the gate, and shown to them as they type it.
 | Answers | Every scored item, plus the two baseline questions |
 | Persona and usage level | Chosen at setup, decides which items apply |
 
+## Produced by the assessment
+
+Not asked for and not observed. Written by the app onto the record it belongs to.
+
+| Field | Notes |
+|---|---|
+| Report token | The long random token in the report's own web address. Whoever holds the link can read the report, so it is treated as a secret: it is stripped from the admin screens, never exported, never written to an event or a log line, and replaced whenever the respondent asks for a new link |
+| Token issued at | When the current link was minted, so a reissue is visible |
+
 ## Taken from the request
 
 Headers every website receives. None of it can be changed by editing the page,
@@ -97,9 +106,12 @@ How the assessment was taken, which is how honestly to read the answers.
    records and from every statistic. Under both the Philippines Data Privacy Act
    and GDPR a request has to be honoured, and an IP address is personal data in
    both.
-3. **Decide a retention period.** Nothing expires today. Records are kept until
-   deleted by hand. A stated period, for example two years, is easier to defend
-   than "forever", and can be enforced with a scheduled job.
+3. **Decide a retention period.** The notice states twenty four months from the
+   last completed assessment, and the report link is already enforced against
+   it: an expired link stops opening. The records themselves are still deleted
+   by hand. The scheduled job that deletes them is the remaining piece, and
+   until it exists the stated period is a promise the product keeps only on the
+   link and not yet on the data.
 4. **The EU share is worth watching.** It is on the Reach tab. While it is near
    zero the exposure is small; if it grows, a full privacy notice page and a
    named contact for requests become worth having.
@@ -112,6 +124,8 @@ How the assessment was taken, which is how honestly to read the answers.
 - **Reach and devices** tab: countries, cities, devices, browsers, systems,
   screen sizes, languages, timezones, networks, shared addresses, and pace.
 - **Context** pane on every record: everything above for one person.
-- **CSV export**: forty extra columns, one row per submission.
+- **CSV export**: forty extra columns, one row per submission. The report token
+  is deliberately not among them: the export enumerates its columns by hand, and
+  adding the token to it would put a live link into a spreadsheet.
 - **Funnel events**: device and country on every step, so drop off can be read
   by segment rather than only in total.

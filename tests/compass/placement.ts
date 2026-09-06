@@ -12,6 +12,7 @@
  */
 
 import fs from 'fs';
+import { assessmentOf } from '@/lib/history';
 import path from 'path';
 import { compute, applicableItems } from '@/engine';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
@@ -204,7 +205,15 @@ head('A journey is only a journey within one assessment');
 {
   const src = fs.readFileSync(path.join(process.cwd(), 'src', 'lib', 'history.ts'), 'utf-8');
   ok('prior attempts are matched on the assessment as well as the person',
-    /persona\?: string/.test(src) && /l\.persona === persona/.test(src));
+    /persona\?: string/.test(src) && /assessmentOf\(l\) === persona/.test(src));
+  // The record's `persona` field holds the archetype, not the assessment.
+  // Matching on it compared "student" against "curious_explorer", found nothing
+  // ever, and quietly turned every retake into a first attempt.
+  ok('and the assessment is taken from the result rather than the archetype field',
+    assessmentOf({ role: 'z', persona: 'curious_explorer',
+      result: { persona: 'student' } } as never) === 'student');
+  ok('with the archetype field never standing in for it',
+    assessmentOf({ role: 'teacher', persona: 'sprinter' } as never) === 'teacher');
   ok('the comparison passes the current assessment through',
     /priorAttempts\(email, excludeId, current\.persona\)/.test(src));
   ok('the reason is recorded where the next person will read it',

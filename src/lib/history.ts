@@ -52,6 +52,13 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
  * exactly the failure it sounds like: a teacher who also took the parent set
  * was shown a climb of sixty seven points that never happened, in the largest
  * type on the report.
+ *
+ * The assessment a record belongs to is `role`, not `persona`. On a LeadRecord
+ * `persona` holds the archetype the answers landed on, which is why an earlier
+ * version of this filter compared "administrator" against "strategic_integrator"
+ * and matched nothing at all: every returning respondent was silently told they
+ * had no earlier sitting. Read `role` here, and take the persona off the result
+ * rather than off the record.
  */
 export async function priorAttempts(
   email: string, excludeId?: string, persona?: string
@@ -61,9 +68,41 @@ export async function priorAttempts(
   const all = await listLeads();
   return all
     .filter((l) => l.engineVersion === 2 && !!l.result && norm(l.email || '') === target)
-    .filter((l) => (persona ? l.persona === persona : true))
+    .filter((l) => (persona ? assessmentOf(l) === persona : true))
     .filter((l) => l.id !== excludeId)
     .sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
+}
+
+/**
+ * Which assessment a stored record belongs to.
+ *
+ * The result carries it authoritatively; `role` is the same value denormalized
+ * onto the record, and is the fallback for anything written before the result
+ * was stored whole.
+ */
+export function assessmentOf(lead: LeadRecord): string {
+  const fromResult = (lead.result as CompassResult | undefined)?.persona;
+  return fromResult || lead.role || '';
+}
+
+/**
+ * The comparison as it stood when this attempt was made.
+ *
+ * A stored report is read later, sometimes much later, and the movement it
+ * describes has to be the movement it described at the time. Attempts made
+ * after this one are excluded, so a report opened from its link is the report
+ * that was sent rather than a new one assembled around it.
+ */
+export async function comparisonForStoredAttempt(
+  lead: LeadRecord
+): Promise<AttemptComparison | null> {
+  const current = lead.result as CompassResult | undefined;
+  if (!current?.stage) return null;
+  const prior = (await priorAttempts(lead.email || '', lead.id, assessmentOf(lead)))
+    .filter((l) => (l.createdAt || '') < (lead.createdAt || ''));
+  if (!prior.length) return null;
+  const at = lead.createdAt ? new Date(lead.createdAt) : new Date();
+  return compareToPrevious(current, prior[prior.length - 1], prior.length + 1, at);
 }
 
 /**

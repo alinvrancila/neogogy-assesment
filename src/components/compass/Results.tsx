@@ -12,7 +12,7 @@
  * here scores anything.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ECOSYSTEM, NEXT_STEP } from '@/brand';
 import {
   generateReportSections, reportHead, confidenceLabel, REPORT_DISCLAIMER,
@@ -53,6 +53,56 @@ const HEARD_OPTIONS = [
   'Search engine', 'Social media', 'Friend or colleague', 'School or organization',
   'A talk, class, or event', 'Newsletter or email', 'Other',
 ];
+
+/* --------------------------------------------------- the report's own page */
+
+/**
+ * The address this report was kept at.
+ *
+ * Shown on the screen of the person who just earned it, because the same link
+ * also goes out by email and email can be switched off. A link nobody was ever
+ * handed is not a feature. The two controls that manage it live on the report
+ * page itself, which is where the privacy notice says they are.
+ */
+export function SavedLink({ path }: { path: string }) {
+  const [url, setUrl] = useState(path);
+  const [copied, setCopied] = useState(false);
+
+  // The origin is only known in the browser, so the absolute address is filled
+  // in after mount rather than guessed during rendering.
+  useEffect(() => { setUrl(`${window.location.origin}${path}`); }, [path]);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2500);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <section className="saved-link" aria-labelledby="saved-h">
+      <h3 id="saved-h">Your report has its own page</h3>
+      <p>
+        This report is kept for you at the address below. It carries a long random token, so it
+        cannot be guessed, and anyone holding it can read the report, so keep it as you would keep
+        the report. Two controls on that page let you send yourself the link again, or close it and
+        get a new one.
+      </p>
+      <p className="saved-link-url"><a href={path}>{url}</a></p>
+      <div className="dlrow">
+        <button className="btn btn-ghost" onClick={copy}>
+          {copied ? 'Copied' : 'Copy the link'} <span className="arrow">&rarr;</span>
+        </button>
+      </div>
+      <p className="muted" style={{ marginTop: 10, fontSize: '.9rem' }}>
+        It works until the record does, twenty four months from your last completed assessment.
+      </p>
+    </section>
+  );
+}
 
 /* ------------------------------------------------------------------ gate */
 
@@ -285,13 +335,22 @@ function SectionBlock(
 }
 
 export default function Results({
-  result, firstName, emailed, onRetake, comparison, submission
+  result, firstName, emailed, onRetake, comparison, submission, reportPath, takenAt, leadId
 }: {
   result: CompassResult;
   firstName?: string;
   emailed: boolean;
   onRetake: () => void;
   comparison?: AttemptComparison | null;
+  /** Path of this report's own page, when the submission was stored. Absent on
+   *  the report page itself, which is already at that address. */
+  reportPath?: string | null;
+  /** When the assessment was taken. Absent at the end of a sitting, where today
+   *  is the answer. Required on a saved report, where the cover, the metadata
+   *  block and the certificate all state a date that must not move. */
+  takenAt?: string;
+  /** The record behind this report, so its report id can be quoted back to us. */
+  leadId?: string;
   /** Pastor persona only: kept in memory so a PDF can be built without storing anything. */
   submission?: Submission | null;
 }) {
@@ -305,13 +364,14 @@ export default function Results({
   if (isPastor) {
     return (
       <div className="wrap results pastor">
-        <ResultCover result={result} name={firstName} />
+        <ResultCover result={result} name={firstName} takenAt={takenAt} leadId={leadId} />
         <PastorOpeningBlock result={result} />
         {emailed ? (
           <p className="muted" style={{ marginTop: -8, marginBottom: 16 }}>
             {firstName ? `Thank you, ${firstName}. ` : ''}A PDF of this reading is on its way to your inbox.
           </p>
         ) : null}
+        {reportPath ? <SavedLink path={reportPath} /> : null}
         <AscentResults result={result} comparison={null} />
         <ServingAndStandingIn result={result} />
         <DependenceCheckBlock result={result} />
@@ -328,7 +388,7 @@ export default function Results({
         <FormationRoadmap result={result} />
         <PastorReflections result={result} />
         <PastorResources result={result} />
-        <PastorCertificate result={result} name={firstName} />
+        <PastorCertificate result={result} name={firstName} takenAt={takenAt} />
         <ShareResult result={result} />
         <PastorClosing result={result} submission={submission ?? null} onRetake={onRetake} />
 
@@ -345,7 +405,7 @@ export default function Results({
 
   return (
     <div className="wrap results">
-      <ResultCover result={result} name={firstName} />
+      <ResultCover result={result} name={firstName} takenAt={takenAt} leadId={leadId} />
 
       {isBusiness ? <HealthHeadline result={result} /> : null}
 
@@ -374,6 +434,8 @@ export default function Results({
           {firstName ? `Thank you, ${firstName}. ` : ''}A PDF of this report is on its way to your inbox.
         </p>
       ) : null}
+
+      {reportPath ? <SavedLink path={reportPath} /> : null}
 
       {orderedForScreen(sections)
         // the business report answers these in its own modules above

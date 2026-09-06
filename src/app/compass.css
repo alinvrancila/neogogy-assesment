@@ -3473,3 +3473,20 @@
 /* A refusal that offers the way back, rather than a wall with a reason on it. */
 .nfc .gate-err-back { margin-top: 10px; }
 .nfc .gate-err[role="alert"] { display: grid; }
+
+/* The report's own page (B3): the address on the results screen, and the link
+   panel on the report page itself. Quiet by design, because a private address
+   should read as a note to the reader rather than as another call to action. */
+.nfc .saved-link{margin:36px 0;padding:24px 26px;border:1.5px solid var(--gold-soft);
+  border-radius:var(--r);background:rgba(183,159,118,.07)}
+.nfc .saved-link h3{font-size:1.25rem;margin-bottom:10px}
+.nfc .saved-link p{color:var(--ink-soft);font-weight:300;max-width:62ch;margin-bottom:14px}
+.nfc .saved-link-url{font-family:var(--f-mono,ui-monospace,SFMono-Regular,Menlo,monospace);
+  font-size:.92rem;word-break:break-all;background:rgba(20,18,16,.05);
+  border-radius:8px;padding:10px 12px;margin-bottom:16px}
+.nfc .saved-link-url a{color:var(--maroon);text-decoration:underline;text-underline-offset:3px}
+.nfc .saved-link .dlrow{display:flex;gap:12px;flex-wrap:wrap}
+@media (max-width:640px){
+  .nfc .saved-link{padding:20px}
+  .nfc .saved-link .dlrow .btn{width:100%;justify-content:center}
+}

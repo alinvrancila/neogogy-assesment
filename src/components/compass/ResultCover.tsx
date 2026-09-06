@@ -15,10 +15,20 @@
 import type { CompassResult } from '@/engine';
 import { toCoverData } from '@/lib/covers/data';
 
-export default function ResultCover({ result, name, company }: {
+export default function ResultCover({ result, name, company, takenAt, leadId }: {
   result: CompassResult; name?: string; company?: string;
+  /** When the assessment was taken. Absent on the screen shown at the end of a
+   *  sitting, where today is the answer; required on a saved report, where it
+   *  is the one date that must not move. */
+  takenAt?: string;
+  /** The record this cover belongs to, so the report id on it is the number a
+   *  person can quote back to us. */
+  leadId?: string;
 }) {
-  const d = toCoverData({ result, name, company });
+  const d = toCoverData({
+    result, name, company, leadId,
+    date: takenAt ? new Date(takenAt) : undefined,
+  });
   const resultLen = d.resultTitle.length > 52 ? 'long' : d.resultTitle.length > 30 ? 'medium' : 'short';
   const nameLen = d.personName.length > 34 ? 'long' : d.personName.length > 22 ? 'medium' : 'short';
 

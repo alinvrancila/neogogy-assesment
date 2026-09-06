@@ -27,7 +27,9 @@ export const sendReportEmail = async ({
   personaName: string;
   subject?: string;
   bodyText: string;
-  pdf: Buffer;
+  /** Optional. The link email carries no attachment: it exists to hand back an
+   *  address, and a second copy of the report is not what was asked for. */
+  pdf?: Buffer;
 }): Promise<{ sent: boolean; reason?: string }> => {
   if (!isEmailEnabled()) {
     return { sent: false, reason: 'email_disabled' };
@@ -41,13 +43,15 @@ export const sendReportEmail = async ({
     to,
     subject: subject || `Your Human Advantage Report: ${personaName}`,
     text: bodyText,
-    attachments: [
-      {
-        filename: 'Neogogy_Formation_Compass.pdf',
-        content: pdf,
-        contentType: 'application/pdf'
-      }
-    ]
+    attachments: pdf
+      ? [
+          {
+            filename: 'Neogogy_Formation_Compass.pdf',
+            content: pdf,
+            contentType: 'application/pdf'
+          }
+        ]
+      : []
   });
 
   const raw: Buffer = await new Promise((resolve, reject) => {
