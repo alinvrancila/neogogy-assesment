@@ -173,19 +173,19 @@ export default function LifePortalWebhookPanel() {
             <label className="block">
               <span className="admin-muted text-xs uppercase tracking-[0.12em]">Source of origin</span>
               <input value={settings.sourceOfOriginCode || ''} onChange={(e) => update('sourceOfOriginCode', e.target.value)}
-                placeholder="Let Life Portal derive"
+                placeholder="Let Life Portal derive from UTM/source"
                 className="admin-input mt-1 w-full rounded-2xl px-4 py-3 text-sm outline-none" />
             </label>
             <label className="block">
               <span className="admin-muted text-xs uppercase tracking-[0.12em]">Program code</span>
               <input value={settings.programCode || ''} onChange={(e) => update('programCode', e.target.value)}
-                placeholder="Optional"
+                placeholder="Blank for LifeX assessment leads"
                 className="admin-input mt-1 w-full rounded-2xl px-4 py-3 text-sm outline-none" />
             </label>
             <label className="block">
               <span className="admin-muted text-xs uppercase tracking-[0.12em]">Academic term</span>
               <input value={settings.academicTermCode || ''} onChange={(e) => update('academicTermCode', e.target.value)}
-                placeholder="Optional"
+                placeholder="Blank unless tied to an admissions program"
                 className="admin-input mt-1 w-full rounded-2xl px-4 py-3 text-sm outline-none" />
             </label>
             <label className="block">

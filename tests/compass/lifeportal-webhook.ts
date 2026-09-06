@@ -14,8 +14,6 @@ const ok = (name: string, cond: boolean, got?: unknown) => {
   else { fail += 1; console.log('  FAIL ', name, got !== undefined ? `got ${JSON.stringify(got)}` : ''); }
 };
 
-process.env.LIFE_PORTAL_PROGRAM_CODE = 'bs-entrepreneurship';
-process.env.LIFE_PORTAL_ACADEMIC_TERM_CODE = 'intake-2026-2027-t2';
 process.env.LIFE_PORTAL_WEBHOOK_ENABLED = 'true';
 delete process.env.LIFE_PORTAL_WEBHOOK_SECRET;
 
@@ -83,10 +81,21 @@ ok('the webhook stays disabled without the server signing secret', !isLifePortal
 ok('external id is stable from the lead id', payload.external_id === 'neogogy-assessment-lead-123', payload.external_id);
 ok('contact identity maps name and email', payload.contact.full_name === 'Ana Learner' && payload.contact.email === 'ana@example.edu');
 ok('mobile maps to both phone fields for CRM matching', payload.contact.phone === '+63 917 123 4567' && payload.contact.mobile_phone === '+63 917 123 4567');
-ok('default CRM stage and configured program term are included',
+ok('profile fields match Life Portal local assessment vocabulary',
+  payload.experience === 'neogogy_assessment'
+  && payload.experience_label === 'Neogogy Formation Compass'
+  && payload.profile_type === 'student'
+  && payload.archetype === 'reflective-operator'
+  && payload.archetype_name === 'Reflective Operator'
+  && payload.program_interest === 'LifeX Online Certificate',
+  payload);
+ok('default CRM stage is included without forcing a degree program',
   payload.contact.stage_code === 'inquiry'
-  && payload.contact.program_code === 'bs-entrepreneurship'
-  && payload.contact.academic_term_code === 'intake-2026-2027-t2',
+  && payload.contact.program_code === undefined
+  && payload.contact.academic_term_code === undefined,
+  payload.contact);
+ok('source of origin is left blank so Life Portal derives from attribution',
+  payload.contact.source_of_origin_code === undefined,
   payload.contact);
 ok('LifeX and Neogogy tags both travel', payload.contact.tags.includes('lifex') && payload.contact.tags.includes('neogogy'));
 ok('browser attribution overrides defaults',
@@ -98,6 +107,9 @@ ok('page and referrer URLs are carried', payload.attribution.pageUrl === 'https:
   && payload.attribution.referrer === 'https://linkedin.com/feed');
 ok('assessment summary carries result fields',
   payload.assessment.stage === 7
+  && payload.assessment.profileType === 'student'
+  && payload.assessment.experience === 'neogogy_assessment'
+  && payload.assessment.programInterest === 'LifeX Online Certificate'
   && payload.assessment.developmentalIndex === 72.3
   && payload.assessment.dimensions?.fluency === 77.7
   && payload.assessment.composites?.futureReadiness === 74.4,

@@ -4,6 +4,9 @@ import type { LeadRecord, SubmissionMeta } from '@/lib/storage';
 import { resolveLifePortalWebhookSettings, type LifePortalWebhookConfig } from '@/lib/lifePortalSettings';
 
 const DEFAULT_ENDPOINT = 'https://lifeportal.life.edu.ph/api/public/integrations/contacts/webhook';
+const DEFAULT_PROGRAM_INTEREST = 'LifeX Online Certificate';
+const EXPERIENCE = 'neogogy_assessment';
+const EXPERIENCE_LABEL = 'Neogogy Formation Compass';
 
 export type LifePortalWebhookPayload = {
   external_id: string;
@@ -14,6 +17,12 @@ export type LifePortalWebhookPayload = {
     name: string;
     type: string;
   };
+  experience: string;
+  experience_label: string;
+  profile_type: string;
+  archetype?: string;
+  archetype_name?: string;
+  program_interest: string;
   contact: {
     full_name: string;
     first_name?: string;
@@ -45,6 +54,10 @@ export type LifePortalWebhookPayload = {
     leadId: string;
     submittedAt: string;
     role: string;
+    profileType: string;
+    experience: string;
+    experienceLabel: string;
+    programInterest: string;
     assessmentPersona: string;
     archetypeId?: string;
     archetypeName?: string;
@@ -168,9 +181,15 @@ export function buildLifePortalContactPayload(
     occurred_at: lead.createdAt,
     sender: {
       id: 'neogogy-assessment',
-      name: 'Neogogy Formation Compass',
+      name: EXPERIENCE_LABEL,
       type: 'assessment_app',
     },
+    experience: EXPERIENCE,
+    experience_label: EXPERIENCE_LABEL,
+    profile_type: lead.role,
+    archetype: lead.archetypeId,
+    archetype_name: lead.archetypeName || lead.personaName,
+    program_interest: DEFAULT_PROGRAM_INTEREST,
     contact: {
       full_name: lead.name,
       first_name: text(lead.firstName, 100),
@@ -202,6 +221,10 @@ export function buildLifePortalContactPayload(
       leadId: lead.id,
       submittedAt: lead.createdAt,
       role: lead.role,
+      profileType: lead.role,
+      experience: EXPERIENCE,
+      experienceLabel: EXPERIENCE_LABEL,
+      programInterest: DEFAULT_PROGRAM_INTEREST,
       assessmentPersona: lead.role,
       archetypeId: lead.archetypeId,
       archetypeName: lead.archetypeName || lead.personaName,

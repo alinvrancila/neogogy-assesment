@@ -163,9 +163,9 @@ For the Life Portal CRM integration, add these optional production secrets:
 | `LIFE_PORTAL_WEBHOOK_ENABLED` | Optional override; set to `false` to pause outbound CRM sync |
 | `LIFE_PORTAL_STAGE_CODE` | Optional override; defaults to `inquiry` |
 | `LIFE_PORTAL_FIRST_INQUIRY_SOURCE_CODE` | Optional override; defaults to `rfi` |
-| `LIFE_PORTAL_PROGRAM_CODE` | Optional Life Portal program code, for example `bs-entrepreneurship` |
-| `LIFE_PORTAL_ACADEMIC_TERM_CODE` | Optional Life Portal academic term code, for example `intake-2026-2027-t2` |
-| `LIFE_PORTAL_SOURCE_OF_ORIGIN_CODE` | Optional explicit source code; otherwise Life Portal derives it from attribution |
+| `LIFE_PORTAL_PROGRAM_CODE` | Optional Life Portal program code. Leave blank for LifeX assessment leads unless the campaign intentionally routes to a degree program. |
+| `LIFE_PORTAL_ACADEMIC_TERM_CODE` | Optional Life Portal academic term code. Leave blank when no admissions program is set. |
+| `LIFE_PORTAL_SOURCE_OF_ORIGIN_CODE` | Optional explicit source code; otherwise Life Portal derives it from attribution, e.g. `lifex` + `webhook` becomes Organic Web. |
 
 Each completed assessment sends the lead's name, email, mobile phone, stage,
 assessment persona, archetype, scores, business context, consent flag, UTM
