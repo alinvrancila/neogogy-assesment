@@ -54,7 +54,7 @@ const defaults = (): LifePortalWebhookConfig => ({
   url: clean(process.env.LIFE_PORTAL_WEBHOOK_URL, 1000) || DEFAULT_ENDPOINT,
   secret: clean(process.env.LIFE_PORTAL_WEBHOOK_SECRET, 500),
   stageCode: clean(process.env.LIFE_PORTAL_STAGE_CODE, 120) || 'inquiry',
-  firstInquirySourceCode: clean(process.env.LIFE_PORTAL_FIRST_INQUIRY_SOURCE_CODE, 120) || 'rfi',
+  firstInquirySourceCode: clean(process.env.LIFE_PORTAL_FIRST_INQUIRY_SOURCE_CODE, 120) || 'neogogy_assessment',
   programCode: clean(process.env.LIFE_PORTAL_PROGRAM_CODE, 120),
   academicTermCode: clean(process.env.LIFE_PORTAL_ACADEMIC_TERM_CODE, 120),
   sourceOfOriginCode: clean(process.env.LIFE_PORTAL_SOURCE_OF_ORIGIN_CODE, 120),

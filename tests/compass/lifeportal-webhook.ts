@@ -83,7 +83,7 @@ ok('contact identity maps name and email', payload.contact.full_name === 'Ana Le
 ok('mobile maps to both phone fields for CRM matching', payload.contact.phone === '+63 917 123 4567' && payload.contact.mobile_phone === '+63 917 123 4567');
 ok('profile fields match Life Portal local assessment vocabulary',
   payload.experience === 'neogogy_assessment'
-  && payload.experience_label === 'Neogogy Formation Compass'
+  && payload.experience_label === 'Neogogy Human Advantage Assessment'
   && payload.profile_type === 'student'
   && payload.archetype === 'reflective-operator'
   && payload.archetype_name === 'Reflective Operator'
@@ -91,6 +91,7 @@ ok('profile fields match Life Portal local assessment vocabulary',
   payload);
 ok('default CRM stage is included without forcing a degree program',
   payload.contact.stage_code === 'inquiry'
+  && payload.contact.first_inquiry_source_code === 'neogogy_assessment'
   && payload.contact.program_code === undefined
   && payload.contact.academic_term_code === undefined,
   payload.contact);

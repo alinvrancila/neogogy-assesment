@@ -24,7 +24,7 @@ const EMPTY: LifePortalSettings = {
   enabled: true,
   url: 'https://lifeportal.life.edu.ph/api/public/integrations/contacts/webhook',
   stageCode: 'inquiry',
-  firstInquirySourceCode: 'rfi',
+  firstInquirySourceCode: 'neogogy_assessment',
   programCode: '',
   academicTermCode: '',
   sourceOfOriginCode: '',

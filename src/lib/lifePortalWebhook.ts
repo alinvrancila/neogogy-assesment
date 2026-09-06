@@ -6,7 +6,7 @@ import { resolveLifePortalWebhookSettings, type LifePortalWebhookConfig } from '
 const DEFAULT_ENDPOINT = 'https://lifeportal.life.edu.ph/api/public/integrations/contacts/webhook';
 const DEFAULT_PROGRAM_INTEREST = 'LifeX Online Certificate';
 const EXPERIENCE = 'neogogy_assessment';
-const EXPERIENCE_LABEL = 'Neogogy Formation Compass';
+const EXPERIENCE_LABEL = 'Neogogy Human Advantage Assessment';
 
 export type LifePortalWebhookPayload = {
   external_id: string;
@@ -201,7 +201,7 @@ export function buildLifePortalContactPayload(
       academic_term_code: config?.academicTermCode || text(process.env.LIFE_PORTAL_ACADEMIC_TERM_CODE, 120),
       stage_code: config?.stageCode || text(process.env.LIFE_PORTAL_STAGE_CODE, 120) || 'inquiry',
       source_of_origin_code: config?.sourceOfOriginCode || text(process.env.LIFE_PORTAL_SOURCE_OF_ORIGIN_CODE, 120),
-      first_inquiry_source_code: config?.firstInquirySourceCode || text(process.env.LIFE_PORTAL_FIRST_INQUIRY_SOURCE_CODE, 120) || 'rfi',
+      first_inquiry_source_code: config?.firstInquirySourceCode || text(process.env.LIFE_PORTAL_FIRST_INQUIRY_SOURCE_CODE, 120) || 'neogogy_assessment',
       tags: tagList(lead),
     },
     attribution: {
