@@ -6,12 +6,15 @@
  * a healthy answer, that dependence tags cannot move a score, and that the
  * anonymous path leaves nothing behind.
  */
+import { readFileSync } from "fs";
+import { join as joinPath } from "path";
 import { compute, applicableItems, allItems, generateReport, generateReportSections } from "../../src/engine";
 import type { ConstructId, Item, Persona, Submission } from "../../src/engine/types";
 import { CONSTRUCT_IDS } from "../../src/engine/types";
 import { STAGES } from "../../src/engine/config";
 import {
   PERSONA_DISPLAY, PASTOR_MARKERS, PASTOR_LENS, constructName, constructContent,
+  stageDetail, stageName,
 } from "../../src/engine/display";
 import { dependenceTags } from "../../src/engine/pastor";
 
@@ -310,6 +313,25 @@ head("The record, and what may leave it");
   ok("neither claims anyone's AI use is certified safe",
     !/certif\w* (?:that )?(?:my|their|your)? ?(?:use|ai) (?:is|as) safe|ai safety certif/i.test(
       sharePosts(strong).map((p) => p.text).join(" ") + " " + pastorStanding(strong).detail));
+}
+
+head('C4: the ministry ladder reads in both directions');
+{
+  for (const st of [3, 4, 5, 6]) {
+    const dep = stageDetail('pastor', st, 'dependence').looksLike;
+    const dis = stageDetail('pastor', st, 'disconnection').looksLike;
+    const neutral = stageDetail('pastor', st, 'balanced').looksLike;
+    ok(`stage ${st}: dependence and disconnection differ`, dep !== dis);
+    ok(`stage ${st}: neither is the neutral text`, dep !== neutral && dis !== neutral);
+  }
+  ok('the lowest camp is no longer a compliment',
+    stageName('pastor', 1) !== 'Set Apart');
+  const app = readFileSync(joinPath(process.cwd(), 'src/components/compass/CompassApp.tsx'), 'utf-8');
+  ok('the epigraph cites its primary source rather than a secondary one',
+    /Congress on Biblical Exposition/.test(app) && !/quoted in Faith at Work/.test(app));
+  const nar = readFileSync(joinPath(process.cwd(), 'src/engine/narrative.ts'), 'utf-8');
+  ok('the ladder printed is the one the persona is placed on',
+    /stageNameFor\(r\.persona, x\.stage\)/.test(nar));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

@@ -607,9 +607,10 @@ function PastorOpening({ onBack, onNext }: { onBack: () => void; onNext: () => v
         <h2 className="section-title mt-s">Preaching Formation Check</h2>
 
         <blockquote className="pastor-quote">
-          Preaching opens &ldquo;the inspired text with such faithfulness and sensitivity that
-          God&rsquo;s voice is heard and God&rsquo;s people obey him.&rdquo;
-          <cite>John Stott, quoted in Faith at Work</cite>
+          &ldquo;To preach or to expound the Scripture is to open up the inspired text with such
+          faithfulness and sensitivity that God&rsquo;s voice is heard and his people obey
+          him.&rdquo;
+          <cite>John Stott, defining expository preaching at the Congress on Biblical Exposition</cite>
         </blockquote>
 
         <p className="lede" style={{ maxWidth: '62ch' }}>

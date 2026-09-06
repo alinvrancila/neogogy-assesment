@@ -16,6 +16,7 @@ import type { CompassResult, ConstructId } from "./types";
 import { CONSTRUCTS, STAGES } from "./config";
 import {
   constructName, reportedConstructName, constructContent, constructPrinciple, stageDetail as stageDetailFor,
+  stageName as stageNameFor,
   riskLean,
   compositeName, indexName, disclaimerExtra,
 } from "./display";
@@ -261,7 +262,7 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
         : `*Which way you are off the path.* Towards disconnection. Your underexposure reading is ${Math.round(r.composites.underexposure)} against a reliance reading of ${Math.round(r.composites.dependencyIndex)}, so the work here is deliberate practice rather than more restraint.`);
     }
     L.push(``);
-    L.push(`The full continuum runs: ${STAGES.map(x => `${x.stage}. ${x.name}`).join(", ")}.`);
+    L.push(`The full continuum runs: ${STAGES.map(x => `${x.stage}. ${stageNameFor(r.persona, x.stage)}`).join(", ")}.`);
     L.push(``);
     L.push(`Placement is continuous rather than a box you fall into, and the stages above you are reached by specific, nameable changes rather than by general improvement. Stages 5 and above also carry gates: minimum readings on agency, verification, independent capability, responsible use and transfer, so that fluency alone cannot carry someone past a weakness that matters.`);
     if (r.stage.borderline) {

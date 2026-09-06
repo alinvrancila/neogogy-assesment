@@ -405,7 +405,7 @@ const PASTOR_PRINCIPLES: Record<ConstructId, string> = {
 };
 
 const PASTOR_STAGE_NAMES: Record<number, string> = {
-  1: "Set Apart", 2: "Watching", 3: "Trying", 4: "Practising", 5: "Working",
+  1: "At a Distance", 2: "Watching", 3: "Trying", 4: "Practising", 5: "Working",
   6: "Integrated", 7: "Discerning", 8: "Anchored", 9: "Renewing", 10: "Rooted and Fruitful",
 };
 
@@ -430,6 +430,41 @@ const PASTOR_STAGE_DETAIL: Record<number, { looksLike: string; trap: string }> =
        trap: "Reviewing the workflow while leaving the deeper rhythms unexamined." },
   10: { looksLike: "A settled practice that feeds the preacher, protects the people, and keeps the pulpit truthful.",
         trap: "Complacency. The risk here is not collapse, it is a good practice going unexamined." },
+};
+
+/**
+ * The ministry ladder, read from each direction.
+ *
+ * The bespoke pastor descriptions took precedence over the generic lean
+ * variants, which meant a preacher whose problem is that the tool has quietly
+ * taken over preparation and a preacher who has barely touched it received word
+ * for word the same paragraph. These are the two directions in ministry
+ * language. Above the sixth camp the paths converge, as they do elsewhere.
+ */
+const PASTOR_STAGE_DETAIL_DEPENDENCE: Record<number, { looksLike: string; trap: string }> = {
+  1: { looksLike: "The tool is carrying a great deal of the preparation and very little of it is being checked against the text or kept. Sermons are produced; the study behind them has thinned.",
+       trap: "Reading a finished sermon as evidence of a fed preacher. On this reading it is evidence that the tool worked." },
+  2: { looksLike: "The tool is in the week and the disciplines around it have not formed. Material reaches the pulpit unverified, and beginning without it has become genuinely hard.",
+       trap: "Mistaking fluency for formation. What arrives quickly did not necessarily pass through you." },
+  3: { looksLike: "Frequent use with unsettled practice. Some claims are checked against Scripture and some are not, and which is which depends on how the week went rather than on what was at stake.",
+       trap: "Letting Saturday decide what gets verified. That is a rule; it is simply not one you chose." },
+  4: { looksLike: "Real use across preparation, with prayer, study and checking thinner underneath it. The work is broader than the discernment around it.",
+       trap: "Use growing faster than the discernment around it, which is where dependence forms quietly in a busy season." },
+  5: { looksLike: "The tool does real work in the week and the checking has not kept pace. The sermons are good; what you could prepare without help has narrowed.",
+       trap: "Reading a smoother sermon as a deeper one, and a full week as a fed one." },
+  6: { looksLike: "Genuine integration with real exposure. The disciplines hold in most places and give way in a few, usually the weeks with a funeral in them.",
+       trap: "Keeping the parts of preparation you love and delegating the parts you do not. Verification is rarely the part anyone loves." },
+};
+
+const PASTOR_STAGE_DETAIL_DISCONNECTION: Record<number, { looksLike: string; trap: string }> = {
+  3: { looksLike: "Preparation that stands on its own, and almost no practice with these tools. What you can do, you can do unaided; what they now do, you are largely guessing at.",
+       trap: "Settling a question about a tool from a handful of early attempts, and holding that view as though it were examined." },
+  4: { looksLike: "A strong independent practice with little fluency on top of it. You could prepare without help, and you would struggle to use help well if you wanted it.",
+       trap: "Calling a gap a conviction. Some of this restraint is chosen and some of it is simply unpractised, and from inside they feel the same." },
+  5: { looksLike: "Real study, real independence, and a picture of these tools that is a year or two behind what they now are.",
+       trap: "Guiding a congregation through something you have not handled. Your people are already using it, and they will ask." },
+  6: { looksLike: "Well protected and lightly exposed. Prayer, study, voice and presence are in good order, and the fluency to use these tools wisely is undeveloped.",
+       trap: "Assuming that because dependence is not your risk, nothing is. A minister who cannot speak into this from experience is left out of a conversation their people are already having." },
 };
 
 const PASTOR_ARCHETYPES: Record<string, { name: string; tagline?: string; narrative?: string }> = {
@@ -729,6 +764,14 @@ export type RiskLean = "dependence" | "disconnection" | "balanced";
  * dependence variant at the low camps when that is the direction they are off.
  */
 export function stageDetail(persona: Persona | undefined, stage: number, lean: RiskLean = "balanced") {
+  // A persona with its own ladder gets its own directions too, checked before
+  // its neutral text, or the bespoke version silently outranks the lean and
+  // both directions read identically.
+  const ownLean = persona === "pastor"
+    ? (lean === "dependence" ? PASTOR_STAGE_DETAIL_DEPENDENCE[stage]
+      : lean === "disconnection" ? PASTOR_STAGE_DETAIL_DISCONNECTION[stage] : undefined)
+    : undefined;
+  if (ownLean) return ownLean;
   const own = of(persona)?.stageDetail?.[stage];
   if (own) return own;
   if (lean === "dependence" && STAGE_DETAIL_DEPENDENCE[stage]) return STAGE_DETAIL_DEPENDENCE[stage];
