@@ -10,6 +10,7 @@ import { sendReportEmail, isEmailEnabled } from '@/lib/email';
 import { buildComparison } from '@/lib/history';
 import { sharePosts, SHARE_URL } from '@/lib/share';
 import { requestContext } from '@/lib/requestContext';
+import { mintReportToken, reportUrl, reportPath, redactToken } from '@/lib/reportLink';
 import { lookupIp } from '@/lib/geoip';
 import { sendLifePortalContactLead } from '@/lib/lifePortalWebhook';
 
@@ -128,8 +129,12 @@ function cleanMeta(raw: unknown): SubmissionMeta | undefined {
 
     // where the visit came from
     referrerHost: str(m.referrerHost, 120),
-    referrerPath: str(m.referrerPath, 120),
-    landingPath: str(m.landingPath, 120),
+    // A respondent who starts a retake from their own report page would
+    // otherwise write their live report token into this record, where it would
+    // then reach the admin screen and the CSV export. Report pages send no
+    // referrer at all, and this is the second line of that defence.
+    referrerPath: redactToken(str(m.referrerPath, 120)),
+    landingPath: redactToken(str(m.landingPath, 120)),
     utmSource: str(m.utmSource),
     utmMedium: str(m.utmMedium),
     utmCampaign: str(m.utmCampaign),
@@ -294,8 +299,15 @@ export async function POST(request: NextRequest) {
   const dimensionScores: Record<string, number> = {};
   Object.values(result.dimensions).forEach((d) => { dimensionScores[d.construct] = d.score; });
 
+  // The address of this record's report page. Minted here so it is written in
+  // the same put as the record: a report cannot exist without its link, and a
+  // link cannot exist without its report.
+  const reportToken = mintReportToken();
+
   const lead: LeadRecord = {
     id: randomUUID(),
+    reportToken,
+    reportTokenIssuedAt: new Date().toISOString(),
     name: fullName,
     firstName: body.firstName || '',
     lastName: body.lastName || '',
@@ -333,8 +345,14 @@ export async function POST(request: NextRequest) {
     },
   };
 
+  // A link is only real if the record it points at was stored. When the write
+  // fails the respondent still gets their result and their PDF, and is told
+  // plainly that there is no saved copy to return to, rather than being handed
+  // an address that answers "this link is not active".
+  let stored = false;
   try {
     await saveLead(lead);
+    stored = true;
   } catch (error) {
     console.error('saveLead failed', error);
     // A storage failure must never cost the respondent their result.
@@ -423,6 +441,14 @@ export async function POST(request: NextRequest) {
           ``,
           `Explore the framework at ican.ph.`,
           ``,
+          ...(stored ? [
+            `Your report also has its own page, kept for you here:`,
+            ``,
+            `  ${reportUrl(reportToken)}`,
+            ``,
+            `Anyone holding that link can read the report, so treat it the way you would treat the report itself. If you ever want it closed, open the page and choose "Get a new link". It works until the record does, twenty four months from your last completed assessment.`,
+            ``,
+          ] : []),
           `---`,
           ``,
           `If you would like to share where you landed, here is a post you can copy:`,
@@ -448,5 +474,10 @@ export async function POST(request: NextRequest) {
     // The respondent still sees their result on screen.
   }
 
-  return NextResponse.json({ success: true, result, comparison, emailSent });
+  return NextResponse.json({
+    success: true, result, comparison, emailSent,
+    // A path, not a whole address, so nothing assembles an absolute URL with a
+    // token in it outside the browser that is about to show it.
+    reportPath: stored ? reportPath(reportToken) : null,
+  });
 }

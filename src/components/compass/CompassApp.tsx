@@ -198,6 +198,9 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
   const [result, setResult] = useState<CompassResult | null>(null);
   const [emailed, setEmailed] = useState(false);
   const [comparison, setComparison] = useState<AttemptComparison | null>(null);
+  // Path of this submission's own report page, returned by the server once the
+  // record is stored. Null when nothing was saved, so no dead link is shown.
+  const [reportPath, setReportPath] = useState<string | null>(null);
   const [firstName, setFirstName] = useState('');
   /** Business Owner only, every field optional, never scored. */
   const [biz, setBiz] = useState<BusinessContext>({ company: '', industry: '', teamSize: '', tools: '' });
@@ -413,6 +416,7 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
       }
       setResult(payload.result as CompassResult);
       setComparison((payload.comparison as AttemptComparison | null) ?? null);
+      setReportPath(typeof payload.reportPath === 'string' ? payload.reportPath : null);
       setEmailed(Boolean(payload.emailSent));
       setFirstName(data.firstName.trim());
       setGate({ submitting: false, error: null });
@@ -448,7 +452,7 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
     clearDraft();
     setScreen('hero'); setPersona(null); setPreset(false); setUsage(null); setB1(null); setB2(null);
     setAnswers({}); setPos(0); setSubmission(null);
-    setResult(null); setEmailed(false); setFirstName(''); setComparison(null);
+    setResult(null); setEmailed(false); setFirstName(''); setComparison(null); setReportPath(null);
     setGate({ submitting: false, error: null });
   }, [clearDraft]);
 
@@ -572,7 +576,8 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
   if (screen === 'results' && result) {
     return shell(
       <Results result={result} firstName={firstName} emailed={emailed}
-        onRetake={restart} comparison={comparison} submission={submission} />
+        onRetake={restart} comparison={comparison} submission={submission}
+        reportPath={reportPath} />
     );
   }
 

@@ -447,9 +447,17 @@ const CLOSINGS: Record<string, { ref: string; text: string }> = {
  * What can be shared is that the check was taken and, where the answers support
  * it, that the practice met the standard. The findings themselves stay here.
  */
-export function PastorCertificate({ result, name }: { result: CompassResult; name?: string }) {
+export function PastorCertificate({ result, name, takenAt }: {
+  result: CompassResult; name?: string;
+  /** The day the check was taken. A certificate that restamps itself with the
+   *  day it is reopened is not a record of anything. */
+  takenAt?: string;
+}) {
   const st = pastorStanding(result);
-  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const date = (takenAt ? new Date(takenAt) : new Date())
+    .toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC',
+    });
   return (
     <section className={`pastor-cert${st.passed ? ' is-met' : ''}`}>
       <p className="asc-kicker">{st.passed ? 'Standard met' : 'Completed'}</p>
@@ -474,7 +482,9 @@ export function PastorClosing({ result, submission, onRetake }: {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  /** Builds the file and hands it straight back. Nothing is stored. */
+  /** Builds the file and hands it straight back. On the results screen the
+   *  submission is in memory; on the saved report page it is reassembled from
+   *  the record, so the button works in both places. */
   const savePdf = async () => {
     if (!submission) return;
     setSaving(true); setErr(null);
@@ -511,19 +521,30 @@ export function PastorClosing({ result, submission, onRetake }: {
         <cite>{c.ref}</cite>
       </blockquote>
       <p>
-        Take this again in six months and see what has moved. Nothing was stored, so the comparison
-        will be yours to keep rather than ours.
+        Take this again in six months and see what has moved. Your reading is kept with your report,
+        so the comparison will be waiting for you when you return.
       </p>
       <div className="dlrow">
-        <button className="btn btn-primary" onClick={savePdf} disabled={saving || !submission}>
-          {saving ? 'Preparing your copy' : 'Save as PDF'} <span className="arrow">&rarr;</span>
-        </button>
+        {submission ? (
+          <button className="btn btn-primary" onClick={savePdf} disabled={saving}>
+            {saving ? 'Preparing your copy' : 'Save as PDF'} <span className="arrow">&rarr;</span>
+          </button>
+        ) : null}
         <button className="btn btn-ghost" onClick={onRetake}>Take it again</button>
       </div>
       {err ? <p className="gate-err">{err}</p> : null}
+      {submission ? null : (
+        <p className="muted" style={{ marginTop: 12 }}>
+          The file cannot be rebuilt from this page. Your two reflection answers were read once and
+          never written down, and the Dependence Check above was drawn from them, so a file made now
+          would say something different from the reading you were given. The copy sent to you when
+          you took this is the one to keep.
+        </p>
+      )}
       <p className="muted pastor-fineprint">
-        The file is built and handed straight back to you. No copy is kept, and nothing about this
-        reading is stored anywhere.
+        The file is built and handed straight back to you. Your report is kept at its own private
+        address, shown to you when you finished. The two reflection questions at the end are the one
+        thing that is never written down: they are read once, and then they are gone.
       </p>
     </section>
   );

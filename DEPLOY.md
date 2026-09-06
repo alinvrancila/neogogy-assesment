@@ -67,6 +67,65 @@ Two verification paths were set up:
 If a send fails (e.g. before verification completes) the user still gets on-screen
 results and the PDF download; the error is logged, never shown.
 
+## Report links (audit item B3)
+
+Every stored submission has its own report page at `/r/<token>`. Three things
+about the deployment matter to it.
+
+**nginx ships with the deploy.** `.github/workflows/deploy.yml` copies
+`deploy/nginx.conf` to the box, runs `nginx -t` and reloads, on every push to
+`main`. No hand copying is needed. What follows is what that file now does and
+how to confirm it landed.
+
+- A `log_format redacted` plus two `map` blocks rewrite `/r/<token>` to
+  `/r/[token]` before anything is written to the access log. The privacy notice
+  tells respondents the token is stripped from the logs, and until this is live
+  on the box, it is not.
+- `/r/` now terminates in its own `location ^~` block with
+  `error_log /dev/null crit;`. The error log cannot be rewritten the way the
+  access log can: nginx appends the raw request line to an upstream failure, so
+  a `systemctl restart neogogy` during a deploy would write live tokens into
+  `error.log`. Report requests therefore log no errors of their own. An upstream
+  outage is still visible on every other path, which is where it is read from.
+- `X-Forwarded-For` is now `$remote_addr` rather than `$proxy_add_x_forwarded_for`.
+  The appending form kept whatever the caller sent and put the real address after
+  it, and the app reads the first entry, so a visitor could choose the IP recorded
+  against their submission and could evade the rate limit on link guessing. If a
+  CDN or load balancer is ever put in front of nginx, this has to change again.
+
+Confirm it landed, from anywhere:
+
+```bash
+curl -sI https://assessment.neogogy.ai/r/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA \
+  | grep -iE 'x-robots-tag|referrer-policy|cache-control'
+```
+
+and on the box:
+
+```bash
+sudo tail -2 /var/log/nginx/access.log   # must show /r/[token], never a real token
+```
+
+The `Deploy` workflow runs `lint`, `build` and `typecheck` but not `npm test`.
+CI runs the suites on the same push, so a red suite is visible, but it does not
+stop the deploy. Adding a `Test` step to `deploy.yml` would make the privacy
+promises in `tests/compass/link.ts` a release gate rather than a report.
+
+**Table scans.** `neogogy-leads` has no index on `reportToken`, so opening a
+report is a filtered `Scan`, billed against the whole table. That is fine at the
+current row count and will not stay fine. A global secondary index on
+`reportToken` (and one on `email`, which `lastCompletedAtForEmail` and the
+retake history would both use) turns two scans per page view into two queries.
+Until then the miss limit in `src/lib/reportLinkAccess.ts` is what stands
+between a guessing loop and the bill.
+
+**Retention is only half enforced.** A link stops opening 24 months after the
+person's last completed assessment, because the app checks. The record itself is
+still deleted by hand. Either stamp a DynamoDB TTL attribute equal to
+`expiresAt(lastCompletedAt)` on each write and re-stamp the person's earlier
+records on every new submission, or run a scheduled purge. The notice says the
+link and the record go together, and today only the link keeps that promise.
+
 ## Editing copy (no code knowledge needed)
 
 All user-facing words live in `src/data/copy.ts` (and question wording in
