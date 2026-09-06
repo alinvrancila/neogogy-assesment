@@ -17,6 +17,7 @@ import {
   stageDetail, stageName,
 } from "../../src/engine/display";
 import { dependenceTags } from "../../src/engine/pastor";
+import { PASTOR_BASELINE_ITEMS } from "../../src/items/shared";
 
 let pass = 0; let fail = 0;
 const ok = (name: string, cond: boolean, got?: unknown) => {
@@ -313,6 +314,33 @@ head("The record, and what may leave it");
   ok("neither claims anyone's AI use is certified safe",
     !/certif\w* (?:that )?(?:my|their|your)? ?(?:use|ai) (?:is|as) safe|ai safety certif/i.test(
       sharePosts(strong).map((p) => p.text).join(" ") + " " + pastorStanding(strong).detail));
+}
+
+head('C4: the Minister edition runs on the same mechanics');
+{
+  const items = applicableItems('pastor', 4);
+  const scored = items.filter((i) => i.options && i.options.some((o) => o.value > 0));
+  const four = scored.filter((i) => i.options!.filter((o) => o.value > 0).length === 4);
+  ok('no four-point option set remains', four.length === 0, four.map((i) => i.id).join(', '));
+  ok('every scored option set offers five levels',
+    scored.every((i) => i.options!.filter((o) => o.value > 0).length === 5));
+
+  // symmetric: two either side of a neutral middle, and no reason baked into an
+  // anchor that a respondent has to agree with in order to report a direction
+  const forms = items.filter((i) => i.id.endsWith('_form'));
+  ok('ten change items', forms.length === 10, String(forms.length));
+  for (const f of forms) {
+    const labels = f.options!.filter((o) => o.value > 0).map((o) => o.label);
+    ok(`${f.construct}: the top anchor states a direction, not a reason`,
+      !/, because /.test(labels[4]), labels[4]);
+  }
+
+  const app = readFileSync(joinPath(process.cwd(), 'src/components/compass/CompassApp.tsx'), 'utf-8');
+  ok('the same action carries the same label everywhere',
+    !/Start the health check/.test(app) && !/>\s*Begin <span/.test(app));
+
+  ok('the two calibration questions are asked here too',
+    PASTOR_BASELINE_ITEMS.length === 2 && PASTOR_BASELINE_ITEMS.every((i) => !!i.prompt));
 }
 
 head('C4: the ministry ladder reads in both directions');

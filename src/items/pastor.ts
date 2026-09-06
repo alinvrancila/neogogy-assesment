@@ -18,7 +18,12 @@ const P = "pastor" as const;
 
 /** A formation item: four anchors and an honest way out. */
 function formation(
-  construct: Item["construct"], prompt: string, anchors: [string, string, string, string],
+  // Five anchors, symmetric around a neutral middle, matching every other set.
+  // These were four, with two negative levels against one positive that carried
+  // a causal explanation baked into it, so a minister whose study time had grown
+  // a great deal had no way to say so and the one positive answer asked them to
+  // agree with a reason as well as a direction.
+  construct: Item["construct"], prompt: string, anchors: [string, string, string, string, string],
   why: string, deeper: string, opts: Partial<Item> = {}
 ): Item {
   const options: ItemOption[] = anchors.map((label, i) => ({ value: i + 1, label }));
@@ -66,7 +71,8 @@ export const PASTOR_ITEMS: Item[] = [
       "Weakened noticeably.",
       "Weakened somewhat.",
       "Stayed the same.",
-      "Strengthened, because the tool freed you for the parts that matter.",
+      "Strengthened somewhat.",
+      "Strengthened noticeably.",
     ],
     "Ownership of the message is something you can feel from the inside before anyone else notices a change. This asks you to name that feeling honestly.",
     "Alin Vrancila, “Navigating the Agathokakological Age”: preaching “from a place of brokenness, repentance, and the ongoing experience of the Holy Spirit”.",
@@ -99,10 +105,11 @@ export const PASTOR_ITEMS: Item[] = [
     }),
   formation("verification",
     "Since AI entered your ministry, how often something you preached later turned out to be inaccurate (a misattributed quote, a wrong word meaning, a historical claim that was not so) has:", [
-      "Increased.",
+      "Increased noticeably.",
+      "Increased somewhat.",
       "Stayed about the same.",
       "Decreased somewhat.",
-      "Decreased clearly, because checking is now built into your preparation.",
+      "Decreased noticeably.",
     ],
     "Errors that reach the pulpit are the honest measure of a verification habit. This question is asked so you can see the trend, not to keep score.",
     "Deuteronomy 19:15, NLT: facts established by two or three witnesses."),
@@ -139,6 +146,7 @@ export const PASTOR_ITEMS: Item[] = [
       "Nearly disappeared.",
       "Shrunk a lot.",
       "Shrunk somewhat.",
+      "Stayed about the same.",
       "Stayed protected on purpose.",
     ],
     "What you protect reveals what you value. The question asks about a rhythm, not a rule.",
@@ -178,6 +186,7 @@ export const PASTOR_ITEMS: Item[] = [
     "Since AI entered your ministry, your confidence in knowing what to hand the tool and what to keep has:", [
       "Decreased.",
       "Stayed unclear.",
+      "Grown a little.",
       "Grown somewhat.",
       "Grown clearly, with a line you can state.",
     ],
@@ -215,7 +224,8 @@ export const PASTOR_ITEMS: Item[] = [
       "Shrunk a lot.",
       "Shrunk somewhat.",
       "Stayed the same.",
-      "Grown, because the tool clears space for real study.",
+      "Grown somewhat.",
+      "Grown noticeably.",
     ],
     "Preachers are formed in the study or they are not formed there. This asks for an honest read of a private thing.",
     "James Spencer, “Theological Dispositions in a Digital World”, on habitus: patterns refined as we respond to God."),
@@ -248,9 +258,10 @@ export const PASTOR_ITEMS: Item[] = [
   formation("amplification",
     "Since AI entered your ministry, the depth of your understanding of the passages you preach has:", [
       "Decreased. You skim more.",
+      "Decreased somewhat.",
       "Stayed the same.",
       "Increased somewhat.",
-      "Increased clearly, and you can name how.",
+      "Increased noticeably.",
     ],
     "Depth is the difference between using a tool and being used by one.",
     "Alin Vrancila, “Navigating the Agathokakological Age”, on moving from information delivery to wisdom formation."),
@@ -282,10 +293,11 @@ export const PASTOR_ITEMS: Item[] = [
     }),
   formation("skillGrowth",
     "Since AI entered your ministry, your ability to catch a weak argument, a flat illustration, or a misread text in a draft (yours or the tool's) has:", [
-      "Weakened.",
+      "Weakened noticeably.",
+      "Weakened somewhat.",
       "Stayed the same.",
       "Strengthened somewhat.",
-      "Strengthened clearly, through deliberate practice.",
+      "Strengthened noticeably.",
     ],
     "The eye that catches the flaw is the craft itself.",
     "James Spencer, “The Quad”, on procedural knowing: the skill behind a claim made visible.",
@@ -321,6 +333,7 @@ export const PASTOR_ITEMS: Item[] = [
       "Never.",
       "Rarely.",
       "Occasionally.",
+      "Often.",
       "Regularly, on purpose.",
     ],
     "The number itself matters less than whether it is zero.",
@@ -356,7 +369,8 @@ export const PASTOR_ITEMS: Item[] = [
       "Shrunk a lot.",
       "Shrunk somewhat.",
       "Stayed the same.",
-      "Grown, because the tool took administration off your desk.",
+      "Grown somewhat.",
+      "Grown noticeably.",
     ],
     "The right use of the tool gives a pastor more time with people, not less. This asks which direction yours has moved.",
     "Noreen Herzfeld, quoted in “Navigating the Agathokakological Age”, on our capacity “to love, to suffer, and to engage in genuine mutual relationship”.",
@@ -389,10 +403,11 @@ export const PASTOR_ITEMS: Item[] = [
     }),
   formation("creativity",
     "Since AI entered your ministry, your congregation's sense that they are hearing from their own pastor, with their lives and their city in view, has:", [
-      "Weakened.",
+      "Weakened noticeably.",
+      "Weakened somewhat.",
       "Stayed the same.",
       "Strengthened somewhat.",
-      "Strengthened clearly.",
+      "Strengthened noticeably.",
     ],
     "Witness is local. A sermon that could be anyone's is a sermon that is no one's.",
     "Andy Crouch, The Life We're Looking For, on communities where people are known, needed, and loved in the flesh.",

@@ -647,7 +647,7 @@ function PastorOpening({ onBack, onNext }: { onBack: () => void; onNext: () => v
         <div className="qnav mt-m">
           <button className="back" type="button" onClick={onBack}><span>&larr;</span> Back</button>
           <button className="btn btn-primary" type="button" onClick={onNext}>
-            Begin <span className="arrow">&rarr;</span>
+            Begin the assessment <span className="arrow">&rarr;</span>
           </button>
         </div>
       </div>
@@ -774,7 +774,7 @@ function BusinessContextScreen({
         <div className="qnav mt-m">
           <button className="back" type="button" onClick={onBack}><span>&larr;</span> Back</button>
           <button className="btn btn-primary" type="button" onClick={onNext}>
-            Start the health check <span className="arrow">&rarr;</span>
+            Begin the assessment <span className="arrow">&rarr;</span>
           </button>
         </div>
       </div>
