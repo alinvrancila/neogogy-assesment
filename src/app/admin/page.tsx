@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SubmissionMeta } from '@/lib/storage';
 import Dashboard from '@/components/admin/Dashboard';
+import LifePortalWebhookPanel from '@/components/admin/LifePortalWebhookPanel';
 
 type Stats = {
   totalEvents: number;
@@ -1205,6 +1206,8 @@ export default function AdminPage() {
           <h2 className="admin-title font-serif text-xl">All events</h2>
           <div ref={eventRef} className="mt-4 h-80 w-full" />
         </div>
+
+        <LifePortalWebhookPanel />
 
         {/* User management */}
         <div className="admin-card rounded-3xl p-6">

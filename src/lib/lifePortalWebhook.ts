@@ -1,10 +1,9 @@
 import crypto from 'node:crypto';
 import type { CompassResult } from '@/engine/types';
 import type { LeadRecord, SubmissionMeta } from '@/lib/storage';
+import { resolveLifePortalWebhookSettings, type LifePortalWebhookConfig } from '@/lib/lifePortalSettings';
 
 const DEFAULT_ENDPOINT = 'https://lifeportal.life.edu.ph/api/public/integrations/contacts/webhook';
-const DEFAULT_STAGE_CODE = 'inquiry';
-const DEFAULT_FIRST_INQUIRY_SOURCE_CODE = 'rfi';
 
 export type LifePortalWebhookPayload = {
   external_id: string;
@@ -152,14 +151,15 @@ export function isLifePortalWebhookEnabled(): boolean {
 export function buildLifePortalContactPayload(
   lead: LeadRecord,
   context: SendContext = {},
+  config?: LifePortalWebhookConfig,
 ): LifePortalWebhookPayload {
   const meta = lead.meta || {};
   const resultSummary = compactResult(lead);
-  const source = text(meta.utmSource, 120) || process.env.LIFE_PORTAL_UTM_SOURCE || 'lifex';
-  const medium = text(meta.utmMedium, 120) || process.env.LIFE_PORTAL_UTM_MEDIUM || 'webhook';
-  const campaign = text(meta.utmCampaign, 160) || process.env.LIFE_PORTAL_UTM_CAMPAIGN || 'lifex-neogogy-assessment';
+  const source = text(meta.utmSource, 120) || config?.utmSource || process.env.LIFE_PORTAL_UTM_SOURCE || 'lifex';
+  const medium = text(meta.utmMedium, 120) || config?.utmMedium || process.env.LIFE_PORTAL_UTM_MEDIUM || 'webhook';
+  const campaign = text(meta.utmCampaign, 160) || config?.utmCampaign || process.env.LIFE_PORTAL_UTM_CAMPAIGN || 'lifex-neogogy-assessment';
   const content = text(meta.utmContent, 160) || `neogogy-${lead.role || 'assessment'}`;
-  const term = text(meta.utmTerm, 160) || process.env.LIFE_PORTAL_UTM_TERM || 'lifex';
+  const term = text(meta.utmTerm, 160) || config?.utmTerm || process.env.LIFE_PORTAL_UTM_TERM || 'lifex';
   const mobilePhone = text(lead.mobilePhone, 40);
 
   return {
@@ -178,11 +178,11 @@ export function buildLifePortalContactPayload(
       email: lead.email,
       phone: mobilePhone,
       mobile_phone: mobilePhone,
-      program_code: text(process.env.LIFE_PORTAL_PROGRAM_CODE, 120),
-      academic_term_code: text(process.env.LIFE_PORTAL_ACADEMIC_TERM_CODE, 120),
-      stage_code: text(process.env.LIFE_PORTAL_STAGE_CODE, 120) || DEFAULT_STAGE_CODE,
-      source_of_origin_code: text(process.env.LIFE_PORTAL_SOURCE_OF_ORIGIN_CODE, 120),
-      first_inquiry_source_code: text(process.env.LIFE_PORTAL_FIRST_INQUIRY_SOURCE_CODE, 120) || DEFAULT_FIRST_INQUIRY_SOURCE_CODE,
+      program_code: config?.programCode || text(process.env.LIFE_PORTAL_PROGRAM_CODE, 120),
+      academic_term_code: config?.academicTermCode || text(process.env.LIFE_PORTAL_ACADEMIC_TERM_CODE, 120),
+      stage_code: config?.stageCode || text(process.env.LIFE_PORTAL_STAGE_CODE, 120) || 'inquiry',
+      source_of_origin_code: config?.sourceOfOriginCode || text(process.env.LIFE_PORTAL_SOURCE_OF_ORIGIN_CODE, 120),
+      first_inquiry_source_code: config?.firstInquirySourceCode || text(process.env.LIFE_PORTAL_FIRST_INQUIRY_SOURCE_CODE, 120) || 'rfi',
       tags: tagList(lead),
     },
     attribution: {
@@ -240,17 +240,18 @@ export async function sendLifePortalContactLead(
   lead: LeadRecord,
   context: SendContext = {},
 ): Promise<LifePortalWebhookResult> {
-  if (process.env.LIFE_PORTAL_WEBHOOK_ENABLED === 'false') {
+  const config = await resolveLifePortalWebhookSettings();
+  if (!config.enabled) {
     return { sent: false, reason: 'disabled' };
   }
 
-  const signingSecret = process.env.LIFE_PORTAL_WEBHOOK_SECRET;
+  const signingSecret = config.secret;
   if (!signingSecret) {
     return { sent: false, reason: 'not_configured' };
   }
 
-  const endpoint = process.env.LIFE_PORTAL_WEBHOOK_URL || DEFAULT_ENDPOINT;
-  const payload = buildLifePortalContactPayload(lead, context);
+  const endpoint = config.url || DEFAULT_ENDPOINT;
+  const payload = buildLifePortalContactPayload(lead, context, config);
   const body = JSON.stringify(payload);
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const signature = crypto
