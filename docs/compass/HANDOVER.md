@@ -3,6 +3,12 @@
 State of the launch work after the September product audit. Written so any
 session, this one or a new one, can pick up without re-deriving.
 
+## Start here, in a fresh session
+
+Read this file, then `git log --oneline -25`. The next piece of work is **B3,
+report URLs**, specified below. Everything needed to do it is in this document
+and in the tests.
+
 ## Where to look first
 
 - `tests/compass/audit.ts` ties each fix to its numbered audit finding.
@@ -71,6 +77,14 @@ evidence, and gates cannot be satisfied by an unevidenced dimension.
   `@napi-rs/canvas` with the `Factory` shim in `raster.mjs`.
 - **The regression snapshot is the safety net** for any engine change:
   `npx tsx tests/compass/dump.ts` before and after, and diff.
+
+## The backup document
+
+`npm run export:backup` writes the whole instrument to a Word file on the
+Desktop: the architecture and this handover, every question in every edition as
+a respondent sees it with its scale and its scoring values, and the full source
+of the engine and the item banks. It is generated from the code, so it cannot
+drift from what runs. Re-run it after any change to the items or the engine.
 
 ## Open questions for the client
 
