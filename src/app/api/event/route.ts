@@ -12,7 +12,14 @@ const ALLOWED = new Set([
   'question_view',
   'assessment_complete',
   'email_submit',
-  'report_download'
+  'report_download',
+  // Written by the server on every submission, and allowlisted here so the two
+  // lists do not disagree about what an event name may be.
+  'report_email_sent',
+  'report_email_failed',
+  'report_view',
+  'report_link_email',
+  'report_link_rotate'
 ]);
 
 export async function POST(request: NextRequest) {

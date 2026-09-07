@@ -87,6 +87,18 @@ How the assessment was taken, which is how honestly to read the answers.
 | utm_source, medium, campaign, term, content | All five, where present |
 | Ad click identifier | Which platform: gclid, fbclid, msclkid, ttclid, li_fat_id, twclid |
 
+## Age
+
+Not asked, and not verified. The Student edition names high school among its
+audiences, so some respondents are minors, and they are asked for exactly what
+everybody else is asked for. The privacy notice and the terms both say this
+plainly and give a parent, a guardian or a school a route to have a record
+deleted.
+
+This is a stated position rather than a control. If the product is ever sold
+into schools as a programme rather than shared as a link, an age band at setup
+with a parental consent path is the next thing to build.
+
 ## Deliberately not collected
 
 - No canvas, font or audio fingerprinting, and no cross-site identifier.

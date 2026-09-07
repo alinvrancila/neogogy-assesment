@@ -65,14 +65,41 @@ function shuffled<T>(list: T[], seed: string): T[] {
   return out;
 }
 
+/**
+ * An option that only makes sense after the one below it.
+ *
+ * Forty scenario options are written as a cumulative ladder, where each answer
+ * takes the previous one as read: "I do that, and check twice when the cost of
+ * being wrong is high." Shuffled, that can be presented first, referring to
+ * nothing, and the respondent cannot tell whether choosing it also asserts the
+ * behaviour it is built on.
+ *
+ * Detected rather than listed, so copy written in this shape later cannot
+ * quietly reintroduce the problem.
+ */
+const buildsOnThePrevious = (label: string) => /^\s*I do that\b/i.test(label);
+
+/**
+ * Whether an item's options can be shown in any order.
+ *
+ * Shuffling exists so that display order cannot be read as a ranking. It can
+ * only do that for options that stand on their own. A ladder already discloses
+ * its own order in the words, so shuffling it hides nothing and costs sense.
+ */
+export const canShuffle = (item: Item): boolean =>
+  item.type === 'scenario'
+  && !!item.options?.length
+  && !item.options.some((o) => buildsOnThePrevious(o.label));
+
 /** The choices a given item offers, in display order. */
 export function optionsFor(item: Item, seed?: string): Choice[] {
   if (item.options && item.options.length) {
     const choices = item.options.map((o) => ({ value: o.value, label: o.label }));
     // Scenarios are the only items whose options are behaviours rather than a
     // scale, so they are the only ones where display order could be read as a
-    // ranking. A branch or an impact scale keeps its written order.
-    if (item.type === 'scenario' && seed) return shuffled(choices, `${seed}:${item.id}`);
+    // ranking. A branch or an impact scale keeps its written order, and so does
+    // a ladder, which cannot be reordered without breaking its own sentences.
+    if (seed && canShuffle(item)) return shuffled(choices, `${seed}:${item.id}`);
     return choices;
   }
   const labels = SCALE_LABELS[item.scale ?? 'agreement'] ?? SCALE_LABELS.agreement;

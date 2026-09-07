@@ -65,6 +65,16 @@ export type LeadRecord = {
   reportTokenIssuedAt?: string;
 
   /**
+   * Whether the report email went, and why not when it did not.
+   *
+   * The outcome used to reach a console line and nothing else, so there was no
+   * way to answer "is anyone receiving their report" short of asking someone.
+   * `emailSent` is undefined on records written before this existed.
+   */
+  emailSent?: boolean;
+  emailError?: string;
+
+  /**
    * v2 only: context about how the assessment was taken.
    *
    * Two kinds of thing live here: what the respondent's browser reports about

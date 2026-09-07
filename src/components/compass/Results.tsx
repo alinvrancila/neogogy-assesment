@@ -54,6 +54,63 @@ const HEARD_OPTIONS = [
   'A talk, class, or event', 'Newsletter or email', 'Other',
 ];
 
+/* ------------------------------------------------------------ the file */
+
+/**
+ * The report as a file, built on demand.
+ *
+ * The site promises "a personal Human Advantage Report to keep", and the only
+ * way to receive one was by email. Six of the seven editions offered no way to
+ * download it, so whenever sending was switched off or a message bounced, the
+ * respondent had no copy at all and was told nothing. The file is built from
+ * the answers already in the browser and handed straight back, so it does not
+ * depend on the mail working.
+ */
+export function DownloadReport({ submission, name }: {
+  submission: Submission; name?: string;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const save = async () => {
+    setSaving(true); setErr(null);
+    try {
+      const res = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          persona: submission.persona, usage: submission.usage,
+          b1: submission.b1, b2: submission.b2, answers: submission.answers,
+          name: name || '',
+        }),
+      });
+      if (!res.ok) throw new Error('The file could not be built. Your report is on this page either way.');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `human-advantage-report-${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'The file could not be built.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <button className="btn btn-ghost" onClick={save} disabled={saving}>
+        {saving ? 'Preparing your copy' : 'Download the PDF'} <span className="arrow">&rarr;</span>
+      </button>
+      {err ? <p className="gate-err">{err}</p> : null}
+    </>
+  );
+}
+
 /* --------------------------------------------------- the report's own page */
 
 /**
@@ -170,10 +227,23 @@ export function GateForm({
                 onChange={(e) => setHeardOther(e.target.value)} placeholder="e.g. a podcast, a person, a conference" />
             </div>
           )}
+          {/* The report is not in this box, and is not conditional on it.
+              Bundling the two meant a respondent who wanted the thing they had
+              just been promised had to tick a marketing box to get it, which is
+              not a freely given consent and leaves the resulting list unusable.
+              The privacy notice has always said the report arrives either way;
+              this is the screen finally saying so too. */}
           <label className="consent">
             <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-            <span>Send me my report and occasional insights about educational opportunities. You can unsubscribe any time.</span>
+            <span>
+              Separately, and only if you tick this: the International Center for Applied Neogogy
+              may email me occasional insights about its work and its programmes. Every message
+              carries an unsubscribe link that works.
+            </span>
           </label>
+          <p className="consent-note">
+            Your results and your report do not depend on this box. They are yours either way.
+          </p>
           {gate.error ? (
             <div className="gate-err" role="alert">
               <p>{gate.error}</p>
@@ -461,6 +531,7 @@ export default function Results({
           <a className="btn btn-primary" href="https://ican.ph/books" target="_blank" rel="noopener noreferrer">
             See the books <span className="arrow">&rarr;</span>
           </a>
+          {submission ? <DownloadReport submission={submission} name={firstName} /> : null}
           <button className="btn btn-ghost" onClick={onRetake}>Take it again</button>
         </div>
       </div>

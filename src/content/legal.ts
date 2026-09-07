@@ -101,6 +101,15 @@ export const PRIVACY: LegalDoc = {
       ],
     },
     {
+      heading: 'Respondents under eighteen',
+      body: [
+        'The Student edition is written for high school as well as college and university, so some of the people answering it are minors. This section says what that means, and it is deliberately blunt about what the product does and does not do about it.',
+        'A respondent under eighteen is asked for the same things as everybody else: a name, an email address, an optional mobile number, and the answers themselves. The record also holds the address the request came from and the city it maps to, like every other record. The assessment does not ask anybody how old they are, and nothing about the flow changes for a younger respondent.',
+        'If you are under eighteen, ask a parent, a guardian or a teacher before you give us your details. If you are a parent, a guardian or a school and you would rather we did not hold a young person\'s record, write to us and we will delete it. We will act on that request from a parent or a guardian without asking the young person to confirm it, and we will not ask why.',
+        `A school or a teacher who sets this for a class is asking their students to hand personal data to us, and should say so to them and to their parents first. We will answer questions from a school about what is held on its students at ${CONTACT}.`,
+      ],
+    },
+    {
       heading: 'Your rights',
       body: [
         `You can ask for a copy of everything held about you, ask for a correction, ask for deletion, withdraw consent, object to the processing, or ask for your data in a portable file. Write to ${CONTACT} from the address you used, and we will answer within thirty days.`,
@@ -152,6 +161,13 @@ export const TERMS: LegalDoc = {
       body: [
         'Your result is yours. You may keep it, print it, and share it with anyone you choose.',
         'The instrument, its questions, its scoring and the design of the report remain the property of ICAN. You may quote from your own report with attribution. You may not reproduce the question set, or build a derivative instrument from it, without written permission.',
+      ],
+    },
+    {
+      heading: 'Age',
+      body: [
+        'The assessment is written for adults and for older school students, and it is not designed for children. If you are under eighteen, take it with the knowledge of a parent, a guardian or a teacher.',
+        'We do not verify anyone\'s age, and we say so rather than implying a check we do not perform. A parent, a guardian or a school can ask us to delete a young person\'s record at any time, and the privacy notice says how.',
       ],
     },
     {

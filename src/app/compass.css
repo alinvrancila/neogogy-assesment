@@ -3490,3 +3490,9 @@
   .nfc .saved-link{padding:20px}
   .nfc .saved-link .dlrow .btn{width:100%;justify-content:center}
 }
+
+/* The line under the marketing box, saying what the box is not for. */
+.nfc .consent-note{
+  margin:8px 0 0 30px; color:var(--ink-soft); font-size:.88rem; line-height:1.5;
+}
+@media (max-width:640px){ .nfc .consent-note{margin-left:0} }

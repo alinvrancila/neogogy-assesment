@@ -9,14 +9,11 @@
  */
 import { getLeadByReportToken, lastCompletedAtForEmail, type LeadRecord } from '@/lib/storage';
 import { isWellFormedToken, isLive, redactToken, reportUrl } from '@/lib/reportLink';
-import { BRAND } from '@/brand';
+import { allow, peek, resetThrottles } from '@/lib/throttle';
 
-/** Read a counter without spending from it. */
-export function peek(key: string, limit: number, now = Date.now()): boolean {
-  const current = windows.get(key);
-  if (!current || current.resetAt <= now) return true;
-  return current.count < limit;
-}
+// Re-exported so the routes and the suite keep one import for link access.
+export { allow, peek, resetThrottles };
+import { BRAND } from '@/brand';
 
 /**
  * How many misses one address gets before it is turned away.
@@ -94,46 +91,6 @@ export function reportViewEvent(lead: LeadRecord) {
     role: lead.role,
     zone: lead.archetypeId || lead.persona,
   };
-}
-
-/**
- * A throttle held in memory.
- *
- * The app runs as a single node process behind nginx, so one map is the whole
- * picture. It restarts empty, which is the right failure: a restart is rare and
- * losing the counters costs less than refusing a person their own link.
- *
- * The control only ever mails the address already on the record, so the worst a
- * held link can do is post the same message to its owner repeatedly. That is
- * still worth bounding, and it is bounded per token and per address so a caller
- * cannot get around it by rotating.
- */
-type Window = { count: number; resetAt: number };
-const windows = new Map<string, Window>();
-
-const HOUR = 60 * 60 * 1000;
-
-/** Keep the map from growing without bound on a long lived process. */
-function sweep(now: number) {
-  if (windows.size < 5000) return;
-  for (const [key, w] of windows) if (w.resetAt <= now) windows.delete(key);
-}
-
-export function allow(key: string, limit: number, windowMs = HOUR, now = Date.now()): boolean {
-  sweep(now);
-  const current = windows.get(key);
-  if (!current || current.resetAt <= now) {
-    windows.set(key, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-  if (current.count >= limit) return false;
-  current.count += 1;
-  return true;
-}
-
-/** Test seam: the counters are process state, and a suite needs them clean. */
-export function resetThrottles() {
-  windows.clear();
 }
 
 /** Log a failure without writing the token into the line. */

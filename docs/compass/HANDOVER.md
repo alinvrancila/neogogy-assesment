@@ -108,6 +108,62 @@ checked by `tests/compass/link.ts` against what the code does.
   now sends `$remote_addr`. This also makes the stored addresses, and the
   geolocation drawn from them, mean what the inventory says they mean.
 
+## The launch audit, 7 September 2026
+
+Every edition was driven through a real production build: seven editions by four
+answer profiles, plus refusals, retakes, PDFs and every public route. All of it
+passed. What did not pass was everything around it. Nine defects of launch
+weight were found and eight are fixed.
+
+Three were making the assessment say the wrong thing, and are described in the
+commit above this one: the gated bottleneck, the dropped final answer, and the
+Minister save button.
+
+The other five, and the decision:
+
+- **The admin was the weakest thing in the product.** Three accounts sharing one
+  password, printed in `DEPLOY.md` and in `scripts/seed-users.mjs`, with no
+  attempt limit, and a session cookie set to `STATS_TOKEN`, a value that also
+  travels in query strings and never expires. Now: the passwords are out of the
+  repository and the seed script generates them and prints them once; login is
+  limited to ten failures per address and per account in fifteen minutes; and a
+  session is a signed, expiring statement of who signed in, keyed on
+  `ADMIN_SESSION_SECRET`. **Rotate the three account passwords by hand. Nothing
+  in the code can do that for you, and the old one should be treated as burned.**
+- **Consent was bundled.** One box read "Send me my report and occasional
+  insights", so a respondent who wanted the report they had just been promised
+  ticked a marketing box to get it. The notice had always said the report comes
+  either way; the screen now says so too, and the box is marketing alone.
+- **Delivery was invisible.** `DEPLOY.md` asserted both `EMAIL_ENABLED=true` and
+  `EMAIL_ENABLED=false`, and the outcome of a send reached a console line and
+  nothing else. The outcome is now on the record and in an event, so the
+  dashboard can show a delivery rate, and every edition offers a PDF download so
+  a respondent is not left with nothing when the mail does not go.
+- **The CSV export answered 500 on the real data**, which is also how a subject
+  access request would have been answered. One optional chain guarded the result
+  and not the field.
+- **Forty scenario options were written as a ladder and then shuffled**, so
+  "I do that, and check twice" could be presented first, referring to nothing.
+  Ladders are now detected and left in their written order; the other 46
+  scenario items still shuffle. Detected rather than listed, so copy written in
+  that shape later cannot quietly reintroduce it.
+
+**Age is documented, not gated, and that was the owner's call.** High school is a
+named Student audience and minors do take this. The notice, the terms and the
+inventory now say plainly that no age is asked or verified, and give a parent, a
+guardian or a school a route to erasure. If this is ever sold into schools as a
+programme rather than shared as a link, an age band at setup with a parental
+consent path is the next thing to build.
+
+### Still open, from the same audit
+
+Thirty-five findings below launch weight survived verification and are not fixed.
+The one that will cost the most commercially: **the four original editions
+receive an identical report**. The questions differ and are well localised; the
+deliverable is not. `PERSONA_DISPLAY` in `src/engine/display.ts` has entries for
+business, professional and pastor only, and the parent report contains the word
+"child" zero times and "students" six. The home page sells the opposite.
+
 ## Traps and corrections
 
 - **A test can pass on the text of a fix while the fix does nothing.** P0-1 was

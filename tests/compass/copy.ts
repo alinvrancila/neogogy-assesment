@@ -21,9 +21,14 @@ import { PERSONA_CONTENT } from '@/content/personas';
 import { BRAND, CORE_QUESTION, ECOSYSTEM, NEXT_STEP } from '@/brand';
 import { PRIVACY, TERMS } from '@/content/legal';
 import { applicableItems } from '@/engine';
+import { optionsFor, canShuffle } from '@/components/compass/items';
+import type { Persona } from '@/engine/types';
 import { STAGES } from '@/engine/config';
 import { stageName } from '@/engine/display';
 import { shareCard, hasOwnCard, SITE_CARD } from '@/lib/shareCard';
+import {
+  SHARE_TITLE, SHARE_DESC, SHARE_IMAGE, PERSPECTIVE_COUNT, DIMENSION_COUNT,
+} from '@/lib/siteMeta';
 
 let pass = 0, fail = 0;
 const ok = (label: string, cond: boolean, detail?: string) => {
@@ -193,14 +198,23 @@ head('The report shows itself');
 head('The site card says what the site is');
 {
   const layout = fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'layout.tsx'), 'utf-8');
-  const title = (layout.match(/const SHARE_TITLE = '([^']+)'/) ?? [])[1] ?? '';
-  const desc = (layout.match(/const SHARE_DESC = '([^']+)'/) ?? [])[1] ?? '';
+  // The values themselves, not the source that produces them. Reading these out
+  // of layout.tsx with a regular expression is how "in six perspectives"
+  // survived on every page and every shared link for as long as there have been
+  // seven of them.
+  const title = SHARE_TITLE;
+  const desc = SHARE_DESC;
+  ok('the counts in the description are derived from the product',
+    desc.includes(`${PERSPECTIVE_COUNT} perspectives`) && desc.includes(`${DIMENSION_COUNT} dimensions`), desc);
+  ok('and they are the counts the product actually has',
+    PERSPECTIVE_COUNT === PERSONA_CONTENT.length && DIMENSION_COUNT === 10,
+    `${PERSPECTIVE_COUNT} perspectives, ${DIMENSION_COUNT} dimensions`);
   ok('the title is the product name', title === BRAND.product, title);
   const sentences = desc.split(/(?<=[.?!])\s+/).filter(Boolean);
   ok('the description is two sentences', sentences.length === 2, `${sentences.length}: ${desc}`);
   ok('it opens on the question the assessment asks', sentences[0] === CORE_QUESTION, sentences[0]);
   ok('it fits what a network will show', desc.length > 120 && desc.length <= 220, `${desc.length} characters`);
-  ok('the alt text describes the picture that is there', /summit above the clouds/.test(layout));
+  ok('the alt text describes the picture that is there', /summit above the clouds/.test(SHARE_IMAGE.alt));
 }
 
 head('The page draws the continuum the way the report does');
@@ -260,6 +274,18 @@ head('The site says what it does with your data');
   ok('it names a route to exercise rights', /info@neogogy\.ai/.test(prose));
   ok('it states a retention period', /twenty four months/i.test(prose));
   ok('consent is not required to receive the report', /whether or not you tick it/i.test(prose));
+
+  // The notice has always said the report is unconditional. The form used to
+  // say the opposite: one box reading "Send me my report and occasional
+  // insights", so a respondent who wanted their report ticked a marketing box
+  // to get it. That is not freely given consent, and it makes the list unusable.
+  const gate = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'compass', 'Results.tsx'), 'utf-8');
+  const box = gate.slice(gate.indexOf('className="consent"'), gate.indexOf('</label>', gate.indexOf('className="consent"')));
+  ok('the marketing box does not offer the report as part of the bargain',
+    !/\breport\b/i.test(box), box.replace(/\s+/g, ' ').slice(0, 160));
+  ok('it names who would be writing', /International Center for Applied Neogogy/.test(box));
+  ok('and the screen says plainly that the report does not depend on it',
+    /do not depend on this box/.test(gate));
   ok('the terms refuse appraisal use', /rank, appraise, select/i.test(
     TERMS.sections.flatMap((x) => x.body).join(' ')));
 
@@ -270,6 +296,21 @@ head('The site says what it does with your data');
     ok(`and the notice accounts for ${field}`,
       new RegExp(field.split(' ')[0], 'i').test(prose));
   }
+
+  // High school is a named audience, so minors take this. There is no age gate,
+  // by decision, and the documents have to say that rather than imply a check
+  // that is not performed.
+  ok('the notice covers respondents under eighteen',
+    /Respondents under eighteen/.test(PRIVACY.sections.map((x) => x.heading).join(' ')));
+  ok('and gives a parent a route to erasure',
+    /parent, a guardian or a school/i.test(prose) && /we will delete it/i.test(prose));
+  const terms = TERMS.sections.map((x) => `${x.heading} ${x.body.join(' ')}`).join(' ');
+  ok('the terms speak to age', /Age/.test(TERMS.sections.map((x) => x.heading).join(' ')));
+  ok('and admit that no age is verified', /do not verify anyone's age/i.test(terms));
+  ok('the inventory records the position', /Not asked, and not verified/.test(
+    fs.readFileSync(path.join(process.cwd(), 'docs', 'DATA-COLLECTED.md'), 'utf-8')));
+  ok('high school is still a named audience, so this stays relevant',
+    PERSONA_CONTENT.some((p) => (p.whoList ?? []).some((w) => /high school/i.test(w))));
 
   const results = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'compass', 'Results.tsx'), 'utf-8');
   ok('the lead form links the notice where the email is asked for', /href="\/privacy"/.test(results));
@@ -288,6 +329,47 @@ head('The page counts what the assessment actually asks');
   const app = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'compass', 'CompassApp.tsx'), 'utf-8');
   ok('the intro counts come from the bank',
     /questionCountLabel\(/.test(app) && !/40 to 42 questions/.test(app));
+}
+
+head('No answer refers to an option that may not have been shown');
+{
+  // Scenario options are shuffled so their order cannot be read as a ranking.
+  // Forty of them were written as a ladder, each taking the one below it as
+  // read, so a shuffle could present "I do that, and check twice when the cost
+  // of being wrong is high" first, referring to nothing.
+  const SETS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business', 'pastor', 'professional'];
+  const seen = new Set<string>();
+  let ladders = 0, shuffled = 0;
+  const offenders: string[] = [];
+
+  for (const persona of SETS) {
+    for (const item of applicableItems(persona, 4)) {
+      if (item.type !== 'scenario' || !item.options?.length) continue;
+      if (seen.has(item.id)) continue;
+      seen.add(item.id);
+      if (canShuffle(item)) shuffled += 1; else ladders += 1;
+
+      // Many seeds, because the defect only shows on the orders that put a
+      // back-reference first.
+      for (const seed of ['a', 'b', 'sess-9f2e', 'x1', 'x2', 'x3', 'x4', 'x5']) {
+        const shown = optionsFor(item, seed);
+        if (/^\s*I do that\b/i.test(shown[0].label)) {
+          offenders.push(`${item.id} (seed ${seed}): ${shown[0].label.slice(0, 60)}`);
+        }
+      }
+    }
+  }
+
+  ok('no option that builds on another can be shown first',
+    offenders.length === 0, offenders.slice(0, 3).join('\n        '));
+  ok('and the ones that stand alone are still shuffled', shuffled > 20, String(shuffled));
+  ok('while the ladders keep the order their sentences require', ladders > 0, String(ladders));
+
+  // Whatever the order, the same behaviours are offered with the same values.
+  const one = applicableItems('professional', 4).find((i) => i.type === 'scenario' && i.options?.length)!;
+  const asWritten = one.options!.map((o) => `${o.value}:${o.label}`).sort().join('|');
+  const asShown = optionsFor(one, 'seed-q').map((o) => `${o.value}:${o.label}`).sort().join('|');
+  ok('shuffling never changes what an option is worth', asWritten === asShown);
 }
 
 head('Nothing overclaims');

@@ -58,6 +58,10 @@ export function buildLeadRows(leads: LeadRecord[]): Row[] {
   return leads.map((lead) => {
     const r = resultOf(lead);
     const m = lead.meta;
+    // Present only on Business records, and absent from anything stored before
+    // these fields were introduced.
+    const risks = Array.isArray(r?.riskRegister) ? r!.riskRegister : null;
+    const plan = Array.isArray(r?.ninetyDayPlan) ? r!.ninetyDayPlan : null;
     const domain = domainOf(lead.email || '');
     const mine = history.get((lead.email || '').toLowerCase()) || [lead];
     const position = mine.findIndex((x) => x.id === lead.id);
@@ -133,14 +137,21 @@ export function buildLeadRows(leads: LeadRecord[]): Row[] {
       business_industry: m?.business?.industry ?? '',
       business_team_size: m?.business?.teamSize ?? '',
       business_tools: m?.business?.tools ?? '',
-      risk_register_total: r?.riskRegister.length ?? '',
-      risk_legal: r ? r.riskRegister.filter((e) => e.category === 'legal').length : '',
-      risk_financial: r ? r.riskRegister.filter((e) => e.category === 'financial').length : '',
-      risk_operational: r ? r.riskRegister.filter((e) => e.category === 'operational').length : '',
-      risk_reputational: r ? r.riskRegister.filter((e) => e.category === 'reputational').length : '',
-      risk_strategic: r ? r.riskRegister.filter((e) => e.category === 'strategic').length : '',
-      risk_register: r ? list(r.riskRegister.map((e) => `${e.category}: ${e.title}`)) : '',
-      ninety_day_plan: r ? list(r.ninetyDayPlan.flatMap((p) => p.actions.map((a) => `${p.window}: ${a.capability}`))) : '',
+      // Only the Business edition produces a risk register or a ninety day plan,
+      // and records stored before those fields existed have neither. The optional
+      // chain has to guard the field, not only the result: guarding only the
+      // result threw on every other edition and took the whole export down with
+      // it, so the one way data leaves the product answered 500 on real data.
+      risk_register_total: risks?.length ?? '',
+      risk_legal: risks ? risks.filter((e) => e.category === 'legal').length : '',
+      risk_financial: risks ? risks.filter((e) => e.category === 'financial').length : '',
+      risk_operational: risks ? risks.filter((e) => e.category === 'operational').length : '',
+      risk_reputational: risks ? risks.filter((e) => e.category === 'reputational').length : '',
+      risk_strategic: risks ? risks.filter((e) => e.category === 'strategic').length : '',
+      risk_register: risks ? list(risks.map((e) => `${e.category}: ${e.title}`)) : '',
+      ninety_day_plan: plan
+        ? list(plan.flatMap((p) => p.actions.map((a) => `${p.window}: ${a.capability}`)))
+        : '',
 
       /* their own history */
       attempt_number: position >= 0 ? position + 1 : 1,

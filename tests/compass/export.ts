@@ -6,6 +6,8 @@
  * on every row, nothing lost to a comma or a quote, and no cell that a
  * spreadsheet would evaluate instead of display.
  */
+import fs from 'fs';
+import path from 'path';
 import { compute, applicableItems } from '@/engine';
 import type { Persona, Submission } from '@/engine/types';
 import type { LeadRecord } from '@/lib/storage';
@@ -132,6 +134,54 @@ ok('a legacy record still exports, with its own columns filled and the rest blan
   rows[3].developmental_index === 41 && rows[3].stage === '' && rows[3].engine_version === 1,
   { index: rows[3].developmental_index, stage: rows[3].stage });
 ok('the file starts with a byte order mark so accented names survive Excel', csv.startsWith('﻿'));
+
+console.log('\nThe export survives a record that is not a Business Owner');
+{
+  // risk_register_total read `r?.riskRegister.length`, guarding the result but
+  // not the field. Only Business produces a risk register, and records stored
+  // before it existed have none, so the whole export threw and the only way
+  // data leaves the product answered 500 on the real dataset.
+  const shaped = (persona: Persona, strip: string[] = []): LeadRecord => {
+    const answers: Record<string, number> = {};
+    applicableItems(persona, 4).forEach((it) => {
+      const t = it.options?.length ? Math.max(...it.options.map((o) => o.value)) : 5;
+      answers[it.id] = it.type === 'reverse' ? t - 1 : 4;
+    });
+    const result = compute({ persona, usage: 4, b1: 4, b2: 3, answers } as Submission) as unknown as Record<string, unknown>;
+    for (const key of strip) delete result[key];
+    return {
+      id: `csv-${persona}-${strip.join('') || 'full'}`, name: 'CSV Reader', email: `${persona}@example.com`,
+      role: persona, modality: '', consent: false,
+      persona: String((result as any).archetype.id), personaName: '',
+      overall: (result as any).stage.rawIndex, createdAt: '2026-09-01T00:00:00.000Z',
+      engineVersion: 2, result, answers,
+    } as unknown as LeadRecord;
+  };
+
+  const everyEdition: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business', 'pastor', 'professional'];
+  let threw = '';
+  try { buildLeadCsv(everyEdition.map((p) => shaped(p))); } catch (e) { threw = String(e); }
+  ok('every edition exports together', threw === '', threw);
+
+  // The shape of the 29 records that predate the field.
+  let legacy = '';
+  try { buildLeadCsv([shaped('student', ['riskRegister', 'ninetyDayPlan'])]); } catch (e) { legacy = String(e); }
+  ok('a record stored before the risk register existed exports', legacy === '', legacy);
+
+  const withRisk = buildLeadRows([shaped('business')])[0];
+  ok('a Business record still reports its risk register',
+    typeof withRisk.risk_register_total === 'number', withRisk.risk_register_total);
+  // A freshly scored record of any edition carries an empty register, so zero is
+  // the truthful answer. A record stored before the field existed carries none,
+  // and that is the case that used to take the export down.
+  const fresh = buildLeadRows([shaped('student')])[0];
+  ok('another edition reports an empty register as zero',
+    fresh.risk_register_total === 0, fresh.risk_register_total);
+  const old = buildLeadRows([shaped('student', ['riskRegister', 'ninetyDayPlan'])])[0];
+  ok('and a record with no register at all leaves the column blank',
+    old.risk_register_total === '' && old.ninety_day_plan === '',
+    `${old.risk_register_total} / ${old.ninety_day_plan}`);
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

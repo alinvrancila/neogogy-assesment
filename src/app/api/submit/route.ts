@@ -365,6 +365,7 @@ export async function POST(request: NextRequest) {
   });
 
   let emailSent = false;
+  let emailError = '';
   try {
     const pdf = await generateCompassPdf({
       result, name: fullName, comparison, leadId: lead.id,
@@ -419,10 +420,35 @@ export async function POST(request: NextRequest) {
         pdf,
       });
       emailSent = sent.sent;
+      if (!sent.sent) emailError = sent.reason || 'not_sent';
+    } else {
+      emailError = 'email_disabled';
     }
   } catch (error) {
+    emailError = error instanceof Error ? error.message.slice(0, 200) : 'unknown';
     console.error('pdf/email failed', error);
     // The respondent still sees their result on screen.
+  }
+
+  // Written down rather than only logged, so the question "is anyone actually
+  // receiving their report" has an answer that does not depend on someone
+  // having been watching the console at the time.
+  if (stored) {
+    try {
+      await saveLead({ ...lead, emailSent, emailError: emailError || undefined });
+    } catch (error) {
+      console.error('recording the delivery outcome failed', error);
+    }
+  }
+  try {
+    await logEvent({
+      event: emailSent ? 'report_email_sent' : 'report_email_failed',
+      sessionId: body.sessionId,
+      role: lead.role,
+      zone: emailSent ? undefined : (emailError || 'unknown').slice(0, 40),
+    });
+  } catch (error) {
+    console.error('delivery event failed', error);
   }
 
   return NextResponse.json({

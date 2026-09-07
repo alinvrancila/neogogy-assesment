@@ -11,7 +11,9 @@
 - **Reverse proxy:** nginx on port 80 (443 after SSL) at `/etc/nginx/nginx.conf`.
 - **Storage:** DynamoDB tables `neogogy-leads` and `neogogy-events` (region `ap-southeast-1`, on-demand billing).
 - **Analytics:** self-hosted events to DynamoDB; summary at `GET /api/stats?token=...`.
-- **Email:** Amazon SES, wired but disabled (`EMAIL_ENABLED=false`). See below.
+- **Email:** Amazon SES. Whether sending is on is set on the server, not here.
+  See "Email" below for how to check it, because this file said both at once for
+  a while and neither statement was verifiable from the repository.
 
 ## Live URLs
 
@@ -42,9 +44,29 @@ http -> https redirect, and enables auto-renewal.
 
 ## Email (Amazon SES)
 
-Email is ENABLED on the server: `EMAIL_ENABLED=true`, `EMAIL_FROM=info@neogogy.ai`,
+**Check before you trust it.** This file used to assert `EMAIL_ENABLED=true` here
+and `EMAIL_ENABLED=false` twenty lines earlier, and the handover said a third
+thing. The server is the only authority:
+
+```bash
+grep -E '^EMAIL_(ENABLED|FROM)=' /opt/neogogy/app/.env.production
+```
+
+The intended configuration is `EMAIL_ENABLED=true`, `EMAIL_FROM=info@neogogy.ai`,
 region ap-southeast-1. The SES account already has production access (can send to
 any recipient). Sends succeed once the `info@neogogy.ai` sender is verified.
+
+**And check that it is actually working.** Every submission now records the
+outcome on the record (`emailSent`, `emailError`) and emits a
+`report_email_sent` or `report_email_failed` event, so the admin dashboard shows
+a delivery rate rather than nothing. A run of `report_email_failed` with reason
+`email_disabled` means sending is off; anything else names the SES error.
+
+Sending being off is no longer the same as a respondent getting nothing: the
+results screen offers a PDF download for every edition, and the report keeps its
+own address under `/r/`. Bounces and complaints are still unhandled, which is
+the remaining piece before any volume: subscribe an SNS topic to SES bounce and
+complaint notifications and keep a suppression list.
 
 Two verification paths were set up:
 
@@ -137,10 +159,25 @@ powershell -ExecutionPolicy Bypass -File deploy\redeploy.ps1
 
 - URL: **https://assessment.neogogy.ai/admin**
 - **Login is email + password**, checked against the DynamoDB `neogogy-users`
-  table (scrypt-hashed passwords). Usernames must be valid emails. Accounts:
-  - `alin@neogogy.ai` / `Default123!`
-  - `don@neogogy.ai` / `Default123!`
-  - `lem@neogogy.ai` / `Default123!`
+  table (scrypt-hashed passwords). Usernames must be valid emails. Three
+  accounts were seeded: `alin@`, `don@` and `lem@neogogy.ai`.
+
+  > **Their passwords used to be printed here.** They were the same default for
+  > all three, against a dashboard holding every respondent's name, email,
+  > phone, address, location and answers, and this file is in the repository.
+  > **Rotate all three in the "Admin users" panel before launch**, and treat the
+  > old one as burned. Passwords do not go back into this file: set them in the
+  > panel and share them out of band.
+
+- **Login is rate limited**: ten failed attempts per address and per account in
+  fifteen minutes, then a fifteen minute wait. Successful logins are never
+  rationed. The counters live in the app process, so a restart clears them.
+- **The session is not the stats token.** The cookie is a signed, expiring
+  statement of who logged in and when, valid eight hours. Set
+  `ADMIN_SESSION_SECRET` in `.env.production` to a long random value; rotating it
+  signs everyone out immediately, which is the way to end a session you are
+  unsure about. If it is unset the session falls back to signing with
+  `STATS_TOKEN`, which works but ties the two secrets together.
 - **User management** (in the dashboard, "Admin users" panel): add a user, change
   a user's password, or remove a user. Changes are live (no redeploy).
 - Visuals (Google Charts): conversion funnel (started -> completed -> email),
