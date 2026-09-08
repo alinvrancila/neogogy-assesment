@@ -164,6 +164,59 @@ deliverable is not. `PERSONA_DISPLAY` in `src/engine/display.ts` has entries for
 business, professional and pastor only, and the parent report contains the word
 "child" zero times and "students" six. The home page sells the opposite.
 
+## The 7 September re-audit: the P0 set
+
+Six items blocked a marketing launch. All six are closed.
+
+**The instrument was gameable by four stages.** Situation items are weighted 1.6
+against 1.0 per item, and the intro promises the reader that situations "carry
+more weight than the ones where you describe yourself". In aggregate that was
+false: a Student edition asks 21 self-descriptions and 11 situations, and the
+eleven reverse-worded items were never damped at all, because the only damper
+ran on `pairId` and only ever matched `claim`. Flattering yourself while
+choosing badly everywhere was worth 42 points and three stages.
+
+Self-description weight now slides with how far it sits from the situations for
+the same dimension, in either direction, floor 0.1 at total disagreement. The
+same manipulation is now worth under ten points and no stage change on all
+seven editions. **A respondent whose two kinds of answer agree is scored exactly
+as before**: the gap is zero, the weight is one, and the coherent ladder still
+runs 0.4, 25, 50, 75, 99.6. The regression test carries a fixed answer vector.
+
+**The contradiction was detected and never shown.** The engine has always built
+a `divergence` section. No render order listed it, on screen or in the file, so
+it was computed and thrown away on every report that earned it while the scoring
+quietly acted on the same signal. It now renders in both, after the pattern
+sections and before the plan.
+
+**Dependence was still described as disconnection**, and the earlier fix is why
+it was hard to see: `stageDetail` was made lean-aware, but four places on screen
+print `STAGES[].short` directly, and that string is written for the disconnection
+direction only. The narrative printed it too, immediately before the lean-aware
+description. There is now `stageSummary(persona, stage, lean)` and every surface
+uses it. The Business edition also had no dependence variants at all: its own
+ladder short-circuited the lean tables, the same trap the pastor branch was
+written to avoid, so the per-edition lean tables are now a lookup rather than a
+condition. A dependence lean is only reachable at business stages 1 to 4, and
+those four are written.
+
+**Smaller, and all verified by running the thing rather than reading it:** the
+single-sitting notice now hides when a comparison exists; the two directions on
+the signature block each name the artefact they belong to, so the map and the
+list no longer read as contradicting each other; and the HEPI figure is the 2026
+survey, checked against the publisher rather than swapped for a newer number.
+
+### The acceptance checks
+
+Checks 1, 2 and 3 pass against a production build. Checks 4 and 5 are the
+history and resume behaviours, which are P1-1 and P1-2 and are not built yet.
+
+### What the brief asked for that was already there
+
+`/r/<token>` report addresses, "email me my link", and a PDF download on every
+edition all shipped in the two releases before this one. What is genuinely
+missing from P1-1 is per-screen `document.title` and history states per question.
+
 ## Traps and corrections
 
 - **A test can pass on the text of a fix while the fix does nothing.** P0-1 was

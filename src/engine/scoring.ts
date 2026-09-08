@@ -110,12 +110,42 @@ const topValue = (item: Item): number => {
 
 interface Contribution { construct: ConstructId; score100: number; weight: number; itemId: string; type: Item["type"]; }
 
-function contributionsFor(item: Item, raw: number | undefined, claimDiscounted: Set<string>): Contribution[] {
+/** What you say about yourself. */
+export const isSelfDescription = (type: Item["type"]) => type === "claim" || type === "reverse";
+/** What you say you would do. */
+export const isSituation = (type: Item["type"]) => type === "scenario";
+
+/**
+ * How much of a self-description survives, given how far it sits above the
+ * situations for the same dimension.
+ *
+ * Nothing is lost at agreement, and almost everything is lost at total
+ * disagreement. In between it slides, so a respondent is never pushed across a
+ * boundary by one more point of self-flattery.
+ */
+export function selfReportWeight(gap: number): number {
+  const t = Math.min(1, Math.abs(gap) / SCORING.maxHealthyGap);
+  if (t <= 0) return 1;
+  return SCORING.selfReportFloor + (1 - SCORING.selfReportFloor) * (1 - t);
+}
+
+function contributionsFor(
+  item: Item, raw: number | undefined, claimDiscounted: Set<string>,
+  selfReportGap: Partial<Record<ConstructId, number>>,
+): Contribution[] {
   const hv = healthyValue(item, raw);
   if (hv === undefined || !item.construct) return [];
   const typeW = SCORING.itemTypeWeights[item.type as keyof typeof SCORING.itemTypeWeights] ?? 1.0;
   let w = (item.weight ?? 1.0) * typeW;
-  if (item.type === "claim" && claimDiscounted.has(item.id)) w *= SCORING.claimDiscountOnGap;
+  if (isSelfDescription(item.type)) {
+    // The paired signal is the sharper one where it exists, so take whichever
+    // disagreement is larger. Reverse items carry no pair and used to escape
+    // this entirely, which is where most of the leak was: eleven of them, one
+    // per dimension, undamped.
+    const byConstruct = Math.abs(selfReportGap[item.construct] ?? 0);
+    const byPair = claimDiscounted.has(item.id) ? SCORING.maxHealthyGap : 0;
+    w *= selfReportWeight(Math.max(byConstruct, byPair));
+  }
 
   const top = topValue(item);
   const out: Contribution[] = [{ construct: item.construct, score100: to100(hv, top), weight: w, itemId: item.id, type: item.type }];
@@ -140,6 +170,39 @@ function contributionsFor(item: Item, raw: number | undefined, claimDiscounted: 
 // ---------------------------------------------------------------------------
 
 interface GapInfo { construct: ConstructId; claim: number; behavior: number; gap: number; flagged: boolean; claimItemId: string; }
+
+/**
+ * Per dimension, how far the self-descriptions sit above the situations.
+ *
+ * Measured on the 1 to 5 healthy scale and never below zero: describing
+ * yourself more harshly than you act is not a reason to discount you.
+ */
+export function selfReportGaps(items: Item[], answers: Answers): Partial<Record<ConstructId, number>> {
+  const said: Partial<Record<ConstructId, number[]>> = {};
+  const did: Partial<Record<ConstructId, number[]>> = {};
+  for (const it of items) {
+    if (!it.construct) continue;
+    const hv = healthyValue(it, answers[it.id]);
+    if (hv === undefined) continue;
+    if (isSelfDescription(it.type)) (said[it.construct] ??= []).push(hv);
+    else if (isSituation(it.type)) (did[it.construct] ??= []).push(hv);
+  }
+  const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  const out: Partial<Record<ConstructId, number>> = {};
+  for (const construct of Object.keys(said) as ConstructId[]) {
+    const s = said[construct];
+    const d = did[construct];
+    // Without a situation to compare against there is nothing to disbelieve.
+    if (!s?.length || !d?.length) continue;
+    // Signed, so the report can say which way the disagreement runs. The
+    // damper reads its size, in both directions: the promise made in the intro
+    // is that situations carry more weight than self-description, and that is
+    // not a promise about flattery only. Being harder on yourself than your
+    // answers warrant is disclosed rather than scored.
+    out[construct] = mean(s) - mean(d);
+  }
+  return out;
+}
 
 function computeGaps(items: Item[], answers: Answers): GapInfo[] {
   const byPair = new Map<string, { claim?: Item; scen?: Item }>();
@@ -207,10 +270,11 @@ export function scoreDimensions(persona: Persona, sub: Submission): {
   const items = applicableItems(persona, sub.usage);
   const gaps = computeGaps(items, sub.answers);
   const claimDiscounted = new Set(gaps.filter(g => g.flagged).map(g => g.claimItemId));
+  const selfReportGap = selfReportGaps(items, sub.answers);
 
   const buckets: Record<string, Contribution[]> = {};
   for (const it of items) {
-    for (const c of contributionsFor(it, sub.answers[it.id], claimDiscounted)) {
+    for (const c of contributionsFor(it, sub.answers[it.id], claimDiscounted, selfReportGap)) {
       (buckets[c.construct] ??= []).push(c);
     }
   }

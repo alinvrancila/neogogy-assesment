@@ -11,7 +11,7 @@
 
 import type { CompassResult } from '@/engine';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
-import { constructName, constructContent, reportedConstructName, stageName, indexName } from '@/engine/display';
+import { constructName, constructContent, reportedConstructName, stageName, indexName, stageSummary } from '@/engine/display';
 import { CONSTRUCT_CONTENT } from '@/engine/content';
 import type { ConstructId } from '@/engine/types';
 import { riskLean } from '@/engine/display';
@@ -20,6 +20,15 @@ import { GATE_DEFS } from './AscentMapHero';
 import type { AttemptComparison } from '@/lib/history';
 
 /* ------------------------------------------------------------------ header */
+
+/**
+ * Which way this reading is off the path.
+ *
+ * Every place that summarises a camp needs it, because the ladder's own
+ * one-liners describe the disconnection direction only.
+ */
+const leanOf = (result: CompassResult) =>
+  riskLean(result.composites.dependencyIndex, result.composites.underexposure);
 
 export function ResultHeader({ result }: { result: CompassResult }) {
   return (
@@ -83,8 +92,12 @@ export function OrientationCard({ result }: { result: CompassResult }) {
   const atTop = result.nextTarget.stage === result.stage.stage;
   return (
     <aside className="asc-orient" aria-label="Where you stand">
+      {/* The direction belongs beside the stage, not only in the paragraph
+          below it. Two readings can share a camp and be opposite lives. */}
       <h2 className="asc-orient-h">
         Stage {result.stage.stage} of 10: {result.stage.stageName}
+        {leanOf(result) === 'dependence' ? ', leaning towards dependence' : null}
+        {leanOf(result) === 'disconnection' ? ', leaning towards disconnection' : null}
       </h2>
       <p className="asc-orient-sub">
         {result.stage.substage === 'early'
@@ -94,7 +107,7 @@ export function OrientationCard({ result }: { result: CompassResult }) {
             : 'You are moving toward the next stage'}
       </p>
       <p className="asc-orient-body">
-        {STAGES.find((s) => s.stage === result.stage.stage)?.short}
+        {stageSummary(result.persona, result.stage.stage, leanOf(result))}
       </p>
 
       {/* C1: the direction has to be unambiguous. "Only 1.4 points from stage 8"
@@ -130,7 +143,7 @@ export function OrientationCard({ result }: { result: CompassResult }) {
               Stage {result.nextTarget.stage}: {result.nextTarget.stageName}
             </p>
             <p className="asc-orient-body">
-              {STAGES.find((s) => s.stage === result.nextTarget.stage)?.short}
+              {stageSummary(result.persona, result.nextTarget.stage, leanOf(result))}
             </p>
           </>
         )}
@@ -167,7 +180,9 @@ export function RouteStages({ result }: { result: CompassResult }) {
                   {isNext ? <span className="asc-flag asc-flag-next">Next ledge</span> : null}
                 </span>
                 <span className="asc-stage-alt">index {s.minIndex} and above</span>
-                {(isHere || isNext) ? <span className="asc-stage-short">{s.short}</span> : null}
+                {(isHere || isNext)
+                  ? <span className="asc-stage-short">{stageSummary(result.persona, s.stage, leanOf(result))}</span>
+                  : null}
               </span>
             </li>
           );
@@ -276,7 +291,9 @@ export function FootholdCard({ result }: { result: CompassResult }) {
 
 /* -------------------------------------------------------------- route log */
 
-export function RouteLogCard({ result }: { result: CompassResult }) {
+export function RouteLogCard(
+  { result, hasHistory = false }: { result: CompassResult; hasHistory?: boolean }
+) {
   const measured = Object.values(result.dimensions).filter((d) => d.confidence === 'high').length;
   const rows: Array<[string, string]> = [
     ['Current stage', `${result.stage.stageName} (${result.stage.stage} of 10)`],
@@ -301,10 +318,17 @@ export function RouteLogCard({ result }: { result: CompassResult }) {
           </div>
         ))}
       </dl>
-      <p className="asc-unavailable">
-        Practice history, experiment counts and a start date are not shown because this assessment
-        records a single sitting. They become available once you take it a second time.
-      </p>
+      {/* Only true the first time. This used to print unconditionally, a few
+          sections below a comparison block naming the date of the previous
+          reading and the dimensions that had moved since, so the report told
+          the reader on one page that it had never met them and that it
+          remembered them. */}
+      {hasHistory ? null : (
+        <p className="asc-unavailable">
+          Practice history, experiment counts and a start date are not shown because this is the
+          first sitting recorded for you. They become available once you take it a second time.
+        </p>
+      )}
     </section>
   );
 }

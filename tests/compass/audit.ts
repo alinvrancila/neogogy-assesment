@@ -10,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import { compute, applicableItems, generateReportSections } from '@/engine';
 import { riskLean, stageDetail } from '@/engine/display';
+import type { Submission as Sub } from '@/engine/types';
 import { firstStepFor } from '@/engine/firstStep';
 import { CONSTRUCTS } from '@/engine/config';
 import { assessmentOf, compareToPrevious } from '@/lib/history';
@@ -43,6 +44,7 @@ const avoidant = (p: Persona) => compute(build(p, 1, (it) => {
 }));
 
 const PERSONAS: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'professional'];
+const PERSONAS_ALL: Persona[] = ['student', 'teacher', 'parent', 'administrator', 'business', 'pastor', 'professional'];
 
 head('3.1 The continuum no longer describes the opposite of the reader');
 {
@@ -102,6 +104,92 @@ head('3.2 A journey is only a journey within one assessment');
   ok('and the movement is measured, not asserted',
     moved !== null && moved.indexDelta === Math.round((student.stage.rawIndex - earlier.stage.rawIndex) * 10) / 10,
     String(moved?.indexDelta));
+}
+
+head('P0-2: the contradiction the scoring acts on is shown to the reader');
+{
+  // The engine has always produced this section. No render order listed it, so
+  // it was computed and thrown away on every report that earned it, while the
+  // scoring quietly acted on the same signal.
+  const flattering = (p: Persona): Submission => {
+    const answers: Record<string, number> = {};
+    for (const it of applicableItems(p, 4)) {
+      const self = it.type === 'claim' || it.type === 'reverse';
+      answers[it.id] = self
+        ? (it.type === 'reverse' ? 1 : top(it))
+        : (it.type === 'reverse' ? top(it) : 1);
+    }
+    return { persona: p, usage: 4, b1: 3, b2: 3, answers };
+  };
+
+  const sections = generateReportSections(compute(flattering('student')));
+  const divergence = sections.find((x) => x.key === 'divergence');
+  ok('a profile that contradicts itself is given the section', !!divergence);
+  const text = divergence ? [divergence.title, ...divergence.lines].join(' ') : '';
+  ok('it names at least two dimensions',
+    (text.match(/\*\*[A-Z][^*]+\.\*\*/g) || []).length >= 2);
+  ok('it speaks to the reader', /\byou\b/i.test(text) && !/the respondent|the person/i.test(text));
+  ok('and it does not accuse', !/dishonest|lying|inflat/i.test(text));
+
+  const screen = fs.readFileSync(
+    path.join(process.cwd(), 'src', 'components', 'compass', 'Results.tsx'), 'utf-8');
+  const order = screen.slice(screen.indexOf('SCREEN_ORDER'), screen.indexOf('function orderedForScreen'));
+  ok('the screen renders it', /key: 'divergence'/.test(order));
+  ok('after the pattern sections and before the plan',
+    order.indexOf("'divergence'") > order.indexOf("'selfKnowledge'")
+    && order.indexOf("'divergence'") < order.indexOf("'plan'"));
+  ok('and the file renders it too',
+    /key === 'divergence'/.test(fs.readFileSync(
+      path.join(process.cwd(), 'src', 'lib', 'reportPdfV2.tsx'), 'utf-8')));
+
+  // A coherent respondent is not given a section about a disagreement they did
+  // not have.
+  const coherent = compute(build('student', 4, (it) => (it.type === 'reverse' ? 2 : 4)));
+  ok('a coherent profile is not given it',
+    !generateReportSections(coherent).some((x) => x.key === 'divergence'));
+}
+
+head('P0-3: a heavy user is never described as a distant one');
+{
+  const heavy = (p: Persona, level: number): Submission => {
+    const answers: Record<string, number> = {};
+    for (const it of applicableItems(p, 5)) {
+      const t = top(it);
+      const h = Math.max(1, Math.min(t, Math.round(((level - 1) / 4) * (t - 1)) + 1));
+      answers[it.id] = it.type === 'reverse' ? t + 1 - h : h;
+    }
+    return { persona: p, usage: 5, b1: 4, b2: 4, answers };
+  };
+  const DISCONNECTED = /little or no hands-on|occasional experimentation|use is broad|not yet grounded in your own|plays no part in/i;
+
+  for (const p of PERSONAS_ALL) {
+    for (const level of [1, 1.5, 2]) {
+      const r = compute(heavy(p, level));
+      const lean = riskLean(r.composites.dependencyIndex, r.composites.underexposure);
+      if (lean !== 'dependence') continue;
+
+      const det = stageDetail(p, r.stage.stage, lean);
+      ok(`${p} at stage ${r.stage.stage}: the camp is described from the dependence side`,
+        !DISCONNECTED.test(det.looksLike), det.looksLike.slice(0, 90));
+
+      const lines = generateReportSections(r).flatMap((x) => x.lines).join(' ');
+      ok(`${p} at stage ${r.stage.stage}: and the page does not also describe the opposite life`,
+        !DISCONNECTED.test(lines),
+        (lines.match(new RegExp(`.{0,60}${DISCONNECTED.source}.{0,60}`, 'i')) || [''])[0]);
+      ok(`${p} at stage ${r.stage.stage}: the stage names which way it leans`,
+        /leaning towards dependence/.test(lines));
+      ok(`${p} at stage ${r.stage.stage}: and is not sent away to learn the tool`,
+        r.bottleneck.construct !== 'fluency' && r.bottleneck.construct !== 'adaptability',
+        r.bottleneck.construct);
+    }
+  }
+
+  // The Business edition kept its own ladder, which used to outrank the lean.
+  for (let stage = 1; stage <= 4; stage++) {
+    ok(`business stage ${stage} has a dependence description of its own`,
+      stageDetail('business', stage, 'dependence').looksLike
+      !== stageDetail('business', stage, 'disconnection').looksLike);
+  }
 }
 
 head('B3: a report has its own address, and the address is a secret');

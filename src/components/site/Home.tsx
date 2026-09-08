@@ -515,7 +515,7 @@ function TwoQuestions() {
 
 function Research() {
   const stats = [
-    { n: '92%', t: 'of students now learn with AI, while only about a third have ever had guidance on how.', src: 'HEPI / Kortext 2025' },
+    { n: '95%', t: 'of students now use AI, and 94 percent use it on work that is assessed, while fewer than half say their teaching staff are helping them build the skill.', src: 'HEPI / Kortext 2026' },
     { n: '17%', t: 'worse on a later unaided exam for those who practised with an unrestricted chatbot, against no AI at all.', src: 'Bastani et al., PNAS 2025' },
     { n: '2x', t: 'the learning gains when the same technology is used deliberately, against established classroom practice.', src: 'Kestin et al., Scientific Reports 2025' },
   ];

@@ -241,16 +241,27 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
       : r.stage.substage === "established"
         ? "you are settled in this stage"
         : "you are moving toward the next one";
-    L.push(`**Stage ${r.stage.stage} of 10: ${r.stage.stageName}.** Your ${indexName(r.persona)} is ${r.stage.rawIndex} out of 100. That number is simply how far along the route your answers place you, where 0 is no meaningful use of AI and 100 is a mature, self-renewing practice. Within this stage, ${subPlain}.`);
-    L.push(``);
-    L.push(stageDef.short);
-    L.push(``);
     // Which way this reading is off the path decides which description of the
     // camp is true for the person standing in it. A low index reached through
     // dependence and a low index reached through disconnection are opposite
     // lives, and the generic text only ever described the second.
     const lean = riskLean(r.composites.dependencyIndex, r.composites.underexposure);
     const det = stageDetailFor(r.persona, r.stage.stage, lean);
+    const leaning = lean === "dependence" ? ", leaning towards dependence"
+      : lean === "disconnection" ? ", leaning towards disconnection" : "";
+
+    L.push(`**Stage ${r.stage.stage} of 10: ${r.stage.stageName}${leaning}.** Your ${indexName(r.persona)} is ${r.stage.rawIndex} out of 100. That number is simply how far along the route your answers place you, where 0 is no meaningful use of AI and 100 is a mature, self-renewing practice. Within this stage, ${subPlain}.`);
+    L.push(``);
+    // The generic one-line summary of the camp is written for the disconnection
+    // direction, because that is the only direction the ladder was originally
+    // written for. Printing it beside a lean-aware description told a heavy
+    // daily user, on the same page that reported heavy use, that they had
+    // "little or no hands-on practice". Where a direction-specific description
+    // exists it is the description, and the generic line is not printed at all.
+    if (!det) {
+      L.push(stageDef.short);
+      L.push(``);
+    }
     if (det) {
       L.push(`*What this stage usually looks like.* ${det.looksLike}`);
       L.push(`*The trap at this stage.* ${det.trap}`);
@@ -281,7 +292,12 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
   // 3. Developmental signature
   {
     const L: string[] = [];
-    L.push(`Ten dimensions, each scored 0 to 100. Higher is healthier on every one except ${reportedConstructName(r.persona, "dependencySafety")}, which is shown as a risk, so lower is healthier there. Each carries its own confidence level, because some dimensions rest on more of your evidence than others.`);
+    // The map and this list show the same ten dimensions from two sides, and one
+    // dimension appears under two names. Both directions were stated a few lines
+    // apart with nothing saying which belonged to which, so the page read as a
+    // contradiction even though neither sentence was wrong. Each direction now
+    // names the thing it describes.
+    L.push(`Ten dimensions, each scored 0 to 100. On the map, every one is plotted the same way, so further from the centre is always healthier. In the list below, ${reportedConstructName(r.persona, "dependencySafety")} is the one dimension written as a risk rather than as a capability, so there the lower number is the healthy one, and the capability reading behind it is given beside it. Each carries its own confidence level, because some dimensions rest on more of your evidence than others.`);
     L.push(``);
     L.push(`**At a glance**`);
     for (const c of Object.keys(CONSTRUCTS) as ConstructId[]) L.push(dimLine(r, c));

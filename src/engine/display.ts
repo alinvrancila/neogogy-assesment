@@ -763,20 +763,79 @@ export type RiskLean = "dependence" | "disconnection" | "balanced";
  * technology prose would be worse than either. Everyone else gets the
  * dependence variant at the low camps when that is the direction they are off.
  */
+/**
+ * The Business Owner ladder, read from the dependence side.
+ *
+ * The bespoke ladder used to outrank the lean for this edition, exactly the way
+ * the comment on stageDetail warns about, so an owner running the whole company
+ * through AI and checking none of it was told that "AI plays no part in how the
+ * business runs" on the same page that reported heavy use. A dependence lean is
+ * only reachable at the first four camps, so only those are written here.
+ */
+const BUSINESS_STAGE_DETAIL_DEPENDENCE: Record<number, { looksLike: string; trap: string }> = {
+  1: {
+    looksLike: "AI is doing a great deal of the work of the business and almost none of it is being checked, recorded or reproducible by anyone here. The output is going out; very little of the knowledge behind it has stayed in the company.",
+    trap: "Reading the volume of finished work as capacity you own. On this reading it is the tool's capacity, and it leaves when the tool, the price or the terms change.",
+  },
+  2: {
+    looksLike: "The tools are in daily use across the business and no practice has formed around them. Work reaches customers unverified, and starting a piece of work without assistance has become genuinely slow.",
+    trap: "Mistaking the speed for a capability of the business. Speed here belongs to the vendor, and it is not on your balance sheet.",
+  },
+  3: {
+    looksLike: "Frequent use with unsettled habits. Some work is checked and some is not, and which is which depends on how busy the week was rather than on what the work was worth or what it exposed you to.",
+    trap: "Letting the deadline decide what gets checked. That is a governance rule, it is just not one anybody chose or wrote down.",
+  },
+  4: {
+    looksLike: "Broad, confident use across several functions, with verification, continuity and institutional memory thin underneath it. Breadth is well ahead of protection.",
+    trap: "Exposure growing faster than governance. This is where dependence usually forms in a business, and it does not feel like a problem while it is forming, because nothing has gone wrong yet.",
+  },
+};
+
+type LeanDetail = Partial<Record<RiskLean, Record<number, { looksLike: string; trap: string }>>>;
+
+/** Editions whose ladder is their own, and therefore needs its own directions. */
+const OWN_LEAN_DETAIL: Partial<Record<Persona, LeanDetail>> = {
+  pastor: {
+    dependence: PASTOR_STAGE_DETAIL_DEPENDENCE,
+    disconnection: PASTOR_STAGE_DETAIL_DISCONNECTION,
+  },
+  business: { dependence: BUSINESS_STAGE_DETAIL_DEPENDENCE },
+};
+
 export function stageDetail(persona: Persona | undefined, stage: number, lean: RiskLean = "balanced") {
   // A persona with its own ladder gets its own directions too, checked before
   // its neutral text, or the bespoke version silently outranks the lean and
-  // both directions read identically.
-  const ownLean = persona === "pastor"
-    ? (lean === "dependence" ? PASTOR_STAGE_DETAIL_DEPENDENCE[stage]
-      : lean === "disconnection" ? PASTOR_STAGE_DETAIL_DISCONNECTION[stage] : undefined)
-    : undefined;
+  // both directions read identically. Listed in a table rather than written as
+  // a condition per persona, because the condition was written for the Minister
+  // edition and the Business edition then walked into the same trap unnoticed.
+  const ownLean = persona ? OWN_LEAN_DETAIL[persona]?.[lean]?.[stage] : undefined;
   if (ownLean) return ownLean;
   const own = of(persona)?.stageDetail?.[stage];
   if (own) return own;
   if (lean === "dependence" && STAGE_DETAIL_DEPENDENCE[stage]) return STAGE_DETAIL_DEPENDENCE[stage];
   if (lean === "disconnection" && STAGE_DETAIL_DISCONNECTION[stage]) return STAGE_DETAIL_DISCONNECTION[stage];
   return STAGE_DETAIL[stage];
+}
+
+/**
+ * The one line that describes a camp, in the direction this reading leans.
+ *
+ * The ladder's own `short` is written for the disconnection direction, because
+ * that is the only direction the ladder was originally written for. Four places
+ * on screen printed it raw, so a respondent reporting heavy daily use was told
+ * on the same page that there was "little or no hands-on practice". A balanced
+ * reading still gets the ladder's own line, unchanged; a leaning one gets the
+ * opening sentence of the description written for that direction, which is
+ * already persona-specific prose rather than something invented here.
+ */
+export function stageSummary(
+  persona: Persona | undefined, stage: number, lean: RiskLean = "balanced"
+): string {
+  const generic = STAGES.find((s) => s.stage === stage)?.short ?? "";
+  if (lean === "balanced") return generic;
+  const det = stageDetail(persona, stage, lean);
+  const first = det?.looksLike?.split(/(?<=\.)\s+/)[0];
+  return first || generic;
 }
 
 /**

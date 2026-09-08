@@ -38,7 +38,7 @@ export default function AscentResults(
       {/* action, and the evidence behind the foothold */}
       <div className="asc-modules">
         <FootholdCard result={result} />
-        <RouteLogCard result={result} />
+        <RouteLogCard result={result} hasHistory={!!comparison} />
         <NextClimbCard result={result} />
       </div>
     </div>

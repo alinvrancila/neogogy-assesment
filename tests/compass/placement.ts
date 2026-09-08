@@ -221,6 +221,59 @@ head('A journey is only a journey within one assessment');
     /not comparable with an index from another/.test(src));
 }
 
+head('P0-1: describing yourself well cannot outrun what you would do');
+{
+  // The intro promises, in these words, that situation answers "carry more
+  // weight than the ones where you describe yourself, because habits show up in
+  // situations rather than in intentions". Per item that was true, 1.6 against
+  // 1.0. In aggregate it was not: a Student edition asks 21 self-descriptions
+  // and 11 situations, and the eleven reverse-worded ones were never damped at
+  // all, so flattering yourself while choosing badly everywhere moved the index
+  // 42 points and three stages.
+  const topOf = (it: Item) => (it.options?.length ? Math.max(...it.options.map((o) => o.value)) : 5);
+  const isSelf = (it: Item) => it.type === 'claim' || it.type === 'reverse';
+  const best = (it: Item) => (it.type === 'reverse' ? 1 : topOf(it));
+  const worst = (it: Item) => (it.type === 'reverse' ? topOf(it) : 1);
+
+  const fixed = (p: Persona, self: 'best' | 'worst'): Submission => {
+    const answers: Record<string, number> = {};
+    for (const it of applicableItems(p, 4)) {
+      answers[it.id] = isSelf(it)
+        ? (self === 'best' ? best(it) : worst(it))
+        : worst(it);   // every situation answered badly, identically in both runs
+    }
+    return { persona: p, usage: 4, b1: 3, b2: 3, answers };
+  };
+
+  for (const p of ['student', 'teacher', 'parent', 'administrator', 'business', 'pastor', 'professional'] as Persona[]) {
+    const modest = compute(fixed(p, 'worst'));
+    const flattering = compute(fixed(p, 'best'));
+    const spread = Math.round((flattering.stage.rawIndex - modest.stage.rawIndex) * 10) / 10;
+    ok(`${p}: flipping every self-description moves the index by at most ten points`,
+      spread <= 10, `${spread} points`);
+    ok(`${p}: and cannot move the stage at all`,
+      flattering.stage.stage === modest.stage.stage,
+      `stage ${modest.stage.stage} became ${flattering.stage.stage}`);
+  }
+
+  // The damper must only fire on disagreement. Somebody whose self-description
+  // matches their situations is scored exactly as they were before it existed.
+  const coherent = (p: Persona, level: number): Submission => {
+    const answers: Record<string, number> = {};
+    for (const it of applicableItems(p, 4)) {
+      const t = topOf(it);
+      const h = Math.max(1, Math.min(t, Math.round(((level - 1) / 4) * (t - 1)) + 1));
+      answers[it.id] = it.type === 'reverse' ? t + 1 - h : h;
+    }
+    return { persona: p, usage: 4, b1: 3, b2: 3, answers };
+  };
+  const ladder = [1, 2, 3, 4, 5].map((l) => compute(coherent('student', l)).stage.rawIndex);
+  ok('a coherent respondent still scores across the whole range',
+    ladder[0] < 5 && ladder[4] > 95, ladder.join(', '));
+  ok('and climbs evenly, because nothing is damped when nothing disagrees',
+    ladder.every((v, i) => i === 0 || v > ladder[i - 1] + 15), ladder.join(', '));
+}
+
 head('A gated report names the dimension its own evidence cites');
 {
   // The gate sentence is written in the persona's vocabulary, and the

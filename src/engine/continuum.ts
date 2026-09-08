@@ -149,7 +149,7 @@ export function findBottleneck(dims: Dims, stage: StageResult, persona?: Persona
       ?? Object.values(CONSTRUCTS).find(c => firstReason.startsWith(c.name))?.id
       ?? "verification") as ConstructId;
     return { construct, viaGate: true,
-      reason: `Your ${indexName(persona)} (${stage.rawIndex}) already supports a higher stage, but ${constructName(persona, construct).toLowerCase()} is holding the classification down. ${firstReason}. Raising it unlocks the stage your other capabilities have earned.` };
+      reason: `Your ${indexName(persona)} (${stage.rawIndex}) already supports a higher stage, but ${constructName(persona, construct)} is holding the classification down. ${firstReason}. Raising it unlocks the stage your other capabilities have earned.` };
   }
   const next = STAGES.find(s => s.stage === stage.stage + 1);
   const targets: Partial<Record<ConstructId, number>> = next?.gates ?? {};
@@ -165,5 +165,5 @@ export function findBottleneck(dims: Dims, stage: StageResult, persona?: Persona
       reason: "No single dimension is holding you back sharply; progression now comes from consolidating the whole pattern under changing tools and higher-stakes work." };
   }
   return { construct: c, viaGate: false,
-    reason: `The largest single constraint on your progression is ${constructName(persona, c).toLowerCase()} (currently ${dims[c].score}). It is not necessarily your lowest number, but given how the next stage is defined, it is the capability whose growth would move you furthest.` };
+    reason: `The largest single constraint on your progression is ${constructName(persona, c)} (currently ${dims[c].score}). It is not necessarily your lowest number, but given how the next stage is defined, it is the capability whose growth would move you furthest.` };
 }

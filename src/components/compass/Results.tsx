@@ -320,6 +320,11 @@ const SCREEN_ORDER: Array<{ key: ReportSectionKey; lead?: string }> = [
   { key: 'harming' },
   { key: 'strengths' },
   { key: 'selfKnowledge' },
+  // The engine has always produced this section and no order listed it, so it
+  // was written, computed and thrown away on every report that earned it. It is
+  // the one place the report tells you that your two kinds of answer disagreed,
+  // which is also the thing the scoring quietly acts on.
+  { key: 'divergence' },
   { key: 'plan', lead: 'That is the picture. This is what to do with it.' },
   { key: 'roadmap' },
   { key: 'evidence', lead: 'Finally, where all of this comes from, and what it honestly cannot tell you.' },

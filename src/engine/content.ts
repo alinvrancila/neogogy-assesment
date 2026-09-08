@@ -16,8 +16,8 @@ export interface Citation { claim: string; source: string }
 /** The three named studies this instrument is willing to cite specifically. */
 export const EVIDENCE_BASE: Citation[] = [
   {
-    claim: "About 92 percent of students now use AI in their studies, while only around a third report ever receiving guidance on how to use it well.",
-    source: "HEPI / Kortext, 2025",
+    claim: "About 95 percent of students now use AI in some form and 94 percent use it on assessed work, while fewer than half say their teaching staff are helping them build the skill.",
+    source: "HEPI / Kortext, 2026",
   },
   {
     claim: "Students who practised with an unrestricted chatbot performed roughly 17 percent worse on a later unaided exam than students who practised without AI at all. Assistance during practice raised output while lowering what was retained.",

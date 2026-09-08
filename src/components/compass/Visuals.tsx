@@ -17,7 +17,7 @@
 import Image from 'next/image';
 import type { CSSProperties } from 'react';
 import type { CompassResult, ConstructId } from '@/engine';
-import { constructName } from '@/engine/display';
+import { constructName, stageSummary, riskLean } from '@/engine/display';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
 
 // One palette across every chart, shared with the ascent map.
@@ -352,7 +352,12 @@ export function StageLadder({ result }: { result: CompassResult }) {
                 {isTarget ? <span className="lad-tag lad-tag-next">Your next stage</span> : null}
                 {isEarned ? <span className="lad-tag lad-tag-earned">Your index reaches here</span> : null}
               </div>
-              {(isHere || isTarget) && <div className="lad-short">{s.short}</div>}
+              {(isHere || isTarget) && (
+                <div className="lad-short">
+                  {stageSummary(result.persona, s.stage,
+                    riskLean(result.composites.dependencyIndex, result.composites.underexposure))}
+                </div>
+              )}
               {(isHere || isTarget) && gates.length > 0 && (
                 <div className="lad-gates">
                   Requires: {gates.map(([g, v]) => `${constructName(result.persona, g as ConstructId)} ${v}`).join(', ')}

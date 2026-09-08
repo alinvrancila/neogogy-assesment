@@ -181,7 +181,7 @@ export function SurfaceDepth() {
 
 /* -------------------------------------------------------------- the research */
 
-/** 92 percent use it. A ring reads faster than the number alone. */
+/** 95 percent use it. A ring reads faster than the number alone. */
 export function StatRing({ pct = 92 }: { pct?: number }) {
   const r = 46, c = 2 * Math.PI * r;
   return (

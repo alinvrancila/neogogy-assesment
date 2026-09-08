@@ -201,8 +201,9 @@ export function PastorSignature({ result }: { result: CompassResult }) {
         ))}
       </div>
       <p className="muted pastor-fineprint">
-        Dependence Risk is shown as a risk, so a lower number is healthier there. Its bar is drawn on
-        the capacity behind it.
+        Dependence Risk is written as a risk rather than as a capacity, so there the lower number is
+        the healthy one. The bar beside it is drawn on the capacity behind it, which is why that bar
+        fills the other way.
       </p>
     </section>
   );

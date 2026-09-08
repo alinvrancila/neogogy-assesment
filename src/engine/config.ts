@@ -25,7 +25,7 @@ export const VERSIONS = {
 export const CONSTRUCTS: Record<ConstructId, ConstructDef> = {
   agency: {
     id: "agency", name: "Human Agency",
-    principle: "The person remains the author of the work and the owner of the decision.",
+    principle: "You remain the author of the work and the owner of the decision.",
     continuumWeight: 0.14,
   },
   verification: {
@@ -60,7 +60,7 @@ export const CONSTRUCTS: Record<ConstructId, ConstructDef> = {
   },
   adaptability: {
     id: "adaptability", name: "Adaptive Growth",
-    principle: "The person keeps learning as the tools change.",
+    principle: "You keep learning as the tools change.",
     continuumWeight: 0.08,
   },
   responsibleUse: {
@@ -88,8 +88,33 @@ export const SCORING = {
    * When a consistency gap is flagged, the claim item's weight is reduced by this
    * factor for that dimension, shifting the score toward behavioral evidence.
    * The gap therefore now carries real weight (Part V, item 1).
+   *
+   * Retained for the paired-item report, and superseded for scoring by the
+   * sliding damper below.
    */
   claimDiscountOnGap: 0.5,
+  /**
+   * How far a self-description can sit above the situations before it stops
+   * being believed, and how little of it survives at the far end.
+   *
+   * The intro tells the respondent, in these words, that "those answers carry
+   * more weight than the ones where you describe yourself, because habits show
+   * up in situations rather than in intentions". Per item that was already
+   * true: a situation is weighted 1.6 against 1.0. In aggregate it was not.
+   * A Student edition asks 21 self-descriptions and 11 situations, so
+   * describing yourself generously while choosing badly in every situation
+   * moved the index by 42 points and three whole stages, and the promise in
+   * the intro was not kept.
+   *
+   * The damper only fires on disagreement. A respondent whose self-description
+   * matches what they say they would do is scored exactly as before: the gap
+   * is zero and the weight is one. It is only the flattering half of a
+   * contradiction that loses its say, which is also the half the report now
+   * shows back to them.
+   */
+  selfReportFloor: 0.1,
+  /** The widest possible disagreement on the 1 to 5 healthy scale. */
+  maxHealthyGap: 4,
   /** Fewer scored inputs than this on a dimension drops its confidence a level. */
   minInputsForFullConfidence: 3,
   /** Micro-state cutoffs. */

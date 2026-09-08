@@ -1456,6 +1456,18 @@ export async function generateCompassPdf(args: {
           <Lines lines={byKey('selfKnowledge').lines} />
           <View style={S.gap} />
         </>
+        {/* Only produced when two or more dimensions disagreed with themselves,
+            so this block is absent from a coherent report rather than empty. */}
+        {sections.some((x) => x.key === 'divergence') ? (
+          <>
+            <View wrap={false} minPresenceAhead={80}>
+              <Text style={S.eyebrow}>Said against chosen</Text>
+              <Text style={S.h2}>{byKey('divergence').title}</Text>
+            </View>
+            <Lines lines={byKey('divergence').lines} />
+            <View style={S.gap} />
+          </>
+        ) : null}
         <>
           <View wrap={false} minPresenceAhead={80}>
             <Text style={S.eyebrow}>The constraint</Text>
