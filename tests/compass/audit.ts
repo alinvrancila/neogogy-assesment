@@ -142,6 +142,30 @@ head('P0-2: the contradiction the scoring acts on is shown to the reader');
     /key === 'divergence'/.test(fs.readFileSync(
       path.join(process.cwd(), 'src', 'lib', 'reportPdfV2.tsx'), 'utf-8')));
 
+  // The Minister letter renders a chosen few of the shared sections rather than
+  // the whole order, so adding the section to SCREEN_ORDER did not reach it and
+  // a self-contradicting preacher was shown nothing.
+  const filters = [...screen.matchAll(/\.filter\(\(\{ section \}\) => \[([^\]]*)\]\.includes\(section\.key\)\)/g)]
+    .map((m) => m[1]);
+  ok('the Minister letter has a short list of its own', filters.length >= 1, `${filters.length} found`);
+  ok('and the divergence section is on it',
+    filters.every((f) => f.includes("'divergence'")),
+    filters.join(' | '));
+
+  // Every edition that can produce it must be able to show it.
+  for (const p of PERSONAS_ALL) {
+    const answers: Record<string, number> = {};
+    for (const it of applicableItems(p, 4)) {
+      const self = it.type === 'claim' || it.type === 'reverse';
+      answers[it.id] = self
+        ? (it.type === 'reverse' ? 1 : top(it))
+        : (it.type === 'reverse' ? top(it) : 1);
+    }
+    const r = compute({ persona: p, usage: 4, b1: 3, b2: 3, answers });
+    ok(`${p}: a contradicting profile earns the section`,
+      generateReportSections(r).some((x) => x.key === 'divergence'));
+  }
+
   // A coherent respondent is not given a section about a disagreement they did
   // not have.
   const coherent = compute(build('student', 4, (it) => (it.type === 'reverse' ? 2 : 4)));

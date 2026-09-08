@@ -454,8 +454,13 @@ export default function Results({
         <FaithfulnessAndIntegrity result={result} />
         <PastorSignature result={result} />
 
+        {/* The Minister letter renders a chosen few of the shared sections rather
+            than the whole order. The disagreement between what you said about
+            yourself and what you chose in a situation belongs in a letter about
+            formation as much as anywhere, and adding it to SCREEN_ORDER did not
+            reach here, because this branch does not read that order. */}
         {orderedForScreen(sections)
-          .filter(({ section }) => ['bottleneck'].includes(section.key))
+          .filter(({ section }) => ['divergence', 'bottleneck'].includes(section.key))
           .map(({ section }) => (
             <SectionBlock key={section.key} section={section} result={result} />
           ))}
