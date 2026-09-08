@@ -538,3 +538,21 @@
 .nfc .ha-legal-links { display: flex; gap: 18px; justify-content: center; margin-top: 12px; }
 .nfc .ha-legal-links a { font-family: var(--f-mono); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: rgba(242, 232, 220, .74); }
 .nfc .ha-legal-links a:hover { color: var(--gold-soft); }
+
+/* An unfinished assessment, offered rather than forced. The address used to
+   land the visitor back on the question they abandoned, with no homepage and
+   no way out. */
+.ha-resume{background:#F4EFE4;border-bottom:1px solid #E2D4BF}
+.ha-resume-in{display:flex;align-items:center;justify-content:space-between;
+  gap:18px;padding-top:14px;padding-bottom:14px;flex-wrap:wrap}
+.ha-resume-t{margin:0;font-size:.95rem;color:#3B3227}
+.ha-resume-acts{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ha-resume-drop{background:none;border:none;padding:0;cursor:pointer;
+  font:inherit;font-size:.92rem;color:#6A5E54;text-decoration:underline;
+  text-underline-offset:3px}
+.ha-resume-drop:hover{color:#3B3227}
+@media (max-width:640px){
+  .ha-resume-in{flex-direction:column;align-items:flex-start}
+  .ha-resume-acts{width:100%}
+  .ha-resume-acts .ha-btn{flex:1;justify-content:center}
+}

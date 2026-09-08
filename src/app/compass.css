@@ -364,7 +364,7 @@
 
 .nfc .qcard{padding:34px 0;animation:nfcFadeUp .45s;flex:1;display:flex;flex-direction:column;justify-content:center;min-height:58vh}
 .nfc .qcard .qnum{font-family:var(--f-mono);font-size:12px;color:var(--gold);letter-spacing:.1em;margin-bottom:14px}
-.nfc .qcard .qstem{font-family:var(--f-display);font-size:clamp(1.4rem,3.6vw,2.15rem);font-weight:500;line-height:1.22;color:var(--ink);margin-bottom:8px;letter-spacing:-.01em}
+.nfc .qcard .qstem{margin-top:0;font-family:var(--f-display);font-size:clamp(1.4rem,3.6vw,2.15rem);font-weight:500;line-height:1.22;color:var(--ink);margin-bottom:8px;letter-spacing:-.01em}
 .nfc .qcard .qstem .em{color:var(--crimson);font-style:italic}
 .nfc .qcard .reverse-flag{display:inline-flex;align-items:center;gap:7px;font-family:var(--f-mono);font-size:11px;color:var(--amber);margin-bottom:24px;letter-spacing:.04em}
 
@@ -3496,3 +3496,21 @@
   margin:8px 0 0 30px; color:var(--ink-soft); font-size:.88rem; line-height:1.5;
 }
 @media (max-width:640px){ .nfc .consent-note{margin-left:0} }
+
+/* The way out of an assessment in progress. There was none: the question
+   screen carried no links at all, so a visitor part way through could not
+   reach the homepage, stop and come back, or start again. */
+.nfc .qbar-home{background:none;border:none;padding:0;margin:0;cursor:pointer;
+  font:inherit;text-align:left;display:block;color:inherit}
+.nfc .qbar-home:hover .app-title{text-decoration:underline;text-underline-offset:3px}
+.nfc .qbar-exits{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.nfc .qbar-exit{background:none;border:none;padding:0;cursor:pointer;font:inherit;
+  font-size:.86rem;color:var(--ink-soft);text-decoration:underline;text-underline-offset:3px}
+.nfc .qbar-exit:hover{color:var(--maroon)}
+@media (max-width:720px){
+  .nfc .qbar-exits{width:100%;order:3;justify-content:flex-start;padding-top:8px}
+}
+
+/* Said aloud, not shown. */
+.nfc .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}

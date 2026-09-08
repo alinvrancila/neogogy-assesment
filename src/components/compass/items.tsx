@@ -118,17 +118,24 @@ export function keyForIndex(choice: Choice): string {
 }
 
 export function ScaleRow({
-  choices, selected, onPick
-}: { choices: Choice[]; selected: number | null; onPick: (v: number) => void }) {
+  choices, selected, onPick, labelledBy
+}: {
+  choices: Choice[]; selected: number | null; onPick: (v: number) => void;
+  /** The question these answers belong to, so the group is announced with it. */
+  labelledBy?: string;
+}) {
   return (
-    <div className="opts">
-      {choices.map((c) => (
+    <div className="opts" role="radiogroup" aria-labelledby={labelledBy}>
+      {choices.map((c, i) => (
         <button
           key={c.value}
           type="button"
           className={`opt ${selected === c.value ? 'sel' : ''}`}
           onClick={() => onPick(c.value)}
-          aria-pressed={selected === c.value}
+          role="radio"
+          aria-checked={selected === c.value}
+          aria-setsize={choices.length}
+          aria-posinset={i + 1}
         >
           <span className="bub">{c.value}</span>
           <span className="otext">{c.label}</span>
@@ -139,17 +146,23 @@ export function ScaleRow({
 }
 
 export function OptionCards({
-  choices, selected, onPick
-}: { choices: Choice[]; selected: number | null; onPick: (v: number) => void }) {
+  choices, selected, onPick, labelledBy
+}: {
+  choices: Choice[]; selected: number | null; onPick: (v: number) => void;
+  labelledBy?: string;
+}) {
   return (
-    <div className="opts opts-cards">
+    <div className="opts opts-cards" role="radiogroup" aria-labelledby={labelledBy}>
       {choices.map((c, i) => (
         <button
           key={c.value}
           type="button"
           className={`opt opt-card ${selected === c.value ? 'sel' : ''} ${c.value === 0 ? 'opt-na' : ''}`}
           onClick={() => onPick(c.value)}
-          aria-pressed={selected === c.value}
+          role="radio"
+          aria-checked={selected === c.value}
+          aria-setsize={choices.length}
+          aria-posinset={i + 1}
         >
           <span className="bub">{c.value === 0 ? '0' : String.fromCharCode(65 + i)}</span>
           <span className="otext">{c.label}</span>
@@ -173,8 +186,13 @@ export function ItemScreen({
   scope?: 'owner' | 'business';
 }) {
   const cards = usesCards(item);
+  const stemId = `qstem-${item.id}`;
   return (
     <div className="qcard">
+      {/* The question screen had no heading of any level, so a screen reader
+          user arrived with nothing to orient on, and advancing announced
+          nothing at all. The stem is the heading, and the live region says it
+          again when the question changes. */}
       <div className="qnum">
         {header}
         {scope ? (
@@ -183,7 +201,10 @@ export function ItemScreen({
           </span>
         ) : null}
       </div>
-      <div className="qstem">{item.prompt}</div>
+      <h1 className="qstem" id={stemId}>{item.prompt}</h1>
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        {header}. {item.prompt}
+      </p>
       {item.context ? <p className="qcontext">{item.context}</p> : null}
       {item.why ? (
         <details className="qwhy">
@@ -194,8 +215,8 @@ export function ItemScreen({
       ) : null}
       {note ? <div className="qnote">{note}</div> : (item.context ? null : <div style={{ height: 14 }} />)}
       {cards
-        ? <OptionCards choices={choices} selected={selected} onPick={onPick} />
-        : <ScaleRow choices={choices} selected={selected} onPick={onPick} />}
+        ? <OptionCards choices={choices} selected={selected} onPick={onPick} labelledBy={stemId} />
+        : <ScaleRow choices={choices} selected={selected} onPick={onPick} labelledBy={stemId} />}
     </div>
   );
 }

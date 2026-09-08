@@ -201,6 +201,8 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
   // Path of this submission's own report page, returned by the server once the
   // record is stored. Null when nothing was saved, so no dead link is shown.
   const [reportPath, setReportPath] = useState<string | null>(null);
+  /** An unfinished assessment found in this tab, waiting to be offered back. */
+  const [pendingDraft, setPendingDraft] = useState<Saved | null>(null);
   const [firstName, setFirstName] = useState('');
   /** Business Owner only, every field optional, never scored. */
   const [biz, setBiz] = useState<BusinessContext>({ company: '', industry: '', teamSize: '', tools: '' });
@@ -266,14 +268,11 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
         const resumable = s.screen === 'setup' || s.screen === 'quiz';
         const usable = resumable && (s.screen === 'setup' || (s.persona != null && s.usage != null));
         if (usable) {
-          resumedDraft.current = s.screen === 'quiz';
-          setScreen(s.screen);
-          setPersona(s.persona ?? null);
-          setUsage(s.usage ?? null);
-          setB1(s.b1 ?? null);
-          setB2(s.b2 ?? null);
-          setAnswers(s.answers ?? {});
-          setPos(s.pos ?? 0);
+          // Offered, not applied. Restoring straight onto the saved screen meant
+          // somebody who abandoned the assessment and later typed the address
+          // landed back on question six with no prompt, no homepage, and no way
+          // out: the question screen has no links on it at all.
+          setPendingDraft(s);
         } else {
           window.sessionStorage.removeItem(STORE_KEY);
         }
@@ -303,6 +302,66 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
   }, []);
 
   useEffect(() => { answersRef.current = answers; }, [answers]);
+
+  /**
+   * What the tab says.
+   *
+   * Every screen including the report was titled with the product name, so a
+   * respondent with several tabs open, or reading their own history, could not
+   * tell one from another. Only the two legal pages set their own.
+   */
+  useEffect(() => {
+    const name = PERSONAS.find((p) => p.id === persona)?.name;
+    const title =
+      screen === 'hero' ? BRAND.product
+      : screen === 'setup' ? `Choose your assessment · ${BRAND.productShort}`
+      : screen === 'quiz'
+        ? (usage == null
+          ? `How much you use AI · ${name ?? BRAND.productShort}`
+          : `Question ${pos + 1} of ${totalScreens} · ${name ?? BRAND.productShort}`)
+      : screen === 'context' ? `About your business · ${BRAND.productShort}`
+      : screen === 'opening' ? `Before you begin · ${BRAND.productShort}`
+      : screen === 'reflect' ? `Two last questions · ${BRAND.productShort}`
+      : screen === 'gate' ? `Your details · ${BRAND.productShort}`
+      : `Your ${BRAND.report}`;
+    try { document.title = title; } catch { /* the tab title is a courtesy */ }
+  }, [screen, persona, pos, usage, totalScreens]);
+
+  /**
+   * Back moves one question, rather than off the site.
+   *
+   * The whole flow was one history entry, so Back from a finished report left
+   * for whatever real page preceded the session and destroyed the result. A
+   * state is pushed as the respondent advances, and popping one walks back
+   * through the assessment instead.
+   */
+  useEffect(() => {
+    if (!restored.current) return;
+    const inFlow = screen === 'quiz' || screen === 'gate' || screen === 'results';
+    if (!inFlow) return;
+    try {
+      const at = { compass: true, screen, pos };
+      if (window.history.state?.compass
+        && window.history.state.screen === screen
+        && window.history.state.pos === pos) return;
+      window.history.pushState(at, '');
+    } catch { /* history is a convenience, not a requirement */ }
+  }, [screen, pos]);
+
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      const at = e.state as { compass?: boolean; screen?: Screen; pos?: number } | null;
+      if (!at?.compass) return;
+      if (at.screen === 'quiz' && typeof at.pos === 'number') {
+        setScreen('quiz');
+        setPos(at.pos);
+      } else if (at.screen) {
+        setScreen(at.screen);
+      }
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
   useEffect(() => { window.scrollTo(0, 0); }, [screen, pos]);
   useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current); }, []);
 
@@ -399,6 +458,28 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
     advanceSoon();
   }, [advanceSoon]);
 
+  /** Pick up where they left off. */
+  const resumeDraft = useCallback(() => {
+    const s = pendingDraft;
+    if (!s) return;
+    resumedDraft.current = s.screen === 'quiz';
+    setPersona(s.persona ?? null);
+    setUsage(s.usage ?? null);
+    setB1(s.b1 ?? null);
+    setB2(s.b2 ?? null);
+    setAnswers(s.answers ?? {});
+    setPos(s.pos ?? 0);
+    setScreen(s.screen);
+    setPendingDraft(null);
+    window.scrollTo({ top: 0 });
+  }, [pendingDraft]);
+
+  /** Throw it away and start clean. */
+  const discardDraft = useCallback(() => {
+    try { window.sessionStorage.removeItem(STORE_KEY); } catch { /* nothing to clear */ }
+    setPendingDraft(null);
+  }, []);
+
   /* ---------------------------------------------------------------- submit */
   const submitGate = useCallback(async (data: GateData) => {
     if (!submission) return;
@@ -485,6 +566,13 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
     return shell(
       <Home
         initialPersona={initialPersona}
+        draft={pendingDraft ? {
+          label: pendingDraft.screen === 'quiz'
+            ? `You had answered ${Object.keys(pendingDraft.answers ?? {}).length} questions.`
+            : 'You had just chosen your assessment.',
+          onResume: resumeDraft,
+          onDiscard: discardDraft,
+        } : null}
         onBegin={(p) => {
           setPersona(p);
           setPreset(true);
@@ -571,6 +659,12 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
           personaName={PERSONAS.find((p) => p.id === persona)?.name ?? ''}
           progress={progress}
           exact={usage != null}
+          answered={answeredCount}
+          total={totalScreens}
+          // The draft is already written to sessionStorage on every answer, so
+          // leaving is simply going home: the offer to resume is waiting there.
+          onLeave={() => { setScreen('hero'); window.scrollTo({ top: 0 }); }}
+          onRestart={restart}
         />
         <div className="wrap quiz">
           <ItemScreen
@@ -807,20 +901,56 @@ function BusinessContextScreen({
   );
 }
 
-function QuizBar({ personaName, progress, exact }: { personaName: string; progress: number; exact: boolean }) {
+/**
+ * The bar above every question.
+ *
+ * It used to be the only thing on the screen besides the five answer buttons
+ * and Back, and it carried no links at all: a respondent part way through had
+ * no way home, no way to stop and finish later, and no way to start again. The
+ * three controls here are the way out.
+ *
+ * The progress bar also announces itself now. It was two plain divs, so a
+ * screen reader user had no idea how far through they were.
+ */
+function QuizBar({ personaName, progress, exact, answered, total, onLeave, onRestart }: {
+  personaName: string; progress: number; exact: boolean;
+  answered: number; total: number;
+  onLeave: () => void; onRestart: () => void;
+}) {
   return (
     <div className="qbar">
       <div className="wrap qbar-in">
         <div className="qbar-brand">
-          <span className="app-title">Human Advantage Assessment</span>
-          <span className="app-sub">Powered by ICAN.ph</span>
+          <button type="button" className="qbar-home" onClick={onLeave}>
+            <span className="app-title">Human Advantage Assessment</span>
+            <span className="app-sub">Powered by ICAN.ph</span>
+          </button>
         </div>
         <div className="qbar-status">
           <div className="meta">
             <div className="dimname">{personaName}</div>
             <div className="count">{exact ? 'Progress' : 'Getting started'}</div>
-            <div className="progress-track"><div className="progress-fill" style={{ width: `${progress}%` }} /></div>
+            <div
+              className="progress-track"
+              role="progressbar"
+              aria-valuenow={progress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuetext={exact
+                ? `Question ${answered} of ${total}, ${progress} percent complete`
+                : 'Getting started'}
+            >
+              <div className="progress-fill" style={{ width: `${progress}%` }} />
+            </div>
           </div>
+        </div>
+        <div className="qbar-exits">
+          <button type="button" className="qbar-exit" onClick={onLeave}>
+            Save and finish later
+          </button>
+          <button type="button" className="qbar-exit" onClick={onRestart}>
+            Start over
+          </button>
         </div>
       </div>
     </div>

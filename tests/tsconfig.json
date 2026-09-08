@@ -1,0 +1,6 @@
+{
+  "//": "tsx compiles the suites directly, and the root config sets jsx: preserve for Next. A .tsx suite that renders a component needs a real runtime, so this overrides just that. Type checking still runs from the root config, which includes tests/.",
+  "extends": "../tsconfig.json",
+  "compilerOptions": { "jsx": "react-jsx" },
+  "include": ["../src/**/*", "./**/*"]
+}

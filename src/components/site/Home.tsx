@@ -714,8 +714,10 @@ function Closing({ onStart }: { onStart: () => void }) {
 
 /* -------------------------------------------------------------------- page */
 
-export default function Home({ initialPersona, onBegin }: {
+export default function Home({ initialPersona, onBegin, draft }: {
   initialPersona?: Persona; onBegin: (p: Persona) => void;
+  /** An unfinished assessment in this tab, offered rather than forced. */
+  draft?: { label: string; onResume: () => void; onDiscard: () => void } | null;
 }) {
   const [selected, setSelected] = useState<Persona>(initialPersona ?? 'student');
   const [variant, setVariant] = useState<'a' | 'b'>('b');
@@ -752,6 +754,23 @@ export default function Home({ initialPersona, onBegin }: {
     <div className={`ha${barOn ? ' has-bar' : ''}`}>
       <Header onStart={() => scrollTo('ha-personas')} />
       <div className="ha-header-space" aria-hidden="true" />
+      {draft ? (
+        <aside className="ha-resume" role="status">
+          <div className="ha-wrap ha-resume-in">
+            <p className="ha-resume-t">
+              You have an assessment in progress. {draft.label}
+            </p>
+            <div className="ha-resume-acts">
+              <button type="button" className="ha-btn ha-btn-sm" onClick={draft.onResume}>
+                Pick up where you left off
+              </button>
+              <button type="button" className="ha-resume-drop" onClick={draft.onDiscard}>
+                Start fresh
+              </button>
+            </div>
+          </div>
+        </aside>
+      ) : null}
       <Hero variant={variant} onStart={() => scrollTo('ha-personas')} />
       <Personas selected={selected} onSelect={setSelected} onBegin={onBegin} />
       <Definition />

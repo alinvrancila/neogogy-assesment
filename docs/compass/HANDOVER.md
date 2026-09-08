@@ -211,11 +211,56 @@ survey, checked against the publisher rather than swapped for a newer number.
 Checks 1, 2 and 3 pass against a production build. Checks 4 and 5 are the
 history and resume behaviours, which are P1-1 and P1-2 and are not built yet.
 
+### The P1 items done so far
+
+**You can leave an assessment now.** The draft was restored by jumping straight
+onto the saved screen, so somebody who abandoned at question six and later typed
+the address landed back on question six, with no homepage, no prompt, and no
+links on the screen at all. The draft is now offered on the homepage instead,
+with what they had reached, and the question screen carries three ways out: the
+mark goes home, "Save and finish later" leaves with the draft kept, and "Start
+over" clears it.
+
+**Back moves one question.** The whole flow was one history entry, so Back from
+a finished report left the site and destroyed the result. A state is pushed as
+the respondent advances and popping one walks back through the assessment. The
+report itself has had its own address since B3, so a result is recoverable even
+when the tab is not.
+
+**Every screen names itself.** All of them, including the report, were titled
+with the product name, so several tabs were indistinguishable.
+
+**The question screen can be used without sight.** It had no heading of any
+level, its five options were unlabelled toggle buttons, advancing announced
+nothing, and the progress bar was two plain divs. The stem is now the page
+heading, the options are a radiogroup labelled by it with position information
+on each, a polite live region reads the new question when it changes, and the
+progress bar reports its value and a sentence saying where the reader is.
+
 ### What the brief asked for that was already there
 
 `/r/<token>` report addresses, "email me my link", and a PDF download on every
 edition all shipped in the two releases before this one. What is genuinely
 missing from P1-1 is per-screen `document.title` and history states per question.
+
+### P1 still open
+
+- **P1-3, the chained scenario options.** 40 options across four editions open
+  with "I do that, and...". They are no longer incoherent, because ladders are
+  no longer shuffled, but the brief asks for them rewritten to stand alone.
+  That is respondent-facing assessment copy and changes what an option means,
+  so it wants the owner's eye before it ships.
+- **P1-4, contrast.** The markup half is done. 48 text nodes on the report still
+  fail their contrast requirement, the teal kicker at 2.92 against a 4.5
+  requirement, body copy at 4.42, several labels at 7.6 pixels, plus four gold
+  labels on the homepage at 3.88. That is a palette decision.
+- **P1-5, one product name.** Seven report mastheads still name seven products,
+  and the lead form still carries `nfc-` identifiers and `nfc2Session` storage
+  keys.
+- **P1-6b, the shared advice and evidence strings.** Every edition still cites
+  three student-learning studies, so a Business Owner reading their risk
+  register is shown research about undergraduate exam scores, and a Parent
+  report says "classroom practice".
 
 ## Traps and corrections
 
