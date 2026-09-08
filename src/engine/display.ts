@@ -650,7 +650,7 @@ const PASTOR_CONTENT: Partial<Record<ConstructId, Partial<ConstructContent>>> = 
 
 export const PERSONA_DISPLAY: Partial<Record<Persona, PersonaDisplay>> = {
   business: {
-    reportTitle: "Business AI Health Check",
+    reportTitle: "Human Advantage Report: Business Owner edition",
     indexName: "Business AI Health Score",
     subject: "business",
     constructNames: BUSINESS_CONSTRUCT_NAMES,
@@ -676,7 +676,7 @@ export const PERSONA_DISPLAY: Partial<Record<Persona, PersonaDisplay>> = {
   },
 
   professional: {
-    reportTitle: "Professional AI Work Practice Check",
+    reportTitle: "Human Advantage Report: Professional edition",
     indexName: "Practice Health Score",
     subject: "person",
     constructNames: PROFESSIONAL_CONSTRUCT_NAMES,

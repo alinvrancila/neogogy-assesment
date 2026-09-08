@@ -63,7 +63,9 @@ head('The prompts carry as much as the other sets');
 
 head('It reads in its own language, not a classroom\'s');
 {
-  ok('the report is named for the work', reportTitle('professional') === 'Professional AI Work Practice Check');
+  ok('the report is named as an edition of one product, not a product of its own',
+    reportTitle('professional') === 'Human Advantage Report: Professional edition',
+    reportTitle('professional'));
   ok('the index is named for the practice', indexName('professional') === 'Practice Health Score');
   ok('it carries its own note about what this is not',
     (disclaimerExtra('professional') ?? '').includes('not an appraisal'));

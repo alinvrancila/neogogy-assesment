@@ -20,7 +20,7 @@ import {
   riskLean,
   compositeName, indexName, disclaimerExtra,
 } from "./display";
-import { CONSTRUCT_CONTENT, STAGE_DETAIL, EVIDENCE_BASE, FRAMEWORK_SOURCES } from "./content";
+import { CONSTRUCT_CONTENT, STAGE_DETAIL, EVIDENCE_BASE, FRAMEWORK_SOURCES, evidenceFor } from "./content";
 import { helpHarm } from "./patterns";
 
 const PERSONA_LABEL: Record<string, string> = {
@@ -523,7 +523,9 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
   {
     const L: string[] = [];
     L.push(`This instrument is built on a specific claim: that cognitive erosion and future readiness move independently, and that the combination worth catching is high capability sitting on low protection, because it feels like success while it develops. The studies below are the ones this assessment is willing to cite by name.`);
-    for (const e of EVIDENCE_BASE) {
+    const framing = evidenceFor(r.persona);
+    if (framing.leadIn) { L.push(framing.leadIn); L.push(``); }
+    for (const e of framing.claims) {
       L.push(``);
       L.push(`- ${e.claim} *(${e.source})*`);
     }
@@ -531,7 +533,7 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     L.push(`Everywhere else, this report points at a field of research rather than a single paper, because the underlying findings are well established while no single study settles them: retrieval practice and transfer, cognitive load, design fixation, metacognition and self-regulated learning, and the fluency effects that make polished output harder to doubt than rough output making the same claim.`);
     L.push(``);
     L.push(`**Where the framework itself comes from.** The ten dimensions you were measured on come from the Neogogy framework, set out in these two books. They are the source of the model rather than independent evidence for it, which is a distinction worth keeping clear: they explain the thinking, while the studies above are what the thinking is tested against.`);
-    for (const b of FRAMEWORK_SOURCES) {
+    for (const b of FRAMEWORK_SOURCES.map((x) => ({ ...x, note: framing.bookNotes[x.title] ?? x.note }))) {
       L.push(``);
       L.push(`- **${b.title}** (${b.year}), ${b.author}. ${b.note}`);
     }

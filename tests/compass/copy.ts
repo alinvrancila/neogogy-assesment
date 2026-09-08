@@ -20,12 +20,14 @@ import path from 'path';
 import { PERSONA_CONTENT } from '@/content/personas';
 import { BRAND, CORE_QUESTION, ECOSYSTEM, NEXT_STEP } from '@/brand';
 import { PRIVACY, TERMS } from '@/content/legal';
-import { applicableItems } from '@/engine';
+import { applicableItems, compute } from '@/engine';
+import { evidenceFor } from '@/engine/content';
 import { optionsFor, canShuffle } from '@/components/compass/items';
 import type { Persona } from '@/engine/types';
 import { STAGES } from '@/engine/config';
 import { stageName } from '@/engine/display';
 import { shareCard, hasOwnCard, SITE_CARD } from '@/lib/shareCard';
+import { toCoverData } from '@/lib/covers/data';
 import {
   SHARE_TITLE, SHARE_DESC, SHARE_IMAGE, PERSPECTIVE_COUNT, DIMENSION_COUNT,
 } from '@/lib/siteMeta';
@@ -331,6 +333,100 @@ head('The page counts what the assessment actually asks');
     /questionCountLabel\(/.test(app) && !/40 to 42 questions/.test(app));
 }
 
+head('The report speaks to the person reading it');
+{
+  // A Business Owner reading a risk register was shown undergraduate exam
+  // scores with nothing acknowledging that, and every edition was given one
+  // shared verification rule naming graded work, a classroom and a family
+  // decision all at once.
+  const wrongAudience: string[] = [];
+  const sameAdvice = new Set<string>();
+
+  for (const persona of ['student', 'teacher', 'parent', 'administrator', 'business', 'pastor', 'professional'] as Persona[]) {
+    const answers: Record<string, number> = {};
+    applicableItems(persona, 4).forEach((it) => {
+      const t = it.options?.length ? Math.max(...it.options.map((o) => o.value)) : 5;
+      const low = it.construct === 'verification';
+      const h = low ? 1 : 4;
+      answers[it.id] = it.type === 'reverse' ? t + 1 - h : h;
+    });
+    const result = compute({ persona, usage: 4, b1: 4, b2: 3, answers } as never);
+    const rec = result.recommendations.find((x) => x.tag === 'verification_low');
+    if (rec) sameAdvice.add(rec.practice);
+
+    // Education words are fine, and unavoidable: all three studies are education
+    // studies. What was missing was the sentence saying so. Each edition whose
+    // reader is not in a classroom must open the section by locating the
+    // evidence, in its own words, rather than implying it was about them.
+    if (['parent', 'business', 'pastor', 'professional', 'administrator'].includes(persona)) {
+      const lead = evidenceFor(persona).leadIn;
+      if (!lead) wrongAudience.push(`${persona}: no lead-in`);
+      else if (!/education|classroom|school|student|universit|preacher/i.test(lead)) {
+        wrongAudience.push(`${persona}: lead-in does not say where the evidence came from`);
+      }
+    }
+  }
+
+  ok('every edition outside the classroom is told where the evidence came from',
+    wrongAudience.length === 0, wrongAudience.join(', '));
+  ok('and each says it in its own words', (() => {
+    const leads = ['parent', 'business', 'pastor', 'professional', 'administrator']
+      .map((p) => evidenceFor(p as Persona).leadIn);
+    return new Set(leads).size === leads.length;
+  })());
+  ok('and each of the five sharing a library gets its own verification rule',
+    sameAdvice.size >= 5, `${sameAdvice.size} distinct practices across seven editions`);
+  ok('a student is never advised about a behaviour they were not asked about', (() => {
+    const answers: Record<string, number> = {};
+    applicableItems('student', 4).forEach((it) => {
+      const t = it.options?.length ? Math.max(...it.options.map((o) => o.value)) : 5;
+      const h = it.construct === 'responsibleUse' ? 1 : 4;
+      answers[it.id] = it.type === 'reverse' ? t + 1 - h : h;
+    });
+    const r = compute({ persona: 'student', usage: 4, b1: 4, b2: 3, answers } as never);
+    return r.recommendations[0]?.tag === 'disclosure_risk';
+  })(), 'the student bank raises disclosure_risk and never privacy_risk');
+  ok('and no advice uses learning-science shorthand',
+    !/cousin problems/i.test(fs.readFileSync(
+      path.join(process.cwd(), 'src', 'engine', 'recommendations.ts'), 'utf-8')));
+}
+
+head('One product, seven editions');
+{
+  // Seven report mastheads named seven different products, each on the same
+  // page as "Human Advantage Assessment", so a school running three editions
+  // held three products and a respondent held two names for one document.
+  const names = (['student', 'teacher', 'parent', 'administrator', 'business', 'pastor', 'professional'] as Persona[])
+    .map((persona) => {
+      const answers: Record<string, number> = {};
+      applicableItems(persona, 4).forEach((it) => {
+        const t = it.options?.length ? Math.max(...it.options.map((o) => o.value)) : 5;
+        answers[it.id] = it.type === 'reverse' ? t - 1 : 4;
+      });
+      const result = compute({ persona, usage: 4, b1: 4, b2: 3, answers } as never);
+      return toCoverData({ result, name: 'Reader' }).assessmentName;
+    });
+
+  ok('every masthead names the same product', names.every((n) => n.startsWith(BRAND.report)),
+    names.join(' | '));
+  ok('and each names its own edition', new Set(names).size === 7, `${new Set(names).size} distinct`);
+  ok('no masthead is a product of its own',
+    !names.some((n) => /Formation Check|Practice Check|Stewardship Check|Judgment Check|Resilience Check|Health Check/.test(n)),
+    names.join(' | '));
+
+  const src = FILES.map((f) => fs.readFileSync(f, 'utf-8')).join('\n');
+  const respondentFacing = src
+    .split('\n')
+    .filter((l) => !l.trim().startsWith('*') && !l.trim().startsWith('//') && !l.trim().startsWith('/*'));
+  ok('the retired names are gone from anything a reader sees',
+    !respondentFacing.some((l) => /Formation Profile|Formation Compass|AI Health Check|AI Work Practice Check/.test(l)),
+    respondentFacing.filter((l) => /Formation Profile|Formation Compass|AI Health Check|AI Work Practice Check/.test(l))[0]);
+  // Read off the object rather than the file, so the note explaining why it was
+  // removed does not itself trip the check.
+  ok('and there is no unused abbreviation waiting to be adopted by accident',
+    !('abbrev' in BRAND), Object.keys(BRAND).join(', '));
+}
+
 head('No answer refers to an option that may not have been shown');
 {
   // Scenario options are shuffled so their order cannot be read as a ranking.
@@ -349,21 +445,35 @@ head('No answer refers to an option that may not have been shown');
       seen.add(item.id);
       if (canShuffle(item)) shuffled += 1; else ladders += 1;
 
-      // Many seeds, because the defect only shows on the orders that put a
-      // back-reference first.
+      // Any wording that points at another option, not only the one phrasing
+      // the first pass looked for. "I assemble it that way" sat in the teacher
+      // bank through a whole rewrite because the detector only knew "I do that".
+      const POINTS_AT_ANOTHER = /^\s*(?:I do that|I do the above|I assemble it that way|Same as|As above|That, and|Both of|All of that|Like the|In addition to)\b/i;
+      for (const option of item.options) {
+        if (POINTS_AT_ANOTHER.test(option.label)) {
+          offenders.push(`${item.id} value ${option.value}: ${option.label.slice(0, 60)}`);
+        }
+      }
+      // And the shuffle must never lead with one, whatever the seed.
       for (const seed of ['a', 'b', 'sess-9f2e', 'x1', 'x2', 'x3', 'x4', 'x5']) {
         const shown = optionsFor(item, seed);
-        if (/^\s*I do that\b/i.test(shown[0].label)) {
-          offenders.push(`${item.id} (seed ${seed}): ${shown[0].label.slice(0, 60)}`);
+        if (POINTS_AT_ANOTHER.test(shown[0].label)) {
+          offenders.push(`${item.id} (seed ${seed}) leads with: ${shown[0].label.slice(0, 60)}`);
         }
       }
     }
   }
 
-  ok('no option that builds on another can be shown first',
+  ok('no option anywhere points at another option',
     offenders.length === 0, offenders.slice(0, 3).join('\n        '));
-  ok('and the ones that stand alone are still shuffled', shuffled > 20, String(shuffled));
-  ok('while the ladders keep the order their sentences require', ladders > 0, String(ladders));
+  ok('and every scenario item is shuffled', shuffled > 20 && ladders === 0,
+    `${shuffled} shuffled, ${ladders} held back because they still chain`);
+  // The detection stays as a safety net. Nothing chains today, and if copy is
+  // ever written that way again it will be kept in order rather than shuffled
+  // into nonsense, and the assertion above will say so.
+  ok('the safety net that catches chained copy is still in place',
+    /buildsOnThePrevious/.test(fs.readFileSync(
+      path.join(process.cwd(), 'src', 'components', 'compass', 'items.tsx'), 'utf-8')));
 
   // Whatever the order, the same behaviours are offered with the same values.
   const one = applicableItems('professional', 4).find((i) => i.type === 'scenario' && i.options?.length)!;

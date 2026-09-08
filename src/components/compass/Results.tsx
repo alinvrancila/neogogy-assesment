@@ -194,36 +194,36 @@ export function GateForm({
         >
           <div className="grid2">
             <div className="field">
-              <label htmlFor="nfc-first">First name</label>
-              <input id="nfc-first" type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+              <label htmlFor="gate-first">First name</label>
+              <input id="gate-first" type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
             </div>
             <div className="field">
-              <label htmlFor="nfc-last">Last name</label>
-              <input id="nfc-last" type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} />
+              <label htmlFor="gate-last">Last name</label>
+              <input id="gate-last" type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} />
             </div>
           </div>
           <div className="grid2">
             <div className="field">
-              <label htmlFor="nfc-email">Email</label>
-              <input id="nfc-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <label htmlFor="gate-email">Email</label>
+              <input id="gate-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="field">
-              <label htmlFor="nfc-mobile">Mobile phone <span className="opt-tag">optional</span></label>
-              <input id="nfc-mobile" type="tel" inputMode="tel" autoComplete="tel" value={mobilePhone}
+              <label htmlFor="gate-mobile">Mobile phone <span className="opt-tag">optional</span></label>
+              <input id="gate-mobile" type="tel" inputMode="tel" autoComplete="tel" value={mobilePhone}
                 onChange={(e) => setMobilePhone(e.target.value)} placeholder="+63 912 345 6789" />
             </div>
           </div>
           <div className="field">
-            <label htmlFor="nfc-heard">How did you hear about this assessment?</label>
-            <select id="nfc-heard" value={heardFrom} onChange={(e) => setHeardFrom(e.target.value)}>
+            <label htmlFor="gate-heard">How did you hear about this assessment?</label>
+            <select id="gate-heard" value={heardFrom} onChange={(e) => setHeardFrom(e.target.value)}>
               <option value="">Select one</option>
               {HEARD_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </div>
           {heardFrom === 'Other' && (
             <div className="field">
-              <label htmlFor="nfc-heard-other">Tell us how you heard about it</label>
-              <input id="nfc-heard-other" type="text" value={heardOther}
+              <label htmlFor="gate-heard-other">Tell us how you heard about it</label>
+              <input id="gate-heard-other" type="text" value={heardOther}
                 onChange={(e) => setHeardOther(e.target.value)} placeholder="e.g. a podcast, a person, a conference" />
             </div>
           )}

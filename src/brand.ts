@@ -18,8 +18,10 @@ export const BRAND = {
   product: 'Neogogy Human Advantage Assessment',
   /** When the full name has already been established on the surface. */
   productShort: 'Human Advantage Assessment',
-  /** Internal shorthand: code, analytics, configuration. Not a public headline. */
-  abbrev: 'HAS',
+  /* There was an `abbrev: 'HAS'` here, described as internal shorthand. Nothing
+     referenced it, and it appeared nowhere on the site, in a report or in any
+     share text, so it was an abbreviation for a product that never used one. It
+     is gone rather than left to be adopted by accident. */
   /** The organisation the product belongs to. */
   org: 'Neogogy',
   /** The institutional attribution. */

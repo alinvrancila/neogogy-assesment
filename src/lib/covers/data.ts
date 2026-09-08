@@ -10,6 +10,7 @@
  * that ranks. These covers carry a qualitative result, not a score.
  */
 
+import { BRAND } from '@/brand';
 import type { CompassResult, Persona } from '@/engine/types';
 import { reportTitle } from '@/engine/display';
 
@@ -42,15 +43,28 @@ export const COVER_PERSONA: Record<Persona, CoverPersona> = {
   business: 'business',
 };
 
-const ASSESSMENT_NAME: Record<CoverPersona, string> = {
-  student: 'Student AI Formation Check',
-  teacher: 'Teacher AI Practice Check',
-  parent: 'Parent AI Stewardship Check',
-  leader: 'Leadership AI Judgment Check',
-  minister: 'Preaching Formation Check',
-  business: 'Business AI Resilience Check',
-  professional: 'Professional AI Work Practice Check',
+/**
+ * One product, seven editions.
+ *
+ * These were seven different product names, each appearing on the same page as
+ * "Human Advantage Assessment", so a report carried two names and a school
+ * running three editions held three products. An edition is a version of one
+ * thing, and the masthead now says so.
+ */
+const EDITION_NAME: Record<CoverPersona, string> = {
+  student: 'Student edition',
+  teacher: 'Teacher edition',
+  parent: 'Parent edition',
+  leader: 'Leader edition',
+  minister: 'Preaching edition',
+  business: 'Business Owner edition',
+  professional: 'Professional edition',
 };
+
+const ASSESSMENT_NAME: Record<CoverPersona, string> = Object.fromEntries(
+  (Object.keys(EDITION_NAME) as CoverPersona[])
+    .map((k) => [k, `${BRAND.report}: ${EDITION_NAME[k]}`])
+) as Record<CoverPersona, string>;
 
 const CONCEPT: Record<CoverPersona, { title: string; subtitle: string }> = {
   student: { title: 'The Field of Questions', subtitle: 'An expanding fan of inquiry lines' },

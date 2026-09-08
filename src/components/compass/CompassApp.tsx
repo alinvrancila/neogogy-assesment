@@ -138,9 +138,15 @@ const PERSONAS: Array<{
 /** Coarse screen count used only before the usage answer is known. */
 const COARSE_TOTAL = 34;
 
-const STORE_KEY = 'nfc2Progress';
+const STORE_KEY = 'haa.progress';
+/** What the key used to be called. Read once so a draft in flight survives the
+ *  rename, then written back under the new name. */
+const LEGACY_STORE_KEY = 'nfc2Progress';
 
-const ATTRIB_KEY = 'nfc2Attrib';
+const ATTRIB_KEY = 'haa.attribution';
+const LEGACY_ATTRIB_KEY = 'nfc2Attrib';
+const SESSION_KEY = 'haa.session';
+const LEGACY_SESSION_KEY = 'nfc2Session';
 
 /**
  * Capture where the visit came from, once, on first load: the referring host
@@ -149,7 +155,7 @@ const ATTRIB_KEY = 'nfc2Attrib';
  */
 function captureAttribution() {
   try {
-    if (window.localStorage.getItem(ATTRIB_KEY)) return;
+    if (window.localStorage.getItem(ATTRIB_KEY) ?? window.localStorage.getItem(LEGACY_ATTRIB_KEY)) return;
     window.localStorage.setItem(ATTRIB_KEY, JSON.stringify(collectAttribution()));
   } catch { /* attribution is a convenience */ }
 }
@@ -247,11 +253,12 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
   /* ----------------------------------------------------------- persistence */
   useEffect(() => {
     try {
-      let sid = window.localStorage.getItem('nfc2Session');
+      let sid = window.localStorage.getItem(SESSION_KEY)
+        || window.localStorage.getItem(LEGACY_SESSION_KEY);
       if (!sid) {
         sid = (window.crypto?.randomUUID && window.crypto.randomUUID())
           || `s_${Date.now()}_${Math.round(Math.random() * 1e9)}`;
-        window.localStorage.setItem('nfc2Session', sid);
+        window.localStorage.setItem(SESSION_KEY, sid);
       }
       sessionId.current = sid;
       captureAttribution();
@@ -259,7 +266,8 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
       /* a session id is a convenience, not a requirement */
     }
     try {
-      const raw = window.sessionStorage.getItem(STORE_KEY);
+      const raw = window.sessionStorage.getItem(STORE_KEY)
+        ?? window.sessionStorage.getItem(LEGACY_STORE_KEY);
       if (raw) {
         const s = JSON.parse(raw) as Saved;
         // Only in-progress screens are resumable. The gate and results screens

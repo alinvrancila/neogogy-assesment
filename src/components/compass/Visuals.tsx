@@ -272,7 +272,7 @@ export function ReportPreview() {
       <div className="rp-page rp-cover">
         <div className="rp-band">
           <div className="rp-band-eyebrow">Neogogy Human Advantage Assessment</div>
-          <div className="rp-band-title">Your Formation Profile</div>
+          <div className="rp-band-title">Your Human Advantage Report</div>
         </div>
         <div className="rp-pad">
           <div className="rp-youare">Your answers are consistent with</div>

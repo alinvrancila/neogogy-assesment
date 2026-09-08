@@ -15,8 +15,8 @@ export const PARENT_ITEMS: Item[] = [
       "I would not think to use AI, or would not know where to start.",
       "I paste it in and read the summary.",
       "I paste it, get a summary, and ask follow-up questions until I actually understand it.",
-      "I do that, and also ask what the document does not say that I should be asking about.",
-      "I do that, and verify anything consequential with the school or provider directly.",
+      "I get a summary, ask questions until it is clear, then ask what it leaves out that I should know.",
+      "I use AI to understand it and spot the gaps, then check what matters with the school or provider.",
     ], "underexposure_fluency",
     { effects: { 5: { verification: 6 } } }),
 
@@ -31,7 +31,7 @@ export const PARENT_ITEMS: Item[] = [
       "I adopt it; it aggregates more knowledge than I have.",
       "I adopt most of it and quietly drop the parts that feel odd.",
       "I compare its reasoning with what I know about my own child.",
-      "I do that, and talk it over with my spouse or another parent before deciding.",
+      "I check it against what I know about my child, then talk it over with my spouse or another parent.",
       "I treat it as one input; the decision comes from our values, our child, and our judgment.",
     ], "authority_transfer"),
 
@@ -46,8 +46,8 @@ export const PARENT_ITEMS: Item[] = [
       "I ask AI which school is best and go with its answer.",
       "I ask for a ranked list and shortlist from it.",
       "I ask for the criteria that matter, then build the comparison myself.",
-      "I do that, and ask AI to argue against my current favorite.",
-      "I do that, then take those better questions into school visits and conversations with other families.",
+      "I build my own comparison, then ask AI to argue the case against my favorite.",
+      "I let AI challenge my thinking, then take the sharper questions to school visits and other parents.",
     ], "shallow_use",
     { effects: { 1: { agency: -5 } } }),
 
@@ -78,7 +78,7 @@ export const PARENT_ITEMS: Item[] = [
       "I warn the other parents now and check the details later.",
       "I look for the report before acting on anything.",
       "I find the report and one independent source, then act.",
-      "I do that, and I talk with my child to see what is actually happening in their use of it.",
+      "I check it in a second source, then talk with my child about how they actually use the app.",
     ], "verification_low",
     { effects: { 5: { responsibleUse: 5 } } }),
 
@@ -108,7 +108,7 @@ export const PARENT_ITEMS: Item[] = [
       "I ask AI for a complete plan and execute it.",
       "I pick from its list of themes.",
       "I start from what my child loves and use AI to extend it.",
-      "I do that, and deliberately push past its first generic suggestions.",
+      "I build on what my child actually loves, then push AI past its first generic ideas.",
       "I make it a game we play together: our ideas, its twists, and the child chooses and remixes.",
     ], "creativity_homogenization"),
 
@@ -123,8 +123,8 @@ export const PARENT_ITEMS: Item[] = [
       "I describe everything: name, school, the full history.",
       "I tell the whole story with the name changed.",
       "I describe the pattern without any identifying details.",
-      "I do that, and I check what the tool retains before having deep conversations with it.",
-      "I do that, and for the deepest issues I choose a human, whether spouse, mentor, or counselor, rather than the tool.",
+      "I keep out identifying details, and I check what the tool stores before I go deep with it.",
+      "I share only what is safe with the tool, and take the deepest issues to a spouse, mentor, or counselor instead.",
     ], "privacy_risk"),
 
   claim(P, "transfer",
@@ -154,6 +154,6 @@ export const PARENT_ITEMS: Item[] = [
       "I allow it; kids understand these things better than I do.",
       "I ask them to show me how it works.",
       "I try it myself, then we set expectations together.",
-      "I do that, and we revisit the agreement after a month of actual use.",
+      "I try it, we set expectations together, then revisit them after a month of real use.",
     ], "workflow_stagnation"),
 ];

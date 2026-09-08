@@ -15,8 +15,8 @@ export const ADMINISTRATOR_ITEMS: Item[] = [
       "I delegate it entirely; I would not involve AI myself.",
       "I ask AI to write the analysis from my summary numbers.",
       "I load the data, iterate on the analysis with AI, and sanity-check the story.",
-      "I do that, and ask for competing explanations of the trend before choosing one.",
-      "I do that, and reproduce the key figures independently before the board sees them.",
+      "I work the data with AI, then ask it for competing explanations of the trend before I settle on one.",
+      "I test rival explanations with AI, then reproduce the key figures myself before the board sees them.",
     ], "underexposure_fluency",
     { effects: { 5: { verification: 6 } } }),
 
@@ -31,8 +31,8 @@ export const ADMINISTRATOR_ITEMS: Item[] = [
       "I act on the flags; that is what the system is for.",
       "I mention the flags in their evaluations as supporting data.",
       "I treat the flags as hypotheses and go look at their classes myself.",
-      "I do that, and interrogate the metric itself before it touches anyone's file.",
-      "I do that, and set a standing rule: no personnel action originates from an unexamined model output.",
+      "I check what the metric actually measures, and visit the classes, before anything reaches a file.",
+      "I keep a standing rule: no personnel action starts from a model output until someone has checked the metric and visited the classes.",
     ], "authority_transfer",
     { effects: { 1: { responsibleUse: -8 }, 2: { responsibleUse: -4 } } }),
 
@@ -47,8 +47,8 @@ export const ADMINISTRATOR_ITEMS: Item[] = [
       "I ask AI where schools usually cut and follow the list.",
       "I ask for a cut list that hits my target number.",
       "I model several scenarios with AI and compare the tradeoffs.",
-      "I do that, and ask what problems each scenario would create two years from now.",
-      "I do that, and use AI to argue against the option I prefer, so I can find my own bias.",
+      "I run each scenario forward two years with AI, to see the problems it would create.",
+      "I test the scenarios, then have AI argue against the one I prefer, so my own bias shows up.",
     ], "shallow_use"),
 
   claim(P, "dependencySafety",
@@ -78,7 +78,7 @@ export const ADMINISTRATOR_ITEMS: Item[] = [
       "I cite it with 'vendor-reported' attached.",
       "I read the whitepaper before citing anything.",
       "I read it, check the study design, and look for independent replication.",
-      "I do that, and pilot with our own students before any such claim reaches the board.",
+      "I pilot it with our own students, and no such claim reaches the board until that comes back.",
     ], "verification_low"),
 
   claim(P, "skillGrowth",
@@ -93,7 +93,7 @@ export const ADMINISTRATOR_ITEMS: Item[] = [
       "Output is up; that is what I report.",
       "I survey the team on time saved and perceived quality.",
       "I look for evidence of capability: better decisions, better analysis, better meetings.",
-      "I do that, and where AI replaced growth, such as juniors no longer learning by drafting, I redesign the work.",
+      "I check where AI has replaced growth, such as juniors no longer learning by drafting, and redesign that work.",
     ], "skill_erosion"),
 
   claim(P, "creativity",
@@ -107,8 +107,8 @@ export const ADMINISTRATOR_ITEMS: Item[] = [
       "I ask AI what programs are trending and copy the best fit.",
       "I pick from its list, with local adjustments.",
       "I start from our identity and use AI to expand our own concept.",
-      "I do that, and have AI attack the concept hard before we commit.",
-      "I do that, and bring faculty into the same AI-assisted design process, so the originality is institutional, not just mine.",
+      "I have AI attack our own concept hard, and fix what breaks before we commit.",
+      "Faculty build and challenge the concept with AI alongside me, so the originality is institutional, not just mine.",
     ], "creativity_homogenization"),
 
   claim(P, "responsibleUse",
@@ -122,8 +122,8 @@ export const ADMINISTRATOR_ITEMS: Item[] = [
       "I paste the file in; efficiency matters.",
       "I paste it with the name removed.",
       "I describe the situation abstractly, with no identifiers.",
-      "I do that, and only in a tool cleared for confidential use.",
-      "I do that, and keep the judgment itself human, with counsel where needed.",
+      "I use only a tool cleared for confidential work, and keep identifiers out of it.",
+      "I keep the judgment human, take counsel where needed, and give an approved tool only an outline.",
     ], "privacy_risk"),
 
   claim(P, "transfer",

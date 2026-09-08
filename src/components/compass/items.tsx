@@ -77,7 +77,7 @@ function shuffled<T>(list: T[], seed: string): T[] {
  * Detected rather than listed, so copy written in this shape later cannot
  * quietly reintroduce the problem.
  */
-const buildsOnThePrevious = (label: string) => /^\s*I do that\b/i.test(label);
+const buildsOnThePrevious = (label: string) => /^\s*(?:I do that\b|I do the above\b|I assemble it that way\b|Same as\b|As above\b|That, and\b|Both of\b|All of that\b)/i.test(label);
 
 /**
  * Whether an item's options can be shown in any order.

@@ -243,24 +243,53 @@ progress bar reports its value and a sentence saying where the reader is.
 edition all shipped in the two releases before this one. What is genuinely
 missing from P1-1 is per-screen `document.title` and history states per question.
 
+### The rest of P1
+
+**Contrast.** The decorative tokens were not darkened: borders, rules and fills
+are exempt from the requirement and darkening them would have changed the
+design. There are text-safe counterparts instead, the same hues taken down until
+they clear 4.5 to 1 on every ground the product paints text on, and every
+`color:` use points at one. The report teal went from 2.92 to 4.56, and 16 rules
+setting real interface text below ten pixels were raised. The admin dashboard is
+measured against its own two grounds, light and dark, rather than assumed.
+`tests/compass/contrast.ts` computes the ratios on every release.
+
+**One product, seven editions.** Seven report mastheads named seven products.
+They are now `Human Advantage Report: Student edition` and so on. The `nfc-`
+form identifiers and the `nfc2*` storage keys are renamed, and the old storage
+keys are read once so a draft in flight survives the rename. `BRAND.abbrev`
+carried `HAS`, which nothing referenced and which appeared nowhere public; it is
+gone rather than left to be adopted by accident.
+
+**The 40 chained options are rewritten**, and the last one nobody had counted
+with them: `teacher_fluency_s` opened "I assemble it that way", a back reference
+in a wording the detector was never told to look for. The detector and the test
+now cover the whole family of phrasings rather than the single one they were
+written against. No option value, id or effect changed, so the scoring is
+untouched.
+
+**The report speaks to the reader.** All three studies are education studies and
+inventing others would have been worse, so each edition outside the classroom
+now opens the evidence section by saying where the evidence came from, in its
+own words, before quoting it. The five editions sharing a library each get their
+own verification rule instead of one sentence naming graded work, a classroom
+and a family decision at once.
+
+Two things turned up while doing it that nobody had asked for. `transfer_low`
+advised the reader about "cousin problems", which is learning-science shorthand.
+And `responsibleUse` routed every edition to `privacy_risk`, which is raised by
+teacher, parent, leader and professional items about pasting confidential
+material: no student item asks about that, so a student whose constraint was
+responsible use was handed a rule about confidential records they were never
+asked about. Both fixed.
+
 ### P1 still open
 
-- **P1-3, the chained scenario options.** 40 options across four editions open
-  with "I do that, and...". They are no longer incoherent, because ladders are
-  no longer shuffled, but the brief asks for them rewritten to stand alone.
-  That is respondent-facing assessment copy and changes what an option means,
-  so it wants the owner's eye before it ships.
-- **P1-4, contrast.** The markup half is done. 48 text nodes on the report still
-  fail their contrast requirement, the teal kicker at 2.92 against a 4.5
-  requirement, body copy at 4.42, several labels at 7.6 pixels, plus four gold
-  labels on the homepage at 3.88. That is a palette decision.
-- **P1-5, one product name.** Seven report mastheads still name seven products,
-  and the lead form still carries `nfc-` identifiers and `nfc2Session` storage
-  keys.
-- **P1-6b, the shared advice and evidence strings.** Every edition still cites
-  three student-learning studies, so a Business Owner reading their risk
-  register is shown research about undergraduate exam scores, and a Parent
-  report says "classroom practice".
+The 40 rewrites are respondent-facing assessment copy. They preserve each
+option's level and none of the scoring changed, but they are new words in front
+of respondents and are worth the owner reading once.
+
+P2 is untouched.
 
 ## Traps and corrections
 

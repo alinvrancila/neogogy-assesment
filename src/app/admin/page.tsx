@@ -228,7 +228,7 @@ function BusinessContextPanel({ lead }: { lead: LeadRow }) {
   const filled = rows.filter(([, v]) => !!v);
   return (
     <div className="admin-subcard rounded-2xl p-4">
-      <p className="admin-eyebrow">Business AI Health Check</p>
+      <p className="admin-eyebrow">Business Owner edition</p>
       <p className="admin-strong mt-1 text-sm font-semibold">
         This assesses the business, not the individual.
       </p>

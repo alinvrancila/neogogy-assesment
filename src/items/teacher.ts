@@ -16,7 +16,7 @@ export const TEACHER_ITEMS: Item[] = [
       "I ask again with 'make this better' and take the second version.",
       "I feed it my class profile and regenerate until it fits.",
       "I decompose it: core task, extensions, and supports requested separately, then assembled.",
-      "I assemble it that way, then trial it against my own past materials before it reaches students.",
+      "I request the core task, the extensions and the supports separately, assemble them, and trial the result against my own past materials before it reaches students.",
     ], "underexposure_fluency",
     { effects: { 5: { verification: 6 } } }),
 
@@ -32,7 +32,7 @@ export const TEACHER_ITEMS: Item[] = [
       "I adopt most of it and drop the parts that feel wrong.",
       "I compare its rationale with mine before deciding anything.",
       "I take its rationale as a challenge, re-argue my own design, and keep what survives.",
-      "I do that, and note where its reasoning exposed a real weakness, so the unit improves on my terms.",
+      "I defend my own design against its argument, then improve the unit myself where it was actually right.",
     ], "authority_transfer"),
 
   claim(P, "amplification",
@@ -46,8 +46,8 @@ export const TEACHER_ITEMS: Item[] = [
       "I ask AI to write a re-teach worksheet.",
       "I ask AI why students miss questions like this and use its list.",
       "I give AI the actual wrong answers and ask what misconception they share.",
-      "I do that, then have it generate probes to test which misconception each group holds.",
-      "I do that, then practise my new explanation with AI acting as a confused student, to find where it falls down.",
+      "I have AI turn the students' wrong answers into probes that test which misconception each group holds.",
+      "I work out what each group is getting wrong, then have AI play a confused student to find where my explanation fails.",
     ], "shallow_use",
     { effects: { 5: { transfer: 5 } } }),
 

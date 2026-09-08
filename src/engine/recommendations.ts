@@ -40,7 +40,7 @@ const LIBRARY: Record<string, Recommendation> = {
     "Learning transfer",
     "Close every significant AI session with unaided reconstruction.",
     "After AI explains or builds something that matters, close the tool and reconstruct the core from memory: the concept in your own words, the method's steps, the argument's spine. Reopen only to check.",
-    "Cousin problems and later tasks no longer require returning to AI from zero.",
+    "Similar tasks later on no longer send you back to AI from the beginning.",
     "Reconstructing by recognition (re-reading) instead of recall."),
   skill_erosion: R("skill_erosion", "important",
     "Skill preservation",
@@ -93,12 +93,47 @@ const LIBRARY: Record<string, Recommendation> = {
 };
 
 /** Bottleneck construct → the signal tag whose recommendation addresses it. */
+
+/**
+ * The one shared practice that named everybody and therefore nobody.
+ *
+ * It read "before any AI-supplied claim enters graded work, a classroom, a
+ * family decision, or an institutional document", which is a catch-all list
+ * rather than a sentence written for the person reading it. business and pastor
+ * already have libraries of their own; these are the five that shared one.
+ */
+const VERIFICATION_PRACTICE: Partial<Record<Persona, string>> = {
+  student: "Before an AI-supplied claim goes into an assignment, the notes you study from, or an answer you give in class, confirm it in one source the AI did not provide; for anything that will be graded, two.",
+  teacher: "Before an AI-supplied claim reaches a worksheet, a slide, or a comment you write on a student's work, confirm it in one source the AI did not provide; for anything a class will write down and repeat, two.",
+  parent: "Before an AI-supplied claim shapes a decision about your child or gets repeated to them as fact, confirm it in one source the AI did not provide; for anything touching health, money, or safety, two.",
+  administrator: "Before an AI-supplied claim reaches a board report, a budget case, or a message to your staff, confirm it in one source the AI did not provide; for anything that touches a person's job or money you are committing, two.",
+  professional: "Before an AI-supplied claim goes into a report, an email that commits you, or a figure someone else will act on, confirm it in one source the AI did not provide; for anything that would be costly to get wrong, two.",
+};
+
 const BOTTLENECK_TAG: Record<ConstructId, string> = {
   fluency: "underexposure_fluency", agency: "authority_transfer", amplification: "shallow_use",
   dependencySafety: "independent_capability_low", verification: "verification_low",
   skillGrowth: "skill_erosion", creativity: "creativity_homogenization",
   responsibleUse: "privacy_risk", transfer: "transfer_low", adaptability: "workflow_stagnation",
 };
+
+/**
+ * Where an edition's own evidence disagrees with the shared mapping.
+ *
+ * responsibleUse maps to privacy_risk, which is raised by teacher, parent,
+ * leader and professional items about pasting confidential material. No student
+ * item asks about that: the student bank raises disclosure_risk, about saying
+ * what help you had. A student whose constraint was responsible use was
+ * therefore handed a rule about confidential records they were never asked
+ * about.
+ */
+const BOTTLENECK_TAG_BY_PERSONA: Partial<Record<Persona, Partial<Record<ConstructId, string>>>> = {
+  student: { responsibleUse: "disclosure_risk" },
+};
+
+const bottleneckTag = (persona: Persona | undefined, construct: ConstructId): string =>
+  (persona ? BOTTLENECK_TAG_BY_PERSONA[persona]?.[construct] : undefined)
+  ?? BOTTLENECK_TAG[construct];
 
 
 /**
@@ -474,7 +509,14 @@ const PASTOR_MAINTAIN = PR("maintain", "advanced",
 export function buildRecommendations(
   signals: RiskSignal[], bottleneck: Bottleneck, up: UsageProfile, persona?: Persona
 ): Recommendation[] {
-  const LIB = persona === "business" ? BUSINESS_LIBRARY : persona === "pastor" ? PASTOR_LIBRARY : LIBRARY;
+  const base = persona === "business" ? BUSINESS_LIBRARY : persona === "pastor" ? PASTOR_LIBRARY : LIBRARY;
+  // The shared verification practice named every reader's context at once. The
+  // five editions that share this library each get the sentence written for
+  // them; business and pastor have their own entry and are untouched.
+  const ownPractice = persona ? VERIFICATION_PRACTICE[persona] : undefined;
+  const LIB: Record<string, Recommendation> = ownPractice && base.verification_low
+    ? { ...base, verification_low: { ...base.verification_low, practice: ownPractice } }
+    : base;
   const chosen = new Map<string, Recommendation>();
   // 1. The bottleneck's recommendation leads, unless the profile is saturated.
   //    One exception: a preacher who has decided on purpose where these tools
@@ -482,7 +524,7 @@ export function buildRecommendations(
   //    is a formed one, and the check says so rather than arguing with it.
   const skipExposureLead = persona === "pastor" && up.intentionalSelectiveUse;
   if (!bottleneck.saturated) {
-    const btag = BOTTLENECK_TAG[bottleneck.construct];
+    const btag = bottleneckTag(persona, bottleneck.construct);
     const isExposure = btag === "underexposure_fluency";
     if (LIB[btag] && !(skipExposureLead && isExposure)) {
       chosen.set(btag, { ...LIB[btag], priority: "immediate" });

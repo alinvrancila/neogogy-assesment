@@ -9,7 +9,7 @@
  * those three are vetted in this repository. Every other reference points at a
  * field of research rather than inventing a paper, an author, or a number.
  */
-import type { ConstructId } from "./types";
+import type { ConstructId, Persona } from "./types";
 
 export interface Citation { claim: string; source: string }
 
@@ -51,6 +51,94 @@ export const FRAMEWORK_SOURCES: FrameworkSource[] = [
     note: "The companion volume focused entirely on higher education, making the case for why the framework is needed. It carries reflection questions written for faculty learning communities and seminars, which suit a group working through their results together.",
   },
 ];
+
+
+/**
+ * The same three studies, framed for the person reading them.
+ *
+ * All three are education studies, and every edition was shown the same words,
+ * so a Business Owner reading a risk register was given undergraduate exam
+ * scores with nothing acknowledging that. Inventing different studies would be
+ * worse. Each edition is now told plainly where the evidence comes from and why
+ * it is being put in front of them, which is more credible than implying it was
+ * about them.
+ *
+ * student and teacher keep the original wording, which was written for them.
+ */
+export interface EvidenceFraming { leadIn: string; claims: Citation[]; bookNotes: Record<string, string> }
+
+const EVIDENCE_BY_PERSONA: Partial<Record<Persona, EvidenceFraming>> = {
+  business: {
+    leadIn: "The sharpest evidence on this question comes from education rather than from business, and it is worth your time because it measures what a tool does to a person's capability, which is the thing you are paying for every time you hire.",
+    claims: [
+      { claim: "A survey of UK undergraduates found about 95 percent using AI in some form and 94 percent using it on assessed work, while fewer than half said their teaching staff were helping them build the skill. These are the people you will be hiring, and the gap between how much they use it and how little they were taught is the same gap most businesses have.", source: "HEPI / Kortext, 2026" },
+      { claim: "High school students who practised mathematics with an unrestricted chatbot scored roughly 17 percent worse on a later unaided exam than students who practised with no AI at all. It was measured in a classroom rather than in a business, and what it measures is what costs you: the help raised what was produced at the time and lowered what the person kept.", source: "Bastani et al., PNAS, 2025" },
+      { claim: "In a Harvard physics course, the same underlying technology, designed deliberately for learning, produced roughly double the learning gains of established classroom practice. Nobody has run this study on a sales team, and the part that carries over to your business is that the design of the use, not the tool, produced the result.", source: "Kestin et al., Scientific Reports, 2025" },
+    ],
+    bookNotes: {
+      "Neogogy: Learning at the Speed of Mind": "An education book, written for teachers and institutions rather than for owners. It is where the ten dimensions your business was measured on are set out in full, along with the seven principles of Neogogy and the case for the educator as a wisdom collaborator. Take the model from it and expect to translate the classroom examples into your own operation.",
+      "Understanding Neogogy: Academic Intelligence in the Age of AI": "The companion volume, written entirely for higher education, making the case for why the framework is needed. Its reflection questions were built for faculty learning communities, and they need less translation than that suggests: the same questions work on a leadership team sitting down to agree where AI belongs in the business.",
+    },
+  },
+  professional: {
+    leadIn: "The evidence below was gathered in classrooms rather than in workplaces, and it is worth your time because education is the one place where somebody thought to measure what a person could still do afterwards, which is exactly what this report is asking about you.",
+    claims: [
+      { claim: "A survey of UK undergraduates found about 95 percent using AI in some form and 94 percent using it on assessed work, while fewer than half said their teaching staff were helping them build the skill. Change the words and it describes most workplaces, probably yours: nearly everyone using these tools, almost nobody being taught how to use them well.", source: "HEPI / Kortext, 2026" },
+      { claim: "High school students who practised with an unrestricted chatbot did roughly 17 percent worse on a later unaided exam than students who practised without AI at all, even though their assisted work was better at the time. It was measured on mathematics homework, and what it measured, how much is left in you once the help stops, is the one thing your job never checks.", source: "Bastani et al., PNAS, 2025" },
+      { claim: "In a Harvard physics course, the same technology, designed deliberately for learning, produced roughly double the learning gains of established teaching. Nobody has run this study on your work, and the finding that travels is that the design of the use, rather than the tool, carried the effect.", source: "Kestin et al., Scientific Reports, 2025" },
+    ],
+    bookNotes: {
+      "Neogogy: Learning at the Speed of Mind": "An education book, written for teachers and institutions. It is where the ten dimensions you were measured on come from, including the idea this whole assessment turns on: that help should leave you more capable than it found you. The examples are classrooms, the model is not.",
+      "Understanding Neogogy: Academic Intelligence in the Age of AI": "The companion volume, written for higher education. It carries reflection questions made for faculty groups, which are worth borrowing if you would rather work through your results with a colleague than alone.",
+    },
+  },
+  parent: {
+    leadIn: "The studies below come from schools and universities rather than from homes, which puts them closer to your child's day than to yours, and they measure what a report card never shows you: what a learner can still do once the help is taken away.",
+    claims: [
+      { claim: "A survey of UK undergraduates found about 95 percent using AI in some form and 94 percent using it on assessed work, while fewer than half said their teaching staff were helping them build the skill. Those students are a few years ahead of your child, and they show you both where the habit is going and how little of it anyone is teaching.", source: "HEPI / Kortext, 2026" },
+      { claim: "High school students who practised mathematics with an unrestricted chatbot scored roughly 17 percent worse on a later unaided exam than students who practised with no AI at all. Their work looked better while they were doing it. That is the finding to keep at your kitchen table: the help improved the homework and reduced what the child kept.", source: "Bastani et al., PNAS, 2025" },
+      { claim: "In a Harvard physics course, the same technology, designed deliberately for learning, produced roughly double the learning gains of established teaching. The students were older than your child and the point still holds: used one way it takes learning away, used another it adds to it, and the difference is how the use is set up rather than which app is open.", source: "Kestin et al., Scientific Reports, 2025" },
+    ],
+    bookNotes: {
+      "Neogogy: Learning at the Speed of Mind": "An education book, written for teachers and schools rather than for parents. It sets out the ten dimensions you were measured on in full, and the principle underneath them is one you can use at home tonight: help should leave the learner more able than it found them.",
+      "Understanding Neogogy: Academic Intelligence in the Age of AI": "The companion volume, focused on higher education, so it speaks to the years ahead of a school age child rather than to this week. Its reflection questions were written for staff groups, and they work just as well for two parents deciding what the rule in your house is going to be.",
+    },
+  },
+  pastor: {
+    leadIn: "None of this was measured on preachers, and it earns your attention because it asks what preparation leaves behind in the person who did it, which is the one thing a Sunday morning cannot tell you.",
+    claims: [
+      { claim: "A survey of UK undergraduates found about 95 percent using AI in some form and 94 percent using it on assessed work, while fewer than half said their teaching staff were helping them build the skill. They are students and not preachers, and the shape will be familiar to you: nearly everyone using these tools, almost nobody being formed in how to use them.", source: "HEPI / Kortext, 2026" },
+      { claim: "High school students who practised with an unrestricted chatbot scored roughly 17 percent worse on a later unaided exam than those who practised with no AI at all, even though their assisted work was stronger at the time. It was a mathematics class rather than a study desk, and it measures what your congregation can never see on a Sunday: what stayed in the person who prepared.", source: "Bastani et al., PNAS, 2025" },
+      { claim: "In a Harvard physics course, the same technology, designed deliberately for learning, produced roughly double the learning gains of established teaching. The tool was not what changed. How it was set to work on the learner was, and that is the question to put to your own week of preparation.", source: "Kestin et al., Scientific Reports, 2025" },
+    ],
+    bookNotes: {
+      "Neogogy: Learning at the Speed of Mind": "An education book rather than a ministry book, written for teachers and institutions. It is where the ten dimensions you were measured on are set out in full, with the seven principles of Neogogy and the idea of the educator as a wisdom collaborator behind them. The pulpit is never mentioned, and the pattern will be recognisable.",
+      "Understanding Neogogy: Academic Intelligence in the Age of AI": "The companion volume, written for higher education and for faculty. Its reflection questions were made for learning communities and seminars, and they carry over with little effort to your staff team, or to a group of preachers working through their results together.",
+    },
+  },
+  administrator: {
+    leadIn: "All three studies below were run on students, which is either your own sector or the one that supplies your staff, and they measure what no dashboard reports: what a person can still do when the tool is taken away.",
+    claims: [
+      { claim: "A survey of UK undergraduates found about 95 percent using AI in some form and 94 percent using it on assessed work, while fewer than half said their teaching staff were helping them build the skill. Read it as adoption that ran well ahead of policy, because that is what it is, and it is the same race your own organisation is in.", source: "HEPI / Kortext, 2026" },
+      { claim: "High school students who practised with an unrestricted chatbot scored roughly 17 percent worse on a later unaided exam than students who practised without it, while their assisted work was better at the time. It was measured on mathematics homework rather than on staff, and it is the clearest evidence you will find that output and capability can move in opposite directions at once.", source: "Bastani et al., PNAS, 2025" },
+      { claim: "In a Harvard physics course, the same technology, designed deliberately for learning, produced roughly double the learning gains of established practice. This is the study that argues against a blanket position in either direction: the design of the use carried the effect, so what your policy says about how AI is used will matter more than what it says about whether it is used at all.", source: "Kestin et al., Scientific Reports, 2025" },
+    ],
+    bookNotes: {
+      "Neogogy: Learning at the Speed of Mind": "An education book, written for teachers and institutions rather than for the people who run them. It sets out the ten dimensions you were measured on in full, with the seven principles of Neogogy behind them. Take the model from it, and expect to translate the classroom examples into whatever you lead.",
+      "Understanding Neogogy: Academic Intelligence in the Age of AI": "The companion volume, focused entirely on higher education and on the case for why the framework is needed. Its reflection questions were written for faculty learning communities, which makes it the more useful of the two if you plan to take a team through their results together.",
+    },
+  },
+};
+
+/** What this edition should be shown, falling back to the original wording. */
+export function evidenceFor(persona: Persona | undefined): EvidenceFraming {
+  const own = persona ? EVIDENCE_BY_PERSONA[persona] : undefined;
+  return own ?? {
+    leadIn: "",
+    claims: EVIDENCE_BASE,
+    bookNotes: Object.fromEntries(FRAMEWORK_SOURCES.map((b) => [b.title, b.note])),
+  };
+}
 
 export interface ConstructContent {
   /** One paragraph: what this dimension actually measures. */

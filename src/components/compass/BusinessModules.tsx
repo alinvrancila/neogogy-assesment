@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * The parts of a Business AI Health Check that no other persona produces.
+ * The parts of the Business Owner edition that no other edition produces.
  *
  * An owner should finish knowing three things without effort: whether AI is
  * helping or harming the business right now, where the exposure sits, and what
@@ -41,7 +41,7 @@ export function HealthHeadline({ result }: { result: CompassResult }) {
 
   return (
     <section className="biz-headline">
-      <p className="asc-kicker">Business AI Health Check</p>
+      <p className="asc-kicker">Business Owner edition</p>
       <h2 className="biz-h1">{result.archetype.name}</h2>
       <p className="biz-verdict">{result.archetype.tagline}</p>
       <p className="biz-verdict">{verdict}</p>
