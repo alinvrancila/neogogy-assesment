@@ -14,7 +14,11 @@ export async function GET(request: NextRequest) {
   const provided =
     request.nextUrl.searchParams.get('token') || request.headers.get('x-stats-token');
 
-  if (token && provided !== token && !isAdminAuthed(request)) {
+  // Closed unless something proves the caller. The condition used to be gated
+  // on a token existing, so a deployment that had not set STATS_TOKEN served
+  // the whole analytics summary to anybody who asked.
+  const byToken = Boolean(token) && provided === token;
+  if (!byToken && !isAdminAuthed(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

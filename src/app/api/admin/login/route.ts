@@ -34,7 +34,12 @@ export async function POST(request: NextRequest) {
   const name = (username || '').trim().toLowerCase();
   const ip = clientIp(request.headers) || 'unknown';
   const byIp = `admin-login:ip:${ip}`;
-  const byUser = `admin-login:user:${name}`;
+  // Scoped to the caller as well as the account. Keyed on the submitted
+  // username alone, this was a denial of service with no password required:
+  // ten wrong guesses at a named account, from anywhere, and the person who
+  // owns it could not sign in for fifteen minutes. An attacker now only ever
+  // exhausts their own budget.
+  const byUser = `admin-login:ip-user:${ip}:${name}`;
 
   // Checked before the password is, so a locked out caller cannot keep spending
   // scrypt work, and answered the same way as a wrong password so it discloses

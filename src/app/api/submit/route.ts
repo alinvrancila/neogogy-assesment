@@ -11,6 +11,8 @@ import { buildComparison } from '@/lib/history';
 import { sharePosts, SHARE_URL } from '@/lib/share';
 import { requestContext } from '@/lib/requestContext';
 import { mintReportToken, reportUrl, reportPath, redactToken } from '@/lib/reportLink';
+import { allow } from '@/lib/throttle';
+import { clientIp } from '@/lib/requestContext';
 import { lookupIp } from '@/lib/geoip';
 
 export const runtime = 'nodejs';
@@ -251,12 +253,34 @@ function validate(body: Body): { ok: true; submission: Submission } | { ok: fals
   };
 }
 
+/**
+ * How many sittings one address may file in an hour.
+ *
+ * A submission writes a record, renders a PDF and sends mail through SES, and
+ * none of that was bounded. A classroom or an office behind one address is the
+ * case to be generous for: thirty is far more than a room of people taking it
+ * together and far less than a script is worth running.
+ */
+const SUBMISSIONS_PER_HOUR = 30;
+
+/** Not validation of deliverability, just a refusal of things that are not
+ *  addresses at all. The gate says the report goes to this address. */
+const looksLikeAnAddress = (value: string) =>
+  /^[^\s@]+@[^\s@.]+\.[^\s@]{2,}$/.test(value) && value.length <= 254;
+
 export async function POST(request: NextRequest) {
   let body: Body;
   try {
     body = (await request.json()) as Body;
   } catch {
     return NextResponse.json({ error: 'Malformed request.' }, { status: 400 });
+  }
+
+  if (!allow(`submit:${clientIp(request.headers) || 'unknown'}`, SUBMISSIONS_PER_HOUR)) {
+    return NextResponse.json({
+      error: 'That is a lot of assessments from one connection in an hour. '
+        + 'Wait a little and try again, and write to us if you are running this with a group.',
+    }, { status: 429 });
   }
 
   // Refused rather than stored: this persona keeps no records at all.
@@ -269,6 +293,11 @@ export async function POST(request: NextRequest) {
   const fullName = (body.name || `${body.firstName || ''} ${body.lastName || ''}`).trim();
   if (!body.email || !fullName) {
     return NextResponse.json({ error: 'First name and email are required.' }, { status: 400 });
+  }
+  if (!looksLikeAnAddress(String(body.email).trim())) {
+    return NextResponse.json({
+      error: 'That does not look like an email address. Your report is sent there, so it has to be one that works.',
+    }, { status: 400 });
   }
 
   const checked = validate(body);

@@ -75,6 +75,60 @@ head('Guessing a password costs the guesser');
     /mintAdminSession\(name\)/.test(route) && !/ADMIN_COOKIE, token/.test(route));
 }
 
+head('The door cannot be jammed shut from outside');
+{
+  const route = read('src', 'app', 'api', 'admin', 'login', 'route.ts');
+  // Keyed on the submitted username alone, ten wrong guesses from anywhere
+  // locked the owner out for fifteen minutes with no password required.
+  ok('the account budget is scoped to the caller as well as the account',
+    /admin-login:ip-user:\$\{ip\}:\$\{name\}/.test(route)
+    && !/admin-login:user:\$\{name\}/.test(route),
+    'a budget keyed on the username alone is a denial of service');
+
+  resetThrottles();
+  const attacker = 'admin-login:ip-user:203.0.113.1:alin@neogogy.ai';
+  const owner = 'admin-login:ip-user:198.51.100.7:alin@neogogy.ai';
+  for (let i = 0; i < 12; i++) allow(attacker, 10);
+  ok('an attacker exhausts only their own budget', peek(attacker, 10) === false);
+  ok('and the owner still has theirs', peek(owner, 10) === true);
+  resetThrottles();
+}
+
+head('The session is not signed with a secret that travels in the open');
+{
+  const auth = read('src', 'lib', 'adminAuth.ts');
+  ok('the stats token is never used to sign a session',
+    !/process\.env\.STATS_TOKEN/.test(auth),
+    'STATS_TOKEN is accepted in a query string, so anything logging a URL held a signing key');
+  ok('an unconfigured deployment gets a random per-process secret instead',
+    /randomBytes\(32\)/.test(auth) && /ephemeral/.test(auth));
+
+  // A session minted under one secret must not read under another.
+  const was = process.env.ADMIN_SESSION_SECRET;
+  process.env.ADMIN_SESSION_SECRET = 'secret-one';
+  const s = mintAdminSession('someone@example.com');
+  process.env.ADMIN_SESSION_SECRET = 'secret-two';
+  ok('and rotating it invalidates every session', readAdminSession(s) === null);
+  process.env.ADMIN_SESSION_SECRET = was;
+}
+
+head('The public endpoints are bounded');
+{
+  const submit = read('src', 'app', 'api', 'submit', 'route.ts');
+  ok('a submission costs an address part of an hourly budget', /allow\(`submit:/.test(submit));
+  ok('and an address that is not one is refused', /looksLikeAnAddress/.test(submit));
+
+  const stats = read('src', 'app', 'api', 'stats', 'route.ts');
+  ok('the analytics summary is closed unless the caller proves itself',
+    /const byToken = Boolean\(token\) && provided === token;/.test(stats)
+    && /if \(!byToken && !isAdminAuthed\(request\)\)/.test(stats),
+    'it used to be open whenever STATS_TOKEN was unset');
+
+  const event = read('src', 'app', 'api', 'event', 'route.ts');
+  ok('an event carries only identifiers, bounded', /const ident = /.test(event));
+  ok('and anonymous callers have a budget', /allow\(`event:/.test(event));
+}
+
 head('No password is written down in the repository');
 {
   const files = ['DEPLOY.md', 'README.md', '.env.example',

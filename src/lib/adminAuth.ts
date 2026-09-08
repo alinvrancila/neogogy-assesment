@@ -28,12 +28,24 @@ export const ADMIN_COOKIE = 'neogogy_admin';
 /** Eight hours, the same working day the cookie was already set for. */
 export const SESSION_MAX_AGE_S = 8 * 60 * 60;
 
-const secret = (): string =>
-  process.env.ADMIN_SESSION_SECRET
-  // Falls back so an existing deployment keeps working without new
-  // configuration. Set ADMIN_SESSION_SECRET to separate the two.
-  || process.env.STATS_TOKEN
-  || '';
+/**
+ * A secret for this process only, used when none is configured.
+ *
+ * It used to fall back to STATS_TOKEN, which the app itself accepts in a query
+ * string as `/api/stats?token=...`. Anything that had ever logged a URL held a
+ * key that could mint an administrator session for any username. Falling back
+ * to a random value instead means sessions still work out of the box and are
+ * never signed with a secret that travels in the open; the only cost is that a
+ * restart signs everyone out, which is the safe direction to fail.
+ */
+let ephemeral = '';
+
+const secret = (): string => {
+  const configured = process.env.ADMIN_SESSION_SECRET;
+  if (configured) return configured;
+  if (!ephemeral) ephemeral = randomBytes(32).toString('base64url');
+  return ephemeral;
+};
 
 const sign = (payload: string, key: string) =>
   createHmac('sha256', key).update(payload).digest('base64url');
