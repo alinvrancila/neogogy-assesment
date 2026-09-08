@@ -120,8 +120,11 @@ export const PRIVACY: LegalDoc = {
     {
       heading: 'Cookies and tracking',
       body: [
-        'The assessment does not set advertising cookies and does not carry third party trackers. Your progress through the questions is held in your own browser, in session storage, so that a refresh does not cost you your answers. It never leaves your device and it clears when you finish or close the tab.',
-        'If that changes, this notice changes first, and a consent banner appears before anything non-essential is set.',
+        'The assessment does not set advertising cookies and does not carry third party trackers. Nothing here is sold, and nothing is shared with an advertising network.',
+        'Three things are kept in your own browser. Your progress through the questions is held in session storage, so that a refresh does not cost you your answers; it clears when you close the tab, and it is the only one of the three that never leaves your device.',
+        'The other two are kept in local storage and do travel with your submission, which the earlier version of this notice did not say. One is a random identifier for the sitting, which is what lets a start, a completion and a submission be counted as one person rather than three. The other is how you arrived: the site that linked you and any campaign tags on the address you came in on. Neither carries your name, and both stay until you clear your browser data.',
+        'If you would rather not leave them, clearing site data for this address removes all three, and the assessment still works.',
+        'If any of this changes, this notice changes first, and a consent banner appears before anything non-essential is set.',
       ],
     },
     {

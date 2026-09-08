@@ -13,7 +13,7 @@
  * screen and PDF layers are layout only.
  */
 import type { CompassResult, ConstructId } from "./types";
-import { CONSTRUCTS, STAGES } from "./config";
+import { CONSTRUCTS, STAGES, SCORING } from "./config";
 import {
   constructName, reportedConstructName, constructContent, constructPrinciple, stageDetail as stageDetailFor,
   stageName as stageNameFor,
@@ -317,7 +317,10 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
       L.push(`- **How sound is your judgment? ${r.composites.judgment} out of 100.** Checking, ownership of decisions, and clear boundaries, taken together.`);
       L.push(`- **Is assisted work becoming your own? ${r.composites.capabilityTransfer} out of 100.** Higher means what you do with AI is turning into something you can do without it.`);
       L.push(`- **How much depends on the tool? ${r.composites.dependencyIndex} out of 100.** Higher means more of what you produce would be hard to reproduce without AI.`);
-      L.push(`- **Are you practising enough to keep up? ${r.composites.underexposure} out of 100.** Higher means limited hands-on practice. This is a different risk from dependency, and it is not the same as being careful.`);
+      // Printed as "100 out of 100" with the meaning in the sentence after it,
+      // which reads as a top mark for a moment. The number is named for what it
+      // measures before it is given.
+      L.push(`- **How much practice you are missing: ${r.composites.underexposure} out of 100.** This one runs the other way: a high number means little hands-on practice, not a lot of it. It is a different risk from dependency, and it is not the same as being careful.`);
     }
     L.push(``);
     L.push(`**Each dimension, unpacked**`);
@@ -409,15 +412,29 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
   // respondent, and both directions matter: describing yourself more harshly
   // than you behave is as much a finding as the other way round.
   {
-    const gaps = (Object.keys(CONSTRUCTS) as ConstructId[])
+    // Read on the size of the gap rather than on `flagged`, which is set on a
+    // signed comparison and so only ever fires in the flattering direction.
+    // Every word about the harsher direction was unreachable, and a respondent
+    // who consistently underrates themselves, whose self-description the
+    // scoring damps hardest of all, was told nothing at all. `flagged` is left
+    // alone: it drives the claim discount, the confidence, the admin bucket and
+    // the said-against-did chip, and that policy is deliberate.
+    const diverging = (Object.keys(CONSTRUCTS) as ConstructId[])
       .map((c) => ({ c, d: r.dimensions[c] }))
-      .filter((x) => x.d.consistencyGap?.flagged)
-      .sort((a, b) => Math.abs(b.d.consistencyGap!.gap) - Math.abs(a.d.consistencyGap!.gap))
-      .slice(0, 3);
+      .filter((x) => Math.abs(x.d.consistencyGap?.gap ?? 0) >= SCORING.consistencyGapThreshold)
+      .sort((a, b) => Math.abs(b.d.consistencyGap!.gap) - Math.abs(a.d.consistencyGap!.gap));
+    const gaps = diverging.slice(0, 3);
 
     if (gaps.length) {
       const L: string[] = [];
-      L.push(`On ${gaps.length === 1 ? "one dimension" : `${gaps.length} dimensions`}, what you said about yourself and what you chose in a real situation did not line up. Both are probably true, and one of them is what shows up in your work.`);
+      const count = diverging.length;
+      // The number is the number that diverged, not the number printed below
+      // it. Reporting the shown three as the total understated a reader whose
+      // whole profile pulled two ways.
+      const shown = count > gaps.length
+        ? ` The ${gaps.length === 1 ? "largest is" : `${gaps.length} largest are`} below.`
+        : ``;
+      L.push(`On ${count === 1 ? "one dimension" : `${count} dimensions`}, what you said about yourself and what you chose in a real situation did not line up.${shown} Both are probably true, and one of them is what shows up in your work.`);
       L.push(``);
       for (const { c, d } of gaps) {
         const g = d.consistencyGap!;
@@ -544,7 +561,7 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
     L.push(`**The scale leans, deliberately.** Heavy dependence costs far more on this index than complete avoidance does, and that is a choice rather than an accident. Dependence erodes capability that is slow to rebuild. Underexposure leaves capability intact and is a fluency gap, which is why avoidance is held back by the practice gates rather than by the index itself. Both are real risks, and they are not equally expensive to recover from.`);
     // C1: ten named stages imply a resolution four items per dimension cannot carry.
     L.push(`**On the ten stages.** The route is named in ten stages because that is a useful way to describe a direction of travel, not because this instrument can resolve ten distinguishable levels. Read your stage as a neighbourhood rather than a coordinate, and read the constraint below it as the finding.`);
-    L.push(`**Two honest limits.** Each dimension rests on two self-description questions, one reverse-worded question and one real-situation question. That is fewer questions per dimension than a formal psychological test would use, which is exactly why you see a confidence level on each one rather than a single confident number. And all of it is self-reported: this assessment sees what you told it, so its usefulness to you depends on your answers staying honest as your use of AI grows.`);
+    L.push(`**Two honest limits.** Each dimension rests on about three questions: one where you describe yourself, one worded in the negative so that agreeing is not always the healthy answer, and one real situation. A couple of dimensions carry a fourth. That is fewer questions per dimension than a formal psychological test would use, which is exactly why you see a confidence level on each one rather than a single confident number. And all of it is self-reported: this assessment sees what you told it, so its usefulness to you depends on your answers staying honest as your use of AI grows.`);
     S.push({ key: "evidence", n: 12, title: "What this is built on, and what it cannot tell you", lines: L });
   }
 

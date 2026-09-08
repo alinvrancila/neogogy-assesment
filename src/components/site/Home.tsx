@@ -579,8 +579,17 @@ function Different() {
  * the reading is long, and a person deciding whether to spend ten minutes on it
  * deserves to see what comes back.
  */
+/**
+ * These are photographs of a real report, taken by hand on 1 September 2026.
+ *
+ * `cover` is not among them any more: it was made before the naming sweep and
+ * showed "Teacher AI Practice Check" and "The Formation Compass", two names the
+ * product no longer uses, above a prepared-for line reading "Test Runner". It
+ * was the first thumbnail a visitor opened. The interior pages are still
+ * accurate enough to show, but the whole set wants retaking from a current
+ * report before this is promoted anywhere.
+ */
 const REPORT_PAGES: Array<{ file: string; caption: string; only?: string }> = [
-  { file: 'cover', caption: 'Your result, named' },
   { file: 'route', caption: 'Where you are on the route' },
   { file: 'profile', caption: 'What your answers say about you' },
   { file: 'dimensions', caption: 'Ten dimensions, one at a time' },

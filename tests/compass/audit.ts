@@ -209,10 +209,50 @@ head('P0-3: a heavy user is never described as a distant one');
   }
 
   // The Business edition kept its own ladder, which used to outrank the lean.
-  for (let stage = 1; stage <= 4; stage++) {
+  // The first pass covered stages 1 to 4 on the assumption that a dependence
+  // lean stopped there. It does not: a business with high fluency and thin
+  // continuity reaches the fifth and sixth camps still leaning that way.
+  for (let stage = 1; stage <= 6; stage++) {
     ok(`business stage ${stage} has a dependence description of its own`,
       stageDetail('business', stage, 'dependence').looksLike
       !== stageDetail('business', stage, 'disconnection').looksLike);
+  }
+
+  // Rather than trusting that range, find every camp the lean can actually
+  // reach and require a description for each.
+  {
+    const reached = new Map<Persona, Set<number>>();
+    for (const p of PERSONAS_ALL) {
+      const seen = new Set<number>();
+      for (let level = 1; level <= 5; level += 0.25) {
+        for (const usage of [1, 3, 5]) {
+          for (const skew of [-1.5, -0.5, 0.5, 1.5]) {
+            const answers: Record<string, number> = {};
+            for (const it of applicableItems(p, usage)) {
+              const thin = it.construct === 'fluency' || it.construct === 'adaptability';
+              const lvl = Math.max(1, Math.min(5, level + (thin ? skew : -skew * 0.5)));
+              const t = top(it);
+              const h = Math.max(1, Math.min(t, Math.round(((lvl - 1) / 4) * (t - 1)) + 1));
+              answers[it.id] = it.type === 'reverse' ? t + 1 - h : h;
+            }
+            const r = compute({ persona: p, usage, b1: 3, b2: 3, answers });
+            if (riskLean(r.composites.dependencyIndex, r.composites.underexposure) === 'dependence') {
+              seen.add(r.stage.stage);
+            }
+          }
+        }
+      }
+      reached.set(p, seen);
+    }
+    const missing: string[] = [];
+    for (const [p, stages] of reached) {
+      for (const stage of stages) {
+        if (stageDetail(p, stage, 'dependence').looksLike
+          === stageDetail(p, stage, 'disconnection').looksLike) missing.push(`${p} stage ${stage}`);
+      }
+    }
+    ok('every camp a dependence lean can reach has a description written for it',
+      missing.length === 0, missing.join(', '));
   }
 }
 

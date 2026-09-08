@@ -96,8 +96,8 @@ function pastorLong(r: CompassResult): string {
   const st = pastorStanding(r);
   return [
     st.passed
-      ? `I completed the Preaching Formation Check, an advanced assessment of how AI is used in ministry preparation and preaching, and my practice met its standard for responsible use.`
-      : `I completed the Preaching Formation Check, an advanced assessment of how AI is used in ministry preparation and preaching.`,
+      ? `I completed the Preaching edition of the Human Advantage Assessment, which reads how AI is shaping ministry preparation and preaching, and my practice met its standard for responsible use.`
+      : `I completed the Preaching edition of the Human Advantage Assessment, which reads how AI is shaping ministry preparation and preaching.`,
     ``,
     `It looks at forty questions across ten areas: whether the message is still received and owned by the preacher, whether what reaches the pulpit has been checked, whether pastoral care and confidences stay in human hands, and whether a preacher could still prepare without any tool at all.`,
     ``,
@@ -110,8 +110,8 @@ function pastorLong(r: CompassResult): string {
 function pastorShort(r: CompassResult): string {
   const st = pastorStanding(r);
   return st.passed
-    ? `Completed the Preaching Formation Check and met its standard for responsible AI use in ministry. Forty questions on preparation, preaching, care, and formation. Results stay private. ${SHARE_URL}`
-    : `Completed the Preaching Formation Check: forty questions on how AI is shaping preparation, preaching, care, and formation. Results stay private. ${SHARE_URL}`;
+    ? `Completed the Preaching edition of the Human Advantage Assessment and met its standard for responsible AI use in ministry. Forty questions on preparation, preaching, care, and formation. Results stay private. ${SHARE_URL}`
+    : `Completed the Preaching edition of the Human Advantage Assessment: forty questions on how AI is shaping preparation, preaching, care, and formation. Results stay private. ${SHARE_URL}`;
 }
 
 function pastorCaption(r: CompassResult): string {
@@ -119,7 +119,7 @@ function pastorCaption(r: CompassResult): string {
   return [
     st.passed
       ? `Responsible AI practice in ministry: standard met.`
-      : `Preaching Formation Check: completed.`,
+      : `Human Advantage Assessment, Preaching edition: completed.`,
     ``,
     `An advanced assessment of how AI is shaping preparation, preaching, pastoral care, and a preacher's own formation. Forty questions, ten areas, about twelve minutes.`,
     ``,

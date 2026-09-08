@@ -5,6 +5,7 @@ import { logEvent } from '@/lib/storage';
 import { comparisonForStoredAttempt } from '@/lib/history';
 import { resolveLeadResult } from '@/lib/leadResult';
 import { expiresAt, daysRemaining, maskEmail, REPORT_PAGE_METADATA } from '@/lib/reportLink';
+import type { Persona } from '@/engine/types';
 import { accessByToken, reportViewEvent } from '@/lib/reportLinkAccess';
 import { clientIp } from '@/lib/requestContext';
 import ReportView from '@/components/compass/ReportView';
@@ -101,11 +102,27 @@ export default async function ReportLinkPage(
 
   const comparison = await comparisonForStoredAttempt(lead);
 
+  // Every edition but the Minister can rebuild its file from the answers on the
+  // record, so the saved page offers the download the results screen offers.
+  // The Minister cannot: the two reflection answers behind its Dependence Check
+  // are never written down, and a file rebuilt without them would disagree with
+  // the letter printed above it.
+  const submission = lead.role !== 'pastor' && lead.answers && Object.keys(lead.answers).length
+    ? {
+        persona: lead.role as Persona,
+        usage: lead.usageVal ?? 3,
+        b1: lead.baseline?.b1 || undefined,
+        b2: lead.baseline?.b2 || undefined,
+        answers: lead.answers,
+      }
+    : null;
+
   return (
     <ReportView
       result={resolved.result}
       firstName={lead.firstName || lead.name || ''}
       comparison={comparison}
+      submission={submission}
       // The report states the day it was taken, not the day it is opened.
       takenAt={lead.createdAt}
       leadId={lead.id}

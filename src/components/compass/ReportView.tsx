@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import Results from './Results';
 import type { CompassResult } from '@/engine';
 import type { AttemptComparison } from '@/lib/history';
+import type { Submission } from '@/engine/types';
 
 export type ReportLink = {
   token: string;
@@ -141,7 +142,7 @@ function LinkPanel({ link }: { link: ReportLink }) {
 }
 
 export default function ReportView({
-  result, firstName, comparison, link, takenAt, leadId,
+  result, firstName, comparison, link, takenAt, leadId, submission,
 }: {
   result: CompassResult;
   firstName?: string;
@@ -149,22 +150,25 @@ export default function ReportView({
   link: ReportLink;
   takenAt: string;
   leadId: string;
+  /** Rebuilt from the record, so the saved page can offer the file too. Null
+   *  for the Minister edition, whose file cannot be rebuilt honestly. */
+  submission?: Submission | null;
 }) {
   const router = useRouter();
   return (
     <div className="nfc">
       {/* emailed is false: this is the saved copy being read, not a confirmation
           that something has just been sent. */}
-      {/* No submission is passed, ever. The Minister edition rebuilds its file
-          from the answers it was given, and the two reflection answers behind
-          its Dependence Check are read once and never stored, so a file rebuilt
-          here would disagree with the reading printed above it. */}
+      {/* The Minister edition is the one that gets nothing here: its file is
+          rebuilt from the answers it was given, and the two reflection answers
+          behind its Dependence Check are read once and never stored, so a file
+          rebuilt from the record would disagree with the letter above it. */}
       <Results
         result={result}
         firstName={firstName}
         emailed={false}
         comparison={comparison}
-        submission={null}
+        submission={submission ?? null}
         takenAt={takenAt}
         leadId={leadId}
         onRetake={() => router.push('/')}

@@ -220,7 +220,7 @@ function RadarSvg({ r }: { r: CompassResult }) {
   const ids = Object.keys(CONSTRUCTS) as ConstructId[];
   // Two-word labels ride the outside of the web, so each spoke can be named.
   const SHORT: Record<string, string> = {
-    agency: 'Agency', verification: 'Verification', dependencySafety: 'Dependency',
+    agency: 'Agency', verification: 'Verification', dependencySafety: 'Independent capability',
     fluency: 'Fluency', transfer: 'Transfer', amplification: 'Amplification',
     skillGrowth: 'Skill growth', adaptability: 'Adaptability',
     responsibleUse: 'Responsible use', creativity: 'Creativity',
@@ -231,8 +231,12 @@ function RadarSvg({ r }: { r: CompassResult }) {
     const a = (Math.PI * 2 * i) / n - Math.PI / 2;
     return [cx + Math.cos(a) * rad, cy + Math.sin(a) * rad] as const;
   };
-  const val = (id: ConstructId) =>
-    CONSTRUCTS[id].reportedAsRisk ? r.dimensions[id].reportedScore : r.dimensions[id].score;
+  // The healthy reading, on every spoke. This plotted the risk value on the one
+  // dimension reported as a risk, so a respondent with perfect independent
+  // capability was drawn at the centre of that spoke while the caption beside
+  // it promised that further from the centre is healthier. The screen was fixed
+  // for this and the file was not, and the file is the thing people keep.
+  const val = (id: ConstructId) => r.dimensions[id].score;
   const poly = ids.map((id, i) => pt(i, (val(id) / 100) * R).join(',')).join(' ');
   return (
     <Svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>

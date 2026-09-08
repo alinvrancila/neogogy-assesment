@@ -528,8 +528,14 @@ async function main() {
     ok('and the cover reads that date rather than today',
       /date:\s*takenAt \? new Date\(takenAt\)/.test(
         read('src', 'components', 'compass', 'ResultCover.tsx')));
-    ok('and the Minister letter is never rebuilt from answers that were not kept',
-      /submission=\{null\}/.test(view) && !/reassembl/i.test(view));
+    // Every other edition can rebuild its file from the stored answers, so the
+    // saved page offers the download. The Minister cannot: the two reflection
+    // answers behind its Dependence Check are never written down.
+    ok('the saved page offers the file to the editions that can rebuild it',
+      /submission=\{submission\}/.test(page) && /submission=\{submission \?\? null\}/.test(view));
+    ok('and never to the Minister, whose answers were not all kept',
+      /lead\.role !== 'pastor'/.test(page),
+      'the Minister file would disagree with the letter printed above it');
 
     // The resolved value, not the text of the file, so a commented-out block
     // cannot pass this.

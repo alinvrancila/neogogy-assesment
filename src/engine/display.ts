@@ -789,6 +789,18 @@ const BUSINESS_STAGE_DETAIL_DEPENDENCE: Record<number, { looksLike: string; trap
     looksLike: "Broad, confident use across several functions, with verification, continuity and institutional memory thin underneath it. Breadth is well ahead of protection.",
     trap: "Exposure growing faster than governance. This is where dependence usually forms in a business, and it does not feel like a problem while it is forming, because nothing has gone wrong yet.",
   },
+  // A dependence lean was assumed to stop at stage 4. It does not: a business
+  // running real work through these tools, with fluency high and continuity
+  // thin, reaches the fifth and sixth camps still leaning that way, and used to
+  // be handed the neutral description saying its checks were in place.
+  5: {
+    looksLike: "AI reliably completes real work in the business, and the checks around it have not kept pace. What it produces is trusted because it is usually right, rather than because anything confirms it.",
+    trap: "Reading a good run as a working control. Nothing has gone wrong yet, which is not the same as being protected when it does.",
+  },
+  6: {
+    looksLike: "AI is built into how the work gets done, and the parts that would let you carry on without it, the records, the second pair of eyes, the people who could still do it, have thinned underneath.",
+    trap: "Mistaking integration for resilience. The deeper it is built in, the more the question is what happens on the day it is wrong, unavailable, repriced or retired.",
+  },
 };
 
 type LeanDetail = Partial<Record<RiskLean, Record<number, { looksLike: string; trap: string }>>>;

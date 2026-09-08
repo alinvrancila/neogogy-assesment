@@ -87,6 +87,18 @@ How the assessment was taken, which is how honestly to read the answers.
 | utm_source, medium, campaign, term, content | All five, where present |
 | Ad click identifier | Which platform: gclid, fbclid, msclkid, ttclid, li_fat_id, twclid |
 
+## Kept in the respondent's browser
+
+| What | Where | Leaves the device |
+|---|---|---|
+| Progress through the questions | session storage, `haa.progress` | No. Cleared when the tab closes |
+| A random identifier for the sitting | local storage, `haa.session` | Yes, as `sessionId` on every event and submission |
+| How they arrived: referring site and campaign tags | local storage, `haa.attribution` | Yes, inside `meta` on the submission |
+
+The last two persist until the browser's site data is cleared. Neither carries a
+name. The privacy notice says all three plainly; an earlier version said only
+the first existed and that nothing left the device, which was wrong twice.
+
 ## Age
 
 Not asked, and not verified. The Student edition names high school among its

@@ -74,7 +74,12 @@ head('The product is named once, and named the same everywhere');
     const s = fs.readFileSync(f, 'utf-8');
     // case insensitive: the name lived on in capitals on every report cover for
     // a week because this check was not
-    if (/formation compass/i.test(s)) stale.push(path.relative(process.cwd(), f));
+    // Comments explain why a retired name was removed, and saying so must not
+    // count as using it. Only what a reader can see is checked.
+    const visible = s.split('\n')
+      .filter((l) => !/^\s*(\*|\/\/|\/\*)/.test(l))
+      .join('\n');
+    if (/formation compass/i.test(visible)) stale.push(path.relative(process.cwd(), f));
   }
   ok('the retired umbrella name is gone', stale.length === 0, stale.join(', '));
   // "formation" as a concept is not the same thing as the retired product name
@@ -186,7 +191,11 @@ head('The report shows itself');
   const dir = path.join(process.cwd(), 'public', 'report');
   const home = fs.readFileSync(path.join(process.cwd(), 'src', 'components', 'site', 'Home.tsx'), 'utf-8');
   const files = (home.match(/\{ file: '([a-z-]+)'/g) ?? []).map((m) => m.replace(/.*'([a-z-]+)'.*/, '$1'));
-  ok('twelve pages are shown', files.length === 12, `${files.length} listed`);
+  // The cover was retired from this gallery: it predates the naming sweep and
+  // showed two dead product names above a prepared-for line reading "Test
+  // Runner". The rest are still accurate enough to show.
+  ok('the gallery shows the interior pages', files.length === 11, `${files.length} listed`);
+  ok('and not the stale cover', !files.includes('cover'), files.join(', '));
   for (const f of files) {
     const p = path.join(dir, `${f}.jpg`);
     const kb = fs.existsSync(p) ? Math.round(fs.statSync(p).size / 1024) : -1;
@@ -292,6 +301,21 @@ head('The site says what it does with your data');
     TERMS.sections.flatMap((x) => x.body).join(' ')));
 
   // every category in the data inventory has to appear in the notice
+  // The notice said progress was the only thing kept in the browser and that it
+  // never left the device. Two persistent identifiers were kept in local
+  // storage and both travel with the submission.
+  ok('the notice names everything kept in the browser',
+    /session storage/.test(prose) && /local storage/.test(prose));
+  ok('and says which of them travel', /do travel with your submission/.test(prose));
+  ok('and how to be rid of them', /clearing site data/i.test(prose));
+  {
+    const app = fs.readFileSync(
+      path.join(process.cwd(), 'src', 'components', 'compass', 'CompassApp.tsx'), 'utf-8');
+    const kept = [...app.matchAll(/(local|session)Storage\.setItem\(([A-Z_]+)/g)].map((m) => m[2]);
+    ok('every store the assessment writes to is disclosed', kept.length === 3,
+      `${kept.length} writes: ${kept.join(', ')}`);
+  }
+
   const inventory = fs.readFileSync(path.join(process.cwd(), 'docs', 'DATA-COLLECTED.md'), 'utf-8');
   for (const field of ['IP address', 'Mobile phone', 'Marketing consent', 'Email']) {
     ok(`the inventory lists ${field}`, inventory.includes(field));
