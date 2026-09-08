@@ -94,6 +94,33 @@ head('The progress bar reports where you are');
   ok('and a sentence a person can understand', /aria-valuetext=/.test(app));
 }
 
+head('Leaving keeps the draft, and Back does not refile a sitting');
+{
+  const app = fs.readFileSync(
+    path.join(process.cwd(), 'src', 'components', 'compass', 'CompassApp.tsx'), 'utf-8');
+
+  // The save effect ran on every screen. Leaving for the homepage overwrote the
+  // draft with an unresumable one, and the next load deleted it: the button
+  // destroyed the thing it offered to keep.
+  ok('only a resumable screen is written to the draft',
+    /if \(screen !== 'setup' && screen !== 'quiz'\) return;/.test(app));
+
+  // A state was pushed for the gate, so Back from a finished report reopened an
+  // empty gate with the submission still in memory.
+  ok('history states cover the questions only',
+    /if \(screen !== 'quiz'\) return;/.test(app));
+  ok('and a pop cannot walk backwards out of a result',
+    /if \(resultRef\.current\) return;/.test(app));
+  ok('the gate refuses to file the same sitting twice',
+    /if \(resultRef\.current\) \{ setScreen\('results'\); return; \}/.test(app));
+
+  // The bubbles show letters on a card question and numbers on a scale.
+  ok('the keyboard hint describes the keys that are on screen',
+    /usesCards\(currentItem\) \? 'press a letter or click' : 'press a number or click'/.test(app));
+  ok('and a lettered option answers to its letter',
+    /charCodeAt\(0\) - 65/.test(app));
+}
+
 head('There is a way out of an assessment in progress');
 {
   const app = fs.readFileSync(

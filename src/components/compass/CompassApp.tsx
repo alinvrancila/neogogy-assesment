@@ -24,7 +24,7 @@ import { USAGE_ITEM } from '@/items/shared';
 import type { CompassResult } from '@/engine';
 import type { AttemptComparison } from '@/lib/history';
 import {
-  ItemScreen, OptionCards, optionsFor, B1_CHOICES, BAND_CHOICES, type Choice
+  ItemScreen, OptionCards, optionsFor, usesCards, B1_CHOICES, BAND_CHOICES, type Choice
 } from './items';
 import { IcanLogo, DimensionBars, DimensionRadar } from './Visuals';
 import { STAGES } from '@/engine/config';
@@ -209,6 +209,8 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
   const [reportPath, setReportPath] = useState<string | null>(null);
   /** An unfinished assessment found in this tab, waiting to be offered back. */
   const [pendingDraft, setPendingDraft] = useState<Saved | null>(null);
+  /** Whether this sitting has already been scored, readable from a listener. */
+  const resultRef = useRef<CompassResult | null>(null);
   const [firstName, setFirstName] = useState('');
   /** Business Owner only, every field optional, never scored. */
   const [biz, setBiz] = useState<BusinessContext>({ company: '', industry: '', teamSize: '', tools: '' });
@@ -297,6 +299,11 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
 
   useEffect(() => {
     if (!restored.current) return;
+    // Only the screens the restore will accept are written. Leaving for the
+    // homepage used to overwrite the draft with an unresumable one, which the
+    // next load then deleted: "Save and finish later" destroyed the very thing
+    // it offered to keep.
+    if (screen !== 'setup' && screen !== 'quiz') return;
     try {
       const s: Saved = { screen, persona, usage, b1, b2, answers, pos };
       window.sessionStorage.setItem(STORE_KEY, JSON.stringify(s));
@@ -345,8 +352,11 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
    */
   useEffect(() => {
     if (!restored.current) return;
-    const inFlow = screen === 'quiz' || screen === 'gate' || screen === 'results';
-    if (!inFlow) return;
+    // Questions only. Pushing a state for the gate meant Back from a finished
+    // report reopened an empty gate with the submission still in memory, and
+    // submitting again filed a second record, sent a second email, and produced
+    // a comparison against the reading from ninety seconds earlier.
+    if (screen !== 'quiz') return;
     try {
       const at = { compass: true, screen, pos };
       if (window.history.state?.compass
@@ -360,11 +370,12 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
     const onPop = (e: PopStateEvent) => {
       const at = e.state as { compass?: boolean; screen?: Screen; pos?: number } | null;
       if (!at?.compass) return;
+      // A finished result is not something to walk backwards out of. The report
+      // has its own address, which the results screen shows.
+      if (resultRef.current) return;
       if (at.screen === 'quiz' && typeof at.pos === 'number') {
         setScreen('quiz');
         setPos(at.pos);
-      } else if (at.screen) {
-        setScreen(at.screen);
       }
     };
     window.addEventListener('popstate', onPop);
@@ -491,6 +502,9 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
   /* ---------------------------------------------------------------- submit */
   const submitGate = useCallback(async (data: GateData) => {
     if (!submission) return;
+    // Already scored. Re-entering the gate must not file a second record, send
+    // a second email, or compare this sitting against itself.
+    if (resultRef.current) { setScreen('results'); return; }
     if (!data.firstName.trim() || !data.email.trim()) {
       setGate({ submitting: false, error: 'First name and email are required.' });
       return;
@@ -524,6 +538,7 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
         return;
       }
       setResult(payload.result as CompassResult);
+      resultRef.current = payload.result as CompassResult;
       setComparison((payload.comparison as AttemptComparison | null) ?? null);
       setReportPath(typeof payload.reportPath === 'string' ? payload.reportPath : null);
       setEmailed(Boolean(payload.emailSent));
@@ -548,7 +563,15 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
     if (screen !== 'quiz' || !currentItem) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') { back(); return; }
-      const match = currentChoices.find((c) => String(c.value) === e.key);
+      // On a lettered card the bubble shows A to E, in the order shown, so the
+      // letter has to select by position. A numbered scale shows the value, so
+      // the number selects by value. Matching only on value meant a shuffled
+      // card question answered a key nobody could see.
+      const cards = usesCards(currentItem);
+      const byLetter = cards
+        ? currentChoices[e.key.toUpperCase().charCodeAt(0) - 65]
+        : undefined;
+      const match = byLetter ?? currentChoices.find((c) => String(c.value) === e.key);
       if (!match) return;
       if (atUsage) chooseUsage(match.value);
       else chooseItem(currentItem.id, match.value);
@@ -561,7 +584,7 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
     clearDraft();
     setScreen('hero'); setPersona(null); setPreset(false); setUsage(null); setB1(null); setB2(null);
     setAnswers({}); setPos(0); setSubmission(null);
-    setResult(null); setEmailed(false); setFirstName(''); setComparison(null); setReportPath(null);
+    setResult(null); resultRef.current = null; setEmailed(false); setFirstName(''); setComparison(null); setReportPath(null);
     setGate({ submitting: false, error: null });
   }, [clearDraft]);
 
@@ -688,7 +711,9 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
           />
           <div className="qnav">
             <button className="back" onClick={back}><span>&larr;</span> Back</button>
-            <span className="keyhint">press a number or click</span>
+            <span className="keyhint">
+              {usesCards(currentItem) ? 'press a letter or click' : 'press a number or click'}
+            </span>
           </div>
         </div>
       </section>
