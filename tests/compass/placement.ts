@@ -14,7 +14,7 @@
 import fs from 'fs';
 import { assessmentOf } from '@/lib/history';
 import path from 'path';
-import { compute, applicableItems } from '@/engine';
+import { compute, applicableItems, generateReportSections } from '@/engine';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
 import { constructName } from '@/engine/display';
 import type { ConstructId, Item, Persona, Submission } from '@/engine/types';
@@ -272,6 +272,62 @@ head('P0-1: describing yourself well cannot outrun what you would do');
     ladder[0] < 5 && ladder[4] > 95, ladder.join(', '));
   ok('and climbs evenly, because nothing is damped when nothing disagrees',
     ladder.every((v, i) => i === 0 || v > ladder[i - 1] + 15), ladder.join(', '));
+}
+
+head('A gated report does not promise a stage that one change will not open');
+{
+  // The sentence named the first failing gate and then said raising it unlocks
+  // the stage. With two gates shut, it does not.
+  const lowOn = (p: Persona, constructs: string[]): Submission => {
+    const answers: Record<string, number> = {};
+    applicableItems(p, 4).forEach((it) => {
+      const t = it.options?.length ? Math.max(...it.options.map((o) => o.value)) : 5;
+      const lvl = constructs.includes(it.construct ?? '') ? 1 : 5;
+      const h = Math.max(1, Math.min(t, Math.round(((lvl - 1) / 4) * (t - 1)) + 1));
+      answers[it.id] = it.type === 'reverse' ? t + 1 - h : h;
+    });
+    return { persona: p, usage: 4, b1: 4, b2: 3, answers };
+  };
+
+  const one = compute(lowOn('student', ['verification']));
+  ok('one gate: raising it is promised to open the stage',
+    !one.stage.gated || one.bottleneck.reason.includes('unlocks the stage'),
+    one.bottleneck.reason.slice(0, 120));
+
+  const two = compute(lowOn('student', ['agency', 'verification']));
+  ok('two gates were shut', (two.stage.gated?.constructs ?? []).length >= 2,
+    String((two.stage.gated?.constructs ?? []).length));
+  ok('and the report does not promise one change opens the stage',
+    !two.bottleneck.reason.includes('unlocks the stage'), two.bottleneck.reason.slice(0, 140));
+  ok('it names the other one', two.bottleneck.reason.includes('not the only one holding you'));
+  for (const c of two.stage.gated?.constructs ?? []) {
+    ok(`and names ${c} among them`,
+      two.bottleneck.reason.includes(constructName('student', c)), two.bottleneck.reason.slice(0, 200));
+  }
+}
+
+head('Somebody who barely uses AI is not asked to compare nothing with nothing');
+{
+  const light = (usage: number): Submission => {
+    const answers: Record<string, number> = {};
+    applicableItems('student', usage).forEach((it) => {
+      const t = it.options?.length ? Math.max(...it.options.map((o) => o.value)) : 5;
+      const h = Math.max(1, Math.min(t, 2));
+      answers[it.id] = it.type === 'reverse' ? t + 1 - h : h;
+    });
+    return { persona: 'student', usage, b1: 4, b2: 3, answers };
+  };
+  const line = (usage: number) => generateReportSections(compute(light(usage)))
+    .flatMap((s) => s.lines).find((l) => /Pick one recurring task/.test(l)) ?? '';
+
+  for (const usage of [1, 2]) {
+    ok(`usage ${usage}: asked to try it once with AI, not to repeat their ordinary day`,
+      /once with AI alongside you/.test(line(usage)), line(usage).slice(0, 130));
+  }
+  for (const usage of [3, 4, 5]) {
+    ok(`usage ${usage}: still asked for the unaided repetition`,
+      /do it without AI/.test(line(usage)), line(usage).slice(0, 130));
+  }
 }
 
 head('A gated report names the dimension its own evidence cites');

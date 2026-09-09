@@ -148,8 +148,18 @@ export function findBottleneck(dims: Dims, stage: StageResult, persona?: Persona
     const construct = (stage.gated.constructs?.[0]
       ?? Object.values(CONSTRUCTS).find(c => firstReason.startsWith(c.name))?.id
       ?? "verification") as ConstructId;
+    // More than one gate can fail at once, and the sentence named the first and
+    // then promised that raising it would unlock the stage. It would not: the
+    // others are still shut. Say how many there are and name them.
+    const others = (stage.gated.constructs ?? []).slice(1);
+    const alsoNamed = others.map((c) => constructName(persona, c));
+    const alsoSentence = alsoNamed.length === 0
+      ? `Raising it unlocks the stage your other capabilities have earned.`
+      : alsoNamed.length === 1
+        ? `It is not the only one holding you: ${alsoNamed[0]} is below the same stage's requirement too, and the stage opens when both are met.`
+        : `It is not the only one holding you: ${alsoNamed.slice(0, -1).join(', ')} and ${alsoNamed[alsoNamed.length - 1]} are below the same stage's requirement too, and the stage opens when all of them are met.`;
     return { construct, viaGate: true,
-      reason: `Your ${indexName(persona)} (${stage.rawIndex}) already supports a higher stage, but ${constructName(persona, construct)} is holding the classification down. ${firstReason}. Raising it unlocks the stage your other capabilities have earned.` };
+      reason: `Your ${indexName(persona)} (${stage.rawIndex}) already supports a higher stage, but ${constructName(persona, construct)} is holding the classification down. ${firstReason}. ${alsoSentence}` };
   }
   const next = STAGES.find(s => s.stage === stage.stage + 1);
   const targets: Partial<Record<ConstructId, number>> = next?.gates ?? {};

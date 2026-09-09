@@ -690,8 +690,7 @@ export default function CompassApp({ initialPersona }: { initialPersona?: Person
           personaName={PERSONAS.find((p) => p.id === persona)?.name ?? ''}
           progress={progress}
           exact={usage != null}
-          answered={answeredCount}
-          total={totalScreens}
+          heading={header}
           // The draft is already written to sessionStorage on every answer, so
           // leaving is simply going home: the offer to resume is waiting there.
           onLeave={() => { setScreen('hero'); window.scrollTo({ top: 0 }); }}
@@ -945,11 +944,13 @@ function BusinessContextScreen({
  * The progress bar also announces itself now. It was two plain divs, so a
  * screen reader user had no idea how far through they were.
  */
-function QuizBar({ personaName, progress, exact, answered, total, onLeave, onRestart }: {
+function QuizBar({ personaName, progress, exact, heading, onLeave, onRestart }: {
   personaName: string; progress: number; exact: boolean;
-  answered: number; total: number;
+  /** Exactly what the question screen shows, so the two never disagree. */
+  heading: string;
   onLeave: () => void; onRestart: () => void;
 }) {
+  const [confirming, setConfirming] = useState(false);
   return (
     <div className="qbar">
       <div className="wrap qbar-in">
@@ -970,7 +971,11 @@ function QuizBar({ personaName, progress, exact, answered, total, onLeave, onRes
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuetext={exact
-                ? `Question ${answered} of ${total}, ${progress} percent complete`
+                // The same words the heading uses. These counted differently:
+                // the heading numbered the screen, this counted the answers
+                // given, so a screen reader heard one number and a sighted
+                // reader saw another on the same screen.
+                ? `${heading}, ${progress} percent complete`
                 : 'Getting started'}
             >
               <div className="progress-fill" style={{ width: `${progress}%` }} />
@@ -981,9 +986,22 @@ function QuizBar({ personaName, progress, exact, answered, total, onLeave, onRes
           <button type="button" className="qbar-exit" onClick={onLeave}>
             Save and finish later
           </button>
-          <button type="button" className="qbar-exit" onClick={onRestart}>
-            Start over
-          </button>
+          {/* Asked twice. It sat beside its opposite, looked identical, and
+              threw away every answer on one click. */}
+          {confirming ? (
+            <>
+              <button type="button" className="qbar-exit qbar-exit-warn" onClick={onRestart}>
+                Yes, discard my answers
+              </button>
+              <button type="button" className="qbar-exit" onClick={() => setConfirming(false)}>
+                Keep going
+              </button>
+            </>
+          ) : (
+            <button type="button" className="qbar-exit" onClick={() => setConfirming(true)}>
+              Start over
+            </button>
+          )}
         </div>
       </div>
     </div>

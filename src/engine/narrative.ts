@@ -118,7 +118,13 @@ export function improvementPlan(r: CompassResult): { horizon: string; timeframe:
   }
   const first = r.recommendations[0];
   if (first) now.push(`${first.capability}: ${first.practice}`);
-  now.push(`Pick one recurring task this week and do it without AI, then compare it against how you would normally produce it. That comparison is the measurement everything else here depends on.`);
+  // The comparison only exists if there is something to compare against. Told
+  // to somebody who reports little or no use, "do it without AI, then compare
+  // it against how you would normally produce it" describes their ordinary
+  // Tuesday twice, so the same measurement is asked for from the other side.
+  now.push(r.usageProfile.usage <= 2
+    ? `Pick one recurring task this week and do it once with AI alongside you, then compare it against how you produced it before. That comparison is the measurement everything else here depends on, and at the moment you have only one half of it.`
+    : `Pick one recurring task this week and do it without AI, then compare it against how you would normally produce it. That comparison is the measurement everything else here depends on.`);
 
   const thirty: string[] = [];
   for (const rec of r.recommendations.slice(1, 3)) thirty.push(`${rec.capability}: ${rec.practice}`);

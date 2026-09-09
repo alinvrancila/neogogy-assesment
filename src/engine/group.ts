@@ -301,10 +301,13 @@ export function buildGroupResult(
 
   const gateCounts = new Map<ConstructId, number>();
   for (const r of results) {
-    for (const reason of r.stage.gated?.reasons ?? []) {
-      const hit = (Object.keys(CONSTRUCTS) as ConstructId[])
-        .find((c) => reason.toLowerCase().includes(CONSTRUCTS[c].name.toLowerCase().split(' ')[0].toLowerCase()));
-      if (hit) gateCounts.set(hit, (gateCounts.get(hit) ?? 0) + 1);
+    // The gate carries the construct it failed on. This used to search the
+    // reason sentence for the first word of a canonical name, and the first
+    // word of "AI Fluency" is "AI", which appears in almost every stage name a
+    // reason quotes, so nearly every gate in a group report was counted as AI
+    // Fluency whatever had actually failed.
+    for (const construct of r.stage.gated?.constructs ?? []) {
+      gateCounts.set(construct, (gateCounts.get(construct) ?? 0) + 1);
     }
   }
   const gateHeld = {

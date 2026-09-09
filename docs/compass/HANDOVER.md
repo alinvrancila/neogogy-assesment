@@ -291,6 +291,49 @@ of respondents and are worth the owner reading once.
 
 P2 is untouched.
 
+## The pre-launch verification, 9 September 2026
+
+Driven rather than read: 782 checks through a production build over seven
+editions and six answer profiles, 15 against the admin, 60 against the live
+site, plus an independent review that returned 29 findings. Twenty-six are
+closed, one was refuted, and two cannot be fixed from here.
+
+The four that were nobody's theory, found by driving the product:
+
+- The Minister letter was the only report that never showed the divergence
+  section. It renders a short list of the shared sections through a filter of
+  its own, so adding the section to `SCREEN_ORDER` reached six editions.
+- **"Save and finish later" destroyed the draft it promised to keep.** The
+  persistence effect ran on every screen change, so leaving for the homepage
+  overwrote the draft with an unresumable one, which the next load deleted.
+- Back from a finished report reopened the gate with the submission still in
+  memory, so answering again filed a second record and a second email.
+- The keyboard hint said "press a number" on card questions, which letter their
+  options, and the number keys matched on scored value rather than position.
+
+The last three were introduced by the P1 navigation work two commits earlier.
+Testing the change would not have found them; driving the product did.
+
+### Two that cannot be fixed from here
+
+- **The report gallery images.** All twelve are photographs taken by hand on
+  1 September. The cover showed "Teacher AI Practice Check", "The Formation
+  Compass" and a prepared-for line reading "Test Runner", and was the first
+  thumbnail a visitor opened, so it is out of the gallery. There is no
+  rasteriser on this machine: no playwright, no poppler, no canvas. The whole
+  set wants retaking from a current report.
+- **`ADMIN_SESSION_SECRET` is still unset on the server.** Sessions are safe
+  without it now, but they drop on every deploy until it is set.
+
+### Refuted, so nobody chases them again
+
+The site does not load fonts from `fonts.googleapis.com`; Next self-hosts them.
+No page describes the Professional edition as one of six. The strengths section
+states its own thresholds, so a score between 40 and 45 being called developing
+and listed as a vulnerability is disclosed rather than contradictory. And a
+respondent at the top of the continuum is already told that no single dimension
+is holding them.
+
 ## Traps and corrections
 
 - **A test can pass on the text of a fix while the fix does nothing.** P0-1 was

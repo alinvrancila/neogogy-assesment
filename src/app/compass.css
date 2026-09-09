@@ -3523,3 +3523,7 @@
 /* Said aloud, not shown. */
 .nfc .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
   overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Discarding an assessment is not the same kind of action as leaving one. */
+.nfc .qbar-exit-warn{color:var(--crimson);text-decoration-thickness:2px}
+.nfc .qbar-exit-warn:hover{color:var(--maroon)}

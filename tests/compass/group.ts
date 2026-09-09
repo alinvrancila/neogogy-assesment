@@ -259,5 +259,19 @@ head('The report is wired to the group, and only to the group');
   ok('the cover name can be typed rather than being the email domain', /Name on the cover/.test(admin));
 }
 
+head('A group report counts the gate that actually failed');
+{
+  // The construct was recovered by searching the reason sentence for the first
+  // word of a canonical name. The first word of "AI Fluency" is "AI", which
+  // appears in almost every stage name a reason quotes, so nearly every gate in
+  // a cohort was counted as AI Fluency whatever had really failed.
+  const src = fs.readFileSync(
+    path.join(process.cwd(), 'src', 'engine', 'group.ts'), 'utf-8');
+  ok('the gate is read off the result, not out of the prose',
+    /for \(const construct of r\.stage\.gated\?\.constructs \?\? \[\]\)/.test(src));
+  ok('and no longer matched on the first word of a name',
+    !/name\.toLowerCase\(\)\.split\(' '\)\[0\]/.test(src));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

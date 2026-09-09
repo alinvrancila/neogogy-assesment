@@ -121,6 +121,24 @@ head('Leaving keeps the draft, and Back does not refile a sitting');
     /charCodeAt\(0\) - 65/.test(app));
 }
 
+head('One number on the screen, and discarding is asked twice');
+{
+  const app = fs.readFileSync(
+    path.join(process.cwd(), 'src', 'components', 'compass', 'CompassApp.tsx'), 'utf-8');
+  // The heading numbered the screen and the progress bar counted the answers
+  // given, so a screen reader heard one number and a sighted reader saw
+  // another on the same question.
+  ok('the progress bar announces exactly what the heading says',
+    /aria-valuetext=\{exact/.test(app) && /\$\{heading\}, \$\{progress\} percent complete/.test(app));
+  ok('and the heading is handed to it rather than recomputed',
+    /heading=\{header\}/.test(app) && !/answered=\{answeredCount\}/.test(app));
+
+  // It sat beside its opposite, looked identical, and threw away every answer
+  // on one click.
+  ok('starting over asks before discarding', /Yes, discard my answers/.test(app));
+  ok('and offers the way back', /Keep going/.test(app));
+}
+
 head('There is a way out of an assessment in progress');
 {
   const app = fs.readFileSync(
