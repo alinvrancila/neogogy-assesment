@@ -18,3 +18,12 @@ artwork distorts.
 `pdfW` is that logo's width in points on the report's closing page. The four are
 tuned so a tall seal and a wide wordmark carry the same optical weight rather
 than the same bounding box.
+
+`lifex.png` is the current lockup: the LIFEX wordmark with the X reversed out of
+a maroon square and "[SKILLS] FOR WHAT'S NEXT" set inside it. It replaced a
+superseded version carrying "Get where you want to be, faster". Because that
+tagline sits inside the artwork, it is never repeated as separate text beside
+the logo, which is why the LifeX entry in `src/brand.ts` carries a description
+rather than a tagline. Supplied at 3200 by 1102 and resampled to 1400 by 482;
+the ink already reached all four edges, so nothing was cropped.
+

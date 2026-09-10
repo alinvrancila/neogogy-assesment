@@ -68,8 +68,12 @@ export const ECOSYSTEM = [
     url: 'https://www.life.edu.ph', logo: '/orgs/life-college.png', w: 350, h: 420, pdfW: 46 },
   { name: 'Neogogy.ai', note: 'Learning at the speed of mind',
     url: 'https://www.neogogy.ai', logo: '/orgs/neogogy.png', w: 435, h: 360, pdfW: 64 },
-  { name: 'LifeX', note: 'Get where you want to be, faster',
-    url: 'https://lifex.ph', logo: '/orgs/lifex.png', w: 614, h: 200, pdfW: 92 },
+  // The lockup carries "[SKILLS] FOR WHAT'S NEXT" inside the artwork, so the
+  // note beside it describes the organisation instead of repeating the line.
+  // It used to read "Get where you want to be, faster", which was both the
+  // tagline repeated as separate text and the previous tagline at that.
+  { name: 'LifeX', note: 'Workforce learning',
+    url: 'https://lifex.ph', logo: '/orgs/lifex.png', w: 1400, h: 482, pdfW: 92 },
 ] as const;
 
 /** Where a respondent goes next, named once so the page and the report agree. */

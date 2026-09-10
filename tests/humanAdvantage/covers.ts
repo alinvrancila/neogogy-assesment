@@ -7,6 +7,7 @@
  * nothing that ranks a respondent appears.
  */
 import fs from 'fs';
+import { ECOSYSTEM } from '@/brand';
 import path from 'path';
 import { compute, applicableItems } from '../../src/engine';
 import type { Persona } from '../../src/engine/types';
@@ -116,6 +117,40 @@ for (const f of ['student.jpg', 'teacher.jpg', 'parent.jpg', 'leader.jpg', 'mini
 for (const f of ['SourceSerif4-Regular.ttf', 'SourceSerif4-SemiBold.ttf', 'SourceSerif4-SemiBoldItalic.ttf',
   'IBMPlexSans-Regular.ttf', 'IBMPlexSans-SemiBold.ttf', 'IBMPlexMono-Regular.ttf', 'IBMPlexMono-Medium.ttf']) {
   ok(`font ${f} is vendored`, fs.existsSync(path.join(process.cwd(), 'public', 'fonts', f)));
+}
+
+head('The partnership logos are true to their own artwork');
+{
+  //
+  // The README beside these files says the aspect has to be true or the
+  // artwork distorts, because the page sizes each logo by height and the report
+  // by width from the declared w and h. Nothing checked it, so a logo could be
+  // replaced with different artwork and keep the previous dimensions, which
+  // stretches the new file by exactly the ratio between the two aspects.
+  //
+  // Reading the PNG header is enough: width and height are big-endian 32 bit
+  // integers at bytes 16 and 20 of an IHDR chunk, which every PNG opens with.
+  //
+  const pngSize = (file: string) => {
+    const b = fs.readFileSync(file);
+    return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) };
+  };
+  for (const o of ECOSYSTEM) {
+    const file = path.join(process.cwd(), 'public', o.logo.replace(/^\//, ''));
+    ok(`${o.name}: the artwork is present`, fs.existsSync(file));
+    if (!fs.existsSync(file)) continue;
+    const real = pngSize(file);
+    ok(`${o.name}: declared ${o.w} by ${o.h} matches the file`,
+      real.w === o.w && real.h === o.h, `file is ${real.w} by ${real.h}`);
+  }
+
+  // The LifeX lockup carries its tagline inside the artwork, so the note beside
+  // it must not repeat it. It used to read "Get where you want to be, faster",
+  // which was the superseded tagline printed as separate text.
+  const lifex = ECOSYSTEM.find((o) => o.name === 'LifeX')!;
+  ok('LifeX does not repeat a tagline beside its lockup',
+    !/skills for what|what's next|where you want to be|faster/i.test(lifex.note), lifex.note);
+  ok('and every partner still carries a description', ECOSYSTEM.every((o) => o.note.trim().length > 3));
 }
 
 head('Seven layouts, not one template');
