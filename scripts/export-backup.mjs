@@ -47,9 +47,9 @@ const ITEMS = [
   ['professional.ts', 'Professional edition'],
 ];
 const DOCS = [
-  ['docs/compass/ARCHITECTURE.md', 'Architecture'],
-  ['docs/compass/HANDOVER.md', 'Handover'],
-  ['docs/compass/LIMITATIONS-AND-VALIDATION.md', 'Limitations and validation'],
+  ['docs/humanAdvantage/ARCHITECTURE.md', 'Architecture'],
+  ['docs/humanAdvantage/HANDOVER.md', 'Handover'],
+  ['docs/humanAdvantage/LIMITATIONS-AND-VALIDATION.md', 'Limitations and validation'],
   ['docs/DATA-COLLECTED.md', 'Every field recorded'],
 ];
 

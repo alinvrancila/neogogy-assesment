@@ -10,7 +10,7 @@
  * it is looking at.
  */
 import type { LeadRecord, SubmissionMeta } from '@/lib/storage';
-import type { CompassResult } from '@/engine';
+import type { HumanAdvantageResult } from '@/engine';
 import type { ConstructId } from '@/engine/types';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
 
@@ -29,7 +29,7 @@ export interface Attempt {
   name: string;
   persona: string;
   createdAt: string;
-  result: CompassResult;
+  result: HumanAdvantageResult;
   rescored: boolean;
   /** Everything asked of the respondent outside the scored items. */
   heardFrom: string;
@@ -74,9 +74,9 @@ export function toAttempts(leads: LeadRecord[]): Attempt[] {
       id: l.id,
       email: (l.email || '').trim().toLowerCase(),
       name: l.name || '',
-      persona: l.role || (l.result as CompassResult).persona || 'unknown',
+      persona: l.role || (l.result as HumanAdvantageResult).persona || 'unknown',
       createdAt: l.createdAt || '',
-      result: l.result as CompassResult,
+      result: l.result as HumanAdvantageResult,
       rescored: !!l.rescoredFrom,
       heardFrom: (l.heardFrom || '').trim(),
       consent: !!l.consent,
@@ -212,7 +212,7 @@ export function buildCohortReport(attempts: Attempt[], people: Person[], now = n
   const usageCounts = countBy(results.map((r) => r.usageProfile.usage));
   const confCounts = countBy(results.map((r) => r.overallConfidence));
 
-  const dimValue = (r: CompassResult, c: ConstructId) => num(r.dimensions[c]?.score);
+  const dimValue = (r: HumanAdvantageResult, c: ConstructId) => num(r.dimensions[c]?.score);
 
   const dimensions: DimensionStat[] = CONSTRUCT_IDS.map((c) => {
     const vals = results.map((r) => dimValue(r, c));
@@ -245,7 +245,7 @@ export function buildCohortReport(attempts: Attempt[], people: Person[], now = n
   }
 
   // Indicators: the questions an administrator actually needs answered.
-  const count = (fn: (r: CompassResult) => boolean) => results.filter(fn).length;
+  const count = (fn: (r: HumanAdvantageResult) => boolean) => results.filter(fn).length;
   const ind = (id: string, label: string, c: number, tone: 'good' | 'watch' | 'bad', note: string) =>
     ({ id, label, count: c, share: shareOf(c, n), tone, note });
 

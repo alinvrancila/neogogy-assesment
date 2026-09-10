@@ -37,10 +37,10 @@ export type LeadRecord = {
   usageVal?: number | null;
   createdAt: string;
 
-  /** 1 for legacy Formation Compass records, 2 for Formation Compass v2.
+  /** 1 for records from the assessment's first engine, 2 for the current one.
    *  Readers must branch on this: v1 and v2 records are not interchangeable. */
   engineVersion?: number;
-  /** v2 only: the full CompassResult, stored so any future rescoring is a batch
+  /** v2 only: the full HumanAdvantageResult, stored so any future rescoring is a batch
    *  job rather than a re-survey. */
   result?: unknown;
   /** v2 only: denormalized for listing and CSV without parsing result. */

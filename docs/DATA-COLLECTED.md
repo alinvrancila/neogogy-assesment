@@ -1,4 +1,4 @@
-# What the Formation Compass records
+# What the Human Advantage Assessment records
 
 Every field the assessment stores, where it comes from, and why it is kept.
 This doubles as the source for the privacy notice: if something is not on this

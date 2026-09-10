@@ -236,7 +236,7 @@ export interface NinetyDayPhase {
   actions: Array<{ capability: string; change: string; practice: string; checkpoint: string }>;
 }
 
-export interface CompassResult {
+export interface HumanAdvantageResult {
   persona: Persona;
   usageProfile: UsageProfile;
   dimensions: Record<ConstructId, DimensionResult>;

@@ -22,7 +22,7 @@
  * usable as directional behavioral evidence, just less construct-specific than
  * v2 scenarios. They keep scenario weighting.
  */
-import type { CompassResult, ConstructId, Submission } from "./types";
+import type { HumanAdvantageResult, ConstructId, Submission } from "./types";
 import { compute } from "./index";
 
 export interface LegacyRecord {
@@ -75,7 +75,7 @@ const V1_MAP: Record<string, { construct: ConstructId; kind: "claim" | "rev" | "
  * v1 reverse items store the RAW answer (inversion happened at scoring), so we
  * pass raw values straight through: the v2 engine inverts `_rev` items itself.
  */
-export function rescoreLegacy(rec: LegacyRecord): CompassResult {
+export function rescoreLegacy(rec: LegacyRecord): HumanAdvantageResult {
   const persona = ROLE_MAP[rec.role] ?? "student";
   const answers: Record<string, number> = {};
   const seen: Record<string, { sum: number; n: number; kind: string }> = {};

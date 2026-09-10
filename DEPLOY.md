@@ -129,7 +129,7 @@ sudo tail -2 /var/log/nginx/access.log   # must show /r/[token], never a real to
 The `Deploy` workflow runs `lint`, `build` and `typecheck` but not `npm test`.
 CI runs the suites on the same push, so a red suite is visible, but it does not
 stop the deploy. Adding a `Test` step to `deploy.yml` would make the privacy
-promises in `tests/compass/link.ts` a release gate rather than a report.
+promises in `tests/humanAdvantage/link.ts` a release gate rather than a report.
 
 **Table scans.** `neogogy-leads` has no index on `reportToken`, so opening a
 report is a filtered `Scan`, billed against the whole table. That is fine at the

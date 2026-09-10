@@ -1,4 +1,4 @@
-import '@/app/compass.css';
+import '@/app/humanAdvantage.css';
 import '@/app/home.css';
 import type { Metadata } from 'next';
 import { BRAND } from '@/brand';

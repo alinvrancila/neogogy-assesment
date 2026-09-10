@@ -4,7 +4,7 @@
  * but unlike the v1 residual bucket it does not absorb two thirds of respondents: the rules above it
  * absorb the meaningfully distinct profiles first (verified in tests).
  */
-import type { CompassResult, ConstructId, DimensionResult, Persona, UsageProfile } from "./types";
+import type { HumanAdvantageResult, ConstructId, DimensionResult, Persona, UsageProfile } from "./types";
 
 type Dims = Record<ConstructId, DimensionResult>;
 const s = (d: Dims, c: ConstructId) => d[c].score;

@@ -14,7 +14,7 @@
  */
 import { listLeads, saveLead, type LeadRecord } from '../src/lib/storage';
 import { resolveLeadResult } from '../src/lib/leadResult';
-import type { CompassResult } from '../src/engine';
+import type { HumanAdvantageResult } from '../src/engine';
 
 const WRITE = process.argv.includes('--write');
 const SOURCE_VERSION = '0.1.2';
@@ -26,7 +26,7 @@ async function main() {
   const leads = await listLeads();
   const legacy = leads.filter((l) => l.engineVersion !== 2);
 
-  console.log(`\nFormation Compass legacy rescoring ${WRITE ? '(WRITE)' : '(dry run)'}`);
+  console.log(`\nLegacy record rescoring ${WRITE ? '(WRITE)' : '(dry run)'}`);
   console.log(`Stored records: ${leads.length}. Already v2: ${leads.length - legacy.length}. To rescore: ${legacy.length}.`);
 
   if (!legacy.length) {
@@ -34,7 +34,7 @@ async function main() {
     return;
   }
 
-  const rows: Array<{ lead: LeadRecord; result: CompassResult }> = [];
+  const rows: Array<{ lead: LeadRecord; result: HumanAdvantageResult }> = [];
   const skipped: string[] = [];
 
   for (const lead of legacy) {

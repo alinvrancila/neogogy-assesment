@@ -1,7 +1,8 @@
 import type { NextRequest } from 'next/server';
+import { fileStem } from '@/brand';
 import { isAdminAuthed } from '@/lib/adminAuth';
 import { getLead } from '@/lib/storage';
-import { generateCompassPdf } from '@/lib/reportPdfV2';
+import { generateHumanAdvantagePdf } from '@/lib/reportPdfV2';
 import { resolveLeadResult } from '@/lib/leadResult';
 
 export const runtime = 'nodejs';
@@ -33,13 +34,13 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const pdf = await generateCompassPdf({ result: resolved.result, name: lead.name || '' });
+  const pdf = await generateHumanAdvantagePdf({ result: resolved.result, name: lead.name || '' });
 
   return new Response(new Uint8Array(pdf), {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename="Neogogy_Formation_Compass_${safeFilePart(lead.name, 'Participant')}.pdf"`
+      'Content-Disposition': `inline; filename="${fileStem(safeFilePart(lead.name, 'Participant'))}.pdf"`
     }
   });
 }

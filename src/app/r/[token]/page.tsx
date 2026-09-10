@@ -8,9 +8,9 @@ import { expiresAt, daysRemaining, maskEmail, REPORT_PAGE_METADATA } from '@/lib
 import type { Persona } from '@/engine/types';
 import { accessByToken, reportViewEvent } from '@/lib/reportLinkAccess';
 import { clientIp } from '@/lib/requestContext';
-import ReportView from '@/components/compass/ReportView';
+import ReportView from '@/components/humanAdvantage/ReportView';
 import { BRAND } from '@/brand';
-import '@/app/compass.css';
+import '@/app/humanAdvantage.css';
 
 /**
  * A stored report at its own address (audit item B3).

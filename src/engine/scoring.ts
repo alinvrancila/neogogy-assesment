@@ -11,7 +11,7 @@
  * - B2 unused → calibration gap computed alongside the desirability gap.
  */
 import type {
-  Answers, CompassResult, ConfidenceLevel, ConstructId, DimensionResult, Item,
+  Answers, HumanAdvantageResult, ConfidenceLevel, ConstructId, DimensionResult, Item,
   Persona, RiskSignal, Submission, UsageProfile, CalibrationResult,
 } from "./types";
 import { CONSTRUCT_IDS } from "./types";

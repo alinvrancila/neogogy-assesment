@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { isAdminAuthed } from '@/lib/adminAuth';
 import { getLead } from '@/lib/storage';
-import { generateCompassPdf } from '@/lib/reportPdfV2';
+import { generateHumanAdvantagePdf } from '@/lib/reportPdfV2';
 import { resolveLeadResult } from '@/lib/leadResult';
 
 export const runtime = 'nodejs';
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       continue;
     }
     try {
-      const pdf = await generateCompassPdf({ result: resolved.result, name: lead.name || '' });
+      const pdf = await generateHumanAdvantagePdf({ result: resolved.result, name: lead.name || '' });
       files.push({
         name: `${String(files.length + 1).padStart(2, '0')}_${safeFilePart(lead.name, 'Participant')}_${safeFilePart(resolved.result.archetype.name, 'Result')}${resolved.rescored ? '_rescored' : ''}.pdf`,
         data: pdf

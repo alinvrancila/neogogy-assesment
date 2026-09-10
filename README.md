@@ -1,4 +1,4 @@
-# Neogogy Formation Compass
+# Neogogy Human Advantage Assessment
 
 A reflective assessment of a person's relationship with AI, across ten dimensions, placed on a ten
 stage developmental continuum.
@@ -18,8 +18,8 @@ Copy `.env.example` and set at least `STATS_TOKEN` and `ADMIN_PASSWORD`. Leave `
 ## Checks
 
     npm run typecheck        # tsc --noEmit
-    npm run test:compass     # the 29 check validation suite
-    npx tsx tests/compass/branches.ts   # adaptive branch coverage
+    npm run test:synthetic   # the 29 check validation suite
+    npx tsx tests/humanAdvantage/branches.ts   # adaptive branch coverage
     npm run lint
 
 ## Layout
@@ -28,14 +28,14 @@ Copy `.env.example` and set at least `STATS_TOKEN` and `ADMIN_PASSWORD`. Leave `
 |---|---|
 | `src/engine/` | The scoring engine. Isomorphic and pure, no I/O, so it runs identically on client and server and can rescore stored records as a batch job. |
 | `src/items/` | The four persona item banks plus the shared usage, baseline, outcome and adaptive branch items. |
-| `src/components/compass/` | Assessment flow, results experience, visuals. These render; they never score. |
+| `src/components/humanAdvantage/` | Assessment flow, results experience, visuals. These render; they never score. |
 | `src/lib/reportPdfV2.tsx` | The PDF. Layout only: every respondent-facing sentence comes from the narrative engine. |
-| `tests/compass/` | Validation suite, branch checks, deterministic report dump, PDF fixture generator. |
-| `docs/compass/` | Architecture, audit, migration, limitations and validation plan, integration notes. |
+| `tests/humanAdvantage/` | Validation suite, branch checks, deterministic report dump, PDF fixture generator. |
+| `docs/humanAdvantage/` | Architecture, audit, migration, limitations and validation plan, integration notes. |
 
 ## Documentation
 
-Start at [`docs/compass/`](docs/compass/):
+Start at [`docs/humanAdvantage/`](docs/humanAdvantage/):
 
 - `ARCHITECTURE.md`, constructs, items, scoring, continuum, archetypes, recommendations
 - `AUDIT.md`, what the previous version got wrong and what changed

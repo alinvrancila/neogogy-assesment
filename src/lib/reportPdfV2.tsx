@@ -17,7 +17,7 @@ import { ECOSYSTEM, NEXT_STEP } from '@/brand';
 import {
   generateReportSections, reportHead, confidenceLabel, REPORT_DISCLAIMER,
   dimensionDetails, fingerprintReadings, improvementPlan,
-  type CompassResult, type ReportSection, type DimensionDetail,
+  type HumanAdvantageResult, type ReportSection, type DimensionDetail,
 } from '@/engine';
 import type { AttemptComparison } from '@/lib/history';
 import { CONSTRUCTS, STAGES } from '@/engine/config';
@@ -30,7 +30,7 @@ import { AssessmentCover } from '@/lib/covers/layouts';
 import {
   VIEW as MAP_VIEW, pointAtIndex, routePath, routeRidge,
   GATE_DEFS,
-} from '@/components/compass/ascent/route';
+} from '@/components/humanAdvantage/ascent/route';
 import type { ConstructId } from '@/engine/types';
 
 // US Letter, in points. The cover and the body are one document, so they are
@@ -216,7 +216,7 @@ function SectionBlock({ s }: { s: ReportSection }) {
 /* --------------------------------------------------------------- graphics */
 
 
-function RadarSvg({ r }: { r: CompassResult }) {
+function RadarSvg({ r }: { r: HumanAdvantageResult }) {
   const ids = Object.keys(CONSTRUCTS) as ConstructId[];
   // Two-word labels ride the outside of the web, so each spoke can be named.
   const SHORT: Record<string, string> = {
@@ -276,7 +276,7 @@ function RadarSvg({ r }: { r: CompassResult }) {
  * live route, the ten camps and the marker placed at the exact index over it.
  * Geometry comes from the same module the web uses, so the two cannot drift.
  */
-function AscentMap({ r }: { r: CompassResult }) {
+function AscentMap({ r }: { r: HumanAdvantageResult }) {
   const W = CW;
   const H = Math.round((CW * MAP_VIEW.h) / MAP_VIEW.w);
   const sx = W / MAP_VIEW.w;
@@ -427,7 +427,7 @@ function AscentMap({ r }: { r: CompassResult }) {
 
 
 /** The full ten stage ladder, as on the results page. */
-function Ladder({ r }: { r: CompassResult }) {
+function Ladder({ r }: { r: HumanAdvantageResult }) {
   const here = r.stage.stage;
   const next = r.nextTarget.stage;
   return (
@@ -467,7 +467,7 @@ function Ladder({ r }: { r: CompassResult }) {
 }
 
 /** Sorted dimension bars with the shared colour key. */
-function Bars({ r }: { r: CompassResult }) {
+function Bars({ r }: { r: HumanAdvantageResult }) {
   const rows = (Object.keys(CONSTRUCTS) as ConstructId[])
     .map((id) => ({ id, d: r.dimensions[id], def: CONSTRUCTS[id] }))
     .sort((a, b) => b.d.score - a.d.score);
@@ -501,7 +501,7 @@ function Bars({ r }: { r: CompassResult }) {
 }
 
 /** The six composite readings as cards. */
-function Composites({ r }: { r: CompassResult }) {
+function Composites({ r }: { r: HumanAdvantageResult }) {
   const c = r.composites;
   const rows: Array<[string, number, number, string]> = [
     ['Future readiness', c.futureReadiness, c.futureReadiness, 'Fluency, adaptability and transfer'],
@@ -577,7 +577,7 @@ function DimCard({ d }: { d: DimensionDetail }) {
 }
 
 /** The seven quick readings as meters. */
-function Fingerprint({ r }: { r: CompassResult }) {
+function Fingerprint({ r }: { r: HumanAdvantageResult }) {
   const pos = (lvl: string) => {
     const l = lvl.toLowerCase();
     if (l === 'high' || l === 'strong') return 88;
@@ -646,7 +646,7 @@ function Comparison({ c }: { c: AttemptComparison }) {
 }
 
 /** The three horizon plan. */
-function Plan({ r }: { r: CompassResult }) {
+function Plan({ r }: { r: HumanAdvantageResult }) {
   return (
     <View>
       {improvementPlan(r).map((b, i) => (
@@ -669,7 +669,7 @@ function Plan({ r }: { r: CompassResult }) {
 }
 
 /** The bottleneck as a bar against the number it must clear. */
-function GateGap({ r }: { r: CompassResult }) {
+function GateGap({ r }: { r: HumanAdvantageResult }) {
   if (r.bottleneck.saturated) return null;
   const c = r.bottleneck.construct;
   const d = r.dimensions[c];
@@ -710,7 +710,7 @@ function GateGap({ r }: { r: CompassResult }) {
 }
 
 /** All ten dimensions on one scale, against the 45 and 65 lines. */
-function ThresholdStrip({ r }: { r: CompassResult }) {
+function ThresholdStrip({ r }: { r: HumanAdvantageResult }) {
   const rows = (Object.keys(CONSTRUCTS) as ConstructId[])
     .map((id) => ({
       name: reportedConstructName(r.persona, id),
@@ -761,7 +761,7 @@ function ThresholdStrip({ r }: { r: CompassResult }) {
 }
 
 /** Felt against predicted against measured, on one five band scale. */
-function CalibrationScale({ r }: { r: CompassResult }) {
+function CalibrationScale({ r }: { r: HumanAdvantageResult }) {
   const idx = r.stage.rawIndex;
   const measured = idx >= 80 ? 5 : idx >= 62 ? 4 : idx >= 44 ? 3 : idx >= 26 ? 2 : 1;
   const clamp = (b: number) => Math.max(1, Math.min(5, b));
@@ -812,7 +812,7 @@ function CalibrationScale({ r }: { r: CompassResult }) {
 }
 
 /** Fired patterns as cards, so helping and harming are visible at a glance. */
-function PatternCards({ r, kind }: { r: CompassResult; kind: 'help' | 'harm' }) {
+function PatternCards({ r, kind }: { r: HumanAdvantageResult; kind: 'help' | 'harm' }) {
   const hits = r.patterns.filter((p) => p.kind === kind);
   const col = kind === 'help' ? T.teal : '#CF796E';
   // An empty list is a real result, so it gets a card rather than silence.
@@ -864,7 +864,7 @@ function PatternCards({ r, kind }: { r: CompassResult; kind: 'help' | 'harm' }) 
 }
 
 /** One practice as a card, so the roadmap scans instead of reading as prose. */
-function PracticeCard({ rec, n }: { rec: CompassResult['recommendations'][number]; n: number }) {
+function PracticeCard({ rec, n }: { rec: HumanAdvantageResult['recommendations'][number]; n: number }) {
   const col = rec.priority === 'immediate' ? T.oxblood : rec.priority === 'developmental' ? T.gold : T.teal;
   const Field = ({ k, v }: { k: string; v: string }) => (
     <View style={{ flexDirection: 'row', marginTop: 3 }}>
@@ -902,7 +902,7 @@ function PracticeCard({ rec, n }: { rec: CompassResult['recommendations'][number
 }
 
 /** Current position beside the next one. */
-function NextStagePanel({ r }: { r: CompassResult }) {
+function NextStagePanel({ r }: { r: HumanAdvantageResult }) {
   const atTop = r.nextTarget.stage === r.stage.stage;
   return (
     <View wrap={false} style={{ flexDirection: 'row', marginBottom: 8 }}>
@@ -931,7 +931,7 @@ function NextStagePanel({ r }: { r: CompassResult }) {
 }
 
 /** Business Owner: one level of the assessment, with its readings drawn large. */
-function ScopedBlockPdf({ r, scope }: { r: CompassResult; scope: 'owner' | 'business' }) {
+function ScopedBlockPdf({ r, scope }: { r: HumanAdvantageResult; scope: 'owner' | 'business' }) {
   const ids = (Object.keys(CONSTRUCTS) as ConstructId[])
     .filter((id) => dimensionScope(r.persona, id) === scope);
   const rows = ids.map((id) => ({
@@ -1004,7 +1004,7 @@ const HEAD_CELL = {
 };
 
 /** Business Owner: the register, on its own page, rows that never split. */
-function RiskRegisterPdf({ r }: { r: CompassResult }) {
+function RiskRegisterPdf({ r }: { r: HumanAdvantageResult }) {
   const LABEL: Record<string, string> = {
     legal: 'Legal and compliance', financial: 'Financial', operational: 'Operational',
     reputational: 'Reputational', strategic: 'Strategic',
@@ -1077,7 +1077,7 @@ function RiskRegisterPdf({ r }: { r: CompassResult }) {
 }
 
 /** Business Owner: the ninety day plan, on its own page, three blocks. */
-function NinetyDayPdf({ r }: { r: CompassResult }) {
+function NinetyDayPdf({ r }: { r: HumanAdvantageResult }) {
   return (
     <Page size={[PAGE.w, PAGE.h]} style={S.light} wrap>
       <View wrap={false}>
@@ -1118,7 +1118,7 @@ function NinetyDayPdf({ r }: { r: CompassResult }) {
 }
 
 /** Business Owner: what happens if the main tool disappears for a week. */
-function ContinuityPdf({ r }: { r: CompassResult }) {
+function ContinuityPdf({ r }: { r: HumanAdvantageResult }) {
   const continuity = r.dimensions.dependencySafety.score;
   const capture = r.dimensions.transfer.score;
   const verdict = continuity >= 65 && capture >= 55
@@ -1188,7 +1188,7 @@ const Footer = ({ title = 'Neogogy Human Advantage Assessment · Powered by ICAN
  * has to look like a business paper rather than a personal report.
  */
 /** Pastor: the Dependence Check, the outage reading, and the roadmap. */
-function PastorBlocksPdf({ r }: { r: CompassResult }) {
+function PastorBlocksPdf({ r }: { r: HumanAdvantageResult }) {
   const ACCENT = '#2E6E63';
   const d = r.dependenceCheck;
   const capacity = r.dimensions.dependencySafety.score;
@@ -1243,7 +1243,7 @@ function PastorBlocksPdf({ r }: { r: CompassResult }) {
 }
 
 /** Pastor: this week, this month, this season, on its own page. */
-function FormationRoadmapPdf({ r }: { r: CompassResult }) {
+function FormationRoadmapPdf({ r }: { r: HumanAdvantageResult }) {
   return (
     <Page size={[PAGE.w, PAGE.h]} style={S.light} wrap>
       <View wrap={false}>
@@ -1286,8 +1286,8 @@ function FormationRoadmapPdf({ r }: { r: CompassResult }) {
   );
 }
 
-export async function generateCompassPdf(args: {
-  result: CompassResult;
+export async function generateHumanAdvantagePdf(args: {
+  result: HumanAdvantageResult;
   name?: string;
   comparison?: AttemptComparison | null;
   /** Business Owner only, volunteered by the respondent. */

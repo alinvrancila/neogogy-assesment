@@ -26,7 +26,7 @@
 
 import { ARCHETYPES } from './archetypes';
 import { CONSTRUCTS, SCORING, STAGES, VERSIONS } from './config';
-import type { CompassResult, ConstructId, Persona } from './types';
+import type { HumanAdvantageResult, ConstructId, Persona } from './types';
 import { stageName } from './display';
 
 /** Plain labels for a cover and a legend. The engine keeps its own, short. */
@@ -43,7 +43,7 @@ export interface GroupMember {
   /** Pseudonymous. Held only so a person is counted once, never printed. */
   key: string;
   persona: Persona;
-  result: CompassResult;
+  result: HumanAdvantageResult;
   takenAt: string;
   /** Reported use band, 1 to 5, from the respondent's own answer. */
   usage: number;
@@ -267,7 +267,7 @@ export function buildGroupResult(
 
   const n = members.length;
   const results = members.map((m) => m.result);
-  const some = (pred: (r: CompassResult) => boolean) => count(results.filter(pred).length, n);
+  const some = (pred: (r: HumanAdvantageResult) => boolean) => count(results.filter(pred).length, n);
 
   const dates = members.map((m) => m.takenAt).sort();
   const window = { first: dates[0], last: dates[dates.length - 1] };
@@ -362,7 +362,7 @@ export function buildGroupResult(
   const strengths = byMedian.slice(0, 3);
   const watchlist = [...byMedian].reverse().slice(0, 3);
 
-  const COMPOSITES: Array<{ id: keyof CompassResult['composites']; label: string; low: boolean }> = [
+  const COMPOSITES: Array<{ id: keyof HumanAdvantageResult['composites']; label: string; low: boolean }> = [
     { id: 'futureReadiness', label: 'Future readiness', low: false },
     { id: 'augmentation', label: 'Augmentation', low: false },
     { id: 'judgment', label: 'Judgment', low: false },
@@ -446,7 +446,7 @@ export function buildGroupResult(
   };
 
   /* ---- what holds the group */
-  const tallyBy = (pick: (r: CompassResult) => ConstructId | null) => {
+  const tallyBy = (pick: (r: HumanAdvantageResult) => ConstructId | null) => {
     const m = new Map<ConstructId, number>();
     for (const r of results) {
       const c = pick(r);

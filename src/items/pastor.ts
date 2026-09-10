@@ -8,7 +8,7 @@
  * Quotations appear only where they were supplied and can be checked. Where a
  * source is named without a quotation, that is deliberate: this report tells a
  * preacher never to preach an unverified quotation, and it holds itself to the
- * same standard. See docs/compass/sources/pastor/README.md.
+ * same standard. See docs/humanAdvantage/sources/pastor/README.md.
  */
 
 import type { Item, ItemOption } from "../engine/types";

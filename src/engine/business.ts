@@ -11,7 +11,7 @@
  */
 
 import type {
-  CompassResult, PatternHit, Recommendation, RiskCategory, RiskRegisterEntry,
+  HumanAdvantageResult, PatternHit, Recommendation, RiskCategory, RiskRegisterEntry,
   RiskSignal, NinetyDayPhase, UsageProfile,
 } from "./types";
 

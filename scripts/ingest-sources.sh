@@ -1,5 +1,5 @@
 #!/bin/bash
-# Converts whatever is dropped into docs/compass/sources/pastor/originals into
+# Converts whatever is dropped into docs/humanAdvantage/sources/pastor/originals into
 # plain text alongside it, so the quotations in the pastor persona can be
 # checked against the actual documents.
 #
@@ -8,7 +8,7 @@
 #
 # Usage: bash scripts/ingest-sources.sh
 set -u
-DIR="$(cd "$(dirname "$0")/.." && pwd)/docs/compass/sources/pastor"
+DIR="$(cd "$(dirname "$0")/.." && pwd)/docs/humanAdvantage/sources/pastor"
 IN="$DIR/originals"
 mkdir -p "$IN"
 

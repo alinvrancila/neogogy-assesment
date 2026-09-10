@@ -6,7 +6,7 @@
  * and computes differences between them.
  */
 import { listLeads, type LeadRecord } from '@/lib/storage';
-import type { CompassResult } from '@/engine';
+import type { HumanAdvantageResult } from '@/engine';
 import type { ConstructId } from '@/engine/types';
 import { CONSTRUCTS } from '@/engine/config';
 
@@ -81,7 +81,7 @@ export async function priorAttempts(
  * was stored whole.
  */
 export function assessmentOf(lead: LeadRecord): string {
-  const fromResult = (lead.result as CompassResult | undefined)?.persona;
+  const fromResult = (lead.result as HumanAdvantageResult | undefined)?.persona;
   return fromResult || lead.role || '';
 }
 
@@ -96,7 +96,7 @@ export function assessmentOf(lead: LeadRecord): string {
 export async function comparisonForStoredAttempt(
   lead: LeadRecord
 ): Promise<AttemptComparison | null> {
-  const current = lead.result as CompassResult | undefined;
+  const current = lead.result as HumanAdvantageResult | undefined;
   if (!current?.stage) return null;
   const prior = (await priorAttempts(lead.email || '', lead.id, assessmentOf(lead)))
     .filter((l) => (l.createdAt || '') < (lead.createdAt || ''));
@@ -110,12 +110,12 @@ export async function comparisonForStoredAttempt(
  * Returns null when there is nothing to compare against.
  */
 export function compareToPrevious(
-  current: CompassResult,
+  current: HumanAdvantageResult,
   previousLead: LeadRecord,
   attemptNumber: number,
   now: Date
 ): AttemptComparison | null {
-  const previous = previousLead.result as CompassResult | undefined;
+  const previous = previousLead.result as HumanAdvantageResult | undefined;
   if (!previous?.stage || !previous.dimensions) return null;
 
   const prevAt = previousLead.createdAt ? new Date(previousLead.createdAt) : null;
@@ -164,7 +164,7 @@ export function compareToPrevious(
 /** Convenience for the submit route: find and compare in one step. */
 export async function buildComparison(
   email: string,
-  current: CompassResult,
+  current: HumanAdvantageResult,
   now: Date,
   excludeId?: string
 ): Promise<AttemptComparison | null> {

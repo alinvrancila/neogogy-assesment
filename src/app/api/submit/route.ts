@@ -5,7 +5,7 @@ import { compute, applicableItems } from '@/engine';
 import { PASTOR_REFLECTION_PROMPTS } from '@/items/shared';
 import type { Persona, Submission } from '@/engine/types';
 import { saveLead, logEvent, type LeadRecord, type SubmissionMeta } from '@/lib/storage';
-import { generateCompassPdf } from '@/lib/reportPdfV2';
+import { generateHumanAdvantagePdf } from '@/lib/reportPdfV2';
 import { sendReportEmail, isEmailEnabled } from '@/lib/email';
 import { buildComparison } from '@/lib/history';
 import { sharePosts, SHARE_URL } from '@/lib/share';
@@ -396,7 +396,7 @@ export async function POST(request: NextRequest) {
   let emailSent = false;
   let emailError = '';
   try {
-    const pdf = await generateCompassPdf({
+    const pdf = await generateHumanAdvantagePdf({
       result, name: fullName, comparison, leadId: lead.id,
       company: lead.meta?.business?.company,
       industry: lead.meta?.business?.industry,

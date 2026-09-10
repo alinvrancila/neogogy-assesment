@@ -9,14 +9,14 @@
  * Privacy: the shared link points at the assessment, never at a personal
  * result. Nothing identifying is put in a URL.
  */
-import type { CompassResult } from '@/engine';
+import type { HumanAdvantageResult } from '@/engine';
 
 export const SHARE_URL = 'https://assessment.neogogy.ai';
 
 export interface SharePost { network: 'linkedin' | 'facebook' | 'x' | 'instagram'; label: string; text: string }
 
 /** Longer, reflective, suited to a professional feed. */
-function longPost(r: CompassResult): string {
+function longPost(r: HumanAdvantageResult): string {
   return [
     `I took the Neogogy Human Advantage Assessment, a free reading of whether the way I use AI is strengthening my capabilities.`,
     ``,
@@ -31,12 +31,12 @@ function longPost(r: CompassResult): string {
 }
 
 /** Short, for a feed that rewards brevity. */
-function shortPost(r: CompassResult): string {
+function shortPost(r: HumanAdvantageResult): string {
   return `Stage ${r.stage.stage} of 10 on the Neogogy Human Advantage Assessment: ${r.stage.stageName}. A free reading of whether the way you use AI is strengthening your judgment and capability, not just your output. ${SHARE_URL}`;
 }
 
 /** Caption style, since Instagram has no share URL and everything is pasted. */
-function captionPost(r: CompassResult): string {
+function captionPost(r: HumanAdvantageResult): string {
   return [
     `Stage ${r.stage.stage} of 10: ${r.stage.stageName}.`,
     ``,
@@ -74,7 +74,7 @@ const STANDARD = {
 } as const;
 
 /** Whether the reading meets the standard the check looks for. */
-export function pastorStanding(r: CompassResult): PastorStanding {
+export function pastorStanding(r: HumanAdvantageResult): PastorStanding {
   const meets = (Object.keys(STANDARD) as Array<keyof typeof STANDARD>)
     .every((k) => r.dimensions[k].score >= STANDARD[k]);
   const noHarm = !r.patterns.some((p) => p.kind === 'harm');
@@ -92,7 +92,7 @@ export function pastorStanding(r: CompassResult): PastorStanding {
     };
 }
 
-function pastorLong(r: CompassResult): string {
+function pastorLong(r: HumanAdvantageResult): string {
   const st = pastorStanding(r);
   return [
     st.passed
@@ -107,14 +107,14 @@ function pastorLong(r: CompassResult): string {
   ].join('\n');
 }
 
-function pastorShort(r: CompassResult): string {
+function pastorShort(r: HumanAdvantageResult): string {
   const st = pastorStanding(r);
   return st.passed
     ? `Completed the Preaching edition of the Human Advantage Assessment and met its standard for responsible AI use in ministry. Forty questions on preparation, preaching, care, and formation. Results stay private. ${SHARE_URL}`
     : `Completed the Preaching edition of the Human Advantage Assessment: forty questions on how AI is shaping preparation, preaching, care, and formation. Results stay private. ${SHARE_URL}`;
 }
 
-function pastorCaption(r: CompassResult): string {
+function pastorCaption(r: HumanAdvantageResult): string {
   const st = pastorStanding(r);
   return [
     st.passed
@@ -129,7 +129,7 @@ function pastorCaption(r: CompassResult): string {
   ].join('\n');
 }
 
-export function sharePosts(r: CompassResult): SharePost[] {
+export function sharePosts(r: HumanAdvantageResult): SharePost[] {
   if (r.persona === 'pastor') {
     return [
       { network: 'linkedin', label: 'LinkedIn', text: pastorLong(r) },

@@ -1,8 +1,9 @@
 import type { NextRequest } from 'next/server';
+import { fileStem } from '@/brand';
 import { compute, applicableItems } from '@/engine';
 import { PASTOR_REFLECTION_PROMPTS } from '@/items/shared';
 import type { Persona } from '@/engine/types';
-import { generateCompassPdf } from '@/lib/reportPdfV2';
+import { generateHumanAdvantagePdf } from '@/lib/reportPdfV2';
 
 export const runtime = 'nodejs';
 
@@ -49,13 +50,13 @@ export async function POST(request: NextRequest) {
     b1: body.b1, b2: body.b2,
     answers: body.answers,
   });
-  const pdf = await generateCompassPdf({ result, name: body.name || '' });
+  const pdf = await generateHumanAdvantagePdf({ result, name: body.name || '' });
 
   return new Response(new Uint8Array(pdf), {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': 'attachment; filename="Neogogy_Formation_Compass.pdf"'
+      'Content-Disposition': `attachment; filename="${fileStem()}.pdf"`
     }
   });
 }

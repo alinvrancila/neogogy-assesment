@@ -14,7 +14,7 @@
  * take the whole page: the thesis, the two risks, what is easy and hard to see,
  * the two opposite questions, the research, and what the report contains.
  *
- * Copy rule: no em dashes anywhere a respondent can read. See tests/compass/copy.ts.
+ * Copy rule: no em dashes anywhere a respondent can read. See tests/humanAdvantage/copy.ts.
  */
 
 import '@/app/home.css';

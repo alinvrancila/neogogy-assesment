@@ -12,7 +12,7 @@
  * the markdown document. Section prose lives here and nowhere else; the
  * screen and PDF layers are layout only.
  */
-import type { CompassResult, ConstructId } from "./types";
+import type { HumanAdvantageResult, ConstructId } from "./types";
 import { CONSTRUCTS, STAGES, SCORING } from "./config";
 import {
   constructName, reportedConstructName, constructContent, constructPrinciple, stageDetail as stageDetailFor,
@@ -54,7 +54,7 @@ export interface ReportHead {
 export const REPORT_DISCLAIMER =
   "These results are assessment indices derived from your self-reported responses; they describe patterns your answers are consistent with, not clinical or validated psychometric measurements.";
 
-export function reportHead(r: CompassResult): ReportHead {
+export function reportHead(r: HumanAdvantageResult): ReportHead {
   return {
     title: "Neogogy Human Advantage Assessment · Human Advantage Report",
     subtitle: `Profile for a ${PERSONA_LABEL[r.persona]} · ${CONF_LABEL[r.overallConfidence]}`,
@@ -65,13 +65,13 @@ export function confidenceLabel(level: string): string {
   return CONF_LABEL[level] ?? level;
 }
 
-function bandReading(r: CompassResult, c: ConstructId): string {
+function bandReading(r: HumanAdvantageResult, c: ConstructId): string {
   const content = constructContent(r.persona, c);
   const st = r.dimensions[c].microState;
   return st === "strong" ? content.atStrong : st === "developing" ? content.atDeveloping : content.atWatch;
 }
 
-function dimLine(r: CompassResult, c: ConstructId): string {
+function dimLine(r: HumanAdvantageResult, c: ConstructId): string {
   const d = r.dimensions[c];
   const def = CONSTRUCTS[c];
   const shown = def.reportedAsRisk
@@ -82,7 +82,7 @@ function dimLine(r: CompassResult, c: ConstructId): string {
 }
 
 /** The unpacked treatment: what it measures, how you read, and the evidence. */
-function dimBlock(r: CompassResult, c: ConstructId): string[] {
+function dimBlock(r: HumanAdvantageResult, c: ConstructId): string[] {
   const d = r.dimensions[c];
   const def = CONSTRUCTS[c];
   const content = constructContent(r.persona, c);
@@ -107,7 +107,7 @@ function dimBlock(r: CompassResult, c: ConstructId): string[] {
 }
 
 /** Immediate, 30 day and 90 day horizons, assembled from detected behaviour. */
-export function improvementPlan(r: CompassResult): { horizon: string; timeframe: string; items: string[] }[] {
+export function improvementPlan(r: HumanAdvantageResult): { horizon: string; timeframe: string; items: string[] }[] {
   const weakest = [...Object.values(r.dimensions)].sort((a, b) => a.score - b.score);
   const bottleneckContent = constructContent(r.persona, r.bottleneck.construct);
   const secondary = weakest.find((d) => d.construct !== r.bottleneck.construct);
@@ -168,7 +168,7 @@ export interface DimensionDetail {
 }
 
 /** Every dimension with its content, ready to render as a card. */
-export function dimensionDetails(r: CompassResult): DimensionDetail[] {
+export function dimensionDetails(r: HumanAdvantageResult): DimensionDetail[] {
   return (Object.keys(CONSTRUCTS) as ConstructId[]).map((c) => {
     const d = r.dimensions[c];
     const def = CONSTRUCTS[c];
@@ -193,7 +193,7 @@ export function dimensionDetails(r: CompassResult): DimensionDetail[] {
 }
 
 /** The seven quick readings, split into label and level for meters. */
-export function fingerprintReadings(r: CompassResult): Array<{ level: string; label: string }> {
+export function fingerprintReadings(r: HumanAdvantageResult): Array<{ level: string; label: string }> {
   return r.fingerprint.map((f) => {
     const parts = f.split(" ");
     const level = parts.shift() ?? "";
@@ -209,7 +209,7 @@ export function fingerprintReadings(r: CompassResult): Array<{ level: string; la
  * The report as keyed sections, in Part B10 order. Consumed by the results
  * screen, the PDF, and generateReport().
  */
-export function generateReportSections(r: CompassResult): ReportSection[] {
+export function generateReportSections(r: HumanAdvantageResult): ReportSection[] {
   const stageDef = STAGES.find(s => s.stage === r.stage.stage)!;
   const hh = helpHarm(r.patterns);
   const S: ReportSection[] = [];
@@ -580,7 +580,7 @@ export function generateReportSections(r: CompassResult): ReportSection[] {
   return S;
 }
 
-export function generateReport(r: CompassResult): string {
+export function generateReport(r: HumanAdvantageResult): string {
   const head = reportHead(r);
   const L: string[] = [];
   L.push(`# ${head.title}`);

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import CompassApp from '@/components/compass/CompassApp';
+import HumanAdvantageApp from '@/components/humanAdvantage/HumanAdvantageApp';
 import { PERSONA_CONTENT, personaBySlug, type PersonaContent } from '@/content/personas';
 import { BRAND } from '@/brand';
 import { shareCard } from '@/lib/shareCard';
@@ -63,5 +63,5 @@ export async function generateMetadata(
 export default async function PersonaPage({ params }: { params: Promise<{ persona: string }> }) {
   const p = personaBySlug((await params).persona);
   if (!p) notFound();
-  return <CompassApp initialPersona={p.id} />;
+  return <HumanAdvantageApp initialPersona={p.id} />;
 }

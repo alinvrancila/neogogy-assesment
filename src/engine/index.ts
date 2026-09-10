@@ -2,7 +2,7 @@
  * Orchestrator. Isomorphic (no I/O): safe on client and server, like v1's
  * engine.ts, and therefore usable for retroactive rescoring of stored records.
  */
-import type { CompassResult, ConstructId, Submission } from "./types";
+import type { HumanAdvantageResult, ConstructId, Submission } from "./types";
 import { SCORING } from "./config";
 import {
   scoreDimensions, usageProfile, composites, calibration, overallConfidence,
@@ -24,7 +24,7 @@ export {
 export { applicableItems, allItems } from "./scoring";
 export * from "./types";
 
-export function compute(sub: Submission): CompassResult {
+export function compute(sub: Submission): HumanAdvantageResult {
   const { dims, gaps, signals } = scoreDimensions(sub.persona, sub);
   const up = usageProfile(sub, dims);
   const comp = composites(dims, up);

@@ -1,5 +1,5 @@
 /**
- * Resolve any stored lead to a v2 CompassResult.
+ * Resolve any stored lead to a v2 HumanAdvantageResult.
  *
  * engineVersion 2 records carry the result already. v1 records are rescored
  * through the legacy adapter rather than rendered by the retired v1 engine, so
@@ -7,16 +7,16 @@
  * are flagged so callers can label them honestly.
  */
 import { rescoreLegacy, type LegacyRecord } from '@/engine/legacyAdapter';
-import type { CompassResult } from '@/engine';
+import type { HumanAdvantageResult } from '@/engine';
 import type { LeadRecord } from '@/lib/storage';
 
 export type ResolvedResult =
-  | { ok: true; result: CompassResult; rescored: boolean }
+  | { ok: true; result: HumanAdvantageResult; rescored: boolean }
   | { ok: false; reason: string };
 
 export function resolveLeadResult(lead: LeadRecord): ResolvedResult {
   if (lead.engineVersion === 2 && lead.result) {
-    return { ok: true, result: lead.result as CompassResult, rescored: false };
+    return { ok: true, result: lead.result as HumanAdvantageResult, rescored: false };
   }
   if (!lead.answers || !Object.keys(lead.answers).length) {
     return { ok: false, reason: 'This submission has no stored answers, so it cannot be scored.' };

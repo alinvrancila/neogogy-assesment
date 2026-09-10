@@ -13,7 +13,7 @@
 
 import { CONSTRUCTS, STAGES } from '@/engine/config';
 import { stageName } from '@/engine/display';
-import { pointAtIndex, routePath, contourPaths, routeRidge } from '@/components/compass/ascent/route';
+import { pointAtIndex, routePath, contourPaths, routeRidge } from '@/components/humanAdvantage/ascent/route';
 
 const C = {
   ink: '#26201C',

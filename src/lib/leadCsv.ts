@@ -11,7 +11,7 @@
  */
 
 import type { LeadRecord } from '@/lib/storage';
-import type { CompassResult, ConstructId } from '@/engine/types';
+import type { HumanAdvantageResult, ConstructId } from '@/engine/types';
 import { CONSTRUCTS } from '@/engine/config';
 import { domainOf, isOrgDomain } from '@/lib/analytics';
 
@@ -44,8 +44,8 @@ function historyFor(leads: LeadRecord[]) {
   return byEmail;
 }
 
-function resultOf(lead: LeadRecord): CompassResult | null {
-  return lead.engineVersion === 2 && lead.result ? (lead.result as CompassResult) : null;
+function resultOf(lead: LeadRecord): HumanAdvantageResult | null {
+  return lead.engineVersion === 2 && lead.result ? (lead.result as HumanAdvantageResult) : null;
 }
 
 /**
@@ -67,7 +67,7 @@ export function buildLeadRows(leads: LeadRecord[]): Row[] {
     const position = mine.findIndex((x) => x.id === lead.id);
     const previous = position > 0 ? mine[position - 1] : null;
     const previousIndex = previous?.engineVersion === 2
-      ? (previous.result as CompassResult | undefined)?.stage.rawIndex
+      ? (previous.result as HumanAdvantageResult | undefined)?.stage.rawIndex
       : previous?.overall;
 
     const row: Row = {

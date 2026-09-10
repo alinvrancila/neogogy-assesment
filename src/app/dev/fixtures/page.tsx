@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import { compute, applicableItems } from '@/engine';
-import type { CompassResult, Persona, Submission } from '@/engine/types';
-import { ContinuumStrip, DimensionRadar, NextStagePanel } from '@/components/compass/Visuals';
-import '@/app/compass.css';
+import type { HumanAdvantageResult, Persona, Submission } from '@/engine/types';
+import { ContinuumStrip, DimensionRadar, NextStagePanel } from '@/components/humanAdvantage/Visuals';
+import '@/app/humanAdvantage.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,8 +37,8 @@ const healthiest = (it: ReturnType<typeof applicableItems>[number]) =>
 const unhealthiest = (it: ReturnType<typeof applicableItems>[number]) =>
   it.type === 'reverse' ? maxValue(it) : 1;
 
-function fixtures(): Array<{ name: string; note: string; result: CompassResult }> {
-  const out: Array<{ name: string; note: string; result: CompassResult }> = [];
+function fixtures(): Array<{ name: string; note: string; result: HumanAdvantageResult }> {
+  const out: Array<{ name: string; note: string; result: HumanAdvantageResult }> = [];
 
   out.push({
     name: 'All lowest',
@@ -60,7 +60,7 @@ function fixtures(): Array<{ name: string; note: string; result: CompassResult }
   });
 
   // Borderline: sweep a mix ratio until the engine reports a borderline zone.
-  let borderline: CompassResult | null = null;
+  let borderline: HumanAdvantageResult | null = null;
   for (let k = 0; k <= 60 && !borderline; k++) {
     const r = compute(build('parent', 3, (it, i) => Math.min(maxValue(it), ((i * 7 + k) % 5) + 1)));
     if (r.stage.borderline) borderline = r;

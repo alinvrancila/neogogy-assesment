@@ -1,4 +1,4 @@
-# The Neogogy Formation Compass — How the Assessment Works
+# The Neogogy Human Advantage Assessment, how it works
 
 **Version:** v0.1.2 · branch `feature/assessment-complexity` · this document supersedes the earlier spec.
 
@@ -14,7 +14,7 @@
 
 ## 1.1 The core thesis
 
-Most AI-and-learning assessments measure a single quantity: *how much / how well do you use AI?* The Formation Compass is built on the claim that this is the wrong shape, because it collapses two things that move independently:
+Most AI-and-learning assessments measure a single quantity: *how much / how well do you use AI?* The Human Advantage Assessment is built on the claim that this is the wrong shape, because it collapses two things that move independently:
 
 - Whether AI is **eroding** the person (their judgment, memory, attention, authorship)
 - Whether AI is **preparing** the person (their fluency, transfer, adaptability)
@@ -507,12 +507,12 @@ hero → setup (role, modality, B1, B2) → quiz (41 screens) → results (BLURR
 |---|---|
 | `src/data/compass.ts` | all content — dimensions, items, scenarios, personas, scales, micro-insights |
 | `src/lib/engine.ts` | the entire scoring engine and `vulnList` (isomorphic) |
-| `src/components/compass/CompassApp.tsx` | flow, screens, step sequence |
-| `src/components/compass/Results.tsx` | on-screen result composition and the email gate |
-| `src/components/compass/Visuals.tsx` | gauge, radar, quadrant map, dimension bars |
+| `src/components/humanAdvantage/HumanAdvantageApp.tsx` | flow, screens, step sequence |
+| `src/components/humanAdvantage/Results.tsx` | on-screen result composition and the email gate |
+| `src/components/humanAdvantage/Visuals.tsx` | gauge, radar, quadrant map, dimension bars |
 | `src/lib/reportPdf.tsx` | the 7-page PDF |
 | `src/app/api/submit/route.ts` | scoring on submit, persistence, email delivery |
 
 ---
 
-*The Neogogy Formation Compass · created by Alin Vrancila, Ph.D. · International Center for Applied Neogogy (ICAN) · v0.1.2, release 2026-07-06*
+*The Neogogy Human Advantage Assessment · created by Alin Vrancila, Ph.D. · International Center for Applied Neogogy (ICAN) · v0.1.2, release 2026-07-06*

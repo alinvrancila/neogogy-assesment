@@ -1,7 +1,7 @@
 /**
  * The cover's presentation model.
  *
- * One mapper turns a CompassResult and the details the respondent gave into the
+ * One mapper turns a HumanAdvantageResult and the details the respondent gave into the
  * values the six layouts read. Nothing here computes, scores, or decides
  * anything: it renames what the assessment already produced so that six
  * different layouts cannot drift apart in what they call things.
@@ -11,7 +11,7 @@
  */
 
 import { BRAND } from '@/brand';
-import type { CompassResult, Persona } from '@/engine/types';
+import type { HumanAdvantageResult, Persona } from '@/engine/types';
 import { reportTitle } from '@/engine/display';
 
 export type CoverPersona =
@@ -87,7 +87,7 @@ const ID_PREFIX: Record<CoverPersona, string> = {
  * digits from the reading itself so two people never quote the same number for
  * different reports.
  */
-function makeReportId(persona: CoverPersona, r: CompassResult, leadId?: string): string {
+function makeReportId(persona: CoverPersona, r: HumanAdvantageResult, leadId?: string): string {
   if (leadId) return `${ID_PREFIX[persona]}-${leadId.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
   const seed = `${r.archetype.id}|${r.stage.rawIndex}|${Object.values(r.dimensions).map((d) => d.score).join()}`;
   let h = 0;
@@ -96,7 +96,7 @@ function makeReportId(persona: CoverPersona, r: CompassResult, leadId?: string):
 }
 
 export function toCoverData(args: {
-  result: CompassResult;
+  result: HumanAdvantageResult;
   name?: string;
   leadId?: string;
   company?: string;

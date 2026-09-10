@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
 import { compute, applicableItems } from '@/engine';
 import type { Persona, Submission } from '@/engine/types';
-import ResultsPreview from '@/components/compass/ResultsPreview';
+import ResultsPreview from '@/components/humanAdvantage/ResultsPreview';
 import { compareToPrevious } from '@/lib/history';
-import '@/app/compass.css';
+import '@/app/humanAdvantage.css';
 
 export const dynamic = 'force-dynamic';
 

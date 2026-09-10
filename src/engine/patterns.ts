@@ -3,7 +3,7 @@
  * All narratives use non-causal, evidence-hedged language ("your responses are
  * consistent with...") per §21.
  */
-import type { CompassResult, ConstructId, DimensionResult, PatternHit, Persona, UsageProfile } from "./types";
+import type { HumanAdvantageResult, ConstructId, DimensionResult, PatternHit, Persona, UsageProfile } from "./types";
 
 type Dims = Record<ConstructId, DimensionResult>;
 

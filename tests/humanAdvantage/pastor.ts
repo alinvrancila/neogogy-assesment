@@ -1,0 +1,420 @@
+/**
+ * The Minister/Preacher persona.
+ *
+ * Synthetic preachers with deliberately shaped answers, plus the structural
+ * checks that matter most for this persona: that the explanations never hint at
+ * a healthy answer, that dependence tags cannot move a score, and that the
+ * anonymous path leaves nothing behind.
+ */
+import { readFileSync } from "fs";
+import { join as joinPath } from "path";
+import { compute, applicableItems, allItems, generateReport, generateReportSections } from "../../src/engine";
+import type { ConstructId, Item, Persona, Submission } from "../../src/engine/types";
+import { CONSTRUCT_IDS } from "../../src/engine/types";
+import { STAGES } from "../../src/engine/config";
+import {
+  PERSONA_DISPLAY, PASTOR_MARKERS, PASTOR_LENS, constructName, constructContent,
+  stageDetail, stageName,
+} from "../../src/engine/display";
+import { dependenceTags } from "../../src/engine/pastor";
+import { PASTOR_BASELINE_ITEMS } from "../../src/items/shared";
+
+let pass = 0; let fail = 0;
+const ok = (name: string, cond: boolean, got?: unknown) => {
+  if (cond) { pass += 1; console.log("  ok   ", name); }
+  else { fail += 1; console.log("  FAIL ", name, got !== undefined ? `got ${JSON.stringify(got)}` : ""); }
+};
+const head = (t: string) => console.log(`\n${t}`);
+
+const maxV = (it: Item) => (it.options?.length ? Math.max(...it.options.map((o) => o.value)) : 5);
+
+function preacher(
+  usage: number, levels: Partial<Record<ConstructId, number>>,
+  opts: { base?: number; extra?: Record<string, number>; claimsHigh?: boolean } = {}
+): Submission {
+  const items = applicableItems("pastor", usage);
+  const answers: Record<string, number> = {};
+  for (const it of items) {
+    const lvl = (it.construct && levels[it.construct]) ?? opts.base ?? 3;
+    const top = maxV(it);
+    const healthy = Math.max(1, Math.min(top, Math.round(((lvl - 1) / 4) * (top - 1)) + 1));
+    if (opts.claimsHigh && it.type === "claim") answers[it.id] = top;
+    else if (it.type === "reverse") answers[it.id] = top + 1 - healthy;
+    else answers[it.id] = healthy;
+  }
+  return { persona: "pastor", usage, b1: 4, b2: 3, answers: { ...answers, ...(opts.extra ?? {}) } };
+}
+const ALL = (v: number) => Object.fromEntries(CONSTRUCT_IDS.map((c) => [c, v])) as Record<ConstructId, number>;
+
+head("The bank");
+for (const u of [1, 3, 5]) {
+  const items = applicableItems("pastor", u);
+  ok(`usage ${u}: forty core items`, items.filter((i) => i.persona === "pastor").length === 40);
+  const branches = items.filter((i) => i.persona === "shared").map((i) => i.id);
+  const expected = u <= 2 ? ["lowuse_reason"] : u >= 4 ? ["highuse_outage", "highuse_unchecked"] : [];
+  ok(`usage ${u}: the right branches`, JSON.stringify(branches) === JSON.stringify(expected), branches);
+}
+ok("ten dimensions, four items each", CONSTRUCT_IDS.every((c) =>
+  applicableItems("pastor", 3).filter((i) => i.construct === c).length === 4));
+ok("every scenario has five options with five distinct healthy values",
+  applicableItems("pastor", 3).filter((i) => i.type === "scenario" && i.persona === "pastor")
+    .every((i) => (i.options ?? []).length === 5 && new Set((i.options ?? []).map((o) => o.value)).size === 5));
+ok("every formation item carries a value 0 way out",
+  applicableItems("pastor", 3).filter((i) => i.type === "outcome")
+    .every((i) => (i.options ?? []).some((o) => o.value === 0)));
+
+head("The explanations");
+const core = allItems("pastor").filter((i) => i.persona === "pastor");
+ok("every item explains why it is asked", core.every((i) => !!i.why && i.why.length > 40));
+ok("every item points somewhere deeper", core.every((i) => !!i.deeper && i.deeper.length > 10));
+ok("no explanation hints at a healthy answer", (() => {
+  const bad = /healthy answer|correct answer|best option|right answer|you should answer|scores? (higher|better)/i;
+  return core.every((i) => !bad.test(i.why ?? ""));
+})(), core.filter((i) => /healthy answer|correct answer|best option/i.test(i.why ?? "")).map((i) => i.id));
+ok("no explanation scolds", (() => {
+  const bad = /must never|you have failed|shame|unfaithful/i;
+  return core.every((i) => !bad.test(i.why ?? ""));
+})());
+
+head("Separation from the other personas");
+const others = new Set((["student", "teacher", "parent", "administrator", "business"] as Persona[])
+  .flatMap((p) => allItems(p).filter((i) => i.persona !== "shared").map((i) => i.prompt)));
+ok("no pastor prompt appears elsewhere", core.every((i) => !others.has(i.prompt)));
+ok("no other persona's prompt appears here", [...others].every((p) => !core.some((i) => i.prompt === p)));
+
+head("Display");
+ok("the ten dimensions keep the names every other assessment uses",
+  constructName("pastor", "agency") === constructName("student", "agency")
+  && constructName("pastor", "dependencySafety") === constructName("student", "dependencySafety"),
+  [constructName("pastor", "agency"), constructName("pastor", "dependencySafety")]);
+ok("each one carries a ministerial lens",
+  CONSTRUCT_IDS.every((c) => !!PASTOR_LENS[c] && PASTOR_LENS[c].length > 30));
+ok("and the reading under it is ministerial", (() => {
+  const c = constructContent("pastor", "agency");
+  return /preach|sermon|pulpit|prayer/i.test(c.whatItMeasures + c.atStrong + c.atWatch);
+})());
+ok("every dimension states the goal it points toward",
+  CONSTRUCT_IDS.every((c) => !!PASTOR_MARKERS[c] && PASTOR_MARKERS[c].length > 30));
+ok("every stage has a pastor name", STAGES.every((s) => !!PERSONA_DISPLAY.pastor!.stageNames?.[s.stage]));
+
+head("Dependence tags never move a score");
+{
+  const sub = preacher(4, ALL(4));
+  const withTags = compute(sub);
+  const items = applicableItems("pastor", 4);
+  ok("tags are recorded", dependenceTags(items, sub).length > 0);
+  // strip every tag from a copy of the bank and confirm the numbers are the same
+  const stripped = JSON.parse(JSON.stringify(withTags.dimensions));
+  ok("scores do not depend on tags", (() => {
+    const again = compute(sub);
+    return CONSTRUCT_IDS.every((c) => again.dimensions[c].score === stripped[c].score);
+  })());
+  ok("the check is produced", !!withTags.dependenceCheck);
+  ok("it is a reading, not a score", (() => {
+    const noPrompts = compute({ ...sub, answers: { ...sub.answers } });
+    return noPrompts.stage.rawIndex === withTags.stage.rawIndex;
+  })());
+}
+
+head("Synthetic preachers");
+{
+  const r = compute(preacher(5, { ...ALL(4), agency: 1, dependencySafety: 1 }));
+  ok("Overextended Preparer: the pattern fires",
+    r.patterns.some((p) => p.id === "outsourced_pulpit"), r.patterns.map((p) => p.id));
+  ok("dependence exposure reads high", r.composites.dependencyIndex >= 55, r.composites.dependencyIndex);
+  ok("the read-first practice leads the roadmap",
+    ["sermon_outsourcing", "authority_transfer", "independent_capability_low", "study_atrophy"]
+      .includes(r.recommendations[0]?.tag), r.recommendations.map((x) => x.tag));
+  ok("the archetype describes without condemning",
+    r.archetype.name === "The Overextended Preparer", r.archetype.name);
+}
+{
+  const r = compute(preacher(4, { ...ALL(4), verification: 1 }));
+  ok("Quick to Trust: unverified authority fires",
+    r.patterns.some((p) => p.id === "unverified_authority"), r.patterns.map((p) => p.id));
+  ok("a verification signal is raised",
+    r.riskSignals.some((s) => ["unverified_exegesis", "fabricated_citation_risk"].includes(s.tag)),
+    r.riskSignals.map((s) => s.tag));
+  ok("a gate holds it below stage 7", r.stage.stage < 7, r.stage.stage);
+}
+{
+  const r = compute(preacher(1, { ...ALL(4), agency: 5, verification: 5, fluency: 3 },
+    { extra: { lowuse_reason: 3 } }));
+  ok("Deliberate Minimalist: a conviction counts as a formed position",
+    r.usageProfile.intentionalSelectiveUse);
+  ok("it is not called underexposed", !r.usageProfile.underexposed);
+  ok("it places at stage 6 or above", r.stage.stage >= 6, r.stage.stage);
+  ok("no exposure-first advice is given",
+    !r.recommendations.some((x) => x.tag === "underexposure_fluency"), r.recommendations.map((x) => x.tag));
+  ok("the archetype is the Deliberate Minimalist",
+    r.archetype.name === "The Deliberate Minimalist", r.archetype.name);
+}
+{
+  // low use for want of time rather than by conviction, which is the shape
+  // this archetype describes
+  const r = compute(preacher(1, { ...ALL(3), agency: 5, verification: 5, dependencySafety: 5, fluency: 1 },
+    { extra: { lowuse_reason: 2 } }));
+  ok("Rooted and Unexposed: that archetype", r.archetype.name === "Rooted and Unexposed", r.archetype.name);
+  ok("ministry readiness stays under 60", r.composites.futureReadiness < 60, r.composites.futureReadiness);
+  ok("the advice is a gentle look rather than a warning",
+    r.recommendations.some((x) => x.tag === "underexposure_fluency"), r.recommendations.map((x) => x.tag));
+  ok("no dependency reduction advice is given to a preacher with none to reduce",
+    !r.recommendations.some((x) => ["independent_capability_low", "study_atrophy"].includes(x.tag)),
+    r.recommendations.map((x) => x.tag));
+}
+{
+  const r = compute(preacher(3, ALL(5)));
+  ok("Anchored Shepherd: stage 8 or above", r.stage.stage >= 8, r.stage.stage);
+  ok("no vulnerabilities to name", r.vulnerabilities.length === 0);
+  ok("the fed shepherd pattern fires",
+    r.patterns.some((p) => p.id === "fed_shepherd"), r.patterns.map((p) => p.id));
+  ok("the action is maintenance", r.recommendations[0]?.tag === "maintain", r.recommendations.map((x) => x.tag));
+  ok("the Dependence Check reads at its healthiest",
+    r.dependenceCheck?.level === "led", r.dependenceCheck?.level);
+  ok("the archetype is the Anchored Shepherd", r.archetype.name === "The Anchored Shepherd", r.archetype.name);
+}
+{
+  const r = compute(preacher(4, { ...ALL(4), fluency: 5, creativity: 1 }));
+  ok("Thinning Voice: the pattern fires",
+    r.patterns.some((p) => p.id === "thinning_voice"), r.patterns.map((p) => p.id));
+  ok("the voice signal is raised",
+    r.riskSignals.some((s) => s.tag === "voice_loss"), r.riskSignals.map((s) => s.tag));
+}
+{
+  const claims = compute(preacher(4, ALL(1), { claimsHigh: true }));
+  const honest = compute(preacher(4, ALL(3)));
+  const flagged = Object.values(claims.dimensions).filter((d) => d.consistencyGap?.flagged).length;
+  ok("Contradictory preacher: eight or more gaps", flagged >= 8, flagged);
+  ok("the result lands below the honest neutral preacher",
+    claims.stage.rawIndex < honest.stage.rawIndex, [claims.stage.rawIndex, honest.stage.rawIndex]);
+  ok("confidence is not high", claims.overallConfidence !== "high", claims.overallConfidence);
+}
+
+head("The two pastor-only outputs");
+{
+  const r = compute(preacher(4, { ...ALL(2) }));
+  ok("the roadmap runs in three windows at most",
+    (r.formationRoadmap?.length ?? 0) <= 3 && (r.formationRoadmap?.length ?? 0) >= 1);
+  ok("every action carries a checkpoint",
+    (r.formationRoadmap ?? []).every((p) => p.actions.every((a) => !!a.checkpoint)));
+  ok("every action carries a resource",
+    (r.formationRoadmap ?? []).every((p) => p.actions.every((a) => !!a.resource)));
+  ok("no block is empty", (r.formationRoadmap ?? []).every((p) => p.actions.length > 0));
+}
+ok("no other persona receives either output",
+  (["student", "teacher", "parent", "administrator", "business"] as Persona[]).every((p) => {
+    const items = applicableItems(p, 3);
+    const answers: Record<string, number> = {};
+    items.forEach((it, i) => { answers[it.id] = ((i * 3) % 5) + 1; });
+    const r = compute({ persona: p, usage: 3, b1: 3, b2: 3, answers });
+    return r.dependenceCheck === undefined && r.formationRoadmap === undefined;
+  }));
+
+head("Every new tag can be acted on");
+{
+  const TAGS = ["sermon_outsourcing", "prayerless_preparation", "unverified_exegesis",
+    "fabricated_citation_risk", "study_atrophy", "formation_bypass", "voice_loss",
+    "pastoral_care_outsourcing", "undisclosed_use", "congregant_privacy_risk",
+    "craft_stagnation", "tool_as_oracle"];
+  const worst = compute(preacher(5, ALL(1)));
+  const raised = new Set(worst.riskSignals.map((s) => s.tag));
+  const reachable = TAGS.filter((t) => t !== "prayerless_preparation");
+  ok("the tags are reachable from answers", reachable.every((t) => raised.has(t)),
+    reachable.filter((t) => !raised.has(t)));
+  ok("every action carries a resource pointer",
+    worst.recommendations.every((r) => !!(r as { resource?: string }).resource),
+    worst.recommendations.map((r) => r.tag));
+}
+
+head("The words a preacher reads");
+{
+  const r = compute(preacher(4, { ...ALL(3), verification: 1, responsibleUse: 2 }));
+  const prose = [
+    generateReport(r),
+    ...generateReportSections(r).flatMap((s) => [s.title, ...s.lines]),
+    ...allItems("pastor").map((i) => `${i.prompt} ${i.why ?? ""} ${i.deeper ?? ""} ${i.context ?? ""} ${(i.options ?? []).map((o) => o.label).join(" ")}`),
+    r.dependenceCheck?.narrative ?? "", r.dependenceCheck?.heading ?? "",
+    ...(r.formationRoadmap ?? []).flatMap((p) => [p.title, p.note, ...p.actions.flatMap((a) => Object.values(a))]),
+    r.archetype.narrative,
+  ].join("\n");
+  ok("no en dashes or em dashes", !/[–—]/.test(prose));
+  ok("the word beloved is never used", !/\bbeloved\b/i.test(prose));
+  ok("no prayer is written for the reader", !/^\s*(Lord|Father|Dear God|Almighty)/im.test(prose));
+  ok("nothing is shouted in capitals", !/\b[A-Z]{4,}\b/.test(
+    [r.archetype.narrative, r.dependenceCheck?.narrative ?? "",
+      ...core.map((i) => i.why ?? "")].join(" ")));
+  ok("the disclaimer says what this is and is not",
+    /not a spiritual assessment of your calling/i.test(generateReport(r)));
+}
+
+head("The record, and what may leave it");
+{
+  const fs = await import("fs/promises");
+  const path = await import("path");
+
+  // the two unscored questions travel with the submission, are computed from,
+  // and are dropped before anything is written down
+  const { PASTOR_REFLECTION_PROMPTS } = await import("../../src/items/shared");
+  const leadsPath = path.join(process.cwd(), "data", "leads.json");
+  const before = await fs.readFile(leadsPath, "utf-8").catch(() => "");
+  const sub = preacher(3, ALL(4), { extra: { reflect_prayer: 4, reflect_unaided: 5 } });
+  const { POST } = await import("../../src/app/api/submit/route");
+  const res = await POST(new Request("http://localhost/api/submit", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      ...sub, name: "Reflection Probe", email: "reflection.probe@example.org",
+    }),
+  }) as never);
+  ok("a submission carrying the two unscored answers is accepted", res.status === 200, res.status);
+
+  const after = JSON.parse(await fs.readFile(leadsPath, "utf-8").catch(() => "[]"));
+  const saved = after.find((l: { email?: string }) => l.email === "reflection.probe@example.org");
+  ok("the record was written", !!saved);
+  ok("the two unscored answers are not in it", !!saved
+    && PASTOR_REFLECTION_PROMPTS.every((i) => saved.answers?.[i.id] === undefined),
+    saved ? Object.keys(saved.answers ?? {}).filter((k) => k.startsWith("reflect_")) : "no record");
+
+  // and they still do their one job. A neutral profile is used, because a
+  // strong or weak one is already decided by the tags the answers carry.
+  const led = compute(preacher(3, ALL(3), { extra: { reflect_prayer: 4, reflect_unaided: 5 } }));
+  const trailing = compute(preacher(3, ALL(3), { extra: { reflect_prayer: 1, reflect_unaided: 1 } }));
+  ok("they still move the Dependence Check",
+    led.dependenceCheck?.level !== trailing.dependenceCheck?.level,
+    [led.dependenceCheck?.level, trailing.dependenceCheck?.level]);
+  ok("and they move nothing else", led.stage.rawIndex === trailing.stage.rawIndex);
+
+  // leave the local store as it was found
+  await fs.writeFile(leadsPath, before);
+
+  // this persona now goes through the same gate as the rest
+  const routeSource = await fs.readFile(
+    path.join(process.cwd(), "src", "app", "api", "submit", "route.ts"), "utf-8");
+  ok("no persona is refused at the gate any more",
+    /const ANONYMOUS_PERSONAS: Persona\[\] = \[\];/.test(routeSource));
+  const reportSource = await fs.readFile(
+    path.join(process.cwd(), "src", "app", "api", "report", "route.ts"), "utf-8");
+  ok("the PDF route still touches no storage",
+    !/saveLead|logEvent|listLeads|appendLocal/.test(reportSource));
+
+  // what a preacher may post carries no finding at all
+  const { sharePosts, pastorStanding } = await import("../../src/lib/share");
+  const strong = compute(preacher(3, ALL(5)));
+  const weak = compute(preacher(4, ALL(2)));
+  for (const [label, r] of [["a strong reading", strong], ["a weak reading", weak]] as const) {
+    const text = sharePosts(r).map((p) => p.text).join("\n");
+    ok(`${label}: no score, stage, or archetype in anything shareable`,
+      !/stage \d|\b\d{1,3}\.\d\b|out of 100/i.test(text)
+      && !Object.values({ a: r.archetype.name }).some((n) => text.includes(n)),
+      text.slice(0, 90));
+    ok(`${label}: no dimension name and number`,
+      !/Authorship Before God \d|Faithfulness to the Text \d|Dependence Risk \d/.test(text));
+  }
+  ok("a strong reading may say the standard was met", pastorStanding(strong).passed);
+  ok("a weak reading says only that it was completed", !pastorStanding(weak).passed);
+  ok("neither claims anyone's AI use is certified safe",
+    !/certif\w* (?:that )?(?:my|their|your)? ?(?:use|ai) (?:is|as) safe|ai safety certif/i.test(
+      sharePosts(strong).map((p) => p.text).join(" ") + " " + pastorStanding(strong).detail));
+}
+
+head('C4: the Minister edition runs on the same mechanics');
+{
+  const items = applicableItems('pastor', 4);
+  const scored = items.filter((i) => i.options && i.options.some((o) => o.value > 0));
+  const four = scored.filter((i) => i.options!.filter((o) => o.value > 0).length === 4);
+  ok('no four-point option set remains', four.length === 0, four.map((i) => i.id).join(', '));
+  ok('every scored option set offers five levels',
+    scored.every((i) => i.options!.filter((o) => o.value > 0).length === 5));
+
+  // symmetric: two either side of a neutral middle, and no reason baked into an
+  // anchor that a respondent has to agree with in order to report a direction
+  const forms = items.filter((i) => i.id.endsWith('_form'));
+  ok('ten change items', forms.length === 10, String(forms.length));
+  for (const f of forms) {
+    const labels = f.options!.filter((o) => o.value > 0).map((o) => o.label);
+    ok(`${f.construct}: the top anchor states a direction, not a reason`,
+      !/, because /.test(labels[4]), labels[4]);
+  }
+
+  const app = readFileSync(joinPath(process.cwd(), 'src/components/humanAdvantage/HumanAdvantageApp.tsx'), 'utf-8');
+  ok('the same action carries the same label everywhere',
+    !/Start the health check/.test(app) && !/>\s*Begin <span/.test(app));
+
+  ok('the two calibration questions are asked here too',
+    PASTOR_BASELINE_ITEMS.length === 2 && PASTOR_BASELINE_ITEMS.every((i) => !!i.prompt));
+}
+
+head('C4: the ministry ladder reads in both directions');
+{
+  for (const st of [3, 4, 5, 6]) {
+    const dep = stageDetail('pastor', st, 'dependence').looksLike;
+    const dis = stageDetail('pastor', st, 'disconnection').looksLike;
+    const neutral = stageDetail('pastor', st, 'balanced').looksLike;
+    ok(`stage ${st}: dependence and disconnection differ`, dep !== dis);
+    ok(`stage ${st}: neither is the neutral text`, dep !== neutral && dis !== neutral);
+  }
+  ok('the lowest camp is no longer a compliment',
+    stageName('pastor', 1) !== 'Set Apart');
+  const app = readFileSync(joinPath(process.cwd(), 'src/components/humanAdvantage/HumanAdvantageApp.tsx'), 'utf-8');
+  ok('the epigraph cites its primary source rather than a secondary one',
+    /Congress on Biblical Exposition/.test(app) && !/quoted in Faith at Work/.test(app));
+  const nar = readFileSync(joinPath(process.cwd(), 'src/engine/narrative.ts'), 'utf-8');
+  ok('the ladder printed is the one the persona is placed on',
+    /stageNameFor\(r\.persona, x\.stage\)/.test(nar));
+}
+
+/**
+ * The file the Minister is offered, built the way the button builds it.
+ *
+ * The two reflection prompts are not in the item bank, on purpose, but they do
+ * travel with the submission because the Dependence Check is read from them.
+ * The report route used to refuse them, so "Save as PDF" answered "The file
+ * could not be built" every single time it was pressed, for every Minister.
+ * Nothing caught it, because nothing had ever called the route the way the
+ * button calls it.
+ */
+async function theSaveButton() {
+  head("The file the Minister can save is the one the button asks for");
+  const { POST } = await import("../../src/app/api/report/route");
+  const { PASTOR_REFLECTION_PROMPTS } = await import("../../src/items/shared");
+
+  const build = (withReflections: boolean) => {
+    const answers: Record<string, number> = {};
+    applicableItems("pastor", 4).forEach((it) => {
+      const t = it.options?.length ? Math.max(...it.options.map((o) => o.value)) : 5;
+      answers[it.id] = it.type === "reverse" ? t - 1 : 4;
+    });
+    if (withReflections) PASTOR_REFLECTION_PROMPTS.forEach((q) => { answers[q.id] = 3; });
+    return answers;
+  };
+
+  const call = async (answers: Record<string, number>) => {
+    const res = await POST(new Request("http://localhost/api/report", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ persona: "pastor", usage: 4, b1: 4, b2: 3, answers, name: "Minister" }),
+    }) as never);
+    const bytes = Buffer.from(await res.arrayBuffer());
+    return { status: res.status, isPdf: bytes.slice(0, 5).toString() === "%PDF-", size: bytes.length,
+      error: bytes.slice(0, 5).toString() === "%PDF-" ? "" : bytes.toString().slice(0, 160) };
+  };
+
+  ok("the reflection prompts are not in the item bank",
+    PASTOR_REFLECTION_PROMPTS.every((q) => !applicableItems("pastor", 4).some((i) => i.id === q.id)));
+
+  const asPressed = await call(build(true));
+  ok("the route accepts the submission the button actually sends",
+    asPressed.status === 200, `${asPressed.status} ${asPressed.error}`);
+  ok("and returns a real document", asPressed.isPdf && asPressed.size > 50_000,
+    `${(asPressed.size / 1024).toFixed(0)}kb`);
+
+  const withoutThem = await call(build(false));
+  ok("a submission without them still builds, for every other path",
+    withoutThem.status === 200 && withoutThem.isPdf, withoutThem.status);
+
+  const alien = await call({ ...build(true), not_a_real_item: 3 });
+  ok("and an item from nowhere is still refused", alien.status === 400, alien.status);
+}
+
+theSaveButton().then(() => {
+  console.log(`\n${pass} passed, ${fail} failed`);
+  process.exit(fail ? 1 : 0);
+});

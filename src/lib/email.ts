@@ -9,6 +9,8 @@
  * email on later, only the environment variables.
  */
 
+import { fileStem } from '@/brand';
+
 const REGION = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'ap-southeast-1';
 
 export const isEmailEnabled = () =>
@@ -46,7 +48,7 @@ export const sendReportEmail = async ({
     attachments: pdf
       ? [
           {
-            filename: 'Neogogy_Formation_Compass.pdf',
+            filename: `${fileStem()}.pdf`,
             content: pdf,
             contentType: 'application/pdf'
           }

@@ -8,7 +8,7 @@
  * internal shorthand and never the dominant public label. The attribution names
  * the institution behind the work without competing with the product.
  *
- * Copy rule, enforced by tests/compass/copy.ts: no em dash or en dash appears in
+ * Copy rule, enforced by tests/humanAdvantage/copy.ts: no em dash or en dash appears in
  * any respondent-facing string in this codebase. Use commas, colons, or a second
  * sentence.
  */
@@ -33,6 +33,21 @@ export const BRAND = {
   site: 'assessment.neogogy.ai',
   url: 'https://assessment.neogogy.ai',
 } as const;
+
+/**
+ * The product name as a filename.
+ *
+ * The report a respondent received was called Neogogy_Formation_Compass.pdf
+ * long after the Formation Compass stopped existing, because the string was
+ * typed into three routes and an email attachment rather than taken from the
+ * name. Derived here, it cannot be left behind by the next rename.
+ */
+export const fileStem = (suffix?: string): string =>
+  [BRAND.org, ...BRAND.report.split(/\s+/), ...(suffix ? [suffix] : [])]
+    .join('_')
+    .replace(/[^A-Za-z0-9_]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
 
 /** The question the whole product points at. */
 export const CORE_QUESTION =

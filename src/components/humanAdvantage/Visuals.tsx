@@ -1,0 +1,473 @@
+'use client';
+
+/**
+ * Human Advantage Assessment visuals.
+ *
+ * Three pieces, all driven straight from a HumanAdvantageResult and none of them
+ * computing anything the engine has not already decided:
+ *   ContinuumStrip  the ten stage ramp with the continuous index marker,
+ *                   the borderline zone, and the gate marker
+ *   DimensionRadar  ten dimensions, every spoke healthy-outward
+ *   NextStagePanel  current position to next target, or the maintenance loop
+ *
+ * Brand: Deep Navy ground, a single Electric Teal accent, hairline rules,
+ * generous whitespace, no heavy fills.
+ */
+
+import Image from 'next/image';
+import type { CSSProperties } from 'react';
+import type { HumanAdvantageResult, ConstructId } from '@/engine';
+import { constructName, stageSummary, riskLean } from '@/engine/display';
+import { CONSTRUCTS, STAGES } from '@/engine/config';
+
+// One palette across every chart, shared with the ascent map.
+const NAVY = '#FBF8F1';                 // card ground
+const TEAL = '#159E88';
+const HAIR = 'rgba(116, 110, 100, 0.26)';
+const INK = '#2B2926';
+const MUTE = '#746E64';
+
+/* ------------------------------------------------------- continuum strip */
+
+export function ContinuumStrip({ result }: { result: HumanAdvantageResult }) {
+  const W = 900;
+  const H = 190;
+  const padX = 34;
+  const trackY = 96;
+  const trackW = W - padX * 2;
+
+  const xOf = (index: number) => padX + (Math.max(0, Math.min(100, index)) / 100) * trackW;
+
+  // the placed index, so a gated marker sits inside the stage it names
+  const marker = xOf(result.stage.index);
+  const bl = result.stage.borderline;
+  const gated = result.stage.gated;
+
+  // The borderline zone straddles the boundary the respondent is near.
+  let zone: { x1: number; x2: number } | null = null;
+  if (bl) {
+    const boundaryStage = Math.max(result.stage.stage, bl.adjacentStage);
+    const def = STAGES.find((s) => s.stage === boundaryStage);
+    if (def) {
+      const b = xOf(def.minIndex);
+      const half = (bl.distance / 100) * trackW + 10;
+      zone = { x1: b - half, x2: b + half };
+    }
+  }
+
+  return (
+    <figure className="viz" aria-label={`Stage ${result.stage.stage} of 10, ${result.stage.stageName}`}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img">
+        <rect x={0} y={0} width={W} height={H} fill={NAVY} rx={12} />
+
+        {/* borderline zone sits under the track */}
+        {zone && (
+          <rect
+            x={zone.x1} y={trackY - 16} width={Math.max(6, zone.x2 - zone.x1)} height={32}
+            fill={TEAL} opacity={0.14} rx={4}
+          />
+        )}
+
+        {/* hairline track */}
+        <line x1={padX} y1={trackY} x2={W - padX} y2={trackY} stroke={HAIR} strokeWidth={1} />
+
+        {/* stage ticks */}
+        {STAGES.map((s) => {
+          const x = xOf(s.minIndex);
+          const here = s.stage === result.stage.stage;
+          return (
+            <g key={s.stage}>
+              <line x1={x} y1={trackY - 7} x2={x} y2={trackY + 7} stroke={here ? TEAL : HAIR} strokeWidth={1} />
+              <text x={x} y={trackY + 24} textAnchor="middle" fontSize={10} fill={here ? TEAL : MUTE} fontFamily="var(--f-mono)">
+                {s.stage}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* the earned position, when gating pulled the placement down */}
+        {gated && (
+          <g>
+            <line x1={xOf(result.stage.rawIndex)} y1={trackY - 30} x2={marker} y2={trackY - 30}
+              stroke={HAIR} strokeWidth={1} strokeDasharray="3 3" />
+            <circle cx={xOf(result.stage.rawIndex)} cy={trackY - 30} r={3.5} fill="none" stroke={MUTE} strokeWidth={1} />
+            <text x={xOf(result.stage.rawIndex)} y={trackY - 40} textAnchor="middle" fontSize={9.5} fill={MUTE} fontFamily="var(--f-mono)">
+              index {result.stage.rawIndex} would reach stage {gated.cappedFrom}
+            </text>
+          </g>
+        )}
+
+        {/* position marker */}
+        <g>
+          <line x1={marker} y1={trackY - 20} x2={marker} y2={trackY + 12} stroke={TEAL} strokeWidth={1.5} />
+          <circle cx={marker} cy={trackY} r={5} fill={TEAL} />
+          <text x={marker} y={trackY - 27} textAnchor="middle" fontSize={11} fill={INK} fontFamily="var(--f-mono)">
+            {result.stage.rawIndex}
+          </text>
+        </g>
+
+        {/* labels */}
+        <text x={padX} y={30} fontSize={11} fill={MUTE} fontFamily="var(--f-mono)" letterSpacing="0.12em">
+          THE NEOGOGY CONTINUUM
+        </text>
+        <text x={padX} y={54} fontSize={16} fill={INK} fontFamily="var(--f-serif)">
+          Stage {result.stage.stage} of 10, {result.stage.stageName}
+        </text>
+        <text x={padX} y={72} fontSize={11} fill={TEAL} fontFamily="var(--f-mono)">
+          {result.stage.substage}
+          {bl ? `  ·  borderline zone, ${bl.distance} points from stage ${bl.adjacentStage}` : ''}
+        </text>
+
+        {gated && (
+          <text x={padX} y={H - 16} fontSize={10.5} fill={MUTE} fontFamily="var(--f-mono)">
+            Held at stage {result.stage.stage}: {gated.reasons[0]}
+          </text>
+        )}
+      </svg>
+    </figure>
+  );
+}
+
+/* --------------------------------------------------------------- radar */
+
+/** Short labels for the radar, so spokes never truncate mid-word. */
+const RADAR_LABEL: Record<string, string> = {
+  fluency: 'Fluency',
+  agency: 'Agency',
+  amplification: 'Amplification',
+  dependencySafety: 'Independent Capability',
+  verification: 'Verification',
+  skillGrowth: 'Skill Growth',
+  creativity: 'Creativity',
+  responsibleUse: 'Responsible Use',
+  transfer: 'Transfer',
+  adaptability: 'Adaptability',
+};
+
+export function DimensionRadar({ result }: { result: HumanAdvantageResult }) {
+  const ids = Object.keys(CONSTRUCTS) as ConstructId[];
+  const S = 560;
+  const c = S / 2;
+  const R = 128;
+  const n = ids.length;
+
+  const pt = (i: number, radius: number) => {
+    const a = (Math.PI * 2 * i) / n - Math.PI / 2;
+    return [c + Math.cos(a) * radius, c + Math.sin(a) * radius] as const;
+  };
+
+  /**
+   * Every spoke reads the same direction: further out is healthier.
+   *
+   * Dependency Risk used to be plotted at its risk value, so a healthy reading
+   * of 19 cut a deep notch into the shape at exactly the point where the person
+   * was doing best, and an unhealthy 86 pushed a bulge outward. Nine spokes
+   * said one thing and the tenth said the opposite, inside one polygon, with
+   * the explanation in small type underneath. It is drawn on its healthy
+   * reading now, which is Independent Capability, and the print report has
+   * always done the same.
+   */
+  const valueOf = (id: ConstructId) => result.dimensions[id].score;
+
+  const poly = ids.map((id, i) => pt(i, (valueOf(id) / 100) * R).join(',')).join(' ');
+
+  return (
+    <figure className="viz" aria-label="Your ten dimensions">
+      <svg viewBox={`0 0 ${S} ${S}`} width="100%" role="img">
+        <rect x={0} y={0} width={S} height={S} fill={NAVY} rx={12} stroke="#D7CEC0" strokeWidth={1} />
+        {[0.25, 0.5, 0.75, 1].map((f) => (
+          <polygon
+            key={f}
+            points={ids.map((_, i) => pt(i, R * f).join(',')).join(' ')}
+            fill="none" stroke={HAIR} strokeWidth={1}
+          />
+        ))}
+        {ids.map((_, i) => {
+          const [x, y] = pt(i, R);
+          return <line key={i} x1={c} y1={c} x2={x} y2={y} stroke={HAIR} strokeWidth={1} />;
+        })}
+        <polygon points={poly} fill={TEAL} fillOpacity={0.14} stroke={TEAL} strokeWidth={1.6} />
+        {ids.map((id, i) => {
+          const [x, y] = pt(i, (valueOf(id) / 100) * R);
+          return <circle key={id} cx={x} cy={y} r={3} fill={TEAL} />;
+        })}
+        {ids.map((id, i) => {
+          const [x, y] = pt(i, R + 22);
+          // Anchored by which side of the wheel the spoke is on, so a long
+          // label reads inward instead of running off the edge. Centred
+          // labels put "Independent Capability" half outside the frame.
+          const cos = Math.cos((Math.PI * 2 * i) / n - Math.PI / 2);
+          const anchor = cos > 0.25 ? 'start' : cos < -0.25 ? 'end' : 'middle';
+          return (
+            <text
+              key={id} x={x} y={y} textAnchor={anchor} fontSize={9.5} fill={MUTE}
+              fontFamily="var(--f-mono)"
+            >
+              <tspan x={x} dy={0}>{RADAR_LABEL[id]}</tspan>
+              <tspan x={x} dy={12} fill={INK}>{valueOf(id)}</tspan>
+            </text>
+          );
+        })}
+      </svg>
+      <figcaption className="viz-cap">
+        Every dimension is plotted the same way: further from the centre is healthier. The shape
+        across all ten is the finding, not any single point on it.
+      </figcaption>
+    </figure>
+  );
+}
+
+/* ---------------------------------------------------- next stage panel */
+
+export function NextStagePanel({ result }: { result: HumanAdvantageResult }) {
+  const atTop = result.nextTarget.stage === result.stage.stage;
+  return (
+    <div className="nextstage">
+      <div className="ns-row">
+        <div className="ns-node">
+          <div className="ns-lab">Now</div>
+          <div className="ns-name">Stage {result.stage.stage}, {result.stage.stageName}</div>
+          <div className="ns-sub">{result.stage.substage} · index {result.stage.rawIndex}</div>
+        </div>
+        <div className="ns-arrow" aria-hidden="true">{atTop ? '↻' : '→'}</div>
+        <div className="ns-node ns-target">
+          <div className="ns-lab">{atTop ? 'Maintaining' : 'Next'}</div>
+          <div className="ns-name">Stage {result.nextTarget.stage}, {result.nextTarget.stageName}</div>
+          <div className="ns-sub">{atTop ? 'the loop that keeps it' : 'what it asks of you'}</div>
+        </div>
+      </div>
+      <ul className="md-list">
+        {result.nextTarget.requirements.map((r, i) => <li key={i}>{r}</li>)}
+      </ul>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------- brand and preview */
+
+/** ICAN brand mark, carried over from v1 unchanged. */
+export function IcanLogo({ height = 46, className }: { height?: number; className?: string }) {
+  return (
+    <Image
+      src="/ican-logo.png"
+      alt="ICAN.ph, International Center for Applied Neogogy"
+      width={1039}
+      height={740}
+      className={className}
+      style={{ '--ican-logo-height': `${height}px` } as CSSProperties}
+      priority
+    />
+  );
+}
+
+/**
+ * Faux report cover for the landing page, so a visitor sees the deliverable.
+ * Static illustration with representative numbers, not a computed result.
+ */
+export function ReportPreview() {
+  return (
+    <div className="report-preview" aria-hidden="true">
+      <div className="rp-page rp-back2" />
+      <div className="rp-page rp-back1" />
+      <div className="rp-page rp-cover">
+        <div className="rp-band">
+          <div className="rp-band-eyebrow">Neogogy Human Advantage Assessment</div>
+          <div className="rp-band-title">Your Human Advantage Report</div>
+        </div>
+        <div className="rp-pad">
+          <div className="rp-youare">Your answers are consistent with</div>
+          <div className="rp-profile">[YOUR ARCHETYPE]</div>
+          <div className="rp-tagline">your personal portrait, revealed inside</div>
+          <div className="rp-index">
+            <div className="rp-index-top">
+              <span className="rp-index-n">72</span>
+              <span className="rp-index-lab">Developmental index</span>
+            </div>
+            <div className="rp-indexbar"><span className="rp-indexmark" style={{ left: '72%' }} /></div>
+            <div className="rp-indexends"><span className="de">Stage 1</span><span className="fo">Stage 10</span></div>
+          </div>
+          <div className="rp-stats">
+            <div className="rp-stat"><span>7</span><label>Stage</label></div>
+            <div className="rp-stat"><span style={{ color: '#2F6F62' }}>10</span><label>Dimensions</label></div>
+            <div className="rp-stat"><span style={{ color: '#00A98A' }}>5</span><label>Next moves</label></div>
+          </div>
+          <div className="rp-meta"><span>Prepared for you</span><span>ican.ph</span></div>
+        </div>
+      </div>
+      <div className="rp-badge">Sample report</div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------- band colour vocabulary */
+
+/** One colour scale, used by every chart so a colour means the same thing
+ *  everywhere: healthy, developing, needs attention. */
+export const bandColor = (healthy: number): string =>
+  healthy >= 65 ? '#159E88' : healthy >= 40 ? '#E5AA45' : '#CF796E';
+
+/**
+ * Darker variants for text. The fill colours are tuned for bars and dots on
+ * cream; used as type they fall below a readable contrast ratio, the amber
+ * worst of all at about 1.95 to 1.
+ */
+export const bandTextColor = (healthy: number): string =>
+  healthy >= 65 ? '#0F7A69' : healthy >= 40 ? '#A9741F' : '#B4564A';
+
+export const bandName = (healthy: number): string =>
+  healthy >= 65 ? 'strong' : healthy >= 40 ? 'developing' : 'watch';
+
+/* ------------------------------------------------------------ stage ladder */
+
+/**
+ * The full continuum, every stage named, occupying roughly half a page so a
+ * respondent can see where they sit and what else exists above and below.
+ */
+export function StageLadder({ result }: { result: HumanAdvantageResult }) {
+  const here = result.stage.stage;
+  const target = result.nextTarget.stage;
+  const gatedFrom = result.stage.gated?.cappedFrom;
+
+  return (
+    <div className="ladder" aria-label={`Stage ${here} of 10 on the Neogogy continuum`}>
+      {[...STAGES].reverse().map((s) => {
+        const isHere = s.stage === here;
+        const isTarget = s.stage === target && target !== here;
+        const isEarned = gatedFrom !== undefined && s.stage === gatedFrom;
+        const below = s.stage < here;
+        const gates = s.gates ? Object.entries(s.gates) : [];
+        return (
+          <div
+            key={s.stage}
+            className={`lad-row${isHere ? ' lad-here' : ''}${isTarget ? ' lad-target' : ''}${below ? ' lad-below' : ''}`}
+          >
+            <div className="lad-num">{s.stage}</div>
+            <div className="lad-rail">
+              <span className="lad-dot" />
+            </div>
+            <div className="lad-body">
+              <div className="lad-name">
+                {s.name}
+                {isHere ? <span className="lad-tag lad-tag-here">You are here</span> : null}
+                {isTarget ? <span className="lad-tag lad-tag-next">Your next stage</span> : null}
+                {isEarned ? <span className="lad-tag lad-tag-earned">Your index reaches here</span> : null}
+              </div>
+              {(isHere || isTarget) && (
+                <div className="lad-short">
+                  {stageSummary(result.persona, s.stage,
+                    riskLean(result.composites.dependencyIndex, result.composites.underexposure))}
+                </div>
+              )}
+              {(isHere || isTarget) && gates.length > 0 && (
+                <div className="lad-gates">
+                  Requires: {gates.map(([g, v]) => `${constructName(result.persona, g as ConstructId)} ${v}`).join(', ')}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+      <div className="lad-foot">
+        Your developmental index is <strong>{result.stage.rawIndex}</strong> of 100
+        {result.stage.borderline
+          ? `, which sits ${result.stage.borderline.distance} points from stage ${result.stage.borderline.adjacentStage}, so treat this as a zone rather than a line.`
+          : `.`}
+        {result.stage.gated ? ` Your index alone would reach stage ${result.stage.gated.cappedFrom}, and a gate is holding the placement here.` : ''}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------- dimension bars */
+
+export function DimensionBars({ result }: { result: HumanAdvantageResult }) {
+  const ids = Object.keys(CONSTRUCTS) as ConstructId[];
+  const rows = ids
+    .map((id) => ({ id, d: result.dimensions[id], def: CONSTRUCTS[id] }))
+    .sort((a, b) => b.d.score - a.d.score);
+
+  return (
+    <div className="bars">
+      {rows.map(({ id, d, def }) => {
+        // Bar length reads the same direction as every other bar: longer is
+        // healthier. Drawing the risk value here put a short bar on a person's
+        // best dimension, in the same green as the long bars that mean the
+        // opposite, so scanning the lengths gave the reader the wrong answer.
+        const shownValue = d.score;
+        const color = bandColor(d.score);
+        return (
+          <div className="bar-row" key={id}>
+            <div className="bar-label">
+              {def.reportedAsRisk ? 'Independent Capability' : def.name}
+              {d.confidence !== 'high' ? <span className="bar-conf">{d.confidence}</span> : null}
+            </div>
+            <div className="bar-track">
+              <span className="bar-fill" style={{ width: `${Math.max(2, shownValue)}%`, background: color }} />
+            </div>
+            <div className="bar-val" style={{ color: bandTextColor(d.score) }}>{shownValue}</div>
+          </div>
+        );
+      })}
+      <div className="bars-key">
+        <span><i style={{ background: '#159E88' }} /> strong, 65 and above</span>
+        <span><i style={{ background: '#E5AA45' }} /> developing, 40 to 64</span>
+        <span><i style={{ background: '#CF796E' }} /> watch, below 40</span>
+      </div>
+    </div>
+  );
+}
+
+/* --------------------------------------------------------- composites */
+
+export function CompositesPanel({ result }: { result: HumanAdvantageResult }) {
+  const c = result.composites;
+  // For the two risk composites a high number is a concern, so the colour is
+  // taken from the inverted value to keep one colour vocabulary.
+  const rows: Array<{ label: string; value: number; healthy: number; note: string }> = [
+    { label: 'Future readiness', value: c.futureReadiness, healthy: c.futureReadiness, note: 'Fluency, adaptability and transfer' },
+    { label: 'Augmentation', value: c.augmentation, healthy: c.augmentation, note: 'Better thinking, not just faster output' },
+    { label: 'Judgment', value: c.judgment, healthy: c.judgment, note: 'Verification, agency and responsible use' },
+    { label: 'Capability transfer', value: c.capabilityTransfer, healthy: c.capabilityTransfer, note: 'Assisted work becoming your own' },
+    { label: 'Dependency index', value: c.dependencyIndex, healthy: 100 - c.dependencyIndex, note: 'Higher means more depends on the tool' },
+    { label: 'Underexposure', value: c.underexposure, healthy: 100 - c.underexposure, note: 'Higher means limited practice with the tools' },
+  ];
+  return (
+    <div className="composites">
+      {rows.map((r) => (
+        <div className="comp-card" key={r.label}>
+          <div className="comp-val" style={{ color: bandTextColor(r.healthy) }}>{r.value}</div>
+          <div className="comp-label">{r.label}</div>
+          <div className="comp-track">
+            <span style={{ width: `${Math.max(2, r.value)}%`, background: bandColor(r.healthy) }} />
+          </div>
+          <div className="comp-note">{r.note}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------- plan timeline */
+
+export function PlanTimeline({
+  blocks
+}: { blocks: Array<{ horizon: string; timeframe: string; items: string[] }> }) {
+  return (
+    <div className="plan">
+      {blocks.map((b, i) => (
+        <div className="plan-block" key={b.horizon}>
+          <div className="plan-head">
+            <span className="plan-n">{i + 1}</span>
+            <div>
+              <div className="plan-horizon">{b.horizon}</div>
+              <div className="plan-time">{b.timeframe}</div>
+            </div>
+          </div>
+          <ul className="plan-items">
+            {b.items.map((it, j) => <li key={j}>{it}</li>)}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}

@@ -10,7 +10,7 @@
  * four original personas are byte-identical after this was introduced.
  */
 
-import type { ConstructId, Persona, CompassResult } from "./types";
+import type { ConstructId, Persona, HumanAdvantageResult } from "./types";
 import { CONSTRUCTS, STAGES } from "./config";
 import {
   CONSTRUCT_CONTENT, STAGE_DETAIL, STAGE_DETAIL_DEPENDENCE, STAGE_DETAIL_DISCONNECTION,
@@ -880,8 +880,8 @@ export function reportTitle(persona: Persona | undefined): string {
 
 export function archetypeDisplay(
   persona: Persona | undefined,
-  archetype: CompassResult["archetype"]
-): CompassResult["archetype"] {
+  archetype: HumanAdvantageResult["archetype"]
+): HumanAdvantageResult["archetype"] {
   const over = of(persona)?.archetypes?.[archetype.id];
   if (!over) return archetype;
   return {

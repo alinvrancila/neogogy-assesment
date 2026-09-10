@@ -1,5 +1,5 @@
-import CompassApp from '@/components/compass/CompassApp';
+import HumanAdvantageApp from '@/components/humanAdvantage/HumanAdvantageApp';
 
 export default function Page() {
-  return <CompassApp />;
+  return <HumanAdvantageApp />;
 }
