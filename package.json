@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "npm run test:synthetic && npm run test:ascent && npm run test:analytics && npm run test:context && npm run test:gated && npm run test:export && npm run test:business && npm run test:pastor && npm run test:quotes && npm run test:covers && npm run test:copy && npm run test:group && npm run test:professional && npm run test:placement && npm run test:audit && npm run test:link && npm run test:admin && npm run test:a11y && npm run test:contrast",
+    "test": "npm run test:synthetic && npm run test:ascent && npm run test:analytics && npm run test:context && npm run test:gated && npm run test:export && npm run test:business && npm run test:pastor && npm run test:quotes && npm run test:covers && npm run test:copy && npm run test:group && npm run test:dictionary && npm run test:professional && npm run test:placement && npm run test:audit && npm run test:link && npm run test:admin && npm run test:a11y && npm run test:contrast",
     "typecheck": "tsc --noEmit",
     "test:synthetic": "tsx tests/humanAdvantage/synthetic.ts",
     "rescore:legacy": "tsx scripts/rescore-legacy.ts",
@@ -36,7 +36,8 @@
     "test:contrast": "tsx tests/humanAdvantage/contrast.ts",
     "seed:cohort": "node scripts/seed-cohort.mjs",
     "export:backup": "node scripts/export-backup.mjs",
-    "cards": "node scripts/share-cards.mjs"
+    "cards": "node scripts/share-cards.mjs",
+    "test:dictionary": "tsx tests/humanAdvantage/dictionary.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.620.0",

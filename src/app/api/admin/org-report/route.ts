@@ -2,9 +2,10 @@ import type { NextRequest } from 'next/server';
 import { isAdminAuthed } from '@/lib/adminAuth';
 import { listLeads } from '@/lib/storage';
 import { toAttempts, toPeople } from '@/lib/analytics';
-import { buildGroupResult, type GroupMember } from '@/engine/group';
+import { buildGroupResult, GroupTooSmallError, type GroupMember } from '@/engine/group';
 import { generateGroupPdf } from '@/lib/groupReportPdf';
 import { getOrgProfile } from '@/lib/orgProfile';
+import { fileStem } from '@/brand';
 import type { Persona } from '@/engine/types';
 
 export const runtime = 'nodejs';
@@ -56,7 +57,10 @@ function toCsv(g: ReturnType<typeof buildGroupResult>): string {
   for (const q of [...g.quadrants.capabilityUse, ...g.quadrants.fluencyJudgment]) countRow('quadrant', q.label, q.n, q.share);
   for (const m of g.moves) countRow('practice', m.capability, m.n, m.share);
   for (const s2 of g.segments) {
-    if (s2.suppressed) countRow('segment', `${s2.dimension}: ${s2.value} (suppressed)`, s2.n, 0);
+    // A withheld cut carries no size here either. The row exists so the reader
+    // knows the cut was requested and refused, which is the honest thing to
+    // report, but the count that would identify people does not travel with it.
+    if (s2.suppressed) rows.push(['segment', `${s2.dimension}: ${s2.value}`, 'withheld', '', '', '', '', '', '', '', '']);
     else spreadRow('segment', `${s2.dimension}: ${s2.value}`, s2.index!);
   }
   countRow('headline', 'healthy adoption', g.headline.healthyAdoption.n, g.headline.healthyAdoption.share);
@@ -81,8 +85,31 @@ export async function GET(request: NextRequest) {
   if (to) attempts = attempts.filter((a) => a.createdAt <= `${to}T23:59:59.999Z`);
   if (persona) attempts = attempts.filter((a) => a.persona === persona);
 
-  const people = toPeople(attempts).filter((p) => p.domain === domain);
+  let people = toPeople(attempts).filter((p) => p.domain === domain);
   if (!people.length) return fail(404, `No completed assessments for ${domain}.`);
+
+  //
+  // The Business Owner edition assesses the business, not the person taking it.
+  // Its dimensions are Operational Continuity and Team Capability Growth, its
+  // stages are a different ten, and its index is the Business AI Health Score.
+  // A Business Owner's reading of their own team's capability is a statement
+  // about the same staff who are also in this aggregate under their own
+  // readings, so including it counts one workforce twice through two different
+  // instruments. Excluded by default, declared on the cover, and still
+  // reportable on its own by passing persona=business.
+  //
+  const exclusions: Array<{ reason: string; n: number }> = [];
+  if (persona !== 'business') {
+    const owners = people.filter((p) => p.latest.persona === 'business');
+    if (owners.length) {
+      exclusions.push({
+        reason: 'Business Owner assessments, which read the business rather than the person',
+        n: owners.length,
+      });
+      people = people.filter((p) => p.latest.persona !== 'business');
+    }
+  }
+  if (!people.length) return fail(404, `No completed assessments for ${domain} after exclusions.`);
 
   // Pseudonymous: the key exists so a person is counted once. It is never
   // printed, and no per-person row leaves this function.
@@ -94,11 +121,18 @@ export async function GET(request: NextRequest) {
     usage: p.latest.result.usageProfile.usage,
     felt: p.latest.baseline?.b1 ?? null,
     predicted: p.latest.baseline?.b2 ?? null,
+    versions: p.latest.versions,
     indexDelta: p.indexDelta,
     priorStage: p.attempts.length > 1 ? p.first.result.stage.stage : undefined,
   }));
 
-  const group = buildGroupResult(label, members);
+  let group;
+  try {
+    group = buildGroupResult(label, members, new Date(), exclusions);
+  } catch (err) {
+    if (err instanceof GroupTooSmallError) return fail(422, err.message);
+    throw err;
+  }
 
   // Aggregates only. There is no format that emits a row per person.
   const format = (sp.get('format') || 'pdf').toLowerCase();
@@ -107,7 +141,7 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Content-Disposition': `attachment; filename="${safeFilePart(label)}_Group_Aggregates.json"`,
+        'Content-Disposition': `attachment; filename="${fileStem(safeFilePart(label))}_Aggregates.json"`,
         'Cache-Control': 'no-store',
       },
     });
@@ -117,7 +151,7 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="${safeFilePart(label)}_Group_Aggregates.csv"`,
+        'Content-Disposition': `attachment; filename="${fileStem(safeFilePart(label))}_Aggregates.csv"`,
         'Cache-Control': 'no-store',
       },
     });
@@ -125,7 +159,10 @@ export async function GET(request: NextRequest) {
 
   const profile = await getOrgProfile(domain);
   const pdf = await generateGroupPdf(group, profile);
-  const file = `${safeFilePart(label)}_Group_Report.pdf`;
+  // Built from the brand rather than typed in. This route was the one the last
+  // rename missed, which is how Neogogy_Formation_Compass.pdf outlived the
+  // Formation Compass by three renames.
+  const file = `${fileStem(safeFilePart(label))}.pdf`;
 
   return new Response(new Uint8Array(pdf), {
     status: 200,

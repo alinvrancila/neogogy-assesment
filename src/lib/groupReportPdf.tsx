@@ -238,7 +238,7 @@ function DimRow({ d, w }: { d: GroupDimension; w: number }) {
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 }}>
         <Text style={{ fontSize: 9, color: T.ink }}>
           {d.name}
-          {d.lowerIsHealthier ? <Text style={{ color: T.mute }}> (lower is healthier)</Text> : null}
+          {d.healthyDirection === 'lower' ? <Text style={{ color: T.mute }}> (lower is healthier)</Text> : null}
           {d.polarised ? <Text style={{ color: T.warn }}>  polarised</Text> : null}
           {d.uniformlyLow ? <Text style={{ color: T.warn }}>  uniformly low</Text> : null}
         </Text>
@@ -250,8 +250,8 @@ function DimRow({ d, w }: { d: GroupDimension; w: number }) {
         <Line x1={0} y1={5.5} x2={w} y2={5.5} stroke={T.hair} strokeWidth={3} />
         <Line x1={x(s.min)} y1={5.5} x2={x(s.max)} y2={5.5} stroke="#D8CBBA" strokeWidth={3} />
         <Rect x={x(s.q1)} y={1.5} width={Math.max(2, x(s.q3) - x(s.q1))} height={8}
-          rx={2} fill={d.lowerIsHealthier ? '#C9A227' : T.teal} fillOpacity={0.35} />
-        <Circle cx={x(s.median)} cy={5.5} r={4} fill={d.lowerIsHealthier ? T.warn : T.teal} />
+          rx={2} fill={d.healthyDirection === 'lower' ? '#C9A227' : T.teal} fillOpacity={0.35} />
+        <Circle cx={x(s.median)} cy={5.5} r={4} fill={d.healthyDirection === 'lower' ? T.warn : T.teal} />
       </Svg>
       <Text style={{ fontFamily: 'PlexMono', fontSize: 7.5, color: T.mute, marginTop: 2 }}>
         strong {d.bands.strong.n} · developing {d.bands.developing.n} · watch {d.bands.watch.n}
@@ -298,7 +298,28 @@ export async function generateGroupPdf(g: GroupResult, profile?: OrgProfile | nu
       ? 'The group is moderately spread. Most of it can be addressed together, with the two ends handled separately.'
       : 'The group is tightly clustered. What moves the centre will move most of it.';
 
-  const doc = (
+  return renderToBuffer(groupDocument(g, profile));
+}
+
+/**
+ * The document, before it becomes a PDF.
+ *
+ * Split out so the template can be read without a rasteriser. There is no way
+ * on this machine to turn a PDF back into text (the fonts are subset, so the
+ * glyphs carry a private encoding), and the standing rule on this project is
+ * that a report template is read end to end after it changes. Walking this tree
+ * is that reading: it is the same element tree renderToBuffer draws, so
+ * anything asserted about it is a statement about the page.
+ */
+export function groupDocument(g: GroupResult, profile?: OrgProfile | null) {
+  const W = LETTER.w - SAFE * 2 - 28;
+  const spreadNote = g.index.sd >= 18
+    ? 'This is a wide group. A single average would describe almost nobody in it, so plan against the bands rather than the mean.'
+    : g.index.sd >= 10
+      ? 'The group is moderately spread. Most of it can be addressed together, with the two ends handled separately.'
+      : 'The group is tightly clustered. What moves the centre will move most of it.';
+
+  return (
     <Document
       title={`${g.label} · Group Report`}
       author="International Center for Applied Neogogy"
@@ -308,7 +329,7 @@ export async function generateGroupPdf(g: GroupResult, profile?: OrgProfile | nu
 
       {/* ------------------------------------------------ 1. executive answer */}
       <Page size={[LETTER.w, LETTER.h]} style={S.page}>
-        <Text style={S.eyebrow}>Page 1</Text>
+        <Text style={S.eyebrow}>The answer</Text>
         <Text style={S.h1}>The executive answer</Text>
         <Text style={S.body}>
           Read across {g.n} {g.n === 1 ? 'person' : 'people'} between {dateOf(g.window.first)} and{' '}
@@ -366,7 +387,7 @@ export async function generateGroupPdf(g: GroupResult, profile?: OrgProfile | nu
 
       {/* --------------------------------------------- 2. workforce formation */}
       <Page size={[LETTER.w, LETTER.h]} style={S.page}>
-        <Text style={S.eyebrow}>Page 2</Text>
+        <Text style={S.eyebrow}>Where your workforce stands</Text>
         <Text style={S.h1}>Workforce formation</Text>
 
         <Distribution g={g} />
@@ -386,7 +407,7 @@ export async function generateGroupPdf(g: GroupResult, profile?: OrgProfile | nu
       </Page>
 
       <Page size={[LETTER.w, LETTER.h]} style={S.page}>
-        <Text style={S.eyebrow}>Page 2, continued</Text>
+        <Text style={S.eyebrow}>Where your workforce stands, continued</Text>
         <Text style={S.h1}>Composites, profile and calibration</Text>
 
         <View style={S.card} wrap={false}>
@@ -476,7 +497,7 @@ export async function generateGroupPdf(g: GroupResult, profile?: OrgProfile | nu
 
       {/* ------------------------------------------------------ 3. AI use map */}
       <Page size={[LETTER.w, LETTER.h]} style={S.page}>
-        <Text style={S.eyebrow}>Page 3</Text>
+        <Text style={S.eyebrow}>Adoption</Text>
         <Text style={S.h1}>AI use, against capability</Text>
         <Text style={S.body}>
           The tool, task, workflow and consequence map is not collected yet, so this page reports what
@@ -513,7 +534,7 @@ export async function generateGroupPdf(g: GroupResult, profile?: OrgProfile | nu
 
       {/* ------------------------------------------- 4 and 5. value, protection */}
       <Page size={[LETTER.w, LETTER.h]} style={S.page}>
-        <Text style={S.eyebrow}>Pages 4 and 5</Text>
+        <Text style={S.eyebrow}>Value and protection</Text>
         <Text style={S.h1}>Value and protection</Text>
         <Text style={S.body}>
           Task time, quality, rework and the matched task experiment are not collected yet, so no
@@ -560,7 +581,7 @@ export async function generateGroupPdf(g: GroupResult, profile?: OrgProfile | nu
 
       {/* --------------------------------------- 6 and 7. enablers, segments */}
       <Page size={[LETTER.w, LETTER.h]} style={S.page}>
-        <Text style={S.eyebrow}>Pages 6 and 7</Text>
+        <Text style={S.eyebrow}>Conditions and segments</Text>
         <Text style={S.h1}>Conditions and segments</Text>
         <Text style={S.body}>
           The team climate and training modules are not collected yet, so organisational conditions
@@ -576,11 +597,14 @@ export async function generateGroupPdf(g: GroupResult, profile?: OrgProfile | nu
               <View style={{ flexDirection: 'row' }}>
                 <Text style={{ fontFamily: 'PlexMono', fontSize: 7.5, letterSpacing: 1, textTransform: 'uppercase', color: T.mute, width: 96 }}>{sg.dimension}</Text>
                 <Text style={{ fontSize: 9.5, flex: 1 }}>{sg.value}</Text>
-                <Text style={{ fontFamily: 'PlexMono', fontSize: 8.5, color: T.mute, width: 40, textAlign: 'right' }}>{sg.n}</Text>
+                <Text style={{ fontFamily: 'PlexMono', fontSize: 8.5, color: T.mute, width: 40, textAlign: 'right' }}>
+                  {sg.suppressed ? '' : sg.n}
+                </Text>
               </View>
               {sg.suppressed ? (
                 <Text style={{ fontSize: 8.5, color: T.mute, marginTop: 2 }}>
-                  Withheld: too few people to report without identifying them.
+                  Withheld, because this cut is small enough to identify the people in it.
+                  {sg.needs ? ` It becomes reportable at about ${sg.needs} more ${sg.needs === 1 ? 'respondent' : 'respondents'}.` : ''}
                 </Text>
               ) : (
                 <Text style={{ fontFamily: 'PlexMono', fontSize: 8, color: T.mute, marginTop: 2 }}>
@@ -598,7 +622,7 @@ export async function generateGroupPdf(g: GroupResult, profile?: OrgProfile | nu
 
       {/* ------------------------------------------------- 8. action portfolio */}
       <Page size={[LETTER.w, LETTER.h]} style={S.page}>
-        <Text style={S.eyebrow}>Page 8</Text>
+        <Text style={S.eyebrow}>What to do next</Text>
         <Text style={S.h1}>Action portfolio and the stage move plan</Text>
         <Text style={S.body}>
           Every practice below was already given to people inside this group by their own report,
@@ -651,7 +675,7 @@ export async function generateGroupPdf(g: GroupResult, profile?: OrgProfile | nu
       {/* ------------------------------------------------------- 9. movement */}
       {g.movement.repeatTakers ? (
         <Page size={[LETTER.w, LETTER.h]} style={S.page}>
-          <Text style={S.eyebrow}>Page 9</Text>
+          <Text style={S.eyebrow}>Movement</Text>
           <Text style={S.h1}>Movement</Text>
           <Text style={S.body}>
             Across the {g.movement.repeatTakers} {g.movement.repeatTakers === 1 ? 'person' : 'people'} who
@@ -771,6 +795,4 @@ export async function generateGroupPdf(g: GroupResult, profile?: OrgProfile | nu
       </Page>
     </Document>
   );
-
-  return renderToBuffer(doc);
 }

@@ -53,6 +53,23 @@ export type LeadRecord = {
   rescoredFrom?: string;
 
   /**
+   * What produced this reading.
+   *
+   * The instrument, scoring, scenario and language versions in force when the
+   * answers were scored. A group report used to print these from the running
+   * code, which is a statement about the deployment rather than about the
+   * readings, so a wave from an older instrument was silently described as
+   * having come from the current one. A comparison across waves is only valid
+   * when all four match, and until this was stored there was no way to check.
+   *
+   * Undefined on every record written before this existed. Those are reported
+   * as not recorded rather than assumed to match, and they can be brought into
+   * a comparison by rescoring, because `compute()` is pure and `answers` is
+   * complete.
+   */
+  versions?: { instrument: string; scoring: string; scenario: string; language: string };
+
+  /**
    * The report link (B3).
    *
    * A long random token that addresses this record's report page. Whoever holds

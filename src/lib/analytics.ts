@@ -37,6 +37,8 @@ export interface Attempt {
   hasPhone: boolean;
   answers: Record<string, number>;
   baseline: { b1: number; b2: number } | null;
+  /** What scored this attempt. Undefined before the platform recorded it. */
+  versions?: { instrument: string; scoring: string; scenario: string; language: string };
   meta?: SubmissionMeta;
 }
 
@@ -83,23 +85,44 @@ export function toAttempts(leads: LeadRecord[]): Attempt[] {
       hasPhone: !!(l.mobilePhone || '').trim(),
       answers: (l.answers || {}) as Record<string, number>,
       baseline: l.baseline ?? null,
+      versions: l.versions,
       meta: l.meta,
     }))
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
-/** Group attempts into people, keyed by email. */
+/**
+ * Group attempts into people.
+ *
+ * Keyed by email and assessment, not by email alone.
+ *
+ * The seven assessments ask different questions, place on differently named
+ * stages and, for the Business Owner and Minister editions, score against a
+ * different route entirely, so an index from one is not comparable with an
+ * index from another. Keyed on email alone, a person who sat two of them had
+ * their movement computed across the pair: `first` was one assessment and
+ * `latest` was another, and the difference between two unrelated instruments
+ * was reported to their organisation as improvement or decline.
+ *
+ * `history.ts` was fixed for exactly this and carries the note about a
+ * respondent shown a climb of sixty seven points that never happened. This is
+ * the same defect on the analytics path, which is the path the group report
+ * uses. `Person.email` still holds the plain address, so anything that groups
+ * by person rather than by sitting continues to work.
+ */
 export function toPeople(attempts: Attempt[]): Person[] {
   const byEmail = new Map<string, Attempt[]>();
   for (const a of attempts) {
     if (!a.email) continue;
-    const list = byEmail.get(a.email) ?? [];
+    const key = `${a.email}::${a.persona}`;
+    const list = byEmail.get(key) ?? [];
     list.push(a);
-    byEmail.set(a.email, list);
+    byEmail.set(key, list);
   }
   const people: Person[] = [];
-  for (const [email, list] of byEmail) {
+  for (const [, list] of byEmail) {
     const sorted = [...list].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    const email = sorted[0].email;
     const first = sorted[0];
     const latest = sorted[sorted.length - 1];
     const domain = domainOf(email);
@@ -131,10 +154,23 @@ export function toPeople(attempts: Attempt[]): Person[] {
 
 export interface Spread { n: number; mean: number; median: number; p25: number; p75: number; min: number; max: number }
 
+/**
+ * The same quantile rule the group reading uses.
+ *
+ * There were two implementations with two different rules, one rounding and one
+ * flooring, so the admin dashboard and the group report printed different
+ * quartiles for the same people. Both now interpolate, which is the rule the
+ * reading guide describes to a non-specialist.
+ */
 export function spread(values: number[]): Spread {
   const v = values.filter((x) => Number.isFinite(x)).sort((a, b) => a - b);
   if (!v.length) return { n: 0, mean: 0, median: 0, p25: 0, p75: 0, min: 0, max: 0 };
-  const at = (q: number) => v[Math.min(v.length - 1, Math.max(0, Math.floor(q * (v.length - 1))))];
+  const at = (q: number) => {
+    if (v.length === 1) return v[0];
+    const pos = q * (v.length - 1);
+    const lo = Math.floor(pos), hi = Math.ceil(pos);
+    return lo === hi ? v[lo] : v[lo] + (v[hi] - v[lo]) * (pos - lo);
+  };
   return {
     n: v.length,
     mean: round1(v.reduce((a, b) => a + b, 0) / v.length),

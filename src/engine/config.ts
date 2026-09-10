@@ -207,6 +207,43 @@ export const CONTINUUM = {
 };
 
 // ---------------------------------------------------------------------------
+// Group reading
+// ---------------------------------------------------------------------------
+
+/**
+ * Every cut point the organisation report reads.
+ *
+ * This file opens by promising that no threshold is left undefended in the code
+ * that uses it. The group reading broke that promise in ten places: a "high
+ * capability" of 55 and a "watch" judgment of 55 sitting inline in a quadrant,
+ * a movable distance of 5, a two-camp gap of 4, spread cuts of 10 and 18, and
+ * concentration cuts of 50 and 33. Each one is load-bearing on a page an
+ * executive plans against, so each one is named here.
+ */
+export const GROUP = {
+  /** A cohort smaller than this is one person's report with a company name on it. */
+  minimumForReport: 3,
+  /** Below this the cover and the executive answer carry the stronger caveat. */
+  strongCaveatBelow: 7,
+  /** Index at or above this is "capable" on the use matrix. */
+  capableIndex: 55,
+  /** Judgment below this is the subset to act on first. */
+  judgmentWatch: 55,
+  /** Within this many index points of the next stage counts as immediately movable. */
+  movableWithin: 5,
+  /** This many empty stages between occupied camps means two workforces, not one. */
+  twoCampGap: 4,
+  /** Standard deviation cuts for tight / moderate / spread. */
+  spreadTight: 10, spreadWide: 18,
+  /** Share of the group held by one constraint: one intervention reaches most / mixed. */
+  concentrationHigh: 50, concentrationMixed: 33,
+  /** Capability riding on thin protection: readiness at or above, dependency at or above. */
+  erodingReadiness: 55, erodingDependency: 55,
+  /** Within this many points of a band threshold counts as close to crossing it. */
+  nearThreshold: 5,
+} as const;
+
+// ---------------------------------------------------------------------------
 // Confidence & calibration
 // ---------------------------------------------------------------------------
 

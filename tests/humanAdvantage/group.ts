@@ -45,11 +45,22 @@ const CLASS: GroupMember[] = [
   member('student', 4, 3, 4), member('student', 4, 4, 5), member('student', 4, 5, 6),
 ];
 
-head('It refuses to read a group that is not there');
+head('It refuses to read a group that is not there, or one too small to hide in');
 {
-  let threw = false;
-  try { buildGroupResult('Empty', []); } catch { threw = true; }
-  ok('an empty group fails loudly rather than returning zeroes', threw);
+  const refuses = (members: GroupMember[]) => {
+    try { buildGroupResult('X', members); return null; }
+    catch (e) { return e as Error; }
+  };
+  ok('an empty group fails loudly rather than returning zeroes', !!refuses([]));
+  // A group of one is an individual report with the employer's name on the
+  // cover: every median is that person's score, the range pins them exactly and
+  // the constraint chapter names their weakest capability.
+  const solo = refuses([CLASS[0]]);
+  ok('a group of one is refused', solo?.name === 'GroupTooSmallError');
+  ok('and two are refused', refuses(CLASS.slice(0, 2))?.name === 'GroupTooSmallError');
+  ok('three is the floor', refuses(CLASS.slice(0, 3)) === null);
+  ok('the refusal says why, without naming anyone',
+    !!solo && /at least 3/.test(solo.message) && !/[A-Z][a-z]+@/.test(solo.message));
 }
 
 head('The spread is the spread');
@@ -103,14 +114,26 @@ head('The ten dimensions, across the group');
     ok(`${d.name}: band counts add to the group`,
       d.bands.strong.n + d.bands.developing.n + d.bands.watch.n === g.n);
   }
-  ok('strengths are the three highest medians',
-    g.strengths[0].spread.median >= g.strengths[1].spread.median
-    && g.strengths[1].spread.median >= g.strengths[2].spread.median);
-  ok('the watchlist is the three lowest medians',
-    g.watchlist[0].spread.median <= g.watchlist[1].spread.median
-    && g.watchlist[1].spread.median <= g.watchlist[2].spread.median);
-  ok('strengths and the watchlist do not overlap in a group this wide',
+  // A strength has to clear the strength floor and a watchlist item has to sit
+  // at or below the vulnerability line. These used to be the top three and the
+  // bottom three by median with no threshold at all, so a group whose weakest
+  // dimension was ten points above the strength floor was still handed three
+  // watchlist items, and a group with no strong dimension was congratulated on
+  // three strengths.
+  ok('strengths are ordered by median',
+    g.strengths.every((d, i) => i === 0 || g.strengths[i - 1].spread.median >= d.spread.median));
+  ok('every strength actually clears the strength floor',
+    g.strengths.every((d) => d.spread.median >= g.bands.strength),
+    g.strengths.map((d) => `${d.name} ${d.spread.median}`).join(', '));
+  ok('the watchlist is ordered by median',
+    g.watchlist.every((d, i) => i === 0 || g.watchlist[i - 1].spread.median <= d.spread.median));
+  ok('every watchlist item is at or below the vulnerability line',
+    g.watchlist.every((d) => d.spread.median <= g.bands.vulnerability),
+    g.watchlist.map((d) => `${d.name} ${d.spread.median}`).join(', '));
+  ok('strengths and the watchlist never overlap',
     !g.strengths.some((s) => g.watchlist.some((w) => w.construct === s.construct)));
+  ok('neither list is padded to three',
+    g.strengths.length <= 3 && g.watchlist.length <= 3);
 }
 
 head('What is holding the group, and what would move it');
@@ -140,8 +163,10 @@ head('What is holding the group, and what would move it');
 
 head('It says how much weight it can carry');
 {
-  ok('one person is indicative', buildGroupResult('Solo', [CLASS[0]]).confidence.level === 'indicative');
+  ok('three people is indicative', buildGroupResult('Three', CLASS.slice(0, 3)).confidence.level === 'indicative');
   ok('six is still indicative', buildGroupResult('Six', CLASS).confidence.level === 'indicative');
+  ok('and a small cohort is flagged for the stronger caveat',
+    buildGroupResult('Six', CLASS).cohort.smallCohort === true);
   const ten = Array.from({ length: 10 }, (_, i) => member('student', 4, (i % 5) + 1, i));
   ok('ten is workable', buildGroupResult('Ten', ten).confidence.level === 'workable');
   const thirty = Array.from({ length: 30 }, (_, i) => member('student', 4, (i % 5) + 1, i));
@@ -194,18 +219,35 @@ head('Nobody is named, ranked or singled out');
     !/furthest along|earliest on the route|\bm\.label\b|extremes\./i.test(pdf));
 }
 
-head('Segments are suppressed rather than shown thin');
+head('Segments are suppressed rather than shown thin, and carry nothing when they are');
 {
   // 9 and 3: the small side is too thin, and the large side is withheld too,
-  // because naming it would leave the other three identifiable by subtraction
+  // because naming it would leave the other three identifiable by subtraction.
   const lopsided = buildGroupResult('Riverside', [
     ...Array.from({ length: 9 }, (_, i) => member('student', 4, 3, i)),
     ...Array.from({ length: 3 }, (_, i) => member('teacher', 4, 3, 100 + i)),
   ]).segments.filter((s2) => s2.dimension === 'Assessment');
-  ok('a segment of three is withheld', !!lopsided.find((s2) => s2.n === 3)?.suppressed);
-  ok('the withheld segment carries no figures', lopsided.find((s2) => s2.n === 3)?.index === undefined);
+  const small = lopsided.find((s2) => s2.value === 'Teacher');
+  const large = lopsided.find((s2) => s2.value === 'Student');
+  ok('a segment of three is withheld', small?.suppressed === true);
+  ok('the withheld segment carries no figures', small?.index === undefined);
   ok('its complement is withheld too, or subtraction identifies the three',
-    !!lopsided.find((s2) => s2.n === 9)?.suppressed);
+    large?.suppressed === true);
+
+  //
+  // What is withheld is withheld. A suppressed row used to carry its exact
+  // size, and all three output formats printed it: the PDF set the number
+  // beside the words "too few people to report without identifying them", and
+  // the CSV and JSON did the same. In a twelve person organisation "three
+  // Teachers" is the identifying fact, and the remainder rule that withholds
+  // the large cell then handed the reader both halves of the subtraction.
+  //
+  ok('a withheld cut does not carry its own size', small?.n === undefined);
+  ok('nor does its withheld complement', large?.n === undefined);
+  ok('and neither size appears anywhere in the serialised reading',
+    !/"n":\s*3\b/.test(JSON.stringify(lopsided)) && !/"n":\s*9\b/.test(JSON.stringify(lopsided)));
+  ok('a withheld cut says how many more people it would need',
+    typeof small?.needs === 'number' && small!.needs > 0);
 
   // 9 and 8: both sides clear the threshold, so both are reported
   const even = buildGroupResult('Riverside', [
@@ -214,10 +256,13 @@ head('Segments are suppressed rather than shown thin');
   ]).segments.filter((s2) => s2.dimension === 'Assessment');
   ok('both sides are shown when both clear the threshold',
     even.every((s2) => !s2.suppressed) && even.length === 2);
+  ok('a shown segment does carry its size', even.every((s2) => typeof s2.n === 'number'));
   ok('a shown segment carries quartiles',
     (even[0].index?.q3 ?? 0) >= (even[0].index?.q1 ?? 0));
-  const solo = buildGroupResult('Solo', [CLASS[0]]);
-  ok('a one person group suppresses every segment', solo.segments.every((s2) => s2.suppressed));
+
+  const tiny = buildGroupResult('Tiny', CLASS.slice(0, 3));
+  ok('every segment of a small group is suppressed', tiny.segments.every((s2) => s2.suppressed));
+  ok('and none of them carries a size', tiny.segments.every((s2) => s2.n === undefined));
 }
 
 head('It prints what produced it');

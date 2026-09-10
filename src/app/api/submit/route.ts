@@ -5,6 +5,7 @@ import { compute, applicableItems } from '@/engine';
 import { PASTOR_REFLECTION_PROMPTS } from '@/items/shared';
 import type { Persona, Submission } from '@/engine/types';
 import { saveLead, logEvent, type LeadRecord, type SubmissionMeta } from '@/lib/storage';
+import { VERSIONS } from '@/engine/config';
 import { generateHumanAdvantagePdf } from '@/lib/reportPdfV2';
 import { sendReportEmail, isEmailEnabled } from '@/lib/email';
 import { buildComparison } from '@/lib/history';
@@ -353,6 +354,9 @@ export async function POST(request: NextRequest) {
     usageVal: checked.submission.usage,
     createdAt: new Date().toISOString(),
     engineVersion: 2,
+    // Stamped from the engine that scored these answers, not read back from the
+    // code that renders them later.
+    versions: { ...VERSIONS },
     result,
     stage: result.stage.stage,
     stageName: result.stage.stageName,
