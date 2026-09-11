@@ -48,6 +48,36 @@ export interface Scene {
   title: string;
 }
 
+/**
+ * One type scale for every chart.
+ *
+ * The charts had grown twelve distinct sizes between 5.6 and 9 points, which is
+ * not a scale: it is twelve decisions taken separately. Below about 7.5 points
+ * a printed label stops being comfortable to read, and several of these sat at
+ * 5.6, so the smallest steps have moved the most.
+ *
+ * Seven steps, each a clear jump from the last, so a reader can tell what rank a
+ * piece of text holds without measuring it.
+ */
+export const TYPE = {
+  /** Scale ends, provenance, the canonical name under a row. */
+  micro: 7.5,
+  /** Axis labels, notes under a chart. */
+  caption: 8,
+  /** Row labels, secondary figures. */
+  label: 8.5,
+  /** Counts and the primary text inside a chart. */
+  body: 9.5,
+  /** Emphasis inside a chart. */
+  strong: 10.5,
+  /** A heading inside a drawing. */
+  heading: 12,
+  /** A figure that carries a card. */
+  figure: 18,
+  /** The figure a page is built around. */
+  display: 24,
+} as const;
+
 /** The longest a callout may be, in words. Enforced by test, not by hope. */
 export const CALLOUT_MAX_WORDS = 12;
 /** No chart may carry more than this many callouts. */
@@ -95,6 +125,45 @@ export const scaleX = (min: number, max: number, w: number) =>
 /** Counts never carry a decimal; a score carries at most one. */
 export const one = (n: number): string => (Math.round(n * 10) / 10).toFixed(1);
 export const whole = (n: number): string => String(Math.round(n));
+/**
+ * Wrap a sentence to a width, on word boundaries.
+ *
+ * Charts were slicing at a character count, which cuts words in half: a stage
+ * row read "still want a sec" then "ond look", and a card read "how this work
+ * is going to chang". `chars` is how many characters fit on a line at the size
+ * being used, which is roughly the box width divided by 0.5 times the point
+ * size for this typeface.
+ *
+ * Returns at most `lines` lines, with an ellipsis on the last one if the text
+ * did not fit, so a truncation is visible rather than silent.
+ */
+export function wrap(textIn: string, chars: number, lines = 2): string[] {
+  const words = String(textIn ?? '').split(/\s+/).filter(Boolean);
+  const out: string[] = [];
+  let line = '';
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (next.length > chars && line) {
+      out.push(line);
+      line = word;
+      if (out.length === lines) break;
+    } else {
+      line = next;
+    }
+  }
+  if (out.length < lines && line) out.push(line);
+  const used = out.join(' ').length;
+  if (used < words.join(' ').length && out.length) {
+    const last = out[out.length - 1];
+    out[out.length - 1] = last.length > chars - 1 ? `${last.slice(0, chars - 2).trimEnd()}...` : `${last}...`;
+  }
+  return out;
+}
+
+/** How many characters of this typeface fit in a box, at a point size. */
+export const fitChars = (boxWidth: number, size: number): number =>
+  Math.max(8, Math.floor(boxWidth / (size * 0.5)));
+
 /** A count with its percentage beside it, never instead of it. */
 export const withPct = (k: number, n: number): string =>
   `${k} of ${n} (${n ? Math.round((k / n) * 100) : 0}%)`;

@@ -93,10 +93,14 @@ export function Ch01({ a, width }: P) {
   return (
     <View>
       <Head n={1} />
-      <ChapterStrip question={m.question} answer={executiveStory(a)}
+      <ChapterStrip question={m.question}
+        answer={executiveStory(a).split('. ')[0] + '.'}
         figure={`${g.n}`} figureLabel="people in this reading"
         mini={miniRouteScene(g.centre.stage, 150)} />
-      <View style={{ marginBottom: 14 }} wrap={false}><SceneView scene={cards} /></View>
+      <View style={{ marginBottom: 18 }} wrap={false}><SceneView scene={cards} /></View>
+      <View wrap={false} style={{ marginBottom: 20 }}>
+        <Para>{executiveStory(a).split('. ').slice(1).join('. ')}</Para>
+      </View>
       <Block scene={exposure} i={{
         headline: 'Where your exposure sits',
         howToRead: 'Three capabilities carry most of an organisation’s practical exposure. Each bar '
@@ -370,10 +374,12 @@ export function Ch06({ a, width }: P) {
               median: d.spread.median, q1: d.spread.q1, q3: d.spread.q3,
               min: d.spread.min, max: d.spread.max, n: g.n,
             })} />
-            <SceneView scene={stackedBandScene({
-              strong: d.bands.strong.n, developing: d.bands.developing.n,
-              watch: d.bands.watch.n, vulnerable: d.vulnerable.n, n: g.n,
-            }, Math.min(240, width))} />
+            <View style={{ marginTop: 10, marginBottom: 4 }}>
+              <SceneView scene={stackedBandScene({
+                strong: d.bands.strong.n, developing: d.bands.developing.n,
+                watch: d.bands.watch.n, vulnerable: d.vulnerable.n, n: g.n,
+              }, Math.min(320, width))} />
+            </View>
             <Explain i={i} wide />
           </View>
         );
