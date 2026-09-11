@@ -13,6 +13,12 @@ const family = (p: Extract<Prim, { k: 'text' }>) =>
     : 'var(--sans, system-ui, sans-serif)';
 
 function draw(p: Prim, i: number): React.ReactElement | null {
+  // An empty label is not a label. react-pdf hands one straight to textkit,
+  // which tries to lay out a string with no font resolved and fails with
+  // "font.layout is not a function", a message that says nothing about the
+  // cause. Four chapters died on a conditional that returned '' rather than
+  // omitting the primitive.
+  if ((p.k === 'text' || p.k === 'callout') && !p.text.trim()) return null;
   switch (p.k) {
     case 'rect':
       return <rect key={i} x={p.x} y={p.y} width={p.w} height={p.h} rx={p.r ?? 0}

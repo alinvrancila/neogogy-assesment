@@ -55,6 +55,10 @@ export const CALLOUT_MAX = 4;
 
 export const countCallouts = (s: Scene): number => s.prims.filter((p) => p.k === 'callout').length;
 
+/** Text primitives carrying nothing. A chart should omit them, not emit them. */
+export const emptyLabels = (s: Scene): number =>
+  s.prims.filter((p) => (p.k === 'text' || p.k === 'callout') && !p.text.trim()).length;
+
 /** Semantic colours. Reading meaning is separate from the LifeX chrome, so a
  *  burgundy heading is never read as a warning. */
 export const C = {

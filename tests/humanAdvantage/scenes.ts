@@ -13,7 +13,7 @@ import { quadrantScene } from '@/report/org/charts/quadrant';
 import { journeyScene } from '@/report/org/charts/journey';
 import { heatmapScene } from '@/report/org/charts/heatmap';
 import { divergingScene, exposureScene, bottleneckScene, mirrorScene } from '@/report/org/charts/bars';
-import { CALLOUT_MAX, CALLOUT_MAX_WORDS, countCallouts, C, type Prim, type Scene } from '@/report/org/scene';
+import { CALLOUT_MAX, CALLOUT_MAX_WORDS, countCallouts, emptyLabels, C, type Prim, type Scene } from '@/report/org/scene';
 
 let pass = 0, fail = 0;
 const ok = (label: string, cond: boolean, detail?: string) => {
@@ -214,6 +214,18 @@ for (const [name, s] of ALL) {
     textsOf(s).filter((t) => t.text.length > 3 && t.text === t.text.toUpperCase()).map((t) => t.text).join(', '));
   ok(`${name}: nothing is set below six points`,
     !textsOf(s).some((t) => t.size < 5.5), textsOf(s).filter((t) => t.size < 5.5).map((t) => `${t.text}@${t.size}`).join(', '));
+}
+
+head('No chart emits a label with nothing in it');
+{
+  // react-pdf hands an empty string straight to its layout engine, which tries
+  // to lay out text with no font resolved and fails with "font.layout is not a
+  // function". Four chapters died on a conditional that returned '' rather than
+  // omitting the primitive, and the message named neither the chapter nor the
+  // cause.
+  for (const [name, s] of ALL) {
+    ok(`${name}: no empty text primitive`, emptyLabels(s) === 0, `${emptyLabels(s)} empty labels`);
+  }
 }
 
 head('A scene stays inside its own box');

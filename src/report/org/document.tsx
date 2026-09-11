@@ -13,7 +13,9 @@ import React from 'react';
 import path from 'path';
 import { Document, Page, StyleSheet, Text, View, Font, Image } from '@react-pdf/renderer';
 import { BRAND, ECOSYSTEM } from '@/brand';
-import { Chapter03, CH03 } from './chapters/ch03-journey';
+import { CHAPTER_COMPONENTS } from './chapters/all';
+import { CHAPTER_META } from './chapters/registry';
+import { Cover, Contents, Appendix } from './chapters/frame';
 import { TOKENS as T } from './kit/blocks';
 import type { OrganisationReportAnalytics } from '@/engine/orgAnalytics';
 
@@ -30,17 +32,25 @@ const ORG = (file: string) => path.join(process.cwd(), 'public', file.replace(/^
 let registered = false;
 export function registerFonts() {
   if (registered) return;
+  // SemiBold is registered as 600 and as 700. Charts ask for 700 where the
+  // brief says a caveat is printed in bold rather than in capitals, and an
+  // unregistered weight does not fall back in react-pdf: it reaches textkit as
+  // a missing font and fails with "font.layout is not a function", which is a
+  // message that says nothing about the cause.
   Font.register({ family: 'PlexSans', fonts: [
     { src: FONTS('IBMPlexSans-Regular.ttf') },
     { src: FONTS('IBMPlexSans-SemiBold.ttf'), fontWeight: 600 },
+    { src: FONTS('IBMPlexSans-SemiBold.ttf'), fontWeight: 700 },
   ] });
   Font.register({ family: 'PlexMono', fonts: [
     { src: FONTS('IBMPlexMono-Regular.ttf') },
     { src: FONTS('IBMPlexMono-Medium.ttf'), fontWeight: 500 },
+    { src: FONTS('IBMPlexMono-Medium.ttf'), fontWeight: 600 },
   ] });
   Font.register({ family: 'SourceSerif', fonts: [
     { src: FONTS('SourceSerif4-Regular.ttf') },
     { src: FONTS('SourceSerif4-SemiBold.ttf'), fontWeight: 600 },
+    { src: FONTS('SourceSerif4-SemiBold.ttf'), fontWeight: 700 },
   ] });
   Font.registerHyphenationCallback((word) => [word]);
   registered = true;
@@ -63,7 +73,7 @@ const Footer = ({ label }: { label: string }) => (
 );
 
 /** The chapter registry. The visual contents page and the tests both read it. */
-export const CHAPTERS = [CH03];
+export { CHAPTER_META as CHAPTERS };
 
 export function OrganisationDocument({ a, size = 'Letter' }: {
   a: OrganisationReportAnalytics; size?: PageSizeName;
@@ -77,8 +87,24 @@ export function OrganisationDocument({ a, size = 'Letter' }: {
       author="International Center for Applied Neogogy"
       subject={`Organisational AI readiness and human advantage, across ${a.group.n} people`}
     >
+      <Page size={[dim.w, dim.h]} style={{ ...S.page, backgroundColor: T.paper }}>
+        <Cover a={a} w={dim.w} h={dim.h} />
+      </Page>
+
       <Page size={[dim.w, dim.h]} style={S.page}>
-        <Chapter03 a={a} width={width} />
+        <Contents a={a} width={width} />
+        <Footer label={label} />
+      </Page>
+
+      {CHAPTER_COMPONENTS.map(({ n, C }) => (
+        <Page key={n} size={[dim.w, dim.h]} style={S.page}>
+          <C a={a} width={width} />
+          <Footer label={label} />
+        </Page>
+      ))}
+
+      <Page size={[dim.w, dim.h]} style={S.page}>
+        <Appendix a={a} />
         <Footer label={label} />
       </Page>
     </Document>

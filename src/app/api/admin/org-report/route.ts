@@ -4,6 +4,8 @@ import { listLeads } from '@/lib/storage';
 import { toAttempts, toPeople } from '@/lib/analytics';
 import { buildGroupResult, GroupTooSmallError, type GroupMember } from '@/engine/group';
 import { generateGroupPdf } from '@/lib/groupReportPdf';
+import { buildOrganisationAnalytics } from '@/engine/orgAnalytics';
+import { generateOrgReportPdf } from '@/lib/orgReportPdf';
 import { getOrgProfile } from '@/lib/orgProfile';
 import { fileStem } from '@/brand';
 import type { Persona } from '@/engine/types';
@@ -152,6 +154,27 @@ export async function GET(request: NextRequest) {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="${fileStem(safeFilePart(label))}_Aggregates.csv"`,
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
+
+  //
+  // The v2 report is behind ORG_REPORT_V2 and off by default, so with the flag
+  // unset this route behaves exactly as it did. `size` chooses the page size,
+  // because Letter and A4 both have to render and only one of them is the
+  // default.
+  //
+  const v2 = process.env.ORG_REPORT_V2 === '1' || sp.get('v') === '2';
+  if (v2) {
+    const analytics = buildOrganisationAnalytics(label, members, new Date(), exclusions);
+    const size = sp.get('size') === 'A4' ? 'A4' : 'Letter';
+    const out = await generateOrgReportPdf(analytics, size);
+    return new Response(new Uint8Array(out), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${fileStem(safeFilePart(label))}.pdf"`,
         'Cache-Control': 'no-store',
       },
     });
