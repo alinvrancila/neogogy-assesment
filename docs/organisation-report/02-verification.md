@@ -281,3 +281,166 @@ handle arbitrary cuts, so this is a collection change rather than a report chang
 
 **A real cohort for visual QA.** The local store holds 30 records across four test
 domains. The end-to-end read above runs against a generated 15-person cohort.
+
+---
+
+# Part two: the report itself
+
+Phases 4 to 9 of the brief. Recorded after the remediation above.
+
+**2,045 tests, 25 suites, all passing. Production build clean.**
+
+## What was built
+
+| Phase | Deliverable |
+|---|---|
+| 2 | `orgAnalytics.ts`, the single aggregate adapter. Seven new constructs. |
+| 3 | `orgAnalytics.ts` suite, 48 tests, written before any UI existed. |
+| 4 | Twenty-two chapters, a cover, a visual contents page and an appendix. |
+| 5 | Twenty-seven scene functions and two renderers. |
+| 6 | Thirteen interpreters and the sentence library. |
+| 8 | `orgReportPdf.tsx`, rendering Letter and A4, behind `ORG_REPORT_V2`. |
+| 9 | Thirteen QA cohorts rendered and inspected. |
+
+## The architecture decision, in practice
+
+Every chart is a pure function from data to a `Scene`: a flat list of primitives
+with coordinates. Two thin renderers map a `Scene` to react-pdf or to DOM SVG.
+
+The payoff was not only that the printed and web charts cannot drift. It is that
+most of section 12 became unit tests rather than screenshot reviews. Callout
+counts, callout length, alt text carrying the findings, counts printed beside
+percentages, one decimal at most, nothing below six points, nothing drawn
+outside its own canvas, and whether a marker sits where its value says it does.
+That last one matters most: a chart can print the right number in the wrong
+place and look entirely convincing.
+
+## Three failures that only assembly could find
+
+**Font weight 700 was never registered.** Charts asked for it where the brief
+says a caveat is printed in bold rather than in capitals. An unregistered weight
+does not fall back in react-pdf; it reaches the layout engine as a missing font
+and fails with `font.layout is not a function`, a message that names neither the
+element nor the cause.
+
+**Four chapters emitted an empty text primitive.** Same error message, different
+cause. A conditional returned `''` rather than omitting the primitive, and
+react-pdf hands an empty string straight to its layout engine. Found by
+bisecting the element tree component by component. Both renderers now skip an
+empty label, the charts stop producing one, and the scene contract carries
+`emptyLabels()` with a per-chart test.
+
+**A dash pattern given as an SVG string.** `"2 2"` parsed to `[null]` and pdfkit
+rejected it outright, so every page carrying a range component would have failed
+to render. Dash patterns are numbers now, formatted per target. The scene tests
+could not have caught this, because a scene is geometry and this was a renderer
+contract.
+
+## Two of my own test bugs, found by the build rather than the suite
+
+An assertion read `six.cohort`, a property that does not exist, behind a
+conditional that returned true either way. It could not fail, and had been
+passing all along. Another compared two literal constants the typechecker knows
+can never be equal. Both were caught by `npm run build`, which typechecks the
+test directory, and neither by `npm test`. A suite that runs is not the same as
+a suite that checks.
+
+## The QA cohorts (phase 9)
+
+Thirteen rendered, all in `/tmp/orgqa/`.
+
+| Cohort | N | Pages | What it exercises |
+|---|---|---|---|
+| design-50 | 50 | 56 | The realistic mixed workforce, the brief's design size |
+| design-50 (A4) | 50 | 53 | The second page size |
+| floor-3 | 3 | 49 | The minimum cohort, every segment withheld |
+| small-8 | 8 | 55 | Below the stronger-caveat threshold |
+| medium-29 | 29 | 56 | Just below the inference floor |
+| inference-30 | 30 | 56 | At the inference floor, intervals permitted |
+| large-120 | 120 | 56 | Segments shown, density capped |
+| universally-strong | 24 | 46 | No watchlist may be invented |
+| universally-weak | 24 | 49 | No strengths may be invented |
+| polarised | 24 | 53 | Split on most capabilities |
+| high-use-low-protection | 24 | 47 | The powerful-but-exposed cell |
+| low-use-high-capability | 24 | 46 | Restraint that is chosen |
+| mixed-personas | 29 | 45 | Three editions in one aggregate |
+
+One and two respondents are refused outright rather than rendered.
+
+The universally strong cohort produces one cohort, one practice and no
+watchlist, which is the correct behaviour and the one the old report could not
+produce: it would have invented three watchlist items ten points above the
+strength floor.
+
+## Section 12, item by item
+
+Checked by `tests/humanAdvantage/orgReport.tsx` unless noted.
+
+| # | Item | State |
+|---|---|---|
+| 1 | Every chapter present, in order | Passing. Removing one fails eight assertions. |
+| 2 | Four explanatory blocks, fixed labels | Passing. All four labels appear an equal number of times, so none is orphaned. |
+| 3 | Band ruler with a separate vulnerability line | Passing, in the scene suite. |
+| 4 | Executive names in the body, canonical in small print | Passing, in the dictionary suite. |
+| 5 | Reversed metrics in bold, canonical values unaltered | Passing, in the scene suite. |
+| 6 | No em-dash or en-dash, no all-caps | Passing, on the rendered tree. |
+| 7 | Counts beside percentages, no false precision | Passing. |
+| 8 | Nothing suppressed in any output | Passing. |
+| 9 | Segments withheld and shown correctly | Passing. |
+| 10 | No intervals or correlations below 30 | Passing. |
+| 11 | Not-collected states carry no values | Passing. |
+| 12 | All ten stages with counts and the median at its index | Passing. |
+| 13 | The heatmap shows five things at a glance | Passing, by inspection of the scene. |
+| 14, 15 | Matrices reconcile to per-person data by hand | Passing, in the analytics suite. |
+| 16 | Nine profiles, absent ones muted | Passing. |
+| 17 | Strengths chapter non-empty when a strength exists | Passing. |
+| 18 | The worked example renders exactly | Passing, word for word. |
+| 19 | PDF: no split block, page numbers, Letter and A4 | Partly. See limits below. |
+| 20 | HTML behaviours | **Not built.** See below. |
+| 21 | Alt text on every chart, contrast AA | Alt text passing. Contrast is inherited from the platform tokens. |
+| 22 | Disclaimers verbatim | Passing. |
+| 23 | Current LifeX logo in every placement | Passing. |
+| 24 | Feature flag off by default | Passing. |
+| 25 | Version mismatch, fewer than 3, baseline state | Passing. |
+| 26 | The five documents exist | Passing, except `03-model.md` and `data-dictionary.md`. |
+| 27 | Visual area at least a third | **Not measured.** See limits. |
+| 28 | Chapter strip, one-line box, source line | Passing. |
+| 29 | One to four callouts per chart | Passing. |
+| 30 | Explanations beneath their chart, same page | Enforced structurally by `wrap={false}`. Not measured. |
+| 31 | Visual table of contents | Present, with reading times. Thumbnails are the shared visual language rather than per-chapter. |
+| 32 | Visual minimums per chapter | Passing as a floor: every chapter page carries at least one visual. |
+| 33 | The flip test | Passing as an automated approximation. See limits. |
+
+## Limits, stated plainly
+
+**No rasteriser on this machine.** There is no Playwright, poppler, Ghostscript
+or canvas here, and the PDF's fonts are subset, so glyphs carry a private
+encoding and text cannot be read back out of a rendered file. Everything above
+is checked against the element tree that `renderToBuffer` is handed, which is
+the same tree that gets drawn, but it is not the same as looking at a page.
+
+Three acceptance items depend on seeing pixels and are therefore **not verified**:
+
+- **Item 27, visual area.** My first attempt summed rectangles out of the PDF
+  content stream and reported 208 per cent of a page, which is nonsense:
+  rectangles overlap and the page background is itself a rectangle. A correct
+  measure needs either a rasteriser or a full content-stream interpreter with
+  the transform stack. Not attempted rather than approximated badly.
+- **Item 19, no empty or half-empty pages.** `wrap={false}` guarantees no block
+  splits, which is the harder half. Whether a page ends up half empty as a
+  result is a layout outcome I cannot see.
+- **Item 33, the flip test.** Automated as far as it goes: the headings, figures
+  and callouts do name the workforce, the exposure, the bottleneck and what to
+  do first. A human flipping the pages is a different test and has not been run.
+
+**Item 20, the HTML report, is not built.** The DOM renderer exists and is
+exercised by the scene tests, so the charts are ready. The surface, the
+animations, the hover definitions and the count-and-percent toggle are not.
+
+**Item 26.** `03-model.md` and `data-dictionary.md` are not written. The schema
+is typed in `orgAnalytics.ts` and the dictionary in `dictionary.ts`, so both
+would be generated from the source rather than hand-written.
+
+**Phase 10 has not been run against a real cohort.** The thirteen above are
+synthetic, with fixed shapes chosen to exercise the matrix in section 11. The
+life.edu.ph data is in production and there are no credentials here.
