@@ -6,7 +6,7 @@
 import fs from 'fs';
 import path from 'path';
 import { DIMENSIONS, COMPOSITES, aliasesFor } from '../src/engine/dictionary';
-import { CONSTRUCT_IDS } from '../src/engine/types';
+import { CONSTRUCT_IDS, type ConstructId } from '../src/engine/types';
 import { STAGES, SCORING, GROUP, CONTINUUM, VERSIONS, CONSTRUCTS } from '../src/engine/config';
 import { SUPPRESSION, INFERENCE_FLOOR } from '../src/engine/group';
 import { STAGE_BUSINESS } from '../src/engine/orgStageCopy';
@@ -74,7 +74,7 @@ const dd: string[] = [
   '|---|---|---|---|---|',
   ...STAGES.map((s) => {
     const gates = s.gates
-      ? Object.entries(s.gates).map(([c, v]) => `${DIMENSIONS[c as never].executiveName} ${v}`).join('; ')
+      ? Object.entries(s.gates).map(([c, v]) => `${DIMENSIONS[c as ConstructId].executiveName} ${v}`).join('; ')
       : 'none';
     const biz = STAGE_BUSINESS.find((b) => b.stage === s.stage);
     return `| ${s.stage} | ${s.name} | index ${s.minIndex} | ${gates} | ${esc(biz?.meansForBusiness ?? '')} |`;
