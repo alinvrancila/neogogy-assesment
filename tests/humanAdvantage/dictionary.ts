@@ -25,6 +25,7 @@ import { buildGroupResult, GroupTooSmallError, spreadOf, type GroupMember } from
 import { groupDocument } from '@/lib/groupReportPdf';
 import { DIMENSIONS, COMPOSITES, aliasesFor, bandOf, isVulnerable } from '@/engine/dictionary';
 import { constructName, reportedConstructName } from '@/engine/display';
+import { toAttempts, toPeople } from '@/lib/analytics';
 import { CONSTRUCTS, SCORING, GROUP } from '@/engine/config';
 import { CONSTRUCT_IDS, type ConstructId, type Item, type Persona, type Submission } from '@/engine/types';
 
@@ -406,11 +407,37 @@ head('A wave knows what produced it');
   ok('and counts what is missing', gh.provenance.notRecorded === 4);
 }
 
-head('One sitting per person, per assessment');
+head('Movement is only ever computed within one assessment');
 {
-  const analytics = fs.readFileSync(path.join(process.cwd(), 'src/lib/analytics.ts'), 'utf-8');
-  ok('people are keyed by email and assessment, not by email alone',
-    /\$\{a\.email\}::\$\{a\.persona\}/.test(analytics));
+  //
+  // The seven assessments are different instruments, so an index from one
+  // cannot be compared with an index from another. This was checked by looking
+  // for a composite map key, which is one way to fix it and the way that was
+  // tried first. It makes one human count as two people wherever they have
+  // taken two assessments, which changes what every headcount on the admin
+  // dashboard means, so the invariant is asserted on behaviour instead.
+  //
+  const attempts = toAttempts(JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), 'data/leads.json'), 'utf-8')));
+  const people = toPeople(attempts);
+  ok('there is real data with repeat sittings to check',
+    people.some((p) => p.attempts.length > 1), `${people.length} people`);
+  ok('one Person is one human being',
+    people.length === new Set(people.map((p) => p.email)).size);
+  ok('a person with several assessments still counts once',
+    people.every((p) => people.filter((q) => q.email === p.email).length === 1));
+  for (const p of people.filter((x) => x.indexDelta !== undefined)) {
+    ok(`${p.email.replace(/^[^@]*/, 'a')}: movement compares the same assessment`,
+      p.first.persona === p.latest.persona,
+      `${p.first.persona} against ${p.latest.persona}`);
+  }
+  const mixed = people.find((p) => new Set(p.attempts.map((a) => a.persona)).size > 1);
+  ok('somebody in the data has taken more than one assessment', !!mixed,
+    people.map((p) => new Set(p.attempts.map((a) => a.persona)).size).join(','));
+  if (mixed) {
+    ok('and their earlier sittings of other assessments are still kept',
+      mixed.attempts.length > mixed.attempts.filter((a) => a.persona === mixed.latest.persona).length);
+  }
 }
 
 /* ------------------------------------------------- the page, as it renders */

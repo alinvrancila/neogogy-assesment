@@ -92,44 +92,46 @@ export function toAttempts(leads: LeadRecord[]): Attempt[] {
 }
 
 /**
- * Group attempts into people.
+ * Group attempts into people. One Person is one human being.
  *
- * Keyed by email and assessment, not by email alone.
+ * Movement is computed within a single assessment, which is the part that was
+ * wrong. The seven assessments ask different questions, place on differently
+ * named stages and, for the Business Owner and Minister editions, score against
+ * a different route entirely, so an index from one is not comparable with an
+ * index from another. `first` used to be the earliest attempt of any kind and
+ * `latest` the most recent of any kind, so a person who sat two of them had the
+ * difference between two unrelated instruments reported to their organisation
+ * as improvement or decline. `history.ts` was fixed for exactly this and
+ * carries the note about a respondent shown a climb of sixty seven points that
+ * never happened.
  *
- * The seven assessments ask different questions, place on differently named
- * stages and, for the Business Owner and Minister editions, score against a
- * different route entirely, so an index from one is not comparable with an
- * index from another. Keyed on email alone, a person who sat two of them had
- * their movement computed across the pair: `first` was one assessment and
- * `latest` was another, and the difference between two unrelated instruments
- * was reported to their organisation as improvement or decline.
- *
- * `history.ts` was fixed for exactly this and carries the note about a
- * respondent shown a climb of sixty seven points that never happened. This is
- * the same defect on the analytics path, which is the path the group report
- * uses. `Person.email` still holds the plain address, so anything that groups
- * by person rather than by sitting continues to work.
+ * Keying the map by email and persona also fixes it, and was tried, but it
+ * makes one human count as two people wherever they have taken two
+ * assessments, which quietly changes what every headcount on the admin
+ * dashboard means. `latest` is the most recent sitting of any kind, and `first`
+ * is the earliest sitting of that same assessment, so the comparison is like
+ * for like and a person is still a person.
  */
 export function toPeople(attempts: Attempt[]): Person[] {
   const byEmail = new Map<string, Attempt[]>();
   for (const a of attempts) {
     if (!a.email) continue;
-    const key = `${a.email}::${a.persona}`;
-    const list = byEmail.get(key) ?? [];
+    const list = byEmail.get(a.email) ?? [];
     list.push(a);
-    byEmail.set(key, list);
+    byEmail.set(a.email, list);
   }
   const people: Person[] = [];
-  for (const [, list] of byEmail) {
+  for (const [email, list] of byEmail) {
     const sorted = [...list].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-    const email = sorted[0].email;
-    const first = sorted[0];
     const latest = sorted[sorted.length - 1];
+    // Only sittings of the same assessment can be compared with the latest one.
+    const comparable = sorted.filter((a) => a.persona === latest.persona);
+    const first = comparable[0];
     const domain = domainOf(email);
     let direction: Person['direction'] = 'single';
     let indexDelta: number | undefined;
     let stageDelta: number | undefined;
-    if (sorted.length > 1) {
+    if (comparable.length > 1) {
       indexDelta = round1(latest.result.stage.rawIndex - first.result.stage.rawIndex);
       stageDelta = latest.result.stage.stage - first.result.stage.stage;
       direction = indexDelta > 1 ? 'improved' : indexDelta < -1 ? 'declined' : 'held';
@@ -139,6 +141,7 @@ export function toPeople(attempts: Attempt[]): Person[] {
       name: latest.name || first.name,
       domain,
       isOrganisational: isOrgDomain(domain),
+      // Every sitting is kept, so anything counting submissions still can.
       attempts: sorted,
       first,
       latest,
