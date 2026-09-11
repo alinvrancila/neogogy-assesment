@@ -19,7 +19,7 @@ function draw(p: Prim, i: number): React.ReactElement | null {
     case 'line':
       return <Line key={i} x1={p.x1} y1={p.y1} x2={p.x2} y2={p.y2}
         stroke={p.stroke} strokeWidth={p.strokeWidth ?? 1}
-        strokeDasharray={p.dash} strokeOpacity={p.opacity} />;
+        strokeDasharray={p.dash ? p.dash.join(',') : undefined} strokeOpacity={p.opacity} />;
     case 'circle':
       return <Circle key={i} cx={p.cx} cy={p.cy} r={p.r} fill={p.fill ?? 'none'}
         stroke={p.stroke} strokeWidth={p.strokeWidth} fillOpacity={p.opacity} />;

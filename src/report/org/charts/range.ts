@@ -65,7 +65,7 @@ export function rangeScene(d: RangeInput): Scene {
 
   // The vulnerability line, drawn apart from the band edges and dashed.
   p.push(line({ x1: at(t.vulnerability), y1: axisY - 11, x2: at(t.vulnerability), y2: axisY + 11,
-    stroke: C.vulnerability, strokeWidth: 1, dash: '2 2' }));
+    stroke: C.vulnerability, strokeWidth: 1, dash: [2, 2] }));
 
   // The observed range behind, then the middle half, then the median.
   p.push(line({ x1: at(d.min), y1: axisY, x2: at(d.max), y2: axisY,

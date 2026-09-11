@@ -25,7 +25,10 @@ export type Prim =
   | { k: 'rect'; x: number; y: number; w: number; h: number; r?: number;
       fill?: string; stroke?: string; strokeWidth?: number; opacity?: number }
   | { k: 'line'; x1: number; y1: number; x2: number; y2: number;
-      stroke: string; strokeWidth?: number; dash?: string; opacity?: number }
+      stroke: string; strokeWidth?: number;
+      /** Dash pattern as numbers. Each renderer formats it for its own target:
+       *  SVG wants them space separated, react-pdf's pdfkit wants a real array. */
+      dash?: number[]; opacity?: number }
   | { k: 'circle'; cx: number; cy: number; r: number; fill?: string;
       stroke?: string; strokeWidth?: number; opacity?: number }
   | { k: 'path'; d: string; fill?: string; stroke?: string; strokeWidth?: number; opacity?: number }
