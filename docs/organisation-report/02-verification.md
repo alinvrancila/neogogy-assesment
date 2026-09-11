@@ -444,3 +444,83 @@ would be generated from the source rather than hand-written.
 **Phase 10 has not been run against a real cohort.** The thirteen above are
 synthetic, with fixed shapes chosen to exercise the matrix in section 11. The
 life.edu.ph data is in production and there are no credentials here.
+
+---
+
+# Part three: visual QA, and what shipped
+
+**2,077 tests, 26 suites, all passing. Production build clean. Deployed.**
+
+## Phase 10 turned out to be possible after all
+
+Part two recorded that there was no rasteriser on this machine and that three
+acceptance items could not be verified. Two of those were wrong.
+
+macOS `sips` converts a single page PDF to PNG. Rendering each chapter as its own
+document, and then rendering each on a very tall page so the whole chapter could
+be seen at once rather than only its first page, made a real visual pass
+possible.
+
+It found nine defects. **None of them had been caught by 2,069 passing tests**,
+because every one was about where something sat rather than what it said.
+
+| # | Defect |
+|---|---|
+| 1 | Every chart title printed twice: once by the Block as a heading, once inside the scene. |
+| 2 | The range component kept its internal title through the sweep that removed the other twenty-three, because its arguments are in a different order, and the two lines then shared a baseline and overlapped. |
+| 3 | Chapter 1 printed "Human Agency" where the body must say "Decision Ownership". |
+| 4 | Chapter 12's segment panels read "held most by Human Agency", for the same reason. |
+| 5 | Scorecard meanings were sliced at a character count and still overflowed their card, so one read "how this work is going to chang". |
+| 6 | The cover stopped halfway down the page. |
+| 7 | Four callout collisions: the journey callout on the per-stage note, the heatmap callout on the row it named, the priority label above the plot where it read as a title, the register callout over its column headers. |
+| 8 | The polarisation chart shared a row between the capability name and the bars, truncating "Checking Before You Act" and running it under the first bar. |
+| 9 | The canonical name under each heatmap row was set in the hairline colour and was not legible. |
+
+Two of those are vocabulary leaks, which is acceptance item 4, and there is now a
+test for the class: the rendered document is searched for every canonical name
+that differs from its body name, and exactly three appearances are allowed for
+each (the heatmap small print, the dimension card small print, and the appendix
+alias table). A fourth fails.
+
+Filling the cover was itself instructive: the full ten stage route was tried
+there first and pushed the partnership strip on to a second page. A cover is one
+page, so the index ruler carries the reading instead.
+
+## A regression I introduced, and then corrected
+
+The earlier fix for movement being computed across two different assessments
+keyed people by email and persona together. That does fix the defect. It also
+makes one human count as two people wherever they have taken two assessments,
+and every headcount on the admin dashboard is built on that function. Two of the
+five emails in the local store have taken four assessments each, so this was not
+theoretical.
+
+`latest` is now the most recent sitting of any kind and `first` is the earliest
+sitting of that same assessment. Like for like, and a person is still a person.
+
+The test that guarded it had been looking for the composite map key in the
+source, which asserts one particular implementation rather than the property
+that matters. It now drives the real stored records and asserts the invariant.
+
+## Real data
+
+The pipeline was run against the actual stored records rather than only against
+synthetic cohorts. All three domains in the local store were **refused**, at one
+and two people each, which is the floor working. A cohort carrying no version
+stamps, which is what every record written before this month looks like, renders
+53 pages and reports its provenance honestly rather than claiming comparability
+it does not have.
+
+## What is still not done
+
+**The HTML surface.** The DOM renderer exists and is exercised by the scene
+tests, so the charts are ready. The page, the animations, the hover definitions
+and the count-and-percent toggle are not built. The PDF is the artefact that gets
+sent to an organisation, so this does not block use.
+
+**Item 27, visual area.** Still not measured. It needs either a rasteriser per
+page or a content-stream interpreter with the transform stack. `sips` gives the
+first of those now, so this is newly possible and simply has not been done.
+
+**Phase 10 against life.edu.ph.** The data is in production and there are no
+credentials on this machine.
