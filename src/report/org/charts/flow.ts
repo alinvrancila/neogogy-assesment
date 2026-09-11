@@ -11,16 +11,16 @@ import { C, callout, circle, line, one, rect, text, whole, type Prim, type Scene
 export interface GateStep { name: string; stage: number; required: number; held: number; currentMedian: number; gap: number; close: number }
 
 export function gateFunnelScene(steps: GateStep[], n: number, width = 510): Scene {
-  const W = width, rowH = 48, top = 34;
+  const W = width, rowH = 40, top = 30;
   const p: Prim[] = [];
   let remaining = n;
   steps.forEach((s, i) => {
     const y = top + i * rowH;
     const w = (remaining / Math.max(1, n)) * (W - 128);
     p.push(rect({ k: 'rect', x: 0, y: y - 8, w: Math.max(4, w), h: 20, r: 3, fill: C.gate, opacity: 0.13 }));
-    p.push(text({ x: 8, y: y + 5, size: 9.5, fill: C.ink, text: `${s.name}, stage ${s.stage} asks for ${s.required}` }));
-    p.push(text({ x: W, y: y + 1, size: 9.5, anchor: 'end', mono: true, fill: C.ink, text: `${s.held} held` }));
-    p.push(text({ x: W, y: y + 11, size: 8, anchor: 'end', fill: C.mute,
+    p.push(text({ x: 8, y: y + 5, size: 7.4, fill: C.ink, text: `${s.name}, stage ${s.stage} asks for ${s.required}` }));
+    p.push(text({ x: W, y: y + 1, size: 7, anchor: 'end', mono: true, fill: C.ink, text: `${s.held} held` }));
+    p.push(text({ x: W, y: y + 11, size: 6.2, anchor: 'end', fill: C.mute,
       text: `median ${one(s.currentMedian)}, gap ${one(s.gap)}, ${s.close} close` }));
     // The gap drawn, so the distance is visible rather than only stated.
     const gx = W - 124, gw = 40;
@@ -50,25 +50,25 @@ export function gateFunnelScene(steps: GateStep[], n: number, width = 510): Scen
 export interface MobilityRow { stage: number; stageName: string; n: number; movable: number; gated: number; development: number; intoName: string }
 
 export function mobilityScene(rows: MobilityRow[], n: number, width = 510): Scene {
-  const W = width, rowH = 26, top = 40;
-  const barX = 176, barW = W - barX - 138;
+  const W = width, rowH = 22, top = 34;
+  const barX = 150, barW = W - barX - 118;
   const p: Prim[] = [];
-  p.push(text({ x: barX, y: 26, size: 8, fill: C.mute, text: 'close  ·  held by a gate  ·  more development needed' }));
+  p.push(text({ x: barX, y: 26, size: 6, fill: C.mute, text: 'close  ·  held by a gate  ·  more development needed' }));
   rows.forEach((r, i) => {
     const y = top + i * rowH;
-    p.push(text({ x: 0, y: y + 2, size: 9.5, fill: C.ink, text: `${r.stage}. ${r.stageName}`.slice(0, 28) }));
+    p.push(text({ x: 0, y: y + 2, size: 7.2, fill: C.ink, text: `${r.stage}. ${r.stageName}`.slice(0, 28) }));
     let x = barX;
     const segs: Array<[number, string]> = [[r.movable, C.strength], [r.gated, C.gate], [r.development, C.mute]];
     for (const [v, colour] of segs) {
       const w = (v / Math.max(1, r.n)) * barW;
       if (w > 0) {
         p.push(rect({ k: 'rect', x, y: y - 6, w, h: 12, r: 2, fill: colour, opacity: 0.55 }));
-        if (w > 12) p.push(text({ x: x + w / 2, y: y + 2, size: 8.5, anchor: 'middle', mono: true, fill: C.ink, text: whole(v) }));
+        if (w > 12) p.push(text({ x: x + w / 2, y: y + 2, size: 6.4, anchor: 'middle', mono: true, fill: C.ink, text: whole(v) }));
       }
       x += w;
     }
     if (r.movable > 0) {
-      p.push(text({ x: W, y: y + 2, size: 8.5, anchor: 'end', fill: C.mute,
+      p.push(text({ x: W, y: y + 2, size: 6.6, anchor: 'end', fill: C.mute,
         text: `${r.movable} to ${r.intoName}`.slice(0, 26) }));
     }
   });
@@ -89,7 +89,7 @@ export function mobilityScene(rows: MobilityRow[], n: number, width = 510): Scen
 export interface Bubble { capability: string; reach: number; importance: number; distance: number; region: string }
 
 export function priorityScene(items: Bubble[], n: number, width = 470): Scene {
-  const W = width, H = 292;
+  const W = width, H = 250;
   const padL = 44, padB = 40, padT = 14, padR = 10;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   const p: Prim[] = [];
@@ -102,10 +102,10 @@ export function priorityScene(items: Bubble[], n: number, width = 470): Scene {
   // The four regions, labelled where they sit.
   p.push(line({ x1: padL, y1: padT + plotH / 2, x2: W - padR, y2: padT + plotH / 2, stroke: C.hair, strokeWidth: 0.6, dash: [2, 3] }));
   p.push(line({ x1: padL + plotW / 2, y1: padT, x2: padL + plotW / 2, y2: padT + plotH, stroke: C.hair, strokeWidth: 0.6, dash: [2, 3] }));
-  p.push(text({ x: W - padR - 4, y: padT + 10, size: 8, anchor: 'end', fill: C.mute, text: 'act now' }));
-  p.push(text({ x: padL + 4, y: padT + 10, size: 8, fill: C.mute, text: 'target' }));
-  p.push(text({ x: W - padR - 4, y: padT + plotH - 4, size: 8, anchor: 'end', fill: C.mute, text: 'scale' }));
-  p.push(text({ x: padL + 4, y: padT + plotH - 4, size: 8, fill: C.mute, text: 'monitor' }));
+  p.push(text({ x: W - padR - 4, y: padT + 10, size: 6.2, anchor: 'end', fill: C.mute, text: 'act now' }));
+  p.push(text({ x: padL + 4, y: padT + 10, size: 6.2, fill: C.mute, text: 'target' }));
+  p.push(text({ x: W - padR - 4, y: padT + plotH - 4, size: 6.2, anchor: 'end', fill: C.mute, text: 'scale' }));
+  p.push(text({ x: padL + 4, y: padT + plotH - 4, size: 6.2, fill: C.mute, text: 'monitor' }));
 
   const maxD = Math.max(1, ...items.map((i) => i.distance));
   for (const it of items) {
@@ -117,13 +117,13 @@ export function priorityScene(items: Bubble[], n: number, width = 470): Scene {
   }
   p.push(line({ x1: padL, y1: padT + plotH, x2: W - padR, y2: padT + plotH, stroke: C.hair, strokeWidth: 0.8 }));
   p.push(line({ x1: padL, y1: padT, x2: padL, y2: padT + plotH, stroke: C.hair, strokeWidth: 0.8 }));
-  p.push(text({ x: padL, y: padT + plotH + 12, size: 8, fill: C.mute, text: '0' }));
-  p.push(text({ x: W - padR, y: padT + plotH + 12, size: 8, anchor: 'end', fill: C.mute, text: `${n} people` }));
-  p.push(text({ x: padL + plotW / 2, y: padT + plotH + 12, size: 8.5, anchor: 'middle', fill: C.ink,
+  p.push(text({ x: padL, y: padT + plotH + 12, size: 6, fill: C.mute, text: '0' }));
+  p.push(text({ x: W - padR, y: padT + plotH + 12, size: 6, anchor: 'end', fill: C.mute, text: `${n} people` }));
+  p.push(text({ x: padL + plotW / 2, y: padT + plotH + 12, size: 6.6, anchor: 'middle', fill: C.ink,
     text: 'how many people it reaches' }));
-  p.push(text({ x: 2, y: padT + plotH / 2 - 3, size: 8.5, fill: C.ink, text: 'how' }));
-  p.push(text({ x: 2, y: padT + plotH / 2 + 6, size: 8.5, fill: C.ink, text: 'urgent' }));
-  p.push(text({ x: 0, y: H - 3, size: 8, fill: C.mute,
+  p.push(text({ x: 2, y: padT + plotH / 2 - 3, size: 6.6, fill: C.ink, text: 'how' }));
+  p.push(text({ x: 2, y: padT + plotH / 2 + 6, size: 6.6, fill: C.ink, text: 'urgent' }));
+  p.push(text({ x: 0, y: H - 3, size: 6, fill: C.mute,
     text: 'Bubble size is how far the group is from the threshold it would need to clear.' }));
 
   // Kept inside the plot area, and flipped to the left when the bubble sits
@@ -151,20 +151,20 @@ export function priorityScene(items: Bubble[], n: number, width = 470): Scene {
 /* -------------------------------------------------- chapter 19, tier ladder */
 
 export function tierScene(tiers: Array<{ tier: string; cohorts: string[]; n: number }>, n: number, width = 510): Scene {
-  const W = width, rowH = 40, top = 28;
+  const W = width, rowH = 34, top = 24;
   const p: Prim[] = [];
   tiers.forEach((t, i) => {
     const y = top + i * rowH;
     const w = Math.max(6, (t.n / Math.max(1, n)) * (W - 150));
     p.push(rect({ k: 'rect', x: 0, y, w: W, h: rowH - 5, r: 4, fill: t.n ? C.hairSoft : C.white,
       opacity: t.n ? 0.45 : 1, stroke: t.n ? undefined : C.hair, strokeWidth: 0.6 }));
-    p.push(text({ x: 10, y: y + 14, size: 10.5, weight: 600, fill: t.n ? C.ink : C.hair, text: t.tier }));
-    p.push(text({ x: 10, y: y + 24, size: 8, fill: C.mute,
+    p.push(text({ x: 10, y: y + 14, size: 7.6, weight: 600, fill: t.n ? C.ink : C.hair, text: t.tier }));
+    p.push(text({ x: 10, y: y + 24, size: 6.2, fill: C.mute,
       text: t.cohorts.length ? t.cohorts.join(', ').slice(0, 74) : 'no cohort here in this workforce' }));
     p.push(rect({ k: 'rect', x: W - 140, y: y + 10, w: W - 150 > 0 ? 90 : 0, h: 8, r: 2, fill: C.hairSoft }));
     p.push(rect({ k: 'rect', x: W - 140, y: y + 10, w: Math.max(t.n ? 2 : 0, (t.n / Math.max(1, n)) * 90), h: 8, r: 2,
       fill: C.strength, opacity: 0.6 }));
-    p.push(text({ x: W - 10, y: y + 18, size: 9.5, anchor: 'end', mono: true, fill: t.n ? C.ink : C.hair,
+    p.push(text({ x: W - 10, y: y + 18, size: 7.2, anchor: 'end', mono: true, fill: t.n ? C.ink : C.hair,
       text: `${t.n} of ${n}` }));
   });
   const biggest = [...tiers].sort((a, b) => b.n - a.n)[0];
@@ -191,26 +191,25 @@ export function timelineScene(bands: TimelineBand[], n: number, width = 510): Sc
   const colW = (W - 16) / 3;
   let maxRows = 0;
   bands.forEach((b) => { maxRows = Math.max(maxRows, b.actions.length); });
-  const H = 52 + maxRows * 30 + 12;
+  const H = 46 + maxRows * 26 + 10;
   bands.forEach((b, i) => {
     const x = i * (colW + 8);
-    p.push(rect({ k: 'rect', x, y: 20, w: colW, h: H - 28, r: 4, fill: C.hairSoft, opacity: 0.4 }));
+    p.push(rect({ k: 'rect', x, y: 20, w: colW, h: H - 26, r: 4, fill: C.hairSoft, opacity: 0.4 }));
     p.push(rect({ k: 'rect', x, y: 20, w: colW, h: 3, r: 1.5,
       fill: i === 0 ? C.watch : i === 1 ? C.developing : C.strength, opacity: 0.75 }));
-    p.push(text({ x: x + 9, y: 40, size: 10.5, weight: 600, fill: C.ink, text: b.title }));
+    p.push(text({ x: x + 9, y: 36, size: 7.6, weight: 600, fill: C.ink, text: b.title }));
     b.actions.forEach((a, k) => {
-      const y = 56 + k * 30;
-      p.push(text({ x: x + 9, y: y + 6, size: 8.5, fill: C.ink, text: a.capability.slice(0, 34) }));
-      p.push(text({ x: x + 9, y: y + 15, size: 7.5, fill: C.mute, text: `reaches ${a.reach} of ${n}` }));
+      const y = 50 + k * 26;
+      p.push(text({ x: x + 9, y: y + 6, size: 6.4, fill: C.ink, text: a.capability.slice(0, 34) }));
+      p.push(text({ x: x + 9, y: y + 15, size: 5.8, fill: C.mute, text: `reaches ${a.reach} of ${n}` }));
       p.push(rect({ k: 'rect', x: x + 9, y: y + 18, w: Math.max(2, (a.reach / Math.max(1, n)) * (colW - 22)), h: 2.5, r: 1,
         fill: C.strength, opacity: 0.55 }));
     });
     if (!b.actions.length) {
-      p.push(text({ x: x + 9, y: 62, size: 8, fill: C.hair, text: 'nothing at this priority' }));
+      p.push(text({ x: x + 9, y: 56, size: 6.2, fill: C.hair, text: 'nothing at this priority' }));
     }
   });
-  // Below the first band's heading rather than on top of it.
-  p.push(callout({ x: colW - 8, y: 34, toX: colW - 14, toY: 26, text: 'start here', anchor: 'end' }));
+  p.push(callout({ x: 9, y: 30, toX: 14, toY: 36, text: 'start here' }));
   return {
     w: W, h: H, prims: p, title: 'The next ninety days, in three bands',
     alt: 'Three bands of work. '
@@ -224,23 +223,23 @@ export function timelineScene(bands: TimelineBand[], n: number, width = 510): Sc
 export function polarisationScene(rows: Array<{ name: string; strong: number; watch: number }>, n: number, width = 470): Scene {
   // The name needs a column of its own. Sharing the row with the bars truncated
   // "Checking Before You Act" and ran the label under the first bar.
-  const W = width, rowH = 26, top = 40;
-  const nameW = 152;
+  const W = width, rowH = 22, top = 34;
+  const nameW = 128;
   const half = (W - nameW - 8) / 2, mid = nameW + 8 + half;
   const p: Prim[] = [];
   const max = Math.max(1, ...rows.flatMap((r) => [r.strong, r.watch]));
   if (rows.length) {
-    p.push(text({ x: mid - half, y: 14, size: 8, fill: C.strength, text: 'in the strength band' }));
-    p.push(text({ x: mid + half, y: 14, size: 8, anchor: 'end', fill: C.watch, text: 'in the watch band' }));
+    p.push(text({ x: mid - half, y: 14, size: 6, fill: C.strength, text: 'in the strength band' }));
+    p.push(text({ x: mid + half, y: 14, size: 6, anchor: 'end', fill: C.watch, text: 'in the watch band' }));
   }
   rows.forEach((r, i) => {
     const y = top + i * rowH;
-    p.push(text({ x: 0, y: y + 2, size: 8.5, fill: C.ink, text: r.name.slice(0, 26) }));
+    p.push(text({ x: 0, y: y + 2, size: 6.8, fill: C.ink, text: r.name.slice(0, 26) }));
     const lw = (r.strong / max) * half, rw = (r.watch / max) * half;
     p.push(rect({ k: 'rect', x: mid - lw, y: y - 6, w: lw, h: 12, r: 2, fill: C.strength, opacity: 0.55 }));
     p.push(rect({ k: 'rect', x: mid, y: y - 6, w: rw, h: 12, r: 2, fill: C.watch, opacity: 0.55 }));
-    if (r.strong) p.push(text({ x: mid - lw - 4, y: y + 2, size: 8, anchor: 'end', mono: true, fill: C.mute, text: whole(r.strong) }));
-    if (r.watch) p.push(text({ x: mid + rw + 4, y: y + 2, size: 8, mono: true, fill: C.mute, text: whole(r.watch) }));
+    if (r.strong) p.push(text({ x: mid - lw - 4, y: y + 2, size: 6.2, anchor: 'end', mono: true, fill: C.mute, text: whole(r.strong) }));
+    if (r.watch) p.push(text({ x: mid + rw + 4, y: y + 2, size: 6.2, mono: true, fill: C.mute, text: whole(r.watch) }));
   });
   if (rows.length) {
     p.push(callout({ x: mid, y: top + rows.length * rowH + 10, toX: mid, toY: top + rows.length * rowH - 2,

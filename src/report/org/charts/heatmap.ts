@@ -22,19 +22,19 @@ export interface HeatRow {
 }
 
 const COLS: Array<{ key: keyof HeatRow | 'median'; label: string; w: number }> = [
-  { key: 'median', label: 'median', w: 50 },
-  { key: 'strong', label: 'strong', w: 44 },
-  { key: 'developing', label: 'developing', w: 54 },
-  { key: 'watch', label: 'watch', w: 42 },
-  { key: 'vulnerable', label: 'at or below 45', w: 66 },
-  { key: 'spreadWidth', label: 'spread', w: 44 },
+  { key: 'median', label: 'median', w: 42 },
+  { key: 'strong', label: 'strong', w: 38 },
+  { key: 'developing', label: 'developing', w: 46 },
+  { key: 'watch', label: 'watch', w: 36 },
+  { key: 'vulnerable', label: 'at or below 45', w: 56 },
+  { key: 'spreadWidth', label: 'spread', w: 38 },
 ];
 
 export function heatmapScene(rows: HeatRow[], n: number, width = 510): Scene {
-  const nameW = 196, rowH = 22, headH = 30;
+  const nameW = 172, rowH = 17, headH = 26;
   const p: Prim[] = [];
   const clusters = [...new Set(rows.map((r) => r.cluster))];
-  let y = headH + 30;
+  let y = headH + 14;
   const startX = nameW;
   const colX: number[] = [];
   let cx = startX;
@@ -43,21 +43,21 @@ export function heatmapScene(rows: HeatRow[], n: number, width = 510): Scene {
 
 
   COLS.forEach((c, i) => {
-    p.push(text({ x: colX[i] + c.w - 4, y: headH, size: 8, fill: C.mute, anchor: 'end', text: c.label }));
+    p.push(text({ x: colX[i] + c.w - 4, y: headH, size: 6.2, fill: C.mute, anchor: 'end', text: c.label }));
   });
-  p.push(text({ x: totalW - 4, y: headH, size: 8, fill: C.mute, anchor: 'end', text: 'split' }));
+  p.push(text({ x: totalW - 4, y: headH, size: 6.2, fill: C.mute, anchor: 'end', text: 'split' }));
 
   for (const cluster of clusters) {
-    p.push(text({ x: 0, y: y + 1, size: 8.5, fill: C.gate, text: cluster }));
-    y += 16;
+    p.push(text({ x: 0, y: y + 1, size: 6.4, fill: C.gate, text: cluster }));
+    y += 13;
     for (const r of rows.filter((x) => x.cluster === cluster)) {
-      p.push(text({ x: 0, y: y + 2, size: 9.5, fill: C.ink, text: r.executiveName }));
-      p.push(text({ x: 0, y: y + 10, size: 7.5, fill: C.mute, text: r.canonicalName }));
+      p.push(text({ x: 0, y: y + 2, size: 7.4, fill: C.ink, text: r.executiveName }));
+      p.push(text({ x: 0, y: y + 10, size: 5.8, fill: C.mute, text: r.canonicalName }));
 
       // The median cell carries the band colour and the number.
       const band = bandColour(r.median);
       p.push(rect({ k: 'rect', x: colX[0], y: y - 7, w: COLS[0].w - 4, h: 13, r: 2, fill: band, opacity: 0.2 }));
-      p.push(text({ x: colX[0] + COLS[0].w - 8, y: y + 2, size: 9.5, anchor: 'end', mono: true,
+      p.push(text({ x: colX[0] + COLS[0].w - 8, y: y + 2, size: 7, anchor: 'end', mono: true,
         fill: C.ink, text: one(r.median) }));
 
       // Counts, with an in-cell bar so the number is drawn as well as printed.
@@ -69,26 +69,24 @@ export function heatmapScene(rows: HeatRow[], n: number, width = 510): Scene {
         const w = COLS[i].w - 4;
         p.push(rect({ k: 'rect', x: colX[i], y: y + 3, w: Math.max(v ? 1.5 : 0, (v / Math.max(1, n)) * w),
           h: 3, r: 1, fill: colour, opacity: 0.65 }));
-        p.push(text({ x: colX[i] + w - 4, y: y + 1, size: 8.5, anchor: 'end', mono: true,
+        p.push(text({ x: colX[i] + w - 4, y: y + 1, size: 6.8, anchor: 'end', mono: true,
           fill: v ? C.ink : C.hair, text: whole(v) }));
       }
-      p.push(text({ x: colX[5] + COLS[5].w - 4, y: y + 1, size: 8.5, anchor: 'end', mono: true,
+      p.push(text({ x: colX[5] + COLS[5].w - 4, y: y + 1, size: 6.8, anchor: 'end', mono: true,
         fill: C.mute, text: one(r.spreadWidth) }));
       if (r.polarised) {
         p.push(rect({ k: 'rect', x: totalW - 22, y: y - 6, w: 20, h: 11, r: 5.5, fill: C.watch, opacity: 0.16 }));
-        p.push(text({ x: totalW - 12, y: y + 2, size: 7.5, anchor: 'middle', fill: C.watch, text: 'two' }));
+        p.push(text({ x: totalW - 12, y: y + 2, size: 5.6, anchor: 'middle', fill: C.watch, text: 'two' }));
       }
       y += rowH;
     }
-    y += 7;
+    y += 4;
   }
 
   const worst = [...rows].sort((a, b) => a.median - b.median)[0];
   if (worst) {
-    // Below the column headers rather than above them, pointing down at the
-    // median column it names. Above, it sat on the headers.
-    p.push(callout({ x: colX[0] + COLS[0].w / 2, y: headH + 13,
-      toX: colX[0] + COLS[0].w / 2, toY: headH + 6,
+    // Above the median column, pointing down at it, clear of every row.
+    p.push(callout({ x: colX[0] + COLS[0].w / 2, y: 12, toX: colX[0] + COLS[0].w / 2, toY: headH - 8,
       text: `lowest: ${worst.executiveName}`.slice(0, 34), anchor: 'middle' }));
   }
 

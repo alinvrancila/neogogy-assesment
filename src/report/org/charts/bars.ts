@@ -19,10 +19,10 @@ export interface DivergingInput {
 }
 
 export function divergingScene(d: DivergingInput): Scene {
-  const W = d.width ?? 524;
-  const H = 108;
+  const W = d.width ?? 430;
+  const H = 92;
   const p: Prim[] = [];
-  const barY = 48, barH = 22;
+  const barY = 40, barH = 18;
   const total = Math.max(1, d.left.n + d.middle.n + d.right.n);
   const w = (k: number) => (k / total) * W;
 
@@ -36,18 +36,18 @@ export function divergingScene(d: DivergingInput): Scene {
     if (sw > 0) {
       p.push(rect({ k: 'rect', x, y: barY, w: sw, h: barH, r: 2, fill: colour, opacity: 0.55 }));
       if (sw > 16) {
-        p.push(text({ x: x + sw / 2, y: barY + 12.5, size: 10.5, anchor: 'middle', mono: true,
+        p.push(text({ x: x + sw / 2, y: barY + 12.5, size: 8, anchor: 'middle', mono: true,
           fill: C.ink, text: whole(seg.n) }));
       }
     }
     x += sw;
   }
 
-  p.push(text({ x: 0, y: barY - 6, size: 8.5, fill: C.mute, text: d.left.label }));
-  p.push(text({ x: W, y: barY - 6, size: 8.5, fill: C.mute, anchor: 'end', text: d.right.label }));
-  p.push(text({ x: W / 2, y: barY + barH + 12, size: 8.5, fill: C.mute, anchor: 'middle', text: d.middle.label }));
-  if (d.left.note) p.push(text({ x: 0, y: barY + barH + 24, size: 8.5, fill: C.mute, text: d.left.note }));
-  if (d.right.note) p.push(text({ x: W, y: barY + barH + 24, size: 8.5, fill: C.mute, anchor: 'end', text: d.right.note }));
+  p.push(text({ x: 0, y: barY - 6, size: 6.8, fill: C.mute, text: d.left.label }));
+  p.push(text({ x: W, y: barY - 6, size: 6.8, fill: C.mute, anchor: 'end', text: d.right.label }));
+  p.push(text({ x: W / 2, y: barY + barH + 12, size: 6.8, fill: C.mute, anchor: 'middle', text: d.middle.label }));
+  if (d.left.note) p.push(text({ x: 0, y: barY + barH + 24, size: 6.4, fill: C.mute, text: d.left.note }));
+  if (d.right.note) p.push(text({ x: W, y: barY + barH + 24, size: 6.4, fill: C.mute, anchor: 'end', text: d.right.note }));
 
   const bigger = d.left.n >= d.right.n ? d.left : d.right;
   const at = d.left.n >= d.right.n ? w(d.left.n) / 2 : W - w(d.right.n) / 2;
@@ -66,17 +66,17 @@ export function divergingScene(d: DivergingInput): Scene {
 export interface ExposureRow { name: string; exposureLabel: string; atOrBelow: number }
 
 export function exposureScene(rows: ExposureRow[], n: number, width = 430): Scene {
-  const W = width, rowH = 40, top = 30;
-  const barX = 178, barW = W - barX - 56;
+  const W = width, rowH = 34, top = 26;
+  const barX = 150, barW = W - barX - 46;
   const p: Prim[] = [];
   rows.forEach((r, i) => {
     const y = top + i * rowH;
-    p.push(text({ x: 0, y: y + 2, size: 9.5, fill: C.ink, text: r.name }));
-    p.push(text({ x: 0, y: y + 12, size: 8, fill: C.mute, text: r.exposureLabel }));
+    p.push(text({ x: 0, y: y + 2, size: 7.4, fill: C.ink, text: r.name }));
+    p.push(text({ x: 0, y: y + 12, size: 6.2, fill: C.mute, text: r.exposureLabel }));
     p.push(rect({ k: 'rect', x: barX, y: y - 6, w: barW, h: 13, r: 2, fill: C.hairSoft, opacity: 0.7 }));
     const w = (r.atOrBelow / Math.max(1, n)) * barW;
     if (w > 0) p.push(rect({ k: 'rect', x: barX, y: y - 6, w: Math.max(2, w), h: 13, r: 2, fill: C.vulnerability, opacity: 0.55 }));
-    p.push(text({ x: W, y: y + 3, size: 9.5, anchor: 'end', mono: true, fill: C.ink,
+    p.push(text({ x: W, y: y + 3, size: 7.4, anchor: 'end', mono: true, fill: C.ink,
       text: `${r.atOrBelow} of ${n}` }));
   });
   const worst = [...rows].sort((a, b) => b.atOrBelow - a.atOrBelow)[0];
@@ -98,18 +98,18 @@ export function exposureScene(rows: ExposureRow[], n: number, width = 430): Scen
 export interface BottleneckRow { name: string; n: number; medianGap: number }
 
 export function bottleneckScene(rows: BottleneckRow[], n: number, width = 430): Scene {
-  const W = width, rowH = 23, top = 32;
-  const barX = 196, barW = W - barX - 74;
+  const W = width, rowH = 19, top = 28;
+  const barX = 168, barW = W - barX - 62;
   const p: Prim[] = [];
   const max = Math.max(1, ...rows.map((r) => r.n));
   rows.forEach((r, i) => {
     const y = top + i * rowH;
-    p.push(text({ x: 0, y: y + 2, size: 9.5, fill: i === 0 ? C.ink : C.mute, weight: i === 0 ? 600 : 400, text: r.name }));
+    p.push(text({ x: 0, y: y + 2, size: 7.4, fill: i === 0 ? C.ink : C.mute, weight: i === 0 ? 600 : 400, text: r.name }));
     const w = Math.max(r.n ? 2 : 0, (r.n / max) * barW);
     p.push(rect({ k: 'rect', x: barX, y: y - 6, w, h: 12, r: 2,
       fill: i === 0 ? C.gate : C.mute, opacity: i === 0 ? 0.6 : 0.3 }));
-    p.push(text({ x: barX + w + 6, y: y + 2, size: 9.5, mono: true, fill: C.ink, text: whole(r.n) }));
-    p.push(text({ x: W, y: y + 2, size: 8.5, anchor: 'end', mono: true, fill: C.mute,
+    p.push(text({ x: barX + w + 6, y: y + 2, size: 7, mono: true, fill: C.ink, text: whole(r.n) }));
+    p.push(text({ x: W, y: y + 2, size: 6.4, anchor: 'end', mono: true, fill: C.mute,
       text: r.medianGap > 0 ? `${r.medianGap} to close` : '' }));
   });
   if (rows[0]) {
@@ -131,22 +131,22 @@ export function bottleneckScene(rows: BottleneckRow[], n: number, width = 430): 
 export interface MirrorRow { name: string; aligned: number; healthier: number; weaker: number }
 
 export function mirrorScene(rows: MirrorRow[], n: number, width = 430): Scene {
-  const W = width, rowH = 21, top = 40;
+  const W = width, rowH = 17, top = 34;
   const mid = W * 0.58, half = W * 0.3;
   const p: Prim[] = [];
-  p.push(text({ x: mid - half, y: 25, size: 8, fill: C.mute, text: 'healthier in situations' }));
-  p.push(text({ x: mid + half, y: 25, size: 8, fill: C.mute, anchor: 'end', text: 'weaker in situations' }));
+  p.push(text({ x: mid - half, y: 25, size: 6.2, fill: C.mute, text: 'healthier in situations' }));
+  p.push(text({ x: mid + half, y: 25, size: 6.2, fill: C.mute, anchor: 'end', text: 'weaker in situations' }));
   const max = Math.max(1, ...rows.flatMap((r) => [r.healthier, r.weaker]));
   rows.forEach((r, i) => {
     const y = top + i * rowH;
-    p.push(text({ x: 0, y: y + 2, size: 9.5, fill: C.ink, text: r.name }));
+    p.push(text({ x: 0, y: y + 2, size: 7, fill: C.ink, text: r.name }));
     const lw = (r.healthier / max) * half, rw = (r.weaker / max) * half;
     if (lw > 0) p.push(rect({ k: 'rect', x: mid - lw, y: y - 5, w: lw, h: 10, r: 2, fill: C.strength, opacity: 0.5 }));
     if (rw > 0) p.push(rect({ k: 'rect', x: mid, y: y - 5, w: rw, h: 10, r: 2, fill: C.developing, opacity: 0.6 }));
-    if (r.healthier) p.push(text({ x: mid - lw - 4, y: y + 2, size: 8.5, anchor: 'end', mono: true, fill: C.mute, text: whole(r.healthier) }));
-    if (r.weaker) p.push(text({ x: mid + rw + 4, y: y + 2, size: 8.5, mono: true, fill: C.mute, text: whole(r.weaker) }));
+    if (r.healthier) p.push(text({ x: mid - lw - 4, y: y + 2, size: 6.4, anchor: 'end', mono: true, fill: C.mute, text: whole(r.healthier) }));
+    if (r.weaker) p.push(text({ x: mid + rw + 4, y: y + 2, size: 6.4, mono: true, fill: C.mute, text: whole(r.weaker) }));
   });
-  p.push(text({ x: mid, y: top + rows.length * rowH + 10, size: 8, anchor: 'middle', fill: C.mute,
+  p.push(text({ x: mid, y: top + rows.length * rowH + 10, size: 6.2, anchor: 'middle', fill: C.mute,
     text: `${n} people, each counted once per capability` }));
   const worst = [...rows].sort((a, b) => b.weaker - a.weaker)[0];
   if (worst) {

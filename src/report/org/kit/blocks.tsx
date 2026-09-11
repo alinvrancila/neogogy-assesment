@@ -18,25 +18,15 @@ const T = {
   oxblood: '#7B2B32', paper: '#F6EDE4', page: '#FBF7F1', teal: '#2F6F62',
 };
 
-/**
- * The page's type scale.
- *
- * Four ranks, each a clear jump: the chapter title, the section heading, the
- * running text, and the secondary text under it. Nothing a reader has to read
- * is set below nine and a half points, and the line heights are open enough
- * that a four sentence block does not read as a wall.
- */
 export const S = StyleSheet.create({
-  h1: { fontFamily: 'SourceSerif', fontWeight: 600, fontSize: 23, color: T.oxblood,
-    marginBottom: 10, lineHeight: 1.18 },
-  h2: { fontFamily: 'SourceSerif', fontWeight: 600, fontSize: 15, color: T.ink,
-    marginBottom: 9, lineHeight: 1.25 },
-  eyebrow: { fontFamily: 'PlexMono', fontWeight: 500, fontSize: 8.5, letterSpacing: 1.5,
-    textTransform: 'uppercase', color: T.gold, marginBottom: 9 },
-  body: { fontSize: 10.5, lineHeight: 1.62, color: T.ink },
-  muted: { fontSize: 9.5, lineHeight: 1.58, color: T.mute },
-  blockLabel: { fontFamily: 'PlexSans', fontWeight: 600, fontSize: 9, color: T.ink, marginBottom: 3 },
-  rule: { borderTopWidth: 1, borderTopColor: T.hair, marginTop: 16, marginBottom: 12 },
+  h1: { fontFamily: 'SourceSerif', fontWeight: 600, fontSize: 19, color: T.oxblood, marginBottom: 6 },
+  h2: { fontFamily: 'SourceSerif', fontWeight: 600, fontSize: 12.5, color: T.ink, marginBottom: 5 },
+  eyebrow: { fontFamily: 'PlexMono', fontWeight: 500, fontSize: 7.4, letterSpacing: 1.4,
+    textTransform: 'uppercase', color: T.gold, marginBottom: 7 },
+  body: { fontSize: 9.2, lineHeight: 1.55, color: T.ink },
+  muted: { fontSize: 8.2, lineHeight: 1.5, color: T.mute },
+  blockLabel: { fontFamily: 'PlexSans', fontWeight: 600, fontSize: 7.6, color: T.ink, marginBottom: 2 },
+  rule: { borderTopWidth: 1, borderTopColor: T.hair, marginTop: 10, marginBottom: 8 },
 });
 
 /**
@@ -53,9 +43,9 @@ export const Explain = ({ i, wide }: { i: Interpretation; wide?: boolean }) => {
     [BLOCK_LABELS[3], i.recommendedResponse],
   ];
   const col = (from: number, to: number) => (
-    <View style={{ flex: 1, paddingRight: 20 }}>
+    <View style={{ flex: 1, paddingRight: 12 }}>
       {items.slice(from, to).map(([label, copy]) => (
-        <View key={label} style={{ marginBottom: 12 }}>
+        <View key={label} style={{ marginBottom: 7 }}>
           <Text style={S.blockLabel}>{label}</Text>
           <Text style={S.muted}>{copy}</Text>
         </View>
@@ -68,7 +58,7 @@ export const Explain = ({ i, wide }: { i: Interpretation; wide?: boolean }) => {
       <View style={{ flexDirection: 'row' }}>
         {wide ? <>{col(0, 2)}{col(2, 4)}</> : col(0, 4)}
       </View>
-      {i.caveat ? <Text style={{ ...S.muted, fontSize: 9, marginTop: 4 }}>{i.caveat}</Text> : null}
+      {i.caveat ? <Text style={{ ...S.muted, fontSize: 7.6, marginTop: 2 }}>{i.caveat}</Text> : null}
     </View>
   );
 };
@@ -77,53 +67,10 @@ export const Explain = ({ i, wide }: { i: Interpretation; wide?: boolean }) => {
  * A chart with its explanation, as one indivisible layout unit.
  */
 export const Block = ({ scene, i, wide }: { scene: Scene; i: Interpretation; wide?: boolean }) => (
-  <View style={{ marginBottom: 26 }} wrap={false} minPresenceAhead={60}>
+  <View style={{ marginBottom: 16 }} wrap={false}>
     <Text style={S.h2}>{scene.title}</Text>
-    <View style={{ marginBottom: 4 }}><SceneView scene={scene} /></View>
-    <Explain i={i} wide={wide} />
-  </View>
-);
-
-/**
- * A repeated card: the drawing, and one sentence of meaning.
- *
- * The brief allows this where a chart is small, and the report was not taking
- * it. Ten dimension cards each carried the full four blocks, which came to
- * twelve thousand characters, and the "what management should do" block was
- * byte for byte identical on all ten. A reader who has read it once has read it
- * ten times.
- *
- * The comparison across dimensions is the heatmap's job. These cards carry the
- * reading for one dimension, and how to read a card is said once at the top of
- * the chapter by HowToReadOnce.
- */
-export const CompactBlock = ({ scene, line, note }: {
-  scene: Scene; line: string; note?: string;
-}) => (
-  <View style={{ marginBottom: 14 }} wrap={false} minPresenceAhead={40}>
-    <Text style={{ ...S.h2, fontSize: 12.5, marginBottom: 6 }}>{scene.title}</Text>
     <SceneView scene={scene} />
-    <Text style={{ ...S.muted, marginTop: 5 }}>{line}</Text>
-    {note ? <Text style={{ ...S.muted, fontSize: 9, marginTop: 3 }}>{note}</Text> : null}
-  </View>
-);
-
-/**
- * A chapter's opening, held together.
- *
- * With the chapters flowing rather than each taking a fresh sheet, a title
- * could otherwise land at the foot of a page with its first chart overleaf.
- */
-export const ChapterOpen = ({ children }: { children: React.ReactNode }) => (
-  <View wrap={false} style={{ marginTop: 6 }}>{children}</View>
-);
-
-/** Said once, for a chapter of repeated cards, instead of once per card. */
-export const HowToReadOnce = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <View wrap={false} style={{ borderLeftWidth: 3, borderLeftColor: T.hair, paddingLeft: 13,
-    paddingVertical: 6, marginBottom: 18 }}>
-    <Text style={S.blockLabel}>{title}</Text>
-    <Text style={S.muted}>{children}</Text>
+    <Explain i={i} wide={wide} />
   </View>
 );
 
@@ -132,14 +79,14 @@ export const ChapterStrip = ({ question, answer, figure, figureLabel, mini }: {
   question: string; answer: string; figure: string; figureLabel: string; mini?: Scene;
 }) => (
   <View style={{ flexDirection: 'row', alignItems: 'flex-start', backgroundColor: T.paper,
-    borderRadius: 6, padding: 18, marginBottom: 22 }} wrap={false}>
-    <View style={{ flex: 1, paddingRight: 18 }}>
-      <Text style={{ ...S.muted, fontSize: 9, marginBottom: 6 }}>{question}</Text>
-      <Text style={{ ...S.body, fontSize: 12, lineHeight: 1.5 }}>{answer}</Text>
+    borderRadius: 6, padding: 12, marginBottom: 14 }} wrap={false}>
+    <View style={{ flex: 1, paddingRight: 14 }}>
+      <Text style={{ ...S.muted, fontSize: 7.6, marginBottom: 3 }}>{question}</Text>
+      <Text style={{ ...S.body, fontSize: 10 }}>{answer}</Text>
     </View>
-    <View style={{ width: 118, alignItems: 'flex-end' }}>
-      <Text style={{ fontFamily: 'SourceSerif', fontWeight: 600, fontSize: 28, color: T.oxblood }}>{figure}</Text>
-      <Text style={{ ...S.muted, fontSize: 8.5, textAlign: 'right', lineHeight: 1.4 }}>{figureLabel}</Text>
+    <View style={{ width: 96, alignItems: 'flex-end' }}>
+      <Text style={{ fontFamily: 'SourceSerif', fontWeight: 600, fontSize: 22, color: T.oxblood }}>{figure}</Text>
+      <Text style={{ ...S.muted, fontSize: 6.8, textAlign: 'right' }}>{figureLabel}</Text>
     </View>
     {mini ? <View style={{ marginLeft: 8 }}><SceneView scene={mini} /></View> : null}
   </View>
@@ -147,13 +94,13 @@ export const ChapterStrip = ({ question, answer, figure, figureLabel, mini }: {
 
 /** The one-line summary box, and where the chapter's data comes from. */
 export const ChapterClose = ({ line, source }: { line: string; source: string }) => (
-  <View wrap={false} style={{ marginTop: 12 }}>
-    <View style={{ borderLeftWidth: 3, borderLeftColor: T.gold, paddingLeft: 13, paddingVertical: 8 }}>
-      <Text style={{ ...S.body, fontSize: 11 }}>
+  <View wrap={false} style={{ marginTop: 6 }}>
+    <View style={{ borderLeftWidth: 2, borderLeftColor: T.gold, paddingLeft: 9, paddingVertical: 5 }}>
+      <Text style={{ ...S.body, fontSize: 9 }}>
         <Text style={{ fontWeight: 600 }}>In one line: </Text>{line}
       </Text>
     </View>
-    <Text style={{ ...S.muted, fontSize: 8.5, marginTop: 8 }}>
+    <Text style={{ ...S.muted, fontSize: 6.8, marginTop: 5 }}>
       Where this comes from: {source}
     </Text>
   </View>

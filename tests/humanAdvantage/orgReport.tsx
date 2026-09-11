@@ -85,18 +85,10 @@ const allText = perPage.flatMap((w) => w.text).join(' · ');
 
 head('Every chapter is present, in order, and nothing failed to render');
 {
-  //
-  // Three Page elements: the cover, the contents, and one flowing sheet that
-  // carries every chapter and the appendix. Chapters used to take a sheet each,
-  // which left twenty-two partial pages. What matters is that every chapter is
-  // present and in order, which is asserted below, not how many Page elements
-  // there are.
-  //
-  ok('the document assembles', pages.length === 3,
-    `${pages.length} Page elements`);
-  ok('and the chapters are on the flowing sheet rather than one sheet each',
-    perPage[2].scenes > CHAPTER_META.length,
-    `${perPage[2]?.scenes} visuals on the flowing sheet`);
+  // Three Page elements: the cover, the contents, and one flowing sheet
+  // carrying every chapter and the appendix. What matters is that every chapter
+  // is present and in order, which is asserted below, not how many sheets.
+  ok('the document assembles', pages.length === 3, `${pages.length} Page elements`);
   ok('no component failed to render',
     perPage.every((w) => w.unrendered.length === 0),
     perPage.flatMap((w) => w.unrendered).slice(0, 3).join(' | '));
@@ -117,21 +109,17 @@ head('Every chapter is present, in order, and nothing failed to render');
 
 head('No page in the chapters is without a visual');
 {
-  //
+  // The cover carries the partnership strip, the appendix is allowed to be text-led.
   // With the chapters flowing, a visual cannot be attributed to a sheet without
-  // laying the document out, so this checks the thing that actually matters:
-  // every chapter carries at least one visual of its own.
-  //
+  // laying the document out, so each chapter is asked directly.
   const bare: number[] = [];
   for (const { n, C } of CHAPTER_COMPONENTS) {
-    const w = walk(C({ a: A, width: 524 }), fresh());
-    if (w.scenes === 0) bare.push(n);
+    if (walk(C({ a: A, width: 524 }), fresh()).scenes === 0) bare.push(n);
   }
   ok('every chapter carries at least one visual', bare.length === 0,
     bare.map((n) => `chapter ${n}`).join(', '));
   ok('and the report carries a substantial number in total',
-    perPage[2].scenes >= CHAPTER_META.length * 1.5,
-    `${perPage[2].scenes} visuals`);
+    perPage[2].scenes >= CHAPTER_META.length * 1.5, `${perPage[2].scenes} visuals`);
 }
 
 head('Every explanatory block is present, with the fixed labels in order');

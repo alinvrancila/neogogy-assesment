@@ -34,14 +34,14 @@ export interface JourneyInput {
 
 export function journeyScene(d: JourneyInput): Scene {
   const W = d.width ?? 500;
-  const labelW = 156, countW = 78;
+  const labelW = 132, countW = 64;
   const trackX = labelW, trackW = W - labelW - countW - 6;
-  const rowH = 25, top = 46;
-  const H = top + d.stages.length * rowH + 42;
+  const rowH = 21, top = 40;
+  const H = top + d.stages.length * rowH + 34;
   const p: Prim[] = [];
   const maxN = Math.max(1, ...d.stages.map((s) => s.n));
 
-  p.push(text({ x: W, y: 12, size: 9.5, fill: C.mute, anchor: 'end', mono: true,
+  p.push(text({ x: W, y: 12, size: 7, fill: C.mute, anchor: 'end', mono: true,
     text: `${d.n} people` }));
 
   for (let i = 0; i < d.stages.length; i++) {
@@ -49,11 +49,11 @@ export function journeyScene(d: JourneyInput): Scene {
     const y = top + i * rowH;
     const here = s.stage === d.centreStage;
     // The stage badge, one style everywhere.
-    p.push(rect({ k: 'rect', x: 0, y: y - 10, w: 18, h: 16, r: 3,
+    p.push(rect({ k: 'rect', x: 0, y: y - 9, w: 15, h: 14, r: 3,
       fill: here ? C.strength : C.hairSoft, opacity: here ? 0.9 : 0.7 }));
-    p.push(text({ x: 9, y: y + 2, size: 9.5, anchor: 'middle', mono: true,
+    p.push(text({ x: 7.5, y: y + 1, size: 7, anchor: 'middle', mono: true,
       fill: here ? C.white : C.mute, text: String(s.stage) }));
-    p.push(text({ x: 24, y: y + 2, size: 10.5, fill: here ? C.ink : C.mute,
+    p.push(text({ x: 20, y: y + 1, size: 7.6, fill: here ? C.ink : C.mute,
       weight: here ? 600 : 400, text: s.stageName }));
 
     // The count bar, so the number is drawn and not only printed.
@@ -65,17 +65,17 @@ export function journeyScene(d: JourneyInput): Scene {
     }
     // One anonymous mark per person, stacked inside the band.
     for (let k = 0; k < Math.min(s.n, 28); k++) {
-      p.push(circle({ cx: trackX + 6 + k * 6.2, cy: y, r: 2, fill: here ? C.strengthDeep : C.mute, opacity: 0.75 }));
+      p.push(circle({ cx: trackX + 5 + k * 5.4, cy: y, r: 1.7, fill: here ? C.strengthDeep : C.mute, opacity: 0.75 }));
     }
-    if (s.n > 28) p.push(text({ x: trackX + 6 + 28 * 6.2 + 5, y: y + 3, size: 8, fill: C.mute, text: `+${s.n - 28}` }));
+    if (s.n > 28) p.push(text({ x: trackX + 5 + 28 * 5.4 + 4, y: y + 2, size: 6, fill: C.mute, text: `+${s.n - 28}` }));
 
-    p.push(text({ x: W, y: y + 1, size: 9.5, anchor: 'end', mono: true, fill: s.n ? C.ink : C.hair,
+    p.push(text({ x: W, y: y + 1, size: 7, anchor: 'end', mono: true, fill: s.n ? C.ink : C.hair,
       text: s.n ? `${s.n} · ${Math.round(s.share)}%` : '0' }));
     if (s.gate && s.n > 0) {
-      p.push(text({ x: trackX + trackW * 0.60, y: y + 1, size: 8, fill: C.gate,
+      p.push(text({ x: trackX + trackW * 0.60, y: y + 1, size: 6.2, fill: C.gate,
         text: `held by ${s.gate}`.slice(0, 34) }));
     } else if (s.movable > 0) {
-      p.push(text({ x: trackX + trackW * 0.60, y: y + 1, size: 8, fill: C.mute,
+      p.push(text({ x: trackX + trackW * 0.60, y: y + 1, size: 6.2, fill: C.mute,
         text: `${s.movable} close to the next stage` }));
     }
   }
@@ -91,7 +91,7 @@ export function journeyScene(d: JourneyInput): Scene {
   p.push(rect({ k: 'rect', x: trackX + x(d.q1), y: ry - 3.5, w: Math.max(2, x(d.q3) - x(d.q1)), h: 7,
     r: 2, fill: C.strength, opacity: 0.25 }));
   p.push(circle({ cx: trackX + x(d.median), cy: ry, r: 3.6, fill: C.strength }));
-  p.push(text({ x: 0, y: ry + 3, size: 8.5, fill: C.mute, text: 'the index, 0 to 100' }));
+  p.push(text({ x: 0, y: ry + 3, size: 6.6, fill: C.mute, text: 'the index, 0 to 100' }));
   p.push(callout({ x: trackX + x(d.median), y: ry + 20, toX: trackX + x(d.median), toY: ry + 4.5,
     text: `the middle person, ${one(d.median)}`, anchor: 'middle' }));
 

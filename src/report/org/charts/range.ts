@@ -77,16 +77,16 @@ export function rangeScene(d: RangeInput): Scene {
 
   // Scale labels.
   for (const v of [0, t.watch, t.strength, 100]) {
-    p.push(text({ x: at(v), y: axisY + 21, text: String(v), size: 8.5, fill: C.mute,
+    p.push(text({ x: at(v), y: axisY + 21, text: String(v), size: 6.4, fill: C.mute,
       anchor: v === 0 ? 'start' : v === 100 ? 'end' : 'middle', mono: true }));
   }
   p.push(text({ x: at(t.vulnerability), y: axisY + 30, text: 'vulnerability line',
-    size: 8, fill: C.vulnerability, anchor: 'middle' }));
+    size: 6, fill: C.vulnerability, anchor: 'middle' }));
 
   for (const m of d.stageMarks ?? []) {
     p.push(line({ x1: at(m.at), y1: axisY + 12, x2: at(m.at), y2: axisY + 16,
       stroke: C.hair, strokeWidth: 0.8 }));
-    p.push(text({ x: at(m.at), y: axisY + 38, text: m.label, size: 7.5, fill: C.mute, anchor: 'middle' }));
+    p.push(text({ x: at(m.at), y: axisY + 38, text: m.label, size: 5.6, fill: C.mute, anchor: 'middle' }));
   }
 
   //
@@ -97,11 +97,11 @@ export function rangeScene(d: RangeInput): Scene {
   // then sat on the same baseline and overlapped.
   //
   p.push(text({
-    x: W - padR, y: 12, anchor: 'end', mono: true, size: 9.5, fill: C.mute,
+    x: W - padR, y: 12, anchor: 'end', mono: true, size: 7.2, fill: C.mute,
     text: `median ${one(d.median)} · middle half ${one(d.q1)} to ${one(d.q3)} · reaches ${one(d.min)} to ${one(d.max)}`,
   }));
   if (d.lowerIsHealthier) {
-    p.push(text({ x: padL, y: 12, text: 'lower is healthier', size: 9.5, fill: C.ink, weight: 700 }));
+    p.push(text({ x: padL, y: 12, text: 'lower is healthier', size: 7, fill: C.ink, weight: 700 }));
   }
 
   if (!d.quiet) {
