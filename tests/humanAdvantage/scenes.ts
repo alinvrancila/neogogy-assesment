@@ -10,6 +10,9 @@
 
 import { rangeScene } from '@/report/org/charts/range';
 import { quadrantScene } from '@/report/org/charts/quadrant';
+import { journeyScene } from '@/report/org/charts/journey';
+import { heatmapScene } from '@/report/org/charts/heatmap';
+import { divergingScene, exposureScene, bottleneckScene, mirrorScene } from '@/report/org/charts/bars';
 import { CALLOUT_MAX, CALLOUT_MAX_WORDS, countCallouts, C, type Prim, type Scene } from '@/report/org/scene';
 
 let pass = 0, fail = 0;
@@ -44,7 +47,67 @@ const QUAD = quadrantScene({
     { key: 'll', at: 'bl', title: 'Build the foundation', n: 2, share: 11.8, response: 'Both, together.' },
   ],
 });
-const ALL: Array<[string, Scene]> = [['range', RANGE], ['reversed range', REVERSED], ['quadrant', QUAD]];
+const JOURNEY = journeyScene({
+  n: 17, median: 58.9, q1: 52, q3: 66, centreStage: 5,
+  stages: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((stage) => ({
+    stage, stageName: `Stage ${stage}`, short: 'x',
+    minIndex: [0, 12, 24, 35, 46, 56, 66, 75, 84, 92][stage - 1],
+    n: [1, 0, 2, 3, 6, 3, 1, 1, 0, 0][stage - 1],
+    share: ([1, 0, 2, 3, 6, 3, 1, 1, 0, 0][stage - 1] / 17) * 100,
+    movable: stage === 5 ? 2 : 0,
+    gate: stage === 6 ? 'Checking Before You Act' : undefined,
+  })),
+});
+const HEAT = heatmapScene([
+  { executiveName: 'Decision Ownership', canonicalName: 'Human Agency', cluster: 'judgment and protection',
+    median: 61.2, strong: 5, developing: 9, watch: 3, vulnerable: 4, spreadWidth: 18.4, polarised: true, n: 17 },
+  { executiveName: 'Checking Before You Act', canonicalName: 'Verification and Judgment', cluster: 'judgment and protection',
+    median: 42.7, strong: 2, developing: 10, watch: 5, vulnerable: 7, spreadWidth: 22.1, polarised: false, n: 17 },
+  { executiveName: 'What You Keep', canonicalName: 'Learning Transfer', cluster: 'capability that lasts',
+    median: 70.3, strong: 11, developing: 5, watch: 1, vulnerable: 1, spreadWidth: 12.0, polarised: false, n: 17 },
+], 17);
+const DIVERGING = divergingScene({
+  title: 'Your larger risk is over-reliance, not avoidance',
+  left: { label: 'towards disconnection', n: 3, note: 'needs more real practice' },
+  middle: { label: 'balanced', n: 6 },
+  right: { label: 'towards dependence', n: 8, note: 'needs guardrails' },
+  n: 17,
+});
+const EXPOSURE = exposureScene([
+  { name: 'The Line You Hold', exposureLabel: 'confidential information', atOrBelow: 5 },
+  { name: 'Checking Before You Act', exposureLabel: 'unverified claims', atOrBelow: 7 },
+  { name: 'Decision Ownership', exposureLabel: 'delegated decisions', atOrBelow: 4 },
+], 17);
+const BOTTLENECK = bottleneckScene([
+  { name: 'Checking Before You Act', n: 7, medianGap: 12.5 },
+  { name: 'Decision Ownership', n: 5, medianGap: 8.0 },
+  { name: 'Practical AI Fluency', n: 3, medianGap: 4.5 },
+], 17);
+const MIRROR = mirrorScene([
+  { name: 'Decision Ownership', aligned: 9, healthier: 3, weaker: 5 },
+  { name: 'Checking Before You Act', aligned: 7, healthier: 2, weaker: 8 },
+  { name: 'What You Keep', aligned: 12, healthier: 4, weaker: 1 },
+], 17);
+
+// A large cohort, because the small one cannot overflow anything and therefore
+// cannot test that a chart stays inside its own canvas. A stage holding 140
+// people is what the density marks have to survive.
+const BIG = journeyScene({
+  n: 240, median: 61, q1: 50, q3: 72, centreStage: 5,
+  stages: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((stage) => ({
+    stage, stageName: `Stage ${stage}`, short: 'x',
+    minIndex: [0, 12, 24, 35, 46, 56, 66, 75, 84, 92][stage - 1],
+    n: [4, 6, 12, 30, 140, 30, 12, 4, 2, 0][stage - 1],
+    share: ([4, 6, 12, 30, 140, 30, 12, 4, 2, 0][stage - 1] / 240) * 100,
+    movable: 0,
+  })),
+});
+
+const ALL: Array<[string, Scene]> = [
+  ['range', RANGE], ['reversed range', REVERSED], ['quadrant', QUAD],
+  ['journey', JOURNEY], ['journey at scale', BIG], ['heatmap', HEAT], ['diverging', DIVERGING],
+  ['exposure', EXPOSURE], ['bottleneck', BOTTLENECK], ['mirror', MIRROR],
+];
 
 head('Every chart annotates itself');
 for (const [name, s] of ALL) {
@@ -174,6 +237,17 @@ head('The two renderers agree, because there is one geometry');
   ok('the same input gives the same scene', JSON.stringify(a) === JSON.stringify(b));
   ok('a different input gives a different scene',
     JSON.stringify(a) !== JSON.stringify(rangeScene({ title: 'x', median: 51, q1: 40, q3: 60, min: 10, max: 90, n: 12 })));
+}
+
+head('A crowded stage is summarised rather than drawn off the page');
+{
+  const marks = BIG.prims.filter((p) => p.k === 'circle').length;
+  ok('the density marks are capped', marks < 240, `${marks} marks for 240 people`);
+  const copy = BIG.prims.filter((p): p is Extract<Prim, { k: 'text' }> => p.k === 'text').map((t) => t.text);
+  ok('and the remainder is counted in words', copy.some((t) => /^\+\d+$/.test(t)),
+    copy.filter((t) => t.startsWith('+')).join(', '));
+  ok('the stage counts are still printed in full',
+    copy.some((t) => /140/.test(t)), copy.join(' | ').slice(0, 200));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
