@@ -232,7 +232,8 @@ export interface SegmentReading {
   needs?: number;
   index?: Spread;
   modalStage?: { stage: number; stageName: string; n: number };
-  constraint?: { name: string; n: number };
+  /** Carries the construct so a report can name it in its own vocabulary. */
+  constraint?: { construct: ConstructId; name: string; n: number };
 }
 
 export interface GroupResult {
@@ -1127,6 +1128,6 @@ function buildSegment(group: GroupMember[], lead: Persona) {
   return {
     index,
     modalStage: { stage, stageName: stageName(lead, stage), n: c },
-    constraint: top ? { name: CONSTRUCTS[top[0]].name, n: top[1] } : undefined,
+    constraint: top ? { construct: top[0], name: CONSTRUCTS[top[0]].name, n: top[1] } : undefined,
   };
 }

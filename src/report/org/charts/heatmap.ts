@@ -41,8 +41,6 @@ export function heatmapScene(rows: HeatRow[], n: number, width = 510): Scene {
   for (const c of COLS) { colX.push(cx); cx += c.w; }
   const totalW = cx + 24;
 
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: 'Where your workforce is strong, developing, vulnerable and divided' }));
 
   COLS.forEach((c, i) => {
     p.push(text({ x: colX[i] + c.w - 4, y: headH, size: 6.2, fill: C.mute, anchor: 'end', text: c.label }));
@@ -54,7 +52,7 @@ export function heatmapScene(rows: HeatRow[], n: number, width = 510): Scene {
     y += 13;
     for (const r of rows.filter((x) => x.cluster === cluster)) {
       p.push(text({ x: 0, y: y + 2, size: 7.4, fill: C.ink, text: r.executiveName }));
-      p.push(text({ x: 0, y: y + 10, size: 5.8, fill: C.hair, text: r.canonicalName }));
+      p.push(text({ x: 0, y: y + 10, size: 5.8, fill: C.mute, text: r.canonicalName }));
 
       // The median cell carries the band colour and the number.
       const band = bandColour(r.median);
@@ -87,8 +85,9 @@ export function heatmapScene(rows: HeatRow[], n: number, width = 510): Scene {
 
   const worst = [...rows].sort((a, b) => a.median - b.median)[0];
   if (worst) {
-    p.push(callout({ x: nameW - 6, y: headH - 10, toX: nameW - 6, toY: headH - 4,
-      text: `lowest median: ${worst.executiveName}`, anchor: 'end' }));
+    // Above the median column, pointing down at it, clear of every row.
+    p.push(callout({ x: colX[0] + COLS[0].w / 2, y: 12, toX: colX[0] + COLS[0].w / 2, toY: headH - 8,
+      text: `lowest: ${worst.executiveName}`.slice(0, 34), anchor: 'middle' }));
   }
 
   const strong = rows.filter((r) => r.median >= 65).length;

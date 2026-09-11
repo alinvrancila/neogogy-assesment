@@ -49,8 +49,6 @@ export function medianIllustrationScene(width = 430): Scene {
   const values = [31, 38, 44, 49, 55, 58, 64, 71, 83];
   const gap = Math.min(30, (W - 40) / values.length);
   const startX = 12;
-  p.push(text({ x: 0, y: 12, size: 8.4, weight: 600, fill: C.ink,
-    text: 'The median is the person standing in the middle' }));
   values.forEach((v, i) => {
     const cx = startX + i * gap, cy = 36;
     const isMid = i === 4;
@@ -135,7 +133,6 @@ export function useBarScene(rows: Array<{ label: string; n: number; share: numbe
   const barX = 96, barW = W - barX - 58;
   const p: Prim[] = [];
   const max = Math.max(1, ...rows.map((r) => r.n));
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink, text: 'How much AI your people report using' }));
   rows.forEach((r, i) => {
     const y = top + i * rowH;
     p.push(text({ x: 0, y: y + 2, size: 7.2, fill: C.ink, text: r.label }));

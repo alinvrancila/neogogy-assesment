@@ -40,7 +40,19 @@ export function scorecardScene(items: ScoreCardItem[], width = 510): Scene {
       p.push(rect({ k: 'rect', x: cx + 10, y: cy + 46, w: Math.max(1.5, ((cw - 20) * it.fill) / 100), h: 3, r: 1.5,
         fill: bandColour(it.fill) }));
     }
-    p.push(text({ x: cx + 10, y: cy + 60, size: 6.2, fill: C.mute, text: it.meaning.slice(0, 62) }));
+    // Wrapped on a word boundary rather than cut at a character count: the
+    // previous version sliced at 62 characters and still overflowed the card,
+    // so a card read "how this work is going to chang".
+    const words = it.meaning.split(' ');
+    const lines: string[] = []; let line = '';
+    const maxChars = Math.floor((cw - 20) / 2.9);
+    for (const word of words) {
+      if ((line + ' ' + word).trim().length > maxChars) { if (line) lines.push(line); line = word; }
+      else line = (line + ' ' + word).trim();
+      if (lines.length === 2) break;
+    }
+    if (line && lines.length < 2) lines.push(line);
+    lines.forEach((l, k) => p.push(text({ x: cx + 10, y: cy + 58 + k * 8, size: 6.2, fill: C.mute, text: l })));
   });
   return {
     w: width, h: rows * (ch + gap) - gap, prims: p,
@@ -57,8 +69,6 @@ export interface StrengthItem { signal: string; whyItMatters: string; preserve: 
 export function strengthScene(items: StrengthItem[], width = 510): Scene {
   const W = width, ch = 62, gap = 7;
   const p: Prim[] = [];
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: 'What your workforce is already doing well' }));
   items.forEach((it, i) => {
     const y = 22 + i * (ch + gap);
     p.push(rect({ k: 'rect', x: 0, y, w: W, h: ch, r: 5, fill: C.strength, opacity: 0.07 }));
@@ -88,8 +98,6 @@ export function profileGridScene(cells: ProfileCell[], n: number, width = 510): 
   const cols = 3, gap = 7;
   const cw = (width - gap * (cols - 1)) / cols, ch = 52;
   const p: Prim[] = [];
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: 'How your workforce currently relates to AI' }));
   cells.forEach((c, i) => {
     const x = (i % cols) * (cw + gap);
     const y = 22 + Math.floor(i / cols) * (ch + gap);
@@ -128,8 +136,6 @@ export function cohortScene(items: CohortItem[], n: number, width = 510): Scene 
   const W = width, rowH = 46;
   const p: Prim[] = [];
   const max = Math.max(1, ...items.map((c) => c.n));
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: 'Your workforce, grouped by what it needs next' }));
   items.forEach((c, i) => {
     const y = 24 + i * rowH;
     p.push(rect({ k: 'rect', x: 0, y, w: W, h: rowH - 6, r: 4, fill: C.hairSoft, opacity: 0.45 }));
@@ -165,7 +171,6 @@ export function practiceScene(theme: string, items: PracticeItem[], n: number, w
   const barX = 214, barW = W - barX - 78;
   const p: Prim[] = [];
   const max = Math.max(1, ...items.map((x) => x.n));
-  p.push(text({ x: 0, y: 12, size: 8.4, weight: 600, fill: C.ink, text: theme }));
   items.forEach((it, i) => {
     const y = top + i * rowH;
     p.push(text({ x: 0, y: y + 2, size: 7.2, fill: C.ink, text: it.capability.slice(0, 44) }));
@@ -192,8 +197,6 @@ export function practiceScene(theme: string, items: PracticeItem[], n: number, w
 export function moduleScene(items: Array<{ name: string; whatItWouldAdd: string }>, width = 510): Scene {
   const W = width, ch = 48, gap = 6;
   const p: Prim[] = [];
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: 'What the next measurement layer would add' }));
   items.forEach((m, i) => {
     const y = 22 + i * (ch + gap);
     p.push(rect({ k: 'rect', x: 0, y, w: W, h: ch, r: 4, fill: C.hairSoft, opacity: 0.35,

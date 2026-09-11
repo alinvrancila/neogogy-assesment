@@ -15,8 +15,6 @@ export interface StageRow {
 export function stageTableScene(rows: StageRow[], n: number, width = 510): Scene {
   const W = width, rowH = 34, top = 28;
   const p: Prim[] = [];
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: 'What each stage means for your business, and what people there need next' }));
   rows.forEach((r, i) => {
     const y = top + i * rowH;
     if (r.present) p.push(rect({ k: 'rect', x: 0, y: y - 8, w: W, h: rowH - 4, r: 3, fill: C.hairSoft, opacity: 0.4 }));
@@ -52,9 +50,8 @@ export function stageTableScene(rows: StageRow[], n: number, width = 510): Scene
 export interface RegisterRow { exposure: string; dimension: string; atOrBelow: number; practice: string }
 
 export function registerScene(rows: RegisterRow[], n: number, width = 510): Scene {
-  const W = width, rowH = 27, top = 34;
+  const W = width, rowH = 27, top = 40;
   const p: Prim[] = [];
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink, text: 'The exposure register' }));
   p.push(text({ x: 0, y: 24, size: 6, fill: C.mute, text: 'exposure' }));
   p.push(text({ x: 136, y: 24, size: 6, fill: C.mute, text: 'capability' }));
   p.push(text({ x: 256, y: 24, size: 6, fill: C.mute, text: 'people at or below 45' }));
@@ -72,10 +69,13 @@ export function registerScene(rows: RegisterRow[], n: number, width = 510): Scen
     p.push(text({ x: 326, y: y + 4, size: 6.6, mono: true, fill: C.ink, text: `${r.atOrBelow} of ${n}` }));
     p.push(text({ x: 392, y: y + 4, size: 6.2, fill: C.mute, text: r.practice.slice(0, 30) }));
   });
+  // Anchored to the row it names, to the right of the practice column, rather
+  // than floating over the column headers.
   const worst = [...rows].sort((a, b) => b.atOrBelow - a.atOrBelow)[0];
   if (worst) {
-    p.push(callout({ x: 256, y: top - 16, toX: 262, toY: top - 9,
-      text: `largest: ${worst.exposure.toLowerCase()}` }));
+    const wy = top + rows.indexOf(worst) * rowH;
+    p.push(callout({ x: W - 4, y: wy - 10, toX: 320, toY: wy, anchor: 'end',
+      text: `largest: ${worst.exposure.toLowerCase()}`.slice(0, 34) }));
   }
   return {
     w: W, h: top + rows.length * rowH + 4, prims: p, title: 'The exposure register',
@@ -95,8 +95,6 @@ export function segmentScene(panels: SegmentPanel[], width = 510): Scene {
   const W = width, ch = 46, gap = 6, cols = 2;
   const cw = (W - gap) / cols;
   const p: Prim[] = [];
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: 'Which parts of your organisation can be read separately' }));
   panels.forEach((s, i) => {
     const x = (i % cols) * (cw + gap);
     const y = 22 + Math.floor(i / cols) * (ch + gap);
@@ -156,7 +154,6 @@ export function waveScene(rows: Array<{ name: string; before: number; after: num
   const W = width, rowH = 20, top = 26;
   const barX = 150, barW = W - barX - 70;
   const p: Prim[] = [];
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink, text: 'What moved since the last wave' }));
   rows.forEach((r, i) => {
     const y = top + i * rowH;
     const up = r.after >= r.before;

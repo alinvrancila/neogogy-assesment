@@ -898,12 +898,13 @@ function GroupReportPanel(
     else setSaved('Cover saved. It appears on the next report generated.');
   };
 
-  const generate = async () => {
+  const generate = async (version: 1 | 2 = 1, size: 'Letter' | 'A4' = 'Letter') => {
     setBusy(true);
     setError(null);
     try {
       const qs = new URLSearchParams({ domain, label: label.trim() || domain });
       if (persona) qs.set('persona', persona);
+      if (version === 2) { qs.set('v', '2'); qs.set('size', size); }
       const res = await fetch(`/api/admin/org-report?${qs.toString()}`, { credentials: 'include' });
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: `Request failed (${res.status})` }));
@@ -913,7 +914,8 @@ function GroupReportPanel(
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${(label.trim() || domain).replace(/[^a-z0-9]+/gi, '_')}_Group_Report.pdf`;
+      a.download = `${(label.trim() || domain).replace(/[^a-z0-9]+/gi, '_')}`
+        + `${version === 2 ? '_Human_Advantage_Report' : '_Group_Report'}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -949,13 +951,27 @@ function GroupReportPanel(
             <option value="business">Business owners</option>
           </select>
         </label>
-        <button onClick={generate} disabled={busy}
+        <button onClick={() => generate(2, 'Letter')} disabled={busy}
           className="admin-button admin-button-primary rounded-full px-4 py-2 text-sm disabled:opacity-60">
           {busy ? 'Building the report...' : 'Generate report'}
+        </button>
+        <button onClick={() => generate(2, 'A4')} disabled={busy}
+          className="admin-button admin-button-outline rounded-full px-4 py-2 text-sm disabled:opacity-60">
+          A4
         </button>
         <button onClick={onClose}
           className="admin-button admin-button-outline rounded-full px-4 py-2 text-sm">Close</button>
       </div>
+      <p className="admin-muted mt-3 text-xs">
+        Twenty-two chapters, written for an executive reader: where the workforce stands, where the
+        exposure is, which populations need different development, and what to do in the next ninety
+        days. Chapter 1 answers it in a page and chapter 2 explains every term.{' '}
+        <button onClick={() => generate(1)} disabled={busy}
+          className="underline" style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }}>
+          The previous twelve page version is still here
+        </button>{' '}
+        if you need it.
+      </p>
       <div className="mt-5 border-t pt-4" style={{ borderColor: 'rgba(128,116,100,0.18)' }}>
         <p className="admin-strong text-sm font-medium">The cover</p>
         <p className="admin-muted mb-3 text-xs">

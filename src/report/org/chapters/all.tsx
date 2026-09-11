@@ -75,7 +75,7 @@ export function Ch01({ a, width }: P) {
     { figure: String(g.mobility.reduce((s, x) => s + x.immediatelyMovable, 0)), label: 'close to the next stage',
       meaning: 'under current scoring rules, not a promise' },
     { figure: g.constraints[0] ? String(g.constraints[0].n) : '0', label: 'held by the top constraint',
-      meaning: g.constraints[0]?.name ?? 'no single constraint dominates' },
+      meaning: g.constraints[0] ? DIMENSIONS[g.constraints[0].construct].executiveName : 'no single constraint dominates' },
     { figure: String(g.dimensions.filter((d) => d.polarised).length), label: 'capabilities split in two',
       meaning: 'where one shared session would serve neither half' },
     { figure: g.consistency.label, label: 'workforce consistency',
@@ -97,7 +97,6 @@ export function Ch01({ a, width }: P) {
         figure={`${g.n}`} figureLabel="people in this reading"
         mini={miniRouteScene(g.centre.stage, 150)} />
       <View style={{ marginBottom: 14 }} wrap={false}><SceneView scene={cards} /></View>
-      <Para>{executiveStory(a)}</Para>
       <Block scene={exposure} i={{
         headline: 'Where your exposure sits',
         howToRead: 'Three capabilities carry most of an organisation’s practical exposure. Each bar '
@@ -636,7 +635,10 @@ export function Ch12({ a, width }: P) {
         cut: p.cut, shown: p.state === 'shown', needs: p.needs,
         n: seg?.n, median: seg?.index?.median,
         modalStage: seg?.modalStage ? `most at stage ${seg.modalStage.stage}` : undefined,
-        constraint: seg?.constraint?.name,
+        // Resolved through the dictionary. This printed "Human Agency" on the
+        // page, which is the engine's name for the construct and not the one
+        // the body of this report speaks.
+        constraint: seg?.constraint ? DIMENSIONS[seg.constraint.construct].executiveName : undefined,
       };
     });
   return (

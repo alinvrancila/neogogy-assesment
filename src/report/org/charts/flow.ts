@@ -13,8 +13,6 @@ export interface GateStep { name: string; stage: number; required: number; held:
 export function gateFunnelScene(steps: GateStep[], n: number, width = 510): Scene {
   const W = width, rowH = 40, top = 30;
   const p: Prim[] = [];
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: steps.length ? 'The guardrails holding people at their current stage' : 'No guardrail is currently holding anyone' }));
   let remaining = n;
   steps.forEach((s, i) => {
     const y = top + i * rowH;
@@ -55,8 +53,6 @@ export function mobilityScene(rows: MobilityRow[], n: number, width = 510): Scen
   const W = width, rowH = 22, top = 34;
   const barX = 150, barW = W - barX - 118;
   const p: Prim[] = [];
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: 'How many of your people can move next, and what is stopping the rest' }));
   p.push(text({ x: barX, y: 26, size: 6, fill: C.mute, text: 'close  ·  held by a gate  ·  more development needed' }));
   rows.forEach((r, i) => {
     const y = top + i * rowH;
@@ -94,14 +90,15 @@ export interface Bubble { capability: string; reach: number; importance: number;
 
 export function priorityScene(items: Bubble[], n: number, width = 470): Scene {
   const W = width, H = 250;
-  const padL = 44, padB = 34, padT = 22, padR = 10;
+  const padL = 44, padB = 40, padT = 14, padR = 10;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   const p: Prim[] = [];
-  const maxImp = Math.max(6, ...items.map((i) => i.importance));
+  // One step of headroom, so the highest bubble sits inside the plot rather
+  // than half outside its top edge.
+  const maxImp = Math.max(6, ...items.map((i) => i.importance)) + 1;
   const x = (v: number) => padL + (v / Math.max(1, n)) * plotW;
   const y = (v: number) => padT + plotH - (v / maxImp) * plotH;
 
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink, text: 'Where to invest first' }));
   // The four regions, labelled where they sit.
   p.push(line({ x1: padL, y1: padT + plotH / 2, x2: W - padR, y2: padT + plotH / 2, stroke: C.hair, strokeWidth: 0.6, dash: [2, 3] }));
   p.push(line({ x1: padL + plotW / 2, y1: padT, x2: padL + plotW / 2, y2: padT + plotH, stroke: C.hair, strokeWidth: 0.6, dash: [2, 3] }));
@@ -120,17 +117,28 @@ export function priorityScene(items: Bubble[], n: number, width = 470): Scene {
   }
   p.push(line({ x1: padL, y1: padT + plotH, x2: W - padR, y2: padT + plotH, stroke: C.hair, strokeWidth: 0.8 }));
   p.push(line({ x1: padL, y1: padT, x2: padL, y2: padT + plotH, stroke: C.hair, strokeWidth: 0.8 }));
-  p.push(text({ x: padL + plotW / 2, y: H - 16, size: 6.6, anchor: 'middle', fill: C.ink, text: 'how many people it reaches' }));
-  p.push(text({ x: padL, y: H - 6, size: 6, fill: C.mute, text: '0' }));
-  p.push(text({ x: W - padR, y: H - 6, size: 6, anchor: 'end', fill: C.mute, text: `${n} people` }));
-  p.push(text({ x: 4, y: padT + plotH / 2, size: 6.6, fill: C.ink, text: 'how' }));
-  p.push(text({ x: 4, y: padT + plotH / 2 + 9, size: 6.6, fill: C.ink, text: 'urgent' }));
-  p.push(text({ x: 0, y: H - 2, size: 6, fill: C.mute, text: 'Bubble size is how far the group is from the threshold it would need to clear.' }));
+  p.push(text({ x: padL, y: padT + plotH + 12, size: 6, fill: C.mute, text: '0' }));
+  p.push(text({ x: W - padR, y: padT + plotH + 12, size: 6, anchor: 'end', fill: C.mute, text: `${n} people` }));
+  p.push(text({ x: padL + plotW / 2, y: padT + plotH + 12, size: 6.6, anchor: 'middle', fill: C.ink,
+    text: 'how many people it reaches' }));
+  p.push(text({ x: 2, y: padT + plotH / 2 - 3, size: 6.6, fill: C.ink, text: 'how' }));
+  p.push(text({ x: 2, y: padT + plotH / 2 + 6, size: 6.6, fill: C.ink, text: 'urgent' }));
+  p.push(text({ x: 0, y: H - 3, size: 6, fill: C.mute,
+    text: 'Bubble size is how far the group is from the threshold it would need to clear.' }));
 
+  // Kept inside the plot area, and flipped to the left when the bubble sits
+  // near the right edge, so the label never runs off the chart or floats above
+  // the axes where it reads as a title.
   const top = [...items].sort((a, b) => b.importance - a.importance || b.reach - a.reach)[0];
   if (top) {
-    p.push(callout({ x: Math.min(W - padR, x(top.reach) + 12), y: Math.max(padT + 8, y(top.importance) - 10),
-      toX: x(top.reach), toY: y(top.importance), text: top.capability.slice(0, 34) }));
+    const bx = x(top.reach), by = y(top.importance);
+    const toRight = bx < padL + plotW * 0.6;
+    p.push(callout({
+      x: toRight ? Math.min(W - padR - 4, bx + 14) : Math.max(padL + 4, bx - 14),
+      y: Math.min(padT + plotH - 6, Math.max(padT + 14, by + 14)),
+      toX: bx, toY: by, text: top.capability.slice(0, 30),
+      anchor: toRight ? 'start' : 'end',
+    }));
   }
   return {
     w: W, h: H, prims: p, title: 'Where to invest first',
@@ -145,8 +153,6 @@ export function priorityScene(items: Bubble[], n: number, width = 470): Scene {
 export function tierScene(tiers: Array<{ tier: string; cohorts: string[]; n: number }>, n: number, width = 510): Scene {
   const W = width, rowH = 34, top = 24;
   const p: Prim[] = [];
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: 'What kind of programme each part of your workforce needs' }));
   tiers.forEach((t, i) => {
     const y = top + i * rowH;
     const w = Math.max(6, (t.n / Math.max(1, n)) * (W - 150));
@@ -186,7 +192,6 @@ export function timelineScene(bands: TimelineBand[], n: number, width = 510): Sc
   let maxRows = 0;
   bands.forEach((b) => { maxRows = Math.max(maxRows, b.actions.length); });
   const H = 46 + maxRows * 26 + 10;
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink, text: 'The next ninety days, in three bands' }));
   bands.forEach((b, i) => {
     const x = i * (colW + 8);
     p.push(rect({ k: 'rect', x, y: 20, w: colW, h: H - 26, r: 4, fill: C.hairSoft, opacity: 0.4 }));
@@ -216,25 +221,28 @@ export function timelineScene(bands: TimelineBand[], n: number, width = 510): Sc
 /* ------------------------------------------------- chapter 12, polarisation */
 
 export function polarisationScene(rows: Array<{ name: string; strong: number; watch: number }>, n: number, width = 470): Scene {
-  const W = width, rowH = 26, top = 26;
-  const mid = W * 0.5, half = W * 0.34;
+  // The name needs a column of its own. Sharing the row with the bars truncated
+  // "Checking Before You Act" and ran the label under the first bar.
+  const W = width, rowH = 22, top = 34;
+  const nameW = 128;
+  const half = (W - nameW - 8) / 2, mid = nameW + 8 + half;
   const p: Prim[] = [];
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: rows.length ? 'The capabilities where your workforce is split in two' : 'No capability splits your workforce in two' }));
   const max = Math.max(1, ...rows.flatMap((r) => [r.strong, r.watch]));
+  if (rows.length) {
+    p.push(text({ x: mid - half, y: 14, size: 6, fill: C.strength, text: 'in the strength band' }));
+    p.push(text({ x: mid + half, y: 14, size: 6, anchor: 'end', fill: C.watch, text: 'in the watch band' }));
+  }
   rows.forEach((r, i) => {
     const y = top + i * rowH;
-    p.push(text({ x: 0, y: y + 2, size: 7, fill: C.ink, text: r.name.slice(0, 30) }));
+    p.push(text({ x: 0, y: y + 2, size: 6.8, fill: C.ink, text: r.name.slice(0, 26) }));
     const lw = (r.strong / max) * half, rw = (r.watch / max) * half;
     p.push(rect({ k: 'rect', x: mid - lw, y: y - 6, w: lw, h: 12, r: 2, fill: C.strength, opacity: 0.55 }));
     p.push(rect({ k: 'rect', x: mid, y: y - 6, w: rw, h: 12, r: 2, fill: C.watch, opacity: 0.55 }));
-    p.push(text({ x: mid - lw - 4, y: y + 2, size: 6.4, anchor: 'end', mono: true, fill: C.mute, text: whole(r.strong) }));
-    p.push(text({ x: mid + rw + 4, y: y + 2, size: 6.4, mono: true, fill: C.mute, text: whole(r.watch) }));
+    if (r.strong) p.push(text({ x: mid - lw - 4, y: y + 2, size: 6.2, anchor: 'end', mono: true, fill: C.mute, text: whole(r.strong) }));
+    if (r.watch) p.push(text({ x: mid + rw + 4, y: y + 2, size: 6.2, mono: true, fill: C.mute, text: whole(r.watch) }));
   });
   if (rows.length) {
-    p.push(text({ x: mid - half, y: top - 8, size: 6, fill: C.strength, text: 'in the strength band' }));
-    p.push(text({ x: mid + half, y: top - 8, size: 6, anchor: 'end', fill: C.watch, text: 'in the watch band' }));
-    p.push(callout({ x: mid, y: top + rows.length * rowH + 8, toX: mid, toY: top + rows.length * rowH - 2,
+    p.push(callout({ x: mid, y: top + rows.length * rowH + 10, toX: mid, toY: top + rows.length * rowH - 2,
       text: 'two populations, not one', anchor: 'middle' }));
   }
   return {

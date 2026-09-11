@@ -165,7 +165,10 @@ export async function GET(request: NextRequest) {
   // because Letter and A4 both have to render and only one of them is the
   // default.
   //
-  const v2 = process.env.ORG_REPORT_V2 === '1' || sp.get('v') === '2';
+  // The admin asks for a version explicitly, so the flag is the override rather
+  // than the switch: ORG_REPORT_V2=0 forces everyone back to the previous
+  // report if the new one has to be pulled without a deploy.
+  const v2 = process.env.ORG_REPORT_V2 === '0' ? false : sp.get('v') === '2';
   if (v2) {
     const analytics = buildOrganisationAnalytics(label, members, new Date(), exclusions);
     const size = sp.get('size') === 'A4' ? 'A4' : 'Letter';

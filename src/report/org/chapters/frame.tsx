@@ -8,6 +8,8 @@ import { S, TOKENS as T } from '../kit/blocks';
 import { SceneView } from '../render/pdf';
 import { CHAPTER_META } from './registry';
 import { miniRouteScene, bandRulerScene } from '../charts/guide';
+import { rangeScene } from '../charts/range';
+import { STAGES } from '@/engine/config';
 import { DIMENSIONS, COMPOSITES, aliasesFor } from '@/engine/dictionary';
 import { CONSTRUCT_IDS } from '@/engine/types';
 import { BRAND, ECOSYSTEM, NEXT_STEP } from '@/brand';
@@ -68,6 +70,49 @@ export function Cover({ a, w, h }: { a: OrganisationReportAnalytics; w: number; 
         strengthened through intelligent use of AI: judgment, agency, independent capability, learning
         transfer and responsible use. The best employee is not the person using the most AI.
       </Text>
+
+      {/*
+        The cover used to stop here, leaving the lower half of the page blank.
+        These are the four figures a reader looks for before opening anything,
+        drawn rather than only printed, so the cover answers something on its
+        own instead of introducing a report that answers it three pages later.
+      */}
+      <View style={{ flexDirection: 'row', marginBottom: 16 }}>
+        {[
+          [String(g.centre.stage), 'the stage holding most of your people', g.centre.stageName],
+          [`${g.headline.healthyAdoption.n} of ${g.n}`, 'meet all four conditions for healthy adoption',
+            'use, judgment, boundaries and independence'],
+          [String(g.dimensions.filter((d) => d.polarised).length), 'capabilities split in two',
+            'where one shared session serves neither half'],
+          [g.consistency.label, 'workforce consistency',
+            `the middle half spans ${Math.round(g.consistency.widthOfMiddleHalf)} points`],
+        ].map(([fig, label, note]) => (
+          <View key={label} style={{ flex: 1, paddingRight: 10 }}>
+            <Text style={{ fontFamily: 'SourceSerif', fontWeight: 600, fontSize: 24, color: T.oxblood }}>{fig}</Text>
+            <View style={{ height: 2, backgroundColor: T.gold, width: 26, marginVertical: 5 }} />
+            <Text style={{ fontSize: 7.4, color: T.ink, marginBottom: 2 }}>{label}</Text>
+            <Text style={{ fontSize: 6.6, color: T.mute, lineHeight: 1.35 }}>{note}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/*
+        The full ten stage route was tried here and pushed the partnership strip
+        on to a second page. A cover is one page. The index ruler carries the
+        same reading in a fifth of the height, and chapter 3 draws the route.
+      */}
+      <View style={{ marginBottom: 14 }}>
+        <Text style={{ ...S.muted, fontSize: 7, marginBottom: 4 }}>
+          Where the middle of your workforce sits, on the scale every reading in this report uses
+        </Text>
+        <SceneView scene={rangeScene({
+          width: w - 88, title: '', quiet: true,
+          median: g.index.median, q1: g.index.q1, q3: g.index.q3,
+          min: g.index.min, max: g.index.max, n: g.n,
+          stageMarks: STAGES.filter((st) => st.stage % 2 === 1)
+            .map((st) => ({ at: st.minIndex, label: `stage ${st.stage}` })),
+        })} />
+      </View>
 
       <View style={{ backgroundColor: '#FFFFFF', borderRadius: 5, paddingVertical: 9,
         paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center',

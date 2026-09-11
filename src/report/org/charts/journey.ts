@@ -41,8 +41,6 @@ export function journeyScene(d: JourneyInput): Scene {
   const p: Prim[] = [];
   const maxN = Math.max(1, ...d.stages.map((s) => s.n));
 
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: `Your workforce across the ten stages of the route` }));
   p.push(text({ x: W, y: 12, size: 7, fill: C.mute, anchor: 'end', mono: true,
     text: `${d.n} people` }));
 
@@ -74,10 +72,10 @@ export function journeyScene(d: JourneyInput): Scene {
     p.push(text({ x: W, y: y + 1, size: 7, anchor: 'end', mono: true, fill: s.n ? C.ink : C.hair,
       text: s.n ? `${s.n} · ${Math.round(s.share)}%` : '0' }));
     if (s.gate && s.n > 0) {
-      p.push(text({ x: trackX + trackW * 0.58, y: y + 1, size: 6.2, fill: C.gate,
-        text: `held by ${s.gate}` }));
+      p.push(text({ x: trackX + trackW * 0.60, y: y + 1, size: 6.2, fill: C.gate,
+        text: `held by ${s.gate}`.slice(0, 34) }));
     } else if (s.movable > 0) {
-      p.push(text({ x: trackX + trackW * 0.58, y: y + 1, size: 6.2, fill: C.mute,
+      p.push(text({ x: trackX + trackW * 0.60, y: y + 1, size: 6.2, fill: C.mute,
         text: `${s.movable} close to the next stage` }));
     }
   }
@@ -98,11 +96,15 @@ export function journeyScene(d: JourneyInput): Scene {
     text: `the middle person, ${one(d.median)}`, anchor: 'middle' }));
 
   const occupied = d.stages.filter((s) => s.n > 0);
+  // The callout sat on the same line as the per-stage note and the two
+  // collided. It now points at the centre bar from the left of the track,
+  // where nothing else is drawn.
   const centre = d.stages.find((s) => s.stage === d.centreStage);
-  if (centre) {
-    p.push(callout({ x: W - countW - 8, y: top + (d.centreStage - 1) * rowH - 11,
-      toX: W - countW - 8, toY: top + (d.centreStage - 1) * rowH - 5,
-      text: `${centre.n} of ${d.n} are here`, anchor: 'end' }));
+  if (centre && centre.n > 0) {
+    // Above the bar and inside the track, where the row labels are not.
+    const cy = top + (d.centreStage - 1) * rowH;
+    p.push(callout({ x: trackX + 6, y: cy - 12, toX: trackX + 6, toY: cy - 6,
+      text: `${centre.n} of ${d.n} are here` }));
   }
 
   return {

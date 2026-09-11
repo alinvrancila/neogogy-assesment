@@ -26,7 +26,6 @@ export function divergingScene(d: DivergingInput): Scene {
   const total = Math.max(1, d.left.n + d.middle.n + d.right.n);
   const w = (k: number) => (k / total) * W;
 
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink, text: d.title }));
 
   let x = 0;
   const segs: Array<[{ label: string; n: number; note?: string }, string]> = [
@@ -70,8 +69,6 @@ export function exposureScene(rows: ExposureRow[], n: number, width = 430): Scen
   const W = width, rowH = 34, top = 26;
   const barX = 150, barW = W - barX - 46;
   const p: Prim[] = [];
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: 'Where your exposure sits, and how many people carry it' }));
   rows.forEach((r, i) => {
     const y = top + i * rowH;
     p.push(text({ x: 0, y: y + 2, size: 7.4, fill: C.ink, text: r.name }));
@@ -105,8 +102,6 @@ export function bottleneckScene(rows: BottleneckRow[], n: number, width = 430): 
   const barX = 168, barW = W - barX - 62;
   const p: Prim[] = [];
   const max = Math.max(1, ...rows.map((r) => r.n));
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: rows[0] ? `${rows[0].name} is holding the most people back` : 'No single capability is holding this workforce back' }));
   rows.forEach((r, i) => {
     const y = top + i * rowH;
     p.push(text({ x: 0, y: y + 2, size: 7.4, fill: i === 0 ? C.ink : C.mute, weight: i === 0 ? 600 : 400, text: r.name }));
@@ -139,8 +134,6 @@ export function mirrorScene(rows: MirrorRow[], n: number, width = 430): Scene {
   const W = width, rowH = 17, top = 34;
   const mid = W * 0.58, half = W * 0.3;
   const p: Prim[] = [];
-  p.push(text({ x: 0, y: 12, size: 9, weight: 600, fill: C.ink,
-    text: 'Where stated practice and situational choice diverge' }));
   p.push(text({ x: mid - half, y: 25, size: 6.2, fill: C.mute, text: 'healthier in situations' }));
   p.push(text({ x: mid + half, y: 25, size: 6.2, fill: C.mute, anchor: 'end', text: 'weaker in situations' }));
   const max = Math.max(1, ...rows.flatMap((r) => [r.healthier, r.weaker]));

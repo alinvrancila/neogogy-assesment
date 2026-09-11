@@ -19,7 +19,8 @@ import { CHAPTER_META } from '@/report/org/chapters/registry';
 import { CHAPTER_COMPONENTS } from '@/report/org/chapters/all';
 import { BLOCK_LABELS } from '@/engine/orgCopy';
 import { emptyLabels, countCallouts, CALLOUT_MAX } from '@/report/org/scene';
-import type { ConstructId, Item, Persona, Submission } from '@/engine/types';
+import { CONSTRUCT_IDS, type ConstructId, type Item, type Persona, type Submission } from '@/engine/types';
+import { DIMENSIONS } from '@/engine/dictionary';
 
 let pass = 0, fail = 0;
 const ok = (label: string, cond: boolean, detail?: string) => {
@@ -127,6 +128,70 @@ head('Every explanatory block is present, with the fixed labels in order');
   ok('all four labels appear the same number of times, so none is orphaned',
     new Set(counts).size === 1, counts.join(', '));
   ok('and they appear on most chapters', counts[0] >= 15, `${counts[0]} blocks`);
+}
+
+head('The body speaks one vocabulary');
+{
+  //
+  // The executive names are the body's vocabulary. A canonical name is allowed
+  // in exactly two places: as small print on the dimension heatmap, and in the
+  // appendix alias table. Anywhere else it is a leak, and chapter 12 had one:
+  // the segment panels read "held most by Human Agency" because the aggregate
+  // carried the engine's name and the chapter printed it straight through.
+  //
+  const canonicalOnly = CONSTRUCT_IDS
+    .map((id) => DIMENSIONS[id].canonicalName)
+    .filter((n) => !CONSTRUCT_IDS.some((id) => DIMENSIONS[id].executiveName === n));
+  ok('there are canonical names that differ from the body names',
+    canonicalOnly.length >= 8, canonicalOnly.join(', '));
+  //
+  // Three sanctioned appearances: the small print on the heatmap row, the small
+  // print on the dimension card, and the appendix alias table. A fourth is a
+  // leak. Counting has to respect word boundaries, because "AI Fluency" is a
+  // substring of the executive name "Practical AI Fluency" and a naive count
+  // reported fifteen of them.
+  //
+  for (const name of canonicalOnly) {
+    const re = new RegExp(`(?<![A-Za-z] )${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g');
+    const hits = (allText.match(re) ?? []).length;
+    ok(`"${name}" appears only as small print and in the appendix`, hits <= 3, `${hits} occurrences`);
+  }
+  for (const id of CONSTRUCT_IDS) {
+    ok(`the body uses "${DIMENSIONS[id].executiveName}"`, allText.includes(DIMENSIONS[id].executiveName));
+  }
+
+  //
+  // The cohort above happens to produce a segment whose constraint is named the
+  // same in both vocabularies, so reverting the fix changed nothing in it. This
+  // one produces a segment constrained on a dimension whose canonical and
+  // executive names differ, which is the case the guard exists for.
+  //
+  const segCohort = buildOrganisationAnalytics('Seg',
+    Array.from({ length: 30 }, (_, i) =>
+      member(i % 7 === 6 ? 'teacher' : 'professional', 4, (i % 5) + 1, i)));
+  const shownSeg = segCohort.group.segments.find((x) => !x.suppressed && x.constraint);
+  ok('the fixture produces a shown segment with a named constraint', !!shownSeg,
+    segCohort.group.segments.map((x) => `${x.value}:${x.suppressed}`).join(' '));
+  if (shownSeg?.constraint) {
+    const canonical = DIMENSIONS[shownSeg.constraint.construct].canonicalName;
+    const executive = DIMENSIONS[shownSeg.constraint.construct].executiveName;
+    ok('and its constraint differs between the two vocabularies',
+      canonical !== executive, `${canonical} is also the body name`);
+    const segText = (() => {
+      const d = OrganisationDocument({ a: segCohort, size: 'Letter' });
+      const kids = (d as { props: { children: unknown } }).props.children;
+      return (Array.isArray(kids) ? kids : [kids]).flat().filter(Boolean)
+        .map((p) => walk(p, fresh()).text.join(' ')).join('\n');
+    })();
+    // Searched across the whole document rather than sliced on the chapter
+    // title, which also appears on the contents page and made the slice land
+    // on the wrong half of the report.
+    ok('the segment panel names it in the body vocabulary',
+      segText.includes(`held most by ${executive}`),
+      (segText.match(/held most by [^|]{0,32}/g) ?? []).slice(0, 3).join(' | '));
+    ok('and never in the engine vocabulary',
+      !segText.includes(`held most by ${canonical}`));
+  }
 }
 
 head('The copy rules hold on the finished page');

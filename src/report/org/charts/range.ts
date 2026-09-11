@@ -89,14 +89,19 @@ export function rangeScene(d: RangeInput): Scene {
     p.push(text({ x: at(m.at), y: axisY + 38, text: m.label, size: 5.6, fill: C.mute, anchor: 'middle' }));
   }
 
-  // The title states the finding, and the numbers sit under it.
-  p.push(text({ x: padL, y: 12, text: d.title, size: 9, fill: C.ink, weight: 600 }));
+  //
+  // No title is drawn here. The Block above renders Scene.title as a proper
+  // heading, and drawing it inside as well printed every chart title twice
+  // across the whole report. This one was missed by the sweep that removed the
+  // others, because its arguments are in a different order, and the two lines
+  // then sat on the same baseline and overlapped.
+  //
   p.push(text({
     x: W - padR, y: 12, anchor: 'end', mono: true, size: 7.2, fill: C.mute,
     text: `median ${one(d.median)} · middle half ${one(d.q1)} to ${one(d.q3)} · reaches ${one(d.min)} to ${one(d.max)}`,
   }));
   if (d.lowerIsHealthier) {
-    p.push(text({ x: padL, y: 24, text: 'lower is healthier', size: 7, fill: C.ink, weight: 700 }));
+    p.push(text({ x: padL, y: 12, text: 'lower is healthier', size: 7, fill: C.ink, weight: 700 }));
   }
 
   if (!d.quiet) {
