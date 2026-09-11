@@ -99,15 +99,28 @@ export function OrganisationDocument({ a, size = 'Letter', profile }: {
         <Footer label={label} />
       </Page>
 
-      {CHAPTER_COMPONENTS.map(({ n, C }) => (
-        <Page key={n} size={[dim.w, dim.h]} style={S.page}>
-          <C a={a} width={width} />
-          <Footer label={label} />
-        </Page>
-      ))}
+      {/*
+        The chapters flow rather than each starting a fresh sheet. Twenty-two
+        page starts left twenty-two partial pages, and a chapter that needs a
+        page and a third was taking two. Blocks still never split, so the breaks
+        fall between them, and each chapter's opening is held together by
+        ChapterOpen so a heading cannot be orphaned at the foot of a page.
 
+      */}
       <Page size={[dim.w, dim.h]} style={S.page}>
-        <Appendix a={a} />
+        {/* No chapter forces a break. Chapter 1 already opens this sheet, and
+            forcing one there produced a blank page carrying only the footer. */}
+        {CHAPTER_COMPONENTS.map(({ n, C }) => (
+          <View key={n}>
+            <C a={a} width={width} />
+          </View>
+        ))}
+        {/* The appendix flows on from the last chapter. Forcing a break here
+            produced a blank page whenever the chapters happened to end near a
+            boundary, which is the same fault chapter 1 had. */}
+        <View>
+          <Appendix a={a} />
+        </View>
         <Footer label={label} />
       </Page>
     </Document>

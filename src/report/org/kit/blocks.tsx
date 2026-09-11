@@ -77,10 +77,53 @@ export const Explain = ({ i, wide }: { i: Interpretation; wide?: boolean }) => {
  * A chart with its explanation, as one indivisible layout unit.
  */
 export const Block = ({ scene, i, wide }: { scene: Scene; i: Interpretation; wide?: boolean }) => (
-  <View style={{ marginBottom: 26 }} wrap={false}>
+  <View style={{ marginBottom: 26 }} wrap={false} minPresenceAhead={60}>
     <Text style={S.h2}>{scene.title}</Text>
     <View style={{ marginBottom: 4 }}><SceneView scene={scene} /></View>
     <Explain i={i} wide={wide} />
+  </View>
+);
+
+/**
+ * A repeated card: the drawing, and one sentence of meaning.
+ *
+ * The brief allows this where a chart is small, and the report was not taking
+ * it. Ten dimension cards each carried the full four blocks, which came to
+ * twelve thousand characters, and the "what management should do" block was
+ * byte for byte identical on all ten. A reader who has read it once has read it
+ * ten times.
+ *
+ * The comparison across dimensions is the heatmap's job. These cards carry the
+ * reading for one dimension, and how to read a card is said once at the top of
+ * the chapter by HowToReadOnce.
+ */
+export const CompactBlock = ({ scene, line, note }: {
+  scene: Scene; line: string; note?: string;
+}) => (
+  <View style={{ marginBottom: 14 }} wrap={false} minPresenceAhead={40}>
+    <Text style={{ ...S.h2, fontSize: 12.5, marginBottom: 6 }}>{scene.title}</Text>
+    <SceneView scene={scene} />
+    <Text style={{ ...S.muted, marginTop: 5 }}>{line}</Text>
+    {note ? <Text style={{ ...S.muted, fontSize: 9, marginTop: 3 }}>{note}</Text> : null}
+  </View>
+);
+
+/**
+ * A chapter's opening, held together.
+ *
+ * With the chapters flowing rather than each taking a fresh sheet, a title
+ * could otherwise land at the foot of a page with its first chart overleaf.
+ */
+export const ChapterOpen = ({ children }: { children: React.ReactNode }) => (
+  <View wrap={false} style={{ marginTop: 6 }}>{children}</View>
+);
+
+/** Said once, for a chapter of repeated cards, instead of once per card. */
+export const HowToReadOnce = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <View wrap={false} style={{ borderLeftWidth: 3, borderLeftColor: T.hair, paddingLeft: 13,
+    paddingVertical: 6, marginBottom: 18 }}>
+    <Text style={S.blockLabel}>{title}</Text>
+    <Text style={S.muted}>{children}</Text>
   </View>
 );
 

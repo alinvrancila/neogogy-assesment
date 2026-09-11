@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { View, Text } from '@react-pdf/renderer';
-import { Block, ChapterStrip, ChapterClose, Explain, S, TOKENS as T } from '../kit/blocks';
+import { Block, ChapterStrip, ChapterClose, CompactBlock, Explain, HowToReadOnce, S, TOKENS as T } from '../kit/blocks';
 import { SceneView } from '../render/pdf';
 import { chapterMeta } from './registry';
 import { rangeScene } from '../charts/range';
@@ -92,11 +92,13 @@ export function Ch01({ a, width }: P) {
   const three = a.priorities.filter((p) => p.region === 'act now').slice(0, 3);
   return (
     <View>
-      <Head n={1} />
-      <ChapterStrip question={m.question}
-        answer={executiveStory(a).split('. ')[0] + '.'}
-        figure={`${g.n}`} figureLabel="people in this reading"
-        mini={miniRouteScene(g.centre.stage, 150)} />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={1} />
+        <ChapterStrip question={m.question}
+          answer={executiveStory(a).split('. ')[0] + '.'}
+          figure={`${g.n}`} figureLabel="people in this reading"
+          mini={miniRouteScene(g.centre.stage, 150)} />
+      </View>
       <View style={{ marginBottom: 18 }} wrap={false}><SceneView scene={cards} /></View>
       <View wrap={false} style={{ marginBottom: 20 }}>
         <Para>{executiveStory(a).split('. ').slice(1).join('. ')}</Para>
@@ -134,9 +136,11 @@ export function Ch02({ a, width }: P) {
   const m = chapterMeta(2);
   return (
     <View>
-      <Head n={2} />
-      <ChapterStrip question={m.question} answer="Every term you will meet later is defined here, once."
-        figure="0 to 100" figureLabel="the scale every score uses" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={2} />
+        <ChapterStrip question={m.question} answer="Every term you will meet later is defined here, once."
+          figure="0 to 100" figureLabel="the scale every score uses" />
+      </View>
       <Block scene={bandRulerScene(width)} i={{
         headline: 'Three bands, and a fourth line that crosses them',
         howToRead: 'Every score runs from 0 to 100 and describes practice on the day your people '
@@ -216,23 +220,13 @@ export function Ch03({ a, width }: P) {
   })), g.n, width);
   return (
     <View>
-      <Head n={3} />
-      <ChapterStrip question={m.question} answer={i.headline}
-        figure={String(g.centre.stage)} figureLabel={`the stage holding most of your people: ${g.centre.stageName}`}
-        mini={miniRouteScene(g.centre.stage, 140)} />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={3} />
+        <ChapterStrip question={m.question} answer={i.headline}
+          figure={String(g.centre.stage)} figureLabel={`the stage holding most of your people: ${g.centre.stageName}`}
+          mini={miniRouteScene(g.centre.stage, 140)} />
+      </View>
       <Block scene={journey} i={i} wide />
-      <Block scene={rangeScene({
-        width, title: 'The same reading on the standard ruler',
-        median: g.index.median, q1: g.index.q1, q3: g.index.q3, min: g.index.min, max: g.index.max, n: g.n,
-        stageMarks: STAGES.filter((s) => s.stage % 2 === 1).map((s) => ({ at: s.minIndex, label: String(s.stage) })),
-      })} i={{
-        headline: 'The same reading, on the ruler used everywhere else',
-        howToRead: 'The bar is the middle half of your people, the dot is the middle person, and the '
-          + 'line behind shows how far the group reaches.',
-        interpretation: i.howToRead,
-        businessMeaning: g.consistency.reading,
-        recommendedResponse: i.recommendedResponse,
-      }} wide />
       <Block scene={table} i={{
         headline: 'What each stage means for an employer',
         howToRead: 'All ten stages are shown whether or not anyone is standing on them, so the route '
@@ -264,10 +258,12 @@ export function Ch04({ a, width }: P) {
   const dep = g.composites.find((c) => c.id === 'dependencyIndex')!;
   return (
     <View>
-      <Head n={4} />
-      <ChapterStrip question={m.question} answer={i.interpretation}
-        figure={String(Math.max(g.lean.towardsDependence.n, g.lean.towardsDisconnection.n))}
-        figureLabel="people on the side that leads" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={4} />
+        <ChapterStrip question={m.question} answer={i.interpretation}
+          figure={String(Math.max(g.lean.towardsDependence.n, g.lean.towardsDisconnection.n))}
+          figureLabel="people on the side that leads" />
+      </View>
       <Block scene={chart} i={i} wide />
       <Block scene={rangeScene({
         width, title: 'How much of the work depends on the tool', lowerIsHealthier: true,
@@ -302,22 +298,26 @@ export function Ch05({ a, width }: P) {
     + 'than only quickly. Capability without protection is the combination this instrument exists to catch.');
   return (
     <View>
-      <Head n={5} />
-      <ChapterStrip question={m.question} answer={i.headline}
-        figure={String(cells.find((c) => c.key === 'hl')?.n ?? 0)}
-        figureLabel="powerful but exposed" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={5} />
+        <ChapterStrip question={m.question} answer={i.headline}
+          figure={String(cells.find((c) => c.key === 'hl')?.n ?? 0)}
+          figureLabel="powerful but exposed" />
+      </View>
       <Para>
         The objective is not maximum AI use. The objective is increasing capability while preserving human
         judgment, agency and independent capability. This map puts those two things on separate axes so that a
         workforce which is fluent and unprotected cannot be mistaken for one that is ready.
       </Para>
       <Block scene={chart} i={i} wide />
-      {cells.map((c) => (
-        <View key={c.key} wrap={false} style={{ marginBottom: 8 }}>
-          <Text style={{ ...S.body, fontSize: 8.8, fontWeight: 600 }}>{c.title}: {c.n} of {a.readinessProtectionMatrix.base}</Text>
-          <Text style={S.muted}>{c.response}</Text>
-        </View>
-      ))}
+      <View wrap={false}>
+        {cells.map((c) => (
+          <Text key={c.key} style={{ ...S.muted, marginTop: 5 }}>
+            <Text style={{ fontWeight: 600, color: T.ink }}>{c.title}, {c.n} of {a.readinessProtectionMatrix.base}. </Text>
+            {c.response}
+          </Text>
+        ))}
+      </View>
       <Close n={5} line={i.headline} />
     </View>
   );
@@ -341,12 +341,14 @@ export function Ch06({ a, width }: P) {
   const ordered = [...g.dimensions].sort((x, y) => x.spread.median - y.spread.median);
   return (
     <View>
-      <Head n={6} />
-      <ChapterStrip question={m.question}
-        answer={`${rows.filter((r) => r.median >= 65).length} capabilities are a strength across your workforce, `
-          + `${rows.filter((r) => r.median <= 45).length} sit at or below the vulnerability line, and `
-          + `${rows.filter((r) => r.polarised).length} are split in two.`}
-        figure={String(rows.filter((r) => r.polarised).length)} figureLabel="capabilities split in two" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={6} />
+        <ChapterStrip question={m.question}
+          answer={`${rows.filter((r) => r.median >= 65).length} capabilities are a strength across your workforce, `
+            + `${rows.filter((r) => r.median <= 45).length} sit at or below the vulnerability line, and `
+            + `${rows.filter((r) => r.polarised).length} are split in two.`}
+          figure={String(rows.filter((r) => r.polarised).length)} figureLabel="capabilities split in two" />
+      </View>
       <Block scene={heatmapScene(rows, g.n, width)} i={{
         headline: 'Where your workforce is strong, developing, vulnerable and divided',
         howToRead: 'Ten capabilities, grouped by what they protect. The median column is coloured by '
@@ -360,27 +362,42 @@ export function Ch06({ a, width }: P) {
         recommendedResponse: 'Work down the page from the lowest median, and treat any split capability '
           + 'as two populations rather than one.',
       }} wide />
+      <HowToReadOnce title="How to read the ten cards that follow">
+        Each card is one capability. The bar shows the middle person as a dot, the middle half of
+        your people as the band around it, and how far the group reaches as the line behind. The
+        dashed rule is the vulnerability line at 45. Under it, the split shows how many people sit in
+        each band. The heatmap above is for comparing capabilities; these cards are for reading one.
+        Where a capability is split in two, coach it in two groups: a single shared session would be
+        too basic for one population and too thin for the other.
+      </HowToReadOnce>
       {ordered.map((d) => {
         const e = DIMENSIONS[d.construct];
         const i = interpretDimension(g, d.construct);
         return (
-          <View key={d.construct} wrap={false} style={{ marginBottom: 14 }}>
+          <View key={d.construct} wrap={false} style={{ marginBottom: 16 }}>
             <Text style={S.h2}>{e.executiveName}</Text>
-            <Text style={{ ...S.muted, fontSize: 6.6, marginBottom: 4 }}>
+            <Text style={{ ...S.muted, fontSize: 8.5, marginTop: -4, marginBottom: 6 }}>
               {e.canonicalName} · {e.cluster}
             </Text>
             <SceneView scene={rangeScene({
-              width, title: i.headline, quiet: true,
+              width, title: '', quiet: true,
               median: d.spread.median, q1: d.spread.q1, q3: d.spread.q3,
               min: d.spread.min, max: d.spread.max, n: g.n,
             })} />
-            <View style={{ marginTop: 10, marginBottom: 4 }}>
+            <View style={{ marginTop: 8, marginBottom: 6 }}>
               <SceneView scene={stackedBandScene({
                 strong: d.bands.strong.n, developing: d.bands.developing.n,
                 watch: d.bands.watch.n, vulnerable: d.vulnerable.n, n: g.n,
               }, Math.min(320, width))} />
             </View>
-            <Explain i={i} wide />
+            <Text style={S.body}>{i.headline}. {e.businessMeaning}</Text>
+            {d.vulnerable.n > 0 || d.polarised || i.caveat ? (
+              <Text style={{ ...S.muted, marginTop: 4 }}>
+                {d.polarised ? `Split in two: ${d.bands.strong.n} in the strength band and ${d.bands.watch.n} in the watch band. ` : ''}
+                {d.vulnerable.n > 0 ? `${d.vulnerable.n} of ${g.n} are at or below the vulnerability line, which is the number of individual reports worth opening. ` : ''}
+                {i.caveat ?? ''}
+              </Text>
+            ) : null}
           </View>
         );
       })}
@@ -396,18 +413,27 @@ export function Ch07({ a, width }: P) {
   const m = chapterMeta(7);
   return (
     <View>
-      <Head n={7} />
-      <ChapterStrip question={m.question}
-        answer="Six readings, each phrased as a question an executive team would actually ask."
-        figure="6" figureLabel="composite readings" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={7} />
+        <ChapterStrip question={m.question}
+          answer="Six readings, each phrased as a question an executive team would actually ask."
+          figure="6" figureLabel="composite readings" />
+      </View>
+      <HowToReadOnce title="How to read the six">
+        Each is a question, answered by one reading built from the same ten capabilities. The bar
+        works as it does everywhere else in this report: the dot is the middle person, the band is
+        the middle half, the line behind is the reach. The last two run the other way, where lower
+        is healthier, and say so.
+      </HowToReadOnce>
       {COMPOSITES.map((c) => {
         const sp = g.composites.find((x) => x.id === c.id)!;
+        const i = interpretComposite(g, c.id);
         return (
-          <Block key={c.id} scene={rangeScene({
+          <CompactBlock key={c.id} scene={rangeScene({
             width, title: c.question, lowerIsHealthier: c.healthyDirection === 'lower',
             median: sp.spread.median, q1: sp.spread.q1, q3: sp.spread.q3,
-            min: sp.spread.min, max: sp.spread.max, n: g.n,
-          })} i={interpretComposite(g, c.id)} wide />
+            min: sp.spread.min, max: sp.spread.max, n: g.n, quiet: true,
+          })} line={i.interpretation} note={i.businessMeaning} />
         );
       })}
       <Close n={7} line="Six questions, answered from the same ten dimensions read six different ways." />
@@ -439,9 +465,11 @@ export function Ch08({ a, width }: P) {
   const heavy = q.find((c) => c.key === 'lh');
   return (
     <View>
-      <Head n={8} />
-      <ChapterStrip question={m.question} answer={i.headline}
-        figure={String(heavy?.n ?? 0)} figureLabel="using it heavily with capability still thin" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={8} />
+        <ChapterStrip question={m.question} answer={i.headline}
+          figure={String(heavy?.n ?? 0)} figureLabel="using it heavily with capability still thin" />
+      </View>
       <Block scene={chart} i={i} wide />
       {heavy && heavy.n > 0 ? (
         <Para>
@@ -487,9 +515,11 @@ export function Ch09({ a, width }: P) {
     + 'like progress from the outside.');
   return (
     <View>
-      <Head n={9} />
-      <ChapterStrip question={m.question} answer={i.headline}
-        figure={String(g.quadrants.fluentAndAtWatch.n)} figureLabel="fluent with judgment in the watch band" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={9} />
+        <ChapterStrip question={m.question} answer={i.headline}
+          figure={String(g.quadrants.fluentAndAtWatch.n)} figureLabel="fluent with judgment in the watch band" />
+      </View>
       <Block scene={chart} i={i} wide />
       <Para>
         A high-use, high-fluency workforce with weak checking can look advanced while carrying hidden
@@ -532,13 +562,15 @@ export function Ch10({ a, width }: P) {
   const all = [...items, ...extras];
   return (
     <View>
-      <Head n={10} />
-      <ChapterStrip question={m.question}
-        answer={all.length
-          ? `${all.length} things are working and are worth protecting before anything else changes.`
-          : 'No capability currently reaches the strength band across this workforce, which is itself the finding.'}
-        figure={String(g.dimensions.filter((d) => d.bands.strong.n > 0).length)}
-        figureLabel="capabilities with at least one person in the strength band" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={10} />
+        <ChapterStrip question={m.question}
+          answer={all.length
+            ? `${all.length} things are working and are worth protecting before anything else changes.`
+            : 'No capability currently reaches the strength band across this workforce, which is itself the finding.'}
+          figure={String(g.dimensions.filter((d) => d.bands.strong.n > 0).length)}
+          figureLabel="capabilities with at least one person in the strength band" />
+      </View>
       {all.length ? (
         <Block scene={strengthScene(all, width)} i={{
           headline: 'What is working, and what to protect',
@@ -588,12 +620,14 @@ export function Ch11({ a, width }: P) {
   const i = interpretPatterns(g);
   return (
     <View>
-      <Head n={11} />
-      <ChapterStrip question={m.question}
-        answer={`${Math.max(...meters.map((x) => x.atOrBelow))} of ${g.n} people sit at or below the `
-          + 'vulnerability line on your largest exposure.'}
-        figure={String(meters.reduce((s, x) => s + x.atOrBelow, 0))}
-        figureLabel="readings at or below the line across the three governance capabilities" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={11} />
+        <ChapterStrip question={m.question}
+          answer={`${Math.max(...meters.map((x) => x.atOrBelow))} of ${g.n} people sit at or below the `
+            + 'vulnerability line on your largest exposure.'}
+          figure={String(meters.reduce((s, x) => s + x.atOrBelow, 0))}
+          figureLabel="readings at or below the line across the three governance capabilities" />
+      </View>
       <Block scene={exposureScene(meters, g.n, width)} i={{
         headline: 'Three exposures, counted in people',
         howToRead: 'Each bar is your whole workforce. The marked part is the people at or below the '
@@ -649,11 +683,13 @@ export function Ch12({ a, width }: P) {
     });
   return (
     <View>
-      <Head n={12} />
-      <ChapterStrip question={m.question}
-        answer={`Your workforce holds ${profiles.filter((p) => p.present).length} of the nine profiles and `
-          + `${cohorts.length} developmental cohorts, which is why one shared programme is unlikely to fit all of it.`}
-        figure={String(cohorts.length)} figureLabel="developmental cohorts" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={12} />
+        <ChapterStrip question={m.question}
+          answer={`Your workforce holds ${profiles.filter((p) => p.present).length} of the nine profiles and `
+            + `${cohorts.length} developmental cohorts, which is why one shared programme is unlikely to fit all of it.`}
+          figure={String(cohorts.length)} figureLabel="developmental cohorts" />
+      </View>
       <Block scene={profileGridScene(profiles, g.n, width)} i={{
         headline: 'How your workforce currently relates to AI',
         howToRead: 'All nine profiles are shown whether or not anyone holds them. A profile is a '
@@ -665,19 +701,20 @@ export function Ch12({ a, width }: P) {
         recommendedResponse: 'Lead each pattern differently. The first conversation that works for one '
           + 'profile is the wrong opening for another.',
       }} wide />
-      {profiles.filter((p) => p.present).map((p) => {
-        const arch = ARCHETYPES.find((x) => x.name === p.name)!;
-        const biz = PROFILE_BUSINESS[arch.id];
-        if (!biz) return null;
-        return (
-          <View key={arch.id} wrap={false} style={{ marginBottom: 9 }}>
-            <Text style={{ ...S.body, fontSize: 8.6, fontWeight: 600 }}>{p.name} · {p.n} of {g.n}</Text>
-            <Text style={S.muted}>Opportunity: {biz.opportunity} Risk: {biz.risk}</Text>
-            <Text style={S.muted}>Emphasis: {biz.emphasis}</Text>
-            <Text style={S.muted}>First conversation: {biz.firstConversation}</Text>
-          </View>
-        );
-      })}
+      <View wrap={false} style={{ marginBottom: 18 }}>
+        <Text style={S.blockLabel}>How to lead each pattern that is present here</Text>
+        {profiles.filter((p) => p.present).map((p) => {
+          const arch = ARCHETYPES.find((x) => x.name === p.name)!;
+          const biz = PROFILE_BUSINESS[arch.id];
+          if (!biz) return null;
+          return (
+            <Text key={arch.id} style={{ ...S.muted, marginTop: 5 }}>
+              <Text style={{ fontWeight: 600, color: T.ink }}>{p.name}, {p.n} of {g.n}. </Text>
+              {biz.emphasis} First conversation: {biz.firstConversation}
+            </Text>
+          );
+        })}
+      </View>
       <Block scene={cohortScene(cohorts, g.n, width)} i={{
         headline: 'Your workforce, grouped by what it needs next',
         howToRead: 'Cohorts are assigned by need rather than by department or seniority, so they stay '
@@ -718,10 +755,12 @@ export function Ch13({ a, width }: P) {
   const i = interpretSaidVsChosen(g);
   return (
     <View>
-      <Head n={13} />
-      <ChapterStrip question={m.question} answer={i.headline}
-        figure={String(Math.max(...rows.map((r) => r.weaker)))}
-        figureLabel="the widest gap, in people, on a single capability" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={13} />
+        <ChapterStrip question={m.question} answer={i.headline}
+          figure={String(Math.max(...rows.map((r) => r.weaker)))}
+          figureLabel="the widest gap, in people, on a single capability" />
+      </View>
       <Block scene={mirrorScene(rows, g.n, width)} i={i} wide />
       <Para>
         This does not mean respondents are dishonest. It shows where stated beliefs and practical responses
@@ -755,10 +794,12 @@ export function Ch14({ a, width }: P) {
   });
   return (
     <View>
-      <Head n={14} />
-      <ChapterStrip question={m.question} answer={i.headline}
-        figure={`${g.calibration.felt.matched.n}/${g.calibration.felt.n}`}
-        figureLabel="saw their own position about right" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={14} />
+        <ChapterStrip question={m.question} answer={i.headline}
+          figure={`${g.calibration.felt.matched.n}/${g.calibration.felt.n}`}
+          figureLabel="saw their own position about right" />
+      </View>
       <Block scene={feel} i={i} wide />
       <Block scene={pred} i={{
         headline: 'Prediction is the sharper of the two readings',
@@ -794,10 +835,12 @@ export function Ch15({ a, width }: P) {
   const i = interpretGates(g);
   return (
     <View>
-      <Head n={15} />
-      <ChapterStrip question={m.question}
-        answer={rows[0] ? `${rows[0].name} is the constraint for ${rows[0].n} of ${g.n} people, more than any other capability.` : 'No single capability is acting as the constraint across this workforce.'}
-        figure={rows[0] ? String(rows[0].n) : '0'} figureLabel="people held by the top constraint" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={15} />
+        <ChapterStrip question={m.question}
+          answer={rows[0] ? `${rows[0].name} is the constraint for ${rows[0].n} of ${g.n} people, more than any other capability.` : 'No single capability is acting as the constraint across this workforce.'}
+          figure={rows[0] ? String(rows[0].n) : '0'} figureLabel="people held by the top constraint" />
+      </View>
       <Block scene={bottleneckScene(rows, g.n, width)} i={{
         headline: rows[0] ? `${rows[0].name} is holding the most people back` : 'No single constraint dominates',
         howToRead: 'A bottleneck is the dimension doing most to hold a person’s position, which is not '
@@ -828,10 +871,12 @@ export function Ch16({ a, width }: P) {
   }));
   return (
     <View>
-      <Head n={16} />
-      <ChapterStrip question={m.question} answer={i.headline}
-        figure={String(g.mobility.reduce((s, x) => s + x.immediatelyMovable, 0))}
-        figureLabel="within reach of their next stage" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={16} />
+        <ChapterStrip question={m.question} answer={i.headline}
+          figure={String(g.mobility.reduce((s, x) => s + x.immediatelyMovable, 0))}
+          figureLabel="within reach of their next stage" />
+      </View>
       <Block scene={mobilityScene(rows, g.n, width)} i={i} wide />
       <Para>
         Movement on this continuum comes from changed habits rather than changed intentions, and it shows up
@@ -857,9 +902,11 @@ export function Ch17({ a, width }: P) {
   const actNow = a.priorities.filter((p) => p.region === 'act now');
   return (
     <View>
-      <Head n={17} />
-      <ChapterStrip question={m.question} answer={i.headline}
-        figure={String(actNow.length)} figureLabel="practices in the act now region" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={17} />
+        <ChapterStrip question={m.question} answer={i.headline}
+          figure={String(actNow.length)} figureLabel="practices in the act now region" />
+      </View>
       <Block scene={priorityScene(bubbles, g.n, Math.min(width, 470))} i={i} wide />
       <View wrap={false}>
         <Text style={S.h2}>The three to take first</Text>
@@ -882,29 +929,30 @@ export function Ch18({ a, width }: P) {
   const themes = a.practicePortfolio.themes;
   return (
     <View>
-      <Head n={18} />
-      <ChapterStrip question={m.question}
-        answer={`${a.practicePortfolio.total} distinct practices were given to people in this workforce by their own reports.`}
-        figure={String(a.practicePortfolio.total)} figureLabel="practices, across every person" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={18} />
+        <ChapterStrip question={m.question}
+          answer={`${a.practicePortfolio.total} distinct practices were given to people in this workforce by their own reports.`}
+          figure={String(a.practicePortfolio.total)} figureLabel="practices, across every person" />
+      </View>
       <Para>
         Nothing in this chapter is new advice written for a group. Every practice below was given to somebody
         inside this workforce by their own report, and the counts are simply how many people received each one.
         This is the curriculum your organisation already has, tallied.
       </Para>
+      <HowToReadOnce title="How to read the portfolio">
+        One row per practice, with how urgent it is in its own library and how many of your people
+        were given it. The progress indicator under each theme is the engine's own wording for how
+        you would know it is working, and the watch-for is what to keep an eye on while it does.
+      </HowToReadOnce>
       {themes.map((t) => (
-        <Block key={t.theme} scene={practiceScene(t.theme, t.entries.map((e) => ({
+        <CompactBlock key={t.theme} scene={practiceScene(t.theme, t.entries.map((e) => ({
           capability: e.capability, n: e.n, share: e.share, priority: e.priority, unlocks: e.unlocks,
-        })), g.n, width)} i={{
-          headline: t.theme,
-          howToRead: 'Each row is one practice, with its urgency and how many people were given it.',
-          interpretation: t.entries.slice(0, 3).map((e) => `${e.capability}: ${e.n} of ${g.n}`).join('. ') + '.',
-          businessMeaning: t.entries[0]
-            ? `The widest-reaching here is "${t.entries[0].capability}". The progress indicator is: ${t.entries[0].evidenceOfProgress}`
-            : '',
-          recommendedResponse: t.entries[0]
-            ? `Watch for: ${t.entries[0].riskToMonitor}`
-            : 'Nothing at this theme in this workforce.',
-        }} wide />
+        })), g.n, width)}
+          line={t.entries[0]
+            ? `Progress indicator: ${t.entries[0].evidenceOfProgress}`
+            : 'Nothing at this theme in this workforce.'}
+          note={t.entries[0] ? `Watch for: ${t.entries[0].riskToMonitor}` : undefined} />
       ))}
       <Close n={18} line={`${a.practicePortfolio.total} practices, grouped into ${themes.length} themes. This is the L and D brief.`} />
     </View>
@@ -922,10 +970,12 @@ export function Ch19({ a, width }: P) {
   });
   return (
     <View>
-      <Head n={19} />
-      <ChapterStrip question={m.question}
-        answer={`${tiers.filter((t) => t.n > 0).length} of the six programme tiers have people in them.`}
-        figure={String(tiers.filter((t) => t.n > 0).length)} figureLabel="tiers you would need to run" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={19} />
+        <ChapterStrip question={m.question}
+          answer={`${tiers.filter((t) => t.n > 0).length} of the six programme tiers have people in them.`}
+          figure={String(tiers.filter((t) => t.n > 0).length)} figureLabel="tiers you would need to run" />
+      </View>
       <Block scene={tierScene(tiers, g.n, width)} i={{
         headline: 'What kind of programme each part of your workforce needs',
         howToRead: 'Six tiers, from a standing start to teaching others. Each cohort from chapter 12 '
@@ -936,12 +986,15 @@ export function Ch19({ a, width }: P) {
         recommendedResponse: 'Build the tier with the most people first, and use the top tiers as your '
           + 'internal teaching capacity rather than buying it in.',
       }} wide />
-      {tiers.filter((t) => t.n > 0).map((t) => (
-        <View key={t.tier} wrap={false} style={{ marginBottom: 7 }}>
-          <Text style={{ ...S.body, fontSize: 8.6, fontWeight: 600 }}>{t.tier}: {t.n} of {g.n}</Text>
-          <Text style={S.muted}>{TIER_BLURB[t.tier]}</Text>
-        </View>
-      ))}
+      <View wrap={false}>
+        <Text style={S.blockLabel}>What each tier is for</Text>
+        {tiers.filter((t) => t.n > 0).map((t) => (
+          <Text key={t.tier} style={{ ...S.muted, marginTop: 4 }}>
+            <Text style={{ fontWeight: 600, color: T.ink }}>{t.tier}, {t.n} of {g.n}. </Text>
+            {TIER_BLURB[t.tier]}
+          </Text>
+        ))}
+      </View>
       <Close n={19} line={`${tiers.filter((t) => t.n > 0).length} tiers, sized from the cohorts rather than from the headcount.`} />
     </View>
   );
@@ -958,10 +1011,12 @@ export function Ch20({ a, width }: P) {
   }));
   return (
     <View>
-      <Head n={20} />
-      <ChapterStrip question={m.question}
-        answer="Three bands of work, sequenced by urgency and by how many people each action reaches."
-        figure="90" figureLabel="days, in three bands" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={20} />
+        <ChapterStrip question={m.question}
+          answer="Three bands of work, sequenced by urgency and by how many people each action reaches."
+          figure="90" figureLabel="days, in three bands" />
+      </View>
       <Block scene={timelineScene(bands, g.n, width)} i={{
         headline: 'The next ninety days',
         howToRead: 'Each band carries the practices at one level of urgency, ordered by how many of '
@@ -995,25 +1050,23 @@ export function Ch21({ a, width }: P) {
   const m = chapterMeta(21);
   return (
     <View>
-      <Head n={21} />
-      <ChapterStrip question={m.question}
-        answer={`${a.futureMeasurement.length} modules are not collected today. Each is listed with what it would add, and no values.`}
-        figure={String(a.futureMeasurement.length)} figureLabel="modules not collected" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={21} />
+        <ChapterStrip question={m.question}
+          answer={`${a.futureMeasurement.length} modules are not collected today. Each is listed with what it would add, and no values.`}
+          figure={String(a.futureMeasurement.length)} figureLabel="modules not collected" />
+      </View>
       <Para>
         This report is honest about what it does not know. Nothing below has been estimated, modelled or
         inferred, and no figure in this report depends on any of it. Each module is an extension point rather
         than a gap.
       </Para>
-      <Block scene={moduleScene(a.futureMeasurement.map((x) => ({ name: x.name, whatItWouldAdd: x.whatItWouldAdd })), width)} i={{
-        headline: 'What the next measurement layer would add',
-        howToRead: 'Each card names a module the platform does not collect and what adding it would let '
-          + 'this report say.',
-        interpretation: a.futureMeasurement.map((x) => x.name).join(', ') + '.',
-        businessMeaning: 'Productivity figures, cost savings and return on investment all depend on the '
-          + 'modules below. That is why this report does not carry them.',
-        recommendedResponse: 'If you want value attribution, the value and economic modules are the two '
-          + 'to collect first, and both need a baseline taken before an intervention rather than after.',
-      }} wide />
+      <CompactBlock scene={moduleScene(
+        a.futureMeasurement.map((x) => ({ name: x.name, whatItWouldAdd: x.whatItWouldAdd })), width)}
+        line={'Productivity figures, cost savings and return on investment all depend on the modules '
+          + 'above. That is why this report does not carry them.'}
+        note={'If you want value attribution, the value and economic modules are the two to collect '
+          + 'first, and both need a baseline taken before an intervention rather than after.'} />
       <Close n={21} line="Six modules not collected, each declared rather than estimated." />
     </View>
   );
@@ -1027,10 +1080,12 @@ export function Ch22({ a, width }: P) {
   const baseline = a.trend.comparable === false;
   return (
     <View>
-      <Head n={22} />
-      <ChapterStrip question={m.question}
-        answer={baseline ? 'This is your baseline. A second wave is what turns it into movement.' : 'This wave can be compared with the last one.'}
-        figure={g.provenance.comparable ? 'yes' : 'not yet'} figureLabel="comparable with another wave" />
+      <View wrap={false} style={{ marginTop: 14 }}>
+        <Head n={22} />
+        <ChapterStrip question={m.question}
+          answer={baseline ? 'This is your baseline. A second wave is what turns it into movement.' : 'This wave can be compared with the last one.'}
+          figure={g.provenance.comparable ? 'yes' : 'not yet'} figureLabel="comparable with another wave" />
+      </View>
       {baseline ? (
         <Block scene={baselineScene(a.trend.comparable === false ? a.trend.reason : '', Math.min(width, 470))} i={{
           headline: 'This is your baseline',

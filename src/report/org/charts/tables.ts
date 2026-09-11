@@ -13,24 +13,25 @@ export interface StageRow {
 }
 
 export function stageTableScene(rows: StageRow[], n: number, width = 510): Scene {
-  const W = width, rowH = 40, top = 32;
+  const W = width, rowH = 30, top = 30;
   const p: Prim[] = [];
   rows.forEach((r, i) => {
     const y = top + i * rowH;
-    if (r.present) p.push(rect({ k: 'rect', x: 0, y: y - 8, w: W, h: rowH - 4, r: 3, fill: C.hairSoft, opacity: 0.4 }));
+    if (r.present) p.push(rect({ k: 'rect', x: 0, y: y - 9, w: W, h: rowH - 4, r: 3, fill: C.hairSoft, opacity: 0.4 }));
     p.push(rect({ k: 'rect', x: 0, y: y - 5, w: 15, h: 13, r: 3,
       fill: r.present ? C.strength : C.hairSoft, opacity: r.present ? 0.85 : 0.7 }));
     p.push(text({ x: 7.5, y: y + 4, size: 8.5, anchor: 'middle', mono: true,
       fill: r.present ? C.white : C.mute, text: String(r.stage) }));
     p.push(text({ x: 21, y: y + 3, size: 9.5, weight: r.present ? 600 : 400,
       fill: r.present ? C.ink : C.hair, text: r.name.slice(0, 24) }));
-    // Wrapped on word boundaries. Slicing at a character count split words in
-    // half, so a row read "still want a sec" and then "ond look".
+    // One line of meaning and one of what they need next. Two lines of each
+    // made this the tallest block in the report, and the journey above already
+    // says where people are.
     const colX = 150, colW = W - colX - 76;
-    wrap(r.meansForBusiness, fitChars(colW, 8), 2).forEach((l, k) =>
-      p.push(text({ x: colX, y: y - 1 + k * 10, size: 8, fill: C.mute, text: l })));
+    wrap(r.meansForBusiness, fitChars(colW, 8), 1).forEach((l) =>
+      p.push(text({ x: colX, y: y + 1, size: 8, fill: C.mute, text: l })));
     wrap(`Needs next: ${r.needNext}`, fitChars(colW, 8), 1).forEach((l) =>
-      p.push(text({ x: colX, y: y + 21, size: 8, fill: C.gate, text: l })));
+      p.push(text({ x: colX, y: y + 13, size: 8, fill: C.gate, text: l })));
     p.push(text({ x: W, y: y + 3, size: 9.5, anchor: 'end', mono: true, fill: r.present ? C.ink : C.hair,
       text: r.present ? `${r.n} of ${n}` : '0' }));
   });
