@@ -301,11 +301,15 @@ export interface GroupResult {
   constraints: Array<{ construct: ConstructId; name: string; n: number; share: number }>;
   lowestScores: Array<{ construct: ConstructId; name: string; n: number; share: number }>;
   concentration: { share: number; reading: 'one intervention reaches most' | 'mixed' | 'fragmented' };
-  moves: Array<{ capability: string; change: string; practice: string; priority: string; n: number; share: number }>;
+  moves: Array<{
+    tag: string; capability: string; change: string; practice: string; priority: string;
+    evidenceOfProgress: string; riskToMonitor: string; n: number; share: number;
+  }>;
   stagePlan: Array<{ stage: number; stageName: string; n: number; movable: number; into: number; intoName: string; requirements: string[] }>;
   nextStage: { stage: number; stageName: string; requirements: string[] };
 
   /* the derived readings */
+  usageDistribution: Array<{ band: number; label: string; n: number; share: number }>;
   lean: LeanReading;
   gateAnalysis: GateReading[];
   adoptionBlockers: AdoptionBlockers;
@@ -711,19 +715,32 @@ export function buildGroupResult(
       : topShare >= 33 ? 'mixed' : 'fragmented') as GroupResult['concentration']['reading'],
   };
 
-  const moveCounts = new Map<string, { capability: string; change: string; practice: string; priority: string; n: number }>();
+  const moveCounts = new Map<string, {
+    tag: string; capability: string; change: string; practice: string; priority: string;
+    evidenceOfProgress: string; riskToMonitor: string; n: number;
+  }>();
   for (const r of results) {
     for (const rec of r.recommendations) {
       const key = `${rec.capability}::${rec.behaviorChange}`;
       const hit = moveCounts.get(key);
       if (hit) hit.n += 1;
       else moveCounts.set(key, {
-        capability: rec.capability, change: rec.behaviorChange, practice: rec.practice,
-        priority: rec.priority, n: 1,
+        tag: rec.tag, capability: rec.capability, change: rec.behaviorChange, practice: rec.practice,
+        priority: rec.priority,
+        // The engine writes both of these per practice and the group report
+        // dropped them. They are the "how will I know it worked" and the
+        // "watch for" that chapter 18 is required to carry.
+        evidenceOfProgress: rec.evidenceOfProgress, riskToMonitor: rec.riskToMonitor,
+        n: 1,
       });
     }
   }
-  const moves = [...moveCounts.values()].sort((a, b) => b.n - a.n).slice(0, 8)
+  // Every practice the engine gave to anyone in this group, uncapped. The top
+  // eight is a presentation choice and belongs to the page that shows eight,
+  // not to the aggregate: the development portfolio is the whole list, and
+  // truncating it here made a chapter that claims to be the L&D curriculum
+  // brief silently incomplete.
+  const moves = [...moveCounts.values()].sort((a, b) => b.n - a.n)
     .map((m) => ({ ...m, share: shareOf(m.n, n) }));
 
   const stagePlan = distribution.map((d) => {
@@ -939,6 +956,12 @@ export function buildGroupResult(
     allCell('np', 'Protected, not yet fluent', (m) => !fluent(m) && protectedBy(m), 'The judgment is there. Build the practice on top of it.'),
     allCell('nn', 'Early on both', (m) => !fluent(m) && !protectedBy(m), 'Fluency first, with the guardrails taught alongside.'),
   ];
+  const usageDistribution = [1, 2, 3, 4, 5].map((band) => ({
+    band,
+    label: ['Never', 'Rarely', 'Sometimes', 'Weekly', 'Daily'][band - 1],
+    ...count(members.filter((m) => m.usage === band).length, n),
+  }));
+
   const quadrants = {
     capabilityUse,
     /** Who the use matrix covers. The rest are reported as deliberate non-use. */
@@ -1084,7 +1107,7 @@ export function buildGroupResult(
     dimensions, composites, strengths, watchlist, correlations,
     archetypes, patterns, calibration,
     constraints, lowestScores, concentration, moves, stagePlan, nextStage,
-    lean, gateAnalysis, adoptionBlockers, saidVsChosen, mobility, constraintGap, consistency,
+    usageDistribution, lean, gateAnalysis, adoptionBlockers, saidVsChosen, mobility, constraintGap, consistency,
     quadrants, governance, headline, flags, segments, movement, confidence,
   };
 }
