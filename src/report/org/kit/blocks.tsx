@@ -14,7 +14,7 @@ import { BLOCK_LABELS, type Interpretation } from '@/engine/orgCopy';
 import type { Scene } from '../scene';
 
 const T = {
-  ink: '#2C2621', mute: '#6E6155', hair: '#E0D5C6', gold: '#B08A3E',
+  ink: '#2C2621', mute: '#6E6155', hair: '#E0D5C6', gold: '#B08A3E', terracotta: '#A8412C',
   oxblood: '#7B2B32', paper: '#F6EDE4', page: '#FBF7F1', teal: '#2F6F62',
 };
 

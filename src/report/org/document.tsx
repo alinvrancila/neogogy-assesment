@@ -18,6 +18,7 @@ import { CHAPTER_META } from './chapters/registry';
 import { Cover, Contents, Appendix } from './chapters/frame';
 import { TOKENS as T } from './kit/blocks';
 import type { OrganisationReportAnalytics } from '@/engine/orgAnalytics';
+import type { OrgProfile } from '@/lib/orgProfile';
 
 export const PAGE_SIZES = {
   Letter: { w: 612, h: 792 },
@@ -75,8 +76,8 @@ const Footer = ({ label }: { label: string }) => (
 /** The chapter registry. The visual contents page and the tests both read it. */
 export { CHAPTER_META as CHAPTERS };
 
-export function OrganisationDocument({ a, size = 'Letter' }: {
-  a: OrganisationReportAnalytics; size?: PageSizeName;
+export function OrganisationDocument({ a, size = 'Letter', profile }: {
+  a: OrganisationReportAnalytics; size?: PageSizeName; profile?: OrgProfile | null;
 }) {
   const dim = PAGE_SIZES[size];
   const width = dim.w - SAFE * 2;
@@ -87,8 +88,10 @@ export function OrganisationDocument({ a, size = 'Letter' }: {
       author="International Center for Applied Neogogy"
       subject={`Organisational AI readiness and human advantage, across ${a.group.n} people`}
     >
-      <Page size={[dim.w, dim.h]} style={{ ...S.page, backgroundColor: T.paper }}>
-        <Cover a={a} w={dim.w} h={dim.h} />
+      {/* The cover places everything absolutely, so it takes the whole sheet
+          rather than the text frame the chapters use. */}
+      <Page size={[dim.w, dim.h]} style={{ backgroundColor: T.terracotta, fontFamily: 'PlexSans' }}>
+        <Cover a={a} w={dim.w} h={dim.h} profile={profile} />
       </Page>
 
       <Page size={[dim.w, dim.h]} style={S.page}>

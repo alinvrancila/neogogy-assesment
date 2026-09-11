@@ -172,7 +172,10 @@ export async function GET(request: NextRequest) {
   if (v2) {
     const analytics = buildOrganisationAnalytics(label, members, new Date(), exclusions);
     const size = sp.get('size') === 'A4' ? 'A4' : 'Letter';
-    const out = await generateOrgReportPdf(analytics, size);
+    // The organisation's own cover branding, the same record the previous
+    // report reads.
+    const orgProfile = await getOrgProfile(domain);
+    const out = await generateOrgReportPdf(analytics, size, orgProfile);
     return new Response(new Uint8Array(out), {
       status: 200,
       headers: {

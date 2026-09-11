@@ -198,9 +198,18 @@ head('The copy rules hold on the finished page');
 {
   ok('no em-dash or en-dash anywhere', !/[—–]/.test(allText),
     (allText.match(/.{30}[—–].{30}/) ?? []).slice(0, 2).join(' | '));
-  ok('no all-caps emphasis',
-    !perPage.flatMap((w) => w.text).some((t) => t.length > 4 && /^[A-Z ]{5,}$/.test(t.trim())),
-    perPage.flatMap((w) => w.text).filter((t) => t.length > 4 && /^[A-Z ]{5,}$/.test(t.trim())).slice(0, 3).join(' | '));
+  //
+  // The rule is about emphasis in prose. The brand lockup sets its own wordmark
+  // in capitals and has done on every report this product makes, so excluding
+  // it keeps the organisation report consistent with the rest rather than
+  // making it the only one that differs.
+  //
+  const BRAND_LOCKUP = ['HUMAN ADVANTAGE ASSESSMENT'];
+  const shouted = perPage.flatMap((w) => w.text)
+    .filter((t) => t.length > 4 && /^[A-Z ]{5,}$/.test(t.trim()))
+    .filter((t) => !BRAND_LOCKUP.includes(t.trim()));
+  ok('no all-caps emphasis outside the brand lockup', shouted.length === 0,
+    shouted.slice(0, 3).join(' | '));
   ok('never says pupil', !/\bpupils?\b/i.test(allText));
   ok('speaks in the second person', /\byour (people|organisation|workforce)\b/i.test(allText));
   ok('no statistic is called significant', !/\bsignificant\b/i.test(allText));
@@ -283,7 +292,10 @@ head('The report refuses what it must, and caveats what it should');
     return (Array.isArray(kids) ? kids : [kids]).flat().filter(Boolean)
       .map((p) => walk(p, fresh()).text.join(' ')).join('\n');
   })();
-  ok('and the cover carries the stronger caveat', /This is a small group/.test(sixText));
+  ok('and the cover carries the stronger caveat',
+    /small group/i.test(sixText) && /indicative/i.test(sixText)
+    && /segment cuts are withheld/i.test(sixText),
+    (sixText.match(/.{0,30}small group.{0,90}/i) ?? []).slice(0, 1).join(''));
   ok('no confidence interval below thirty', buildOrganisationAnalytics('x', cohort(29)).group.index.ci === undefined);
   ok('no correlations below thirty', buildOrganisationAnalytics('x', cohort(29)).group.correlations.length === 0);
 }

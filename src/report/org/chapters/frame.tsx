@@ -3,11 +3,13 @@
  */
 
 import React from 'react';
-import { View, Text, Image, Link } from '@react-pdf/renderer';
+import { View, Text, Image, Link, Svg, Circle } from '@react-pdf/renderer';
 import { S, TOKENS as T } from '../kit/blocks';
 import { SceneView } from '../render/pdf';
 import { CHAPTER_META } from './registry';
 import { miniRouteScene, bandRulerScene } from '../charts/guide';
+import { LETTER, SAFE, RAIL_SAFE, BrandMark, ART } from '@/lib/covers/kit';
+import type { OrgProfile } from '@/lib/orgProfile';
 import { rangeScene } from '../charts/range';
 import { STAGES } from '@/engine/config';
 import { DIMENSIONS, COMPOSITES, aliasesFor } from '@/engine/dictionary';
@@ -22,112 +24,162 @@ const ORG = (f: string) => path.join(process.cwd(), 'public', f.replace(/^\//, '
 const dateOf = (iso: string) => new Date(iso).toLocaleDateString('en-GB',
   { day: 'numeric', month: 'long', year: 'numeric' });
 
-export function Cover({ a, w, h }: { a: OrganisationReportAnalytics; w: number; h: number }) {
+/**
+ * The cover.
+ *
+ * Built on the cover language the product already owns: a terracotta ground, a
+ * full height artwork panel on the right, the organisation's own mark where the
+ * assessment's mark sits on an individual report, and the gold serif title. The
+ * first version of this page was a plain document header that stopped halfway
+ * down, which looked like a draft beside every other cover the platform
+ * produces.
+ *
+ * Four figures sit under the title, so the cover answers something on its own
+ * rather than only introducing a report that answers it three pages later.
+ */
+export function Cover({ a, w, h, profile }: {
+  a: OrganisationReportAnalytics; w: number; h: number; profile?: OrgProfile | null;
+}) {
   const g = a.group;
+  const frameL = w * 0.44;
+  const TITLE_BOX = frameL - SAFE - 16;
+  const title = (profile?.coverTitle || '').trim() || g.label;
+  const subtitle = (profile?.coverSubtitle || '').trim()
+    || 'What kind of AI workforce you have, where you are strong, where you are exposed, '
+      + 'what is preventing readiness, and what to do next.';
+  const longestWord = Math.max(...title.split(/\s+/).map((x) => x.length));
+  const figures: Array<[string, string]> = [
+    [String(g.centre.stage), `stage ${g.centre.stage}, ${g.centre.stageName}`],
+    [`${g.headline.healthyAdoption.n} of ${g.n}`, 'meet the healthy adoption standard'],
+    [String(g.dimensions.filter((d) => d.polarised).length), 'capabilities split in two'],
+    [g.consistency.label, 'workforce consistency'],
+  ];
   return (
-    <View>
-      <Text style={{ fontFamily: 'PlexMono', fontSize: 7.6, letterSpacing: 1.5,
-        textTransform: 'uppercase', color: T.gold, marginBottom: 10 }}>
-        {BRAND.product}
-      </Text>
-      <Text style={{ fontFamily: 'SourceSerif', fontWeight: 600, fontSize: 27, color: T.oxblood,
-        lineHeight: 1.15, marginBottom: 8 }}>
-        Organisational AI Readiness and Human Advantage Report
-      </Text>
-      <Text style={{ fontSize: 12, color: T.ink, marginBottom: 4 }}>Prepared for {g.label}</Text>
-      <Text style={{ ...S.muted, marginBottom: 16 }}>
-        Chapter 1 gives the answer in a page. Chapter 2 explains any term you meet later.
-      </Text>
+    <>
+      <View style={{ position: 'absolute', left: frameL, right: SAFE, top: h * 0.075, bottom: h * 0.235 }}>
+        {/* eslint-disable-next-line jsx-a11y/alt-text */}
+        <Image src={ART('business.jpg')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </View>
 
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 14 }}>
-        {[
-          ['Respondents', `${g.n}`],
-          ['Assessment window', `${dateOf(g.window.first)} to ${dateOf(g.window.last)}`],
-          ['Assessments present', g.personas.map((p) => `${p.label} (${p.n})`).join(', ')],
-          ['Attempts rule', g.cohort.attemptsRule],
-          ...(g.cohort.exclusions.length
-            ? [['Excluded', g.cohort.exclusions.map((e) => `${e.n}: ${e.reason}`).join('; ')]] : []),
-        ].map(([k, v]) => (
-          <View key={k} style={{ width: '50%', paddingRight: 12, marginBottom: 9 }}>
-            <Text style={{ fontFamily: 'PlexMono', fontSize: 6.4, letterSpacing: 1.1,
-              textTransform: 'uppercase', color: T.mute, marginBottom: 2 }}>{k}</Text>
-            <Text style={{ fontSize: 8.6, color: T.ink }}>{v}</Text>
+      {/*
+        The operating loop, the gesture this product's covers carry. Sized to
+        the circle rather than to the sheet: a full page SVG is exactly the
+        available height on A4, and react-pdf refused to place it, splitting the
+        cover across two pages.
+      */}
+      {(() => {
+        const r = w * 0.23, cx = w * 0.30, cy = h * 0.40;
+        return (
+          <Svg style={{ position: 'absolute', left: cx - r, top: cy - r }}
+            width={r * 2 + 2} height={r * 2 + 2}>
+            <Circle cx={r + 1} cy={r + 1} r={r}
+              fill="none" stroke="#E9B96A" strokeOpacity={0.55} strokeWidth={1.1} />
+          </Svg>
+        );
+      })()}
+
+      <View style={{ position: 'absolute', left: SAFE, top: SAFE }}>
+        {profile?.logo ? (
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 4, padding: 8, width: 148, height: 62,
+            alignItems: 'center', justifyContent: 'center' }}>
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            <Image src={profile.logo} style={{ maxWidth: 132, maxHeight: 46, objectFit: 'contain' }} />
           </View>
-        ))}
+        ) : (
+          <BrandMark tint={T.paper} subdued="rgba(246,237,228,0.72)" />
+        )}
+      </View>
+      <View style={{ position: 'absolute', right: SAFE, top: SAFE, alignItems: 'flex-end' }}>
+        <Text style={{ fontFamily: 'PlexMono', fontSize: 8, letterSpacing: 1.6,
+          textTransform: 'uppercase', color: 'rgba(246,237,228,0.92)' }}>
+          Organisational Report
+        </Text>
+        <Text style={{ fontFamily: 'PlexMono', fontSize: 6.6, letterSpacing: 1.2,
+          textTransform: 'uppercase', color: 'rgba(246,237,228,0.6)', marginTop: 4 }}>
+          AI readiness and human advantage
+        </Text>
+      </View>
+
+      <View style={{ position: 'absolute', left: SAFE, top: 142, width: TITLE_BOX }}>
+        <Text style={{ fontFamily: 'PlexMono', fontSize: 8, letterSpacing: 1.5,
+          textTransform: 'uppercase', color: 'rgba(246,237,228,0.72)', marginBottom: 12 }}>
+          Prepared for
+        </Text>
+        <Text style={{
+          fontFamily: 'SourceSerif', fontWeight: 600, color: '#E9B96A', lineHeight: 1.04,
+          // Sized by the longest word as well as by the whole line: a single
+          // long word cannot wrap, so it is what actually decides the fit.
+          fontSize: Math.min(
+            title.length > 30 ? 30 : title.length > 18 ? 38 : 46,
+            Math.max(20, Math.floor(TITLE_BOX / (0.58 * longestWord))),
+          ),
+        }}>
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text style={{ fontSize: 10.5, lineHeight: 1.5, color: 'rgba(246,237,228,0.9)', marginTop: 14 }}>
+            {subtitle}
+          </Text>
+        ) : null}
+      </View>
+
+      {/* What the report says, before it is opened. */}
+      <View style={{ position: 'absolute', left: SAFE, bottom: 214, width: TITLE_BOX }}>
+        <Text style={{ fontFamily: 'PlexMono', fontSize: 7.5, letterSpacing: 1.4,
+          textTransform: 'uppercase', color: 'rgba(246,237,228,0.74)', marginBottom: 9 }}>
+          Read across {g.n} {g.n === 1 ? 'person' : 'people'}
+        </Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+          {figures.map(([fig, label]) => (
+            <View key={label} style={{ width: '50%', paddingRight: 8, marginBottom: 9 }}>
+              <Text style={{ fontFamily: 'SourceSerif', fontWeight: 600, fontSize: 21, color: '#FFFFFF' }}>{fig}</Text>
+              <Text style={{ fontSize: 6.8, lineHeight: 1.35, color: 'rgba(246,237,228,0.78)' }}>{label}</Text>
+            </View>
+          ))}
+        </View>
       </View>
 
       {g.cohort.smallCohort ? (
-        <View style={{ backgroundColor: T.paper, borderRadius: 5, padding: 10, marginBottom: 12 }}>
-          <Text style={{ ...S.body, fontSize: 8.6 }}>
-            This is a small group. Every figure is indicative rather than settled, all segment cuts are
-            withheld, and the shape of the workforce matters more here than any single number.
+        <View style={{ position: 'absolute', left: SAFE, bottom: 186, width: TITLE_BOX }}>
+          <Text style={{ fontSize: 7.4, lineHeight: 1.4, color: 'rgba(246,237,228,0.82)' }}>
+            A small group. Every figure is indicative, all segment cuts are withheld, and the shape of
+            the workforce matters more here than any single number.
           </Text>
         </View>
       ) : null}
 
-      <Text style={{ ...S.muted, fontSize: 8, marginBottom: 14 }}>
-        The endpoint this report measures against is not maximum AI use. It is human capability
-        strengthened through intelligent use of AI: judgment, agency, independent capability, learning
-        transfer and responsible use. The best employee is not the person using the most AI.
-      </Text>
+      <View style={{ position: 'absolute', left: SAFE, right: SAFE, bottom: 104 }}>
+        <Text style={{ fontFamily: 'PlexMono', fontSize: 7, letterSpacing: 1.4,
+          textTransform: 'uppercase', color: 'rgba(246,237,228,0.74)', marginBottom: 8 }}>
+          In partnership with
+        </Text>
+        <View style={{ backgroundColor: '#FFFFFF', borderRadius: 5, paddingVertical: 9,
+          paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          {ECOSYSTEM.map((o) => (
+            <Link key={o.name} src={o.url} style={{ textDecoration: 'none' }}>
+              {/* eslint-disable-next-line jsx-a11y/alt-text */}
+              <Image src={ORG(o.logo)} style={{ width: o.pdfW * 0.72, height: (o.pdfW * 0.72 * o.h) / o.w }} />
+            </Link>
+          ))}
+        </View>
+      </View>
 
-      {/*
-        The cover used to stop here, leaving the lower half of the page blank.
-        These are the four figures a reader looks for before opening anything,
-        drawn rather than only printed, so the cover answers something on its
-        own instead of introducing a report that answers it three pages later.
-      */}
-      <View style={{ flexDirection: 'row', marginBottom: 16 }}>
-        {[
-          [String(g.centre.stage), 'the stage holding most of your people', g.centre.stageName],
-          [`${g.headline.healthyAdoption.n} of ${g.n}`, 'meet all four conditions for healthy adoption',
-            'use, judgment, boundaries and independence'],
-          [String(g.dimensions.filter((d) => d.polarised).length), 'capabilities split in two',
-            'where one shared session serves neither half'],
-          [g.consistency.label, 'workforce consistency',
-            `the middle half spans ${Math.round(g.consistency.widthOfMiddleHalf)} points`],
-        ].map(([fig, label, note]) => (
-          <View key={label} style={{ flex: 1, paddingRight: 10 }}>
-            <Text style={{ fontFamily: 'SourceSerif', fontWeight: 600, fontSize: 24, color: T.oxblood }}>{fig}</Text>
-            <View style={{ height: 2, backgroundColor: T.gold, width: 26, marginVertical: 5 }} />
-            <Text style={{ fontSize: 7.4, color: T.ink, marginBottom: 2 }}>{label}</Text>
-            <Text style={{ fontSize: 6.6, color: T.mute, lineHeight: 1.35 }}>{note}</Text>
+      <View style={{
+        position: 'absolute', left: RAIL_SAFE, right: RAIL_SAFE, bottom: RAIL_SAFE,
+        borderTopWidth: 1, borderTopColor: 'rgba(246,237,228,0.4)', paddingTop: 10, flexDirection: 'row',
+      }}>
+        {[['Report date', dateOf(g.generatedAt)],
+          ['Window', `${dateOf(g.window.first)} to ${dateOf(g.window.last)}`],
+          ['Assessments', g.personas.map((x) => `${x.label} (${x.n})`).join(', ')],
+          ['Access', BRAND.site]].map(([k, v]) => (
+          <View key={k} style={{ flex: 1, paddingRight: 12 }}>
+            <Text style={{ fontFamily: 'PlexMono', fontSize: 6.5, letterSpacing: 1.2,
+              textTransform: 'uppercase', color: 'rgba(246,237,228,0.72)', marginBottom: 3 }}>{k}</Text>
+            <Text style={{ fontSize: 8, fontWeight: 600, color: T.paper }}>{v}</Text>
           </View>
         ))}
       </View>
-
-      {/*
-        The full ten stage route was tried here and pushed the partnership strip
-        on to a second page. A cover is one page. The index ruler carries the
-        same reading in a fifth of the height, and chapter 3 draws the route.
-      */}
-      <View style={{ marginBottom: 14 }}>
-        <Text style={{ ...S.muted, fontSize: 7, marginBottom: 4 }}>
-          Where the middle of your workforce sits, on the scale every reading in this report uses
-        </Text>
-        <SceneView scene={rangeScene({
-          width: w - 88, title: '', quiet: true,
-          median: g.index.median, q1: g.index.q1, q3: g.index.q3,
-          min: g.index.min, max: g.index.max, n: g.n,
-          stageMarks: STAGES.filter((st) => st.stage % 2 === 1)
-            .map((st) => ({ at: st.minIndex, label: `stage ${st.stage}` })),
-        })} />
-      </View>
-
-      <View style={{ backgroundColor: '#FFFFFF', borderRadius: 5, paddingVertical: 9,
-        paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center',
-        justifyContent: 'space-between', marginTop: 6 }}>
-        {ECOSYSTEM.map((o) => (
-          <Link key={o.name} src={o.url} style={{ textDecoration: 'none' }}>
-            {/* eslint-disable-next-line jsx-a11y/alt-text */}
-            <Image src={ORG(o.logo)} style={{ width: o.pdfW * 0.78, height: (o.pdfW * 0.78 * o.h) / o.w }} />
-          </Link>
-        ))}
-      </View>
-      <Text style={{ ...S.muted, fontSize: 7, marginTop: 6 }}>
-        {BRAND.poweredBy} · {BRAND.site}
-      </Text>
-    </View>
+    </>
   );
 }
 
