@@ -942,7 +942,7 @@ export function Ch18({ a, width }: P) {
       </Para>
       <HowToReadOnce title="How to read the portfolio">
         One row per practice, with how urgent it is in its own library and how many of your people
-        were given it. The progress indicator under each theme is the engine's own wording for how
+        were given it. The progress indicator under each theme is the engine&apos;s own wording for how
         you would know it is working, and the watch-for is what to keep an eye on while it does.
       </HowToReadOnce>
       {themes.map((t) => (
