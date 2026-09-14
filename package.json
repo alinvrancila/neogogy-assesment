@@ -17,6 +17,7 @@
     "art:cover": "node scripts/art/render-cover.mjs",
     "test:analytics": "tsx tests/humanAdvantage/analytics.ts",
     "test:context": "tsx tests/humanAdvantage/context.ts",
+    "test:lifeportal-webhook": "tsx tests/humanAdvantage/lifeportal-webhook.ts",
     "test:gated": "tsx tests/humanAdvantage/gated.ts",
     "test:export": "tsx tests/humanAdvantage/export.ts",
     "test:business": "tsx tests/humanAdvantage/business.ts",

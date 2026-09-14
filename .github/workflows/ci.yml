@@ -32,6 +32,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Test Life Portal webhook mapping
+        run: npm run test:lifeportal-webhook
+
       - name: Build
         run: npm run build
 

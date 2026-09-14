@@ -5,6 +5,7 @@ stage developmental continuum.
 
 Next.js 14 (App Router), TypeScript, Tailwind. Storage is DynamoDB when configured and local JSON
 files under `data/` otherwise. Email is Amazon SES, off unless `EMAIL_ENABLED=true`.
+Completed assessments can also sync to Life Portal CRM when `LIFE_PORTAL_WEBHOOK_SECRET` is set.
 
 ## Running it
 

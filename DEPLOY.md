@@ -14,6 +14,8 @@
 - **Email:** Amazon SES. Whether sending is on is set on the server, not here.
   See "Email" below for how to check it, because this file said both at once for
   a while and neither statement was verifiable from the repository.
+- **CRM webhook:** completed assessment takers are sent to Life Portal as contact
+  leads when `LIFE_PORTAL_WEBHOOK_SECRET` is configured server-side.
 
 ## Live URLs
 
@@ -247,6 +249,25 @@ The deploy job expects the production environment file to already exist on the
 server at `/home/ec2-user/.env.production`; it copies that file into
 `/opt/neogogy/app/.env.production` during each deploy. Do not commit
 `.env.production` or SSH keys.
+
+For the Life Portal CRM integration, add these optional production secrets:
+
+| Secret | Value |
+| ------ | ----- |
+| `LIFE_PORTAL_WEBHOOK_SECRET` | Shared signing secret from Life Portal's external contact webhook settings |
+| `LIFE_PORTAL_WEBHOOK_URL` | Optional override; defaults to `https://lifeportal.life.edu.ph/api/public/integrations/contacts/webhook` |
+| `LIFE_PORTAL_WEBHOOK_ENABLED` | Optional override; set to `false` to pause outbound CRM sync |
+| `LIFE_PORTAL_STAGE_CODE` | Optional override; defaults to `inquiry` |
+| `LIFE_PORTAL_FIRST_INQUIRY_SOURCE_CODE` | Optional override; defaults to `neogogy_assessment` |
+| `LIFE_PORTAL_PROGRAM_CODE` | Optional Life Portal program code. Leave blank for LifeX assessment leads unless the campaign intentionally routes to a degree program. |
+| `LIFE_PORTAL_ACADEMIC_TERM_CODE` | Optional Life Portal academic term code. Leave blank when no admissions program is set. |
+| `LIFE_PORTAL_SOURCE_OF_ORIGIN_CODE` | Optional explicit source code; otherwise Life Portal derives it from attribution, e.g. `lifex` + `webhook` becomes Organic Web. |
+
+Each completed assessment sends the lead's name, email, mobile phone, stage,
+assessment persona, archetype, scores, business context, consent flag, UTM
+values, referrer, landing page, device, and location summary. Webhook failures
+are logged and counted as `lifeportal_webhook_failed`; the respondent still sees
+their result.
 
 During deploy, the workflow discovers the GitHub runner's public IP, temporarily
 authorizes that `/32` for SSH on the EC2 security group, and revokes it in an
